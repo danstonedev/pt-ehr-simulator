@@ -1,5 +1,0 @@
-# Netlify config for PT EMR Sim (static site)
-# Publishes the frontend-only app from the /app directory with no build step.
-
-[build]
-  publish = "app"
