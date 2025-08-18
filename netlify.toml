@@ -3,34 +3,3 @@
 
 [build]
   publish = "app"
-  command = "echo 'No build required - static files only'"
-  ignore = "exit 0"
-
-# Optional: local `netlify dev` proxy to match project ports
-[dev]
-  command = "python -m http.server 3000"
-  publish = "app"
-  port = 3000
-
-# Basic security headers (optional)
-# [[headers]]
-#   for = "/*"
-#   [headers.values]
-#     X-Content-Type-Options = "nosniff"
-#     X-Frame-Options = "SAMEORIGIN"
-#     Referrer-Policy = "strict-origin-when-cross-origin"
-  command = ""
-
-# Optional: local `netlify dev` proxy to match project ports
-[dev]
-  command = "python -m http.server 3000"
-  publish = "app"
-  port = 3000
-
-# Basic security headers (optional)
-# [[headers]]
-#   for = "/*"
-#   [headers.values]
-#     X-Content-Type-Options = "nosniff"
-#     X-Frame-Options = "SAMEORIGIN"
-#     Referrer-Policy = "strict-origin-when-cross-origin"
