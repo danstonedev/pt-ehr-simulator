@@ -1,0 +1,155 @@
+/* Tables / EditableTable module (extracted from styles.css)
+   Depends on theme tokens defined in :root (styles.css)
+*/
+
+/* Base tables with micro-interactions */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-2);
+  font-size: 13px; /* denser */
+}
+
+/* Align tables with subsection inputs using shared indent */
+.section-anchor .editable-table,
+.section-anchor .table,
+.section-anchor .regional-assessment {
+  margin-left: 0;
+  width: 100%;
+}
+
+/* Use squarer corners for inputs inside tables */
+.table,
+.editable-table__table,
+.regional-assessment .table {
+  --input-radius: 3px;
+}
+
+.table td {
+  border-bottom: none; /* remove cell dividers */
+  padding: var(--space-1); /* tighter cells */
+  text-align: left;
+}
+
+/* Keep header padding/text styles separate so we don't accidentally nuke borders used by components */
+.table th {
+  padding: var(--space-1);
+  text-align: left;
+}
+
+.table th {
+  font-size: 14px; /* denser header */
+  font-weight: 600;
+  color: var(--text);
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+  background: var(--bg-secondary);
+}
+
+.table th.sortable {
+  position: relative; cursor: pointer; -webkit-user-select: none; user-select: none;
+  transition: background .2s ease;
+}
+.table th.sortable:hover { background-color: var(--bg-hover); }
+/* Remove legacy emoji arrows to avoid OS-styled blue icons */
+.table th.sortable::after, .table th.sortable:hover::after { content: none !important; }
+
+/* Sort icon cleanup */
+.table th .sort-icon { display: inline-flex; align-items: center; margin-left: 6px; }
+.table th .sort-icon svg { width: 12px; height: 12px; fill: currentColor; }
+
+/* Row hover */
+.table tbody tr { transition: background 0.2s ease; }
+.table tbody tr:hover { background: var(--und-green-light); }
+
+/* Regional assessment tables */
+.regional-assessment .table { width: 100%; border-collapse: collapse; margin: var(--space-2) 0; font-size: 12px; }
+.regional-assessment .table th { background: var(--bg2); padding: var(--space-1) var(--space-1); text-align: left; border: none; font-size: 14px; font-weight: 600; color: var(--text); text-transform: capitalize; letter-spacing: 0.3px; border-bottom: none; }
+.regional-assessment .table td { padding: var(--space-1); border: none; vertical-align: middle; background: var(--panel); color: var(--text); }
+.regional-assessment .table tr:nth-child(even) td { background: var(--table-stripe); }
+.regional-assessment .table input, 
+.regional-assessment .table select { border: 1px solid var(--input-border); padding: 2px var(--space-1); font-size: 12px; border-radius: var(--input-radius); background: var(--input-bg); color: var(--text); }
+.regional-assessment .table input:focus, 
+.regional-assessment .table select:focus { border-color: var(--und-green); }
+
+/* EditableTable */
+.editable-table { width: 100%; }
+.editable-table__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); }
+.editable-table__title { margin: 0; color: var(--accent2); font-size: 14px; font-weight: 600; }
+/* Ensure titles have a little breathing room from rounded containers so they never look clipped */
+.editable-table { margin-top: 6px; }
+.assessment-section .editable-table__header { margin-top: 2px; }
+.editable-table__add-btn { font-size: 12px; padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm); border: none; background: var(--primary); color: #fff; cursor: pointer; transition: all .2s ease; }
+.editable-table__add-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+.editable-table__table { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; font-size: 14px; }
+.editable-table__table { width: 100%; border-collapse: collapse; border: none; border-radius: var(--radius-sm); overflow: hidden; font-size: 13px; }
+.editable-table__head {
+  /* UND gray gradient across the header: darker left -> UND gray right */
+  background: linear-gradient(90deg, var(--sidebar-gray-right) 0%, var(--und-gray) 100%);
+  position: relative;
+}
+.editable-table__header-cell { padding: var(--space-1) var(--space-2); text-align: left; font-size: 14px; font-weight: 600; color: var(--text); text-transform: capitalize; letter-spacing: 0.3px; border-bottom: 0; }
+/* Ensure darker header background on editable tables, override .table th background */
+.editable-table__head .editable-table__header-cell { background: transparent; color: #fff; }
+/* Keep Actions header visible (can be blank via JS) to preserve alignment */
+/* Increase specificity so this wins over `.table th { border-bottom: none; }` */
+.table.editable-table__table th.editable-table__header-cell,
+.editable-table__head th.editable-table__header-cell { border-bottom: 0 !important; }
+.editable-table__row { border-bottom: none; transition: background 0.2s ease; }
+.editable-table__row:hover { background: var(--und-green-light); }
+.editable-table__cell { padding: var(--space-1); vertical-align: middle; }
+
+/* Mobile table adjustments (migrated from styles.css) */
+@media (max-width: 768px) {
+  .table { font-size: 0.875rem; }
+  .table th,
+  .table td { padding: var(--space-2); }
+}
+.editable-table__input, .editable-table__select, .editable-table__textarea { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); padding: 2px var(--space-1); font-size: 12px; color: var(--text); border-radius: var(--input-radius); transition: border-color .2s, box-shadow .2s; }
+.editable-table__textarea { resize: none; overflow: hidden; min-height: 32px; }
+.editable-table__textarea { padding-right: calc(var(--space-1) + 10px); padding-bottom: calc(var(--space-1) + 6px); }
+
+/* Goals table: match standard input size and one-line textarea initial height */
+.goals-table .editable-table__input,
+.goals-table .editable-table__select,
+.goals-table .editable-table__textarea {
+  padding: 12px var(--space-3);
+  font-size: 1rem;
+}
+.goals-table .editable-table__textarea {
+  min-height: 44px; /* one line like standard inputs */
+  padding-right: calc(var(--space-3) + 10px);
+  padding-bottom: calc(var(--space-3) + 6px);
+}
+.editable-table__input:focus, .editable-table__select:focus, .editable-table__textarea:focus { outline: none; border-color: var(--und-green); box-shadow: 0 0 0 2px var(--und-green-light); }
+.editable-table__cell--actions { text-align: center; }
+
+/* Bilateral table widths */
+.bilateral-table .editable-table__header-cell--name { width: 25%; }
+.bilateral-table .editable-table__header-cell--left,
+.bilateral-table .editable-table__header-cell--right { width: 20%; text-align: left; }
+.bilateral-table .editable-table__header-cell--normal { width: 15%; text-align: left; }
+.bilateral-table .editable-table__header-cell--notes { width: 20%; }
+.bilateral-table .editable-table__cell--left,
+.bilateral-table .editable-table__cell--right,
+.bilateral-table .editable-table__cell--normal { text-align: center; }
+
+.mmt-grading-reference, .test-interpretation-reference { background: var(--bg-secondary); border-radius: var(--radius-sm); padding: var(--space-2); }
+.mmt-grading-reference summary, .test-interpretation-reference summary { cursor: pointer; font-weight: bold; color: var(--accent2); font-size: 12px; -webkit-user-select: none; user-select: none; }
+.mmt-grading-reference summary:hover, .test-interpretation-reference summary:hover { color: var(--accent2-dark); }
+
+/* Align helper dropdowns with subsection inputs/tables */
+.section-anchor .mmt-grading-reference,
+.section-anchor .test-interpretation-reference {
+  margin-left: 0;
+  width: 100%;
+}
+
+/* Goals tables accents */
+.goals-table .editable-table__head .editable-table__header-cell { background: transparent; color: #fff; border-bottom: 0; }
+
+/* Ensure no transform on focus for selects inside editable tables */
+.editable-table__select:focus { transform: none; }
+
+/* All table fields pick up var(--input-radius) via global input rules */

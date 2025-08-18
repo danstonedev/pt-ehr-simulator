@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PT Sim-ER (MVP v2)</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23007acc'/><text x='8' y='12' text-anchor='middle' fill='white' font-family='Arial' font-size='10' font-weight='bold'>E</text></svg>">
+  <link rel="stylesheet" href="css/styles.css?v=20250818-002" />
+  <link rel="stylesheet" href="css/print.css" media="print" />
+  <!-- Webfont: Oswald (Trade Gothic alternative) for brand label -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Add docx generation library -->
+  <script src="https://unpkg.com/docx@6.0.3/build/index.js"></script>
+  <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+</head>
+<body>
+  <!-- Skip to main content for keyboard and screen reader users -->
+  <a class="skip-link" href="#app">Skip to main content</a>
+  <header class="topbar no-print">
+    <a class="brand und-logo-link" href="#/" aria-label="University of North Dakota Home">
+      <img class="und-logo" src="img/und-logotype-fullw.svg" alt="University of North Dakota" loading="eager" decoding="async" />
+  <span class="brand-label">Physical Therapy EHR Simulator</span>
+    </a>
+    <nav id="primaryNav" class="topnav" role="navigation" aria-label="Primary">
+      <a href="#/">Home</a>
+      <a href="#/student/cases">Student</a>
+      <a href="#/instructor/cases">Faculty</a>
+      <button id="themeToggle" class="theme-toggle switch is-light" onclick="toggleTheme()" role="switch" aria-checked="false" aria-label="Switch to dark theme">
+        <span class="switch-track" aria-hidden="true"></span>
+        <span class="switch-thumb" aria-hidden="true">
+          <span class="icon sun" aria-hidden="true">☀️</span>
+          <span class="icon moon" aria-hidden="true">🌙</span>
+        </span>
+      </button>
+    </nav>
+  </header>
+
+  <main id="app"></main>
+
+  <!-- Educational ribbon at page bottom -->
+  <div class="edu-ribbon no-print" role="note" aria-label="Educational Use Only">
+    <span>Educational Use Only</span>
+  </div>
+
+  <!-- Removed fixed footer disclaimer to prevent blocking content -->
+
+  <script>
+    // Theme toggle functionality
+  function toggleTheme() {
+      const root = document.documentElement;
+      const toggle = document.getElementById('themeToggle');
+      const isLight = root.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        // Switch to dark
+        root.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'dark');
+        toggle.setAttribute('aria-checked', 'true');
+        toggle.setAttribute('aria-label', 'Switch to light theme');
+        toggle.classList.add('is-dark');
+        toggle.classList.remove('is-light');
+      } else {
+        // Switch to light
+        root.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+        toggle.setAttribute('aria-checked', 'false');
+        toggle.setAttribute('aria-label', 'Switch to dark theme');
+        toggle.classList.add('is-light');
+        toggle.classList.remove('is-dark');
+      }
+    }
+    
+    // Load saved theme on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('theme') || 'light'; // Default to light mode
+      const toggle = document.getElementById('themeToggle');
+      
+      if (savedTheme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        toggle.setAttribute('aria-checked', 'false');
+        toggle.setAttribute('aria-label', 'Switch to dark theme');
+        toggle.classList.add('is-light');
+        toggle.classList.remove('is-dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        toggle.setAttribute('aria-checked', 'true');
+        toggle.setAttribute('aria-label', 'Switch to light theme');
+        toggle.classList.add('is-dark');
+        toggle.classList.remove('is-light');
+      }
+    });
+  </script>
+  <script type="module" src="js/core/router.js?v=20250818-003"></script>
+</body>
+</html>
