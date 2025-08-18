@@ -3,7 +3,8 @@
 
 [build]
   publish = "app"
-  command = ""
+  command = "echo 'No build required - static files only'"
+  ignore = "exit 0"
 
 # Optional: local `netlify dev` proxy to match project ports
 [dev]
@@ -18,11 +19,6 @@
 #     X-Content-Type-Options = "nosniff"
 #     X-Frame-Options = "SAMEORIGIN"
 #     Referrer-Policy = "strict-origin-when-cross-origin"
-# Netlify config for PT EMR Sim (static site)
-# Publishes the frontend-only app from the /app directory with no build step.
-
-[build]
-  publish = "app"
   command = ""
 
 # Optional: local `netlify dev` proxy to match project ports

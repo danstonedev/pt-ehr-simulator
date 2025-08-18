@@ -1,0 +1,3 @@
+# This project is pure static HTML/JS/CSS - no Node.js build required
+# If Netlify insists on a Node version, use the latest LTS
+18
