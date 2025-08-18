@@ -15,6 +15,38 @@ function computeAgeFromDob(dobStr) {
   return age >= 0 && age < 200 ? String(age) : '';
 }
 
+// Lightweight YouTube-style Share Popup
+function showSharePopup(url) {
+  let status;
+  const overlay = el('div', {
+    style: `position: fixed; inset: 0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1100;`,
+    onclick: (e) => { if (e.target === overlay) document.body.removeChild(overlay); }
+  });
+  const card = el('div', {
+    role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Share',
+    style: `background:#fff; color:#111; border-radius:12px; width:92%; max-width:520px; box-shadow:0 20px 45px rgba(0,0,0,0.2); padding:20px 20px 16px; position:relative;`,
+    onclick: (e) => e.stopPropagation()
+  }, [
+    el('div', { style: 'display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;' }, [
+      el('h3', { style: 'margin:0; font-size:18px; font-weight:600;' }, 'Share'),
+      el('button', { class: 'btn icon', 'aria-label': 'Close', style: 'border:none; background:transparent; font-size:18px; cursor:pointer; padding:4px;', onclick: () => document.body.removeChild(overlay) }, '✕')
+    ]),
+  (() => { const row = el('div', { style: 'display:flex; gap:8px; align-items:center; margin:8px 0 4px;' });
+            const input = el('input', { type: 'text', value: url, readOnly: true, style: 'flex:1; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' });
+            const copyBtn = el('button', { class: 'btn small primary', style: 'white-space:nowrap;', onclick: async () => { try { await navigator.clipboard.writeText(url); status.textContent = 'Copied!'; } catch { status.textContent = 'Copy failed. Select text to copy.'; input.select(); input.focus(); } setTimeout(() => { status.textContent = '' }, 2000); } }, 'Copy');
+            row.append(input, copyBtn); return row; })(),
+  (() => { const s = el('div', { style: 'min-height:18px; font-size:12px; color:#059669; margin-top:2px;' }, ''); status = s; return s; })(),
+    el('div', { style: 'display:flex; justify-content:flex-end; gap:8px; margin-top:8px;' }, [
+      el('a', { href: url, target: '_blank', rel: 'noopener noreferrer', class: 'btn small secondary', style: 'text-decoration:none;' }, 'Open Link')
+    ])
+  ]);
+  // status declared above
+  overlay.append(card); document.body.appendChild(overlay);
+  setTimeout(() => { const input = card.querySelector('input'); input?.focus(); input?.select(); }, 0);
+  const onKey = (e) => { if (e.key === 'Escape') { document.body.removeChild(overlay); window.removeEventListener('keydown', onKey); } };
+  window.addEventListener('keydown', onKey);
+}
+
 // Case Creation Modal
 function showCaseCreationModal() {
   const modal = el('div', {
@@ -465,7 +497,6 @@ route('#/instructor/cases', async (app) => {
     
     // Add event listeners
   // Hover/underline handled via CSS theme
-    
     header.addEventListener('click', () => {
       if (sortColumn === column) {
         sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -710,8 +741,9 @@ route('#/instructor/cases', async (app) => {
             el('button', { 
               class: 'btn small primary',
               style: 'display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;',
-              onClick: (e) => {
-                navigator.clipboard.writeText(studentLink);
+              onClick: async (e) => {
+                showSharePopup(studentLink);
+                try { await navigator.clipboard.writeText(studentLink); } catch {}
                 const originalContent = e.target.innerHTML;
                 e.target.innerHTML = '<span>✓ Copied!</span>';
                 setTimeout(() => { e.target.innerHTML = originalContent; }, 2000);

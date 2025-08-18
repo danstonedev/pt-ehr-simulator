@@ -31,7 +31,6 @@ import {
   updateActiveSectionTitle,
   updateHeaderSaveStatus
 } from '../features/navigation/NavigationHeader.js?v=20250818-001';
-import { GoalLinker } from '../modules/GoalLinker.js';
 
 // Modern modular SOAP section components
 
