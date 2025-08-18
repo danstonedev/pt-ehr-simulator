@@ -1,0 +1,11 @@
+{
+  "name": "pt-ehr-simulator",
+  "version": "1.0.0",
+  "description": "Physical Therapy EHR Simulator - Static Web Application",
+  "scripts": {
+    "build": "echo 'This is a static site - no build required'",
+    "start": "echo 'This is a static site - serve directly'"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
