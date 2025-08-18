@@ -23,10 +23,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Upload app directory as artifact
+      - name: Upload root directory as artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: app
+          path: .
 
       - name: Deploy to GitHub Pages
         id: deployment
