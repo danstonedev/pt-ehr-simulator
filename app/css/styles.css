@@ -683,16 +683,16 @@ textarea::-webkit-resizer { display: none; }
 }
 
 .topnav a { 
-  padding: var(--space-3) var(--space-4); 
+  padding: var(--space-3) var(--space-5); 
   color: var(--text-secondary); 
   text-decoration: none; 
-  font-weight: 500; 
-  font-size: 0.875rem; /* 14px */
+  font-weight: 600; 
+  font-size: 1rem; /* restore previous readable size */
   transition: all .2s ease; 
   border-bottom: 2px solid transparent; 
   position: relative; 
   margin-right: var(--space-2); 
-  min-height: 44px; /* Touch target */
+  min-height: 44px; /* touch target */
   display: flex;
   align-items: center;
   border-radius: var(--radius-sm);
@@ -714,6 +714,9 @@ textarea::-webkit-resizer { display: none; }
   border-bottom-color: var(--und-green); 
   background: var(--und-green-light);
 }
+
+/* Spacing for feedback button in top nav */
+.topnav .feedback-btn { margin-left: 8px; }
 
 .tabs { 
   display: flex; 

@@ -132,7 +132,7 @@ route('#/student/drafts', async (app, qs) => {
               }
             }, 'Continue Working'),
             el('button', {
-              class: 'btn secondary small',
+              class: 'btn subtle-danger small',
               onClick: () => deleteDraft(draft.key, draft.caseTitle, draft.encounter)
             }, 'Delete')
           ])

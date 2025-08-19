@@ -574,7 +574,10 @@ function applySubsectionVisibilityControls({ activeSection, isFacultyMode, caseD
  * @param {Function} onUpdate - Callback when case info is updated
  * @returns {HTMLElement} Editable case header
  */
-function createEditableCaseHeader(caseInfo, onUpdate) {
+function createEditableCaseHeader(caseInfo, onUpdate, options = {}) {
+  const preferEditOnClick = !!options.preferEditOnClick;
+  const showEditButton = !!options.forceShowEditButton;
+  const showPencil = !!options.showPencil; // default off
   let isExpanded = false;
   // Default to auto-calc if age is empty and DOB exists
   let autoAge = (!caseInfo.age || caseInfo.age === '') && !!caseInfo.dob;
@@ -622,7 +625,12 @@ function createEditableCaseHeader(caseInfo, onUpdate) {
 
   const titleDisplay = el('div', { class: 'case-title' }, [
     el('h3', { class: 'case-title-text' }, caseInfo.title || 'Untitled Case'),
-    toggleButton
+    ...(showPencil ? [toggleButton] : []),
+    ...(showEditButton ? [el('button', {
+      class: 'btn secondary',
+      style: 'margin-left: 8px; padding:4px 8px; font-size:12px;',
+      onclick: (e) => { e.stopPropagation(); openEditCaseModal({ ...caseInfo }, (updated) => { Object.assign(caseInfo, updated); updateBasicInfo(); onUpdate?.(caseInfo); }); }
+    }, 'Edit')] : [])
   ]);
 
   // Value spans for easy updates
@@ -652,9 +660,10 @@ function createEditableCaseHeader(caseInfo, onUpdate) {
 
   function updateToggleDisplay() { /* no-op; editing handled in modal */ }
 
-  const card = el('div', { class: 'case-info-card', role: 'button', tabIndex: 0, title: 'View full case details' }, [titleDisplay, basicInfo]);
-  card.addEventListener('click', () => openCaseDetailsModal(caseInfo));
-  card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCaseDetailsModal(caseInfo); } });
+  const card = el('div', { class: 'case-info-card', role: 'button', tabIndex: 0, title: preferEditOnClick ? 'Edit case details' : 'View full case details' }, [titleDisplay, basicInfo]);
+  const openTarget = preferEditOnClick ? () => openEditCaseModal(caseInfo, (updated) => { Object.assign(caseInfo, updated); updateBasicInfo(); onUpdate?.(caseInfo); }) : () => openCaseDetailsModal(caseInfo);
+  card.addEventListener('click', openTarget);
+  card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTarget(); } });
   return card;
 }
 
@@ -1133,6 +1142,19 @@ export function createChartNavigation(config) {
     el('span', { style: 'font-size: 18px;' }, '☰')
   ]);
 
+  // Allow student to rename blank notes: prefer draft.noteTitle when present
+  const computedCaseInfo = { ...caseInfo };
+  try {
+    const isStudent = !isFacultyMode;
+    const isBlank = typeof (caseData?.id || '') === 'string' ? String(caseData.id).startsWith('blank') : false;
+    const draft = (window && window.currentDraft) ? window.currentDraft : null;
+    if (isStudent && isBlank && draft) {
+      if (draft.noteTitle && draft.noteTitle.trim()) {
+        computedCaseInfo.title = draft.noteTitle.trim();
+      }
+    }
+  } catch {}
+
   // Create the sidebar navigation
   const sidebar = el('div', {
     class: 'chart-navigation'
@@ -1144,20 +1166,68 @@ export function createChartNavigation(config) {
       'aria-label': 'Chart sections'
     }, [
       // Case summary card shown above SOAP tracker as a peer card (no extra container)
-      (config.isFacultyMode 
-        ? createEditableCaseHeader(caseInfo, config.onCaseInfoUpdate)
-        : createReadOnlyCaseHeader(caseInfo)
-      ),
+      (() => {
+        if (config.isFacultyMode) {
+          // Faculty always gets editable header with an explicit Edit button
+          return createEditableCaseHeader(computedCaseInfo, config.onCaseInfoUpdate, { forceShowEditButton: true, showPencil: false });
+        }
+        // Student-owned blank notes: allow editing in the sidebar
+        // Robust blank detection: prefer caseData.id, fallback to URL hash
+        let isStudentBlank = false;
+        try {
+          const idStr = String(config.caseData?.id || '');
+          if (idStr.startsWith('blank')) isStudentBlank = true;
+          if (!isStudentBlank && typeof window !== 'undefined') {
+            const hash = window.location.hash || '';
+            const m = hash.match(/case=([^&]+)/);
+            const idFromHash = m ? decodeURIComponent(m[1]) : '';
+            if (idFromHash && idFromHash.startsWith('blank')) isStudentBlank = true;
+          }
+        } catch {}
+        if (isStudentBlank) {
+          // Show any student-provided values from draft
+          try {
+            const d = (window && window.currentDraft) ? window.currentDraft : {};
+            if (d?.snapshot) {
+              if (d.snapshot.dob) computedCaseInfo.dob = d.snapshot.dob;
+              if (d.snapshot.age) computedCaseInfo.age = d.snapshot.age;
+              if (d.snapshot.sex) computedCaseInfo.sex = d.snapshot.sex;
+            }
+            if (d?.meta) {
+              if (d.meta.setting) computedCaseInfo.setting = d.meta.setting;
+              if (d.meta.acuity) computedCaseInfo.acuity = d.meta.acuity;
+              if (d.meta.title) computedCaseInfo.title = d.meta.title;
+            }
+          } catch {}
+          return createEditableCaseHeader(computedCaseInfo, (info) => {
+            // Bubble up to editor handler which persists into draft
+            config.onCaseInfoUpdate?.(info);
+          }, { preferEditOnClick: true, forceShowEditButton: true });
+        }
+        return createReadOnlyCaseHeader(computedCaseInfo);
+      })(),
       // Actions: place Export button directly under case description
       el('div', { style: 'margin: 8px 0 12px 0; display:flex; gap:8px; justify-content: stretch;' }, [
         el('button', {
           class: 'btn primary',
           style: 'flex:1;',
           title: 'Export this chart to a Word document',
-          onClick: () => {
+      onClick: () => {
             try {
               const cd = config.caseData || {};
-              const draft = (window && window.currentDraft) ? window.currentDraft : (cd || {});
+        const draft = (window && window.currentDraft) ? window.currentDraft : (cd || {});
+        // If student note has a title, surface it as the case title for export context
+              try {
+                if (draft && typeof cd === 'object') {
+                  if (draft.noteTitle) cd.title = draft.noteTitle;
+                  if (draft.snapshot) {
+                    cd.snapshot = { ...(cd.snapshot || {}), ...draft.snapshot };
+                  }
+                  if (draft.meta) {
+                    cd.meta = { ...(cd.meta || {}), ...draft.meta };
+                  }
+                }
+              } catch {}
               exportToWord(cd, draft);
             } catch (e) {
               console.error('Export to Word failed to start:', e);

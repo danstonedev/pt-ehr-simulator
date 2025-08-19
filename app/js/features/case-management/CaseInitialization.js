@@ -52,6 +52,8 @@ function createBlankCaseTemplate() {
  */
 function createDefaultDraft() {
   return { 
+  // Student-owned metadata for untethered notes
+  noteTitle: '',
     subjective: {
       chiefComplaint: '',
       historyOfPresentIllness: '',
@@ -210,6 +212,27 @@ export async function initializeCase(caseId, isFacultyMode = false, isKeyMode = 
         caseObj: caseObj, 
         latestVersion: 0 
       };
+  } else if (caseId === 'blank' || (typeof caseId === 'string' && caseId.startsWith('blank'))) {
+      // Student-only: Provide a minimal placeholder case for a scratch SOAP note
+      if (isFacultyMode) {
+        return {
+          error: true,
+          title: 'Not Available',
+          message: 'Blank SOAP notes are only available in student mode.'
+        };
+      }
+      const placeholder = {
+        title: 'Blank SOAP Note',
+        meta: {
+          title: 'Blank SOAP Note',
+          setting: 'Outpatient',
+          diagnosis: 'N/A',
+          acuity: 'routine'
+        },
+        snapshot: { age: '', sex: 'unspecified' },
+        editorSettings: undefined
+      };
+  return { id: caseId, caseObj: placeholder, latestVersion: 0 };
     } else {
       const caseWrapper = await getCase(caseId);
       
@@ -316,7 +339,8 @@ export function initializeDraft(caseId, encounter, isFacultyMode = false, caseDa
         };
       }
       
-      if (parsed.assessment) draft.assessment = parsed.assessment;
+  if (parsed.noteTitle) draft.noteTitle = parsed.noteTitle;
+  if (parsed.assessment) draft.assessment = parsed.assessment;
       if (parsed.goals) draft.goals = parsed.goals;
       if (parsed.plan) draft.plan = { ...draft.plan, ...parsed.plan };
       // For students, discard any editorSettings saved in local drafts to avoid stale overrides
@@ -422,6 +446,8 @@ export function initializeDraft(caseId, encounter, isFacultyMode = false, caseDa
     } else {
       // STUDENT MODE: Save to localStorage only (draft work)
       try {
+        // attach/update timestamp for listing/sorting
+        draft.__savedAt = Date.now();
         localStorage.setItem(localStorageKey, JSON.stringify(draft));
         console.log('🎓 Student draft saved locally');
       } catch (error) {

@@ -92,17 +92,10 @@ route('#/', async (app) => {
   const featured = cases.find(c => c.id === 'demo_case_1') || cases[0];
   const lastHash = localStorage.getItem('pt_emr_last_route');
 
-  // Hero panel (full-width) with What's New
+  // Hero panel (full-width)
   const hero = el('div', { class: 'panel' }, [
     el('h1', {}, 'Physical Therapy EHR Simulator'),
     el('p', {}, 'Practice professional SOAP documentation and billing in a safe, offline environment.'),
-    el('h3', { style: 'margin-top: 10px;' }, "What's new"),
-    el('ul', { style: 'margin: 6px 0 0 18px;' }, [
-      el('li', {}, 'Faculty visibility toggles per subsection with sidebar filtering'),
-      el('li', {}, 'True Student Preview with seamless back-to-faculty'),
-      el('li', {}, 'Precise deep-link scrolling under sticky headers'),
-      el('li', {}, 'Relative scroll preservation when switching modes')
-    ])
   ]);
 
   // Editor navigation helpers
@@ -132,62 +125,52 @@ route('#/', async (app) => {
     navigate(`${base}?case=${encodeURIComponent(picked.caseId)}&v=${picked.version}&encounter=${encodeURIComponent(encounter)}`);
   }
 
-  // Only show section buttons below
-
-  // No featured demo cards
-
-  // Left (Student) and Right (Faculty) columns
-  const studentHeader = el('button', {
-    class: 'btn primary',
-    style: 'width:100%; font-size:1.1rem; padding:10px 12px;',
-    onClick: () => navigate('#/student/cases')
-  }, 'STUDENT');
-  
-
-  const facultyHeader = el('button', {
-    class: 'btn primary',
-    style: 'width:100%; font-size:1.1rem; padding:10px 12px;',
-    onClick: () => navigate('#/instructor/cases')
-  }, 'FACULTY');
-  
-  // Build a grid with paired rows so related sections align
-  const columns = el('div', {
-    class: 'home-columns',
-    style: 'display:grid; gap:12px; grid-template-columns: 1fr;'
-  }, []);
-
-  const rows = [
-    // Row 1: Column headers
-    [studentHeader, facultyHeader],
-    // Row 2: Actions under headers
-    [
-      el('div', { class: 'home-actions', style: 'display:flex; gap:8px; flex-wrap:wrap;' }, [
-  el('button', { class: 'btn secondary', onClick: () => navigate('#/student/cases') }, 'Dashboard'),
-  el('button', { class: 'btn secondary', onClick: () => navigate('#/student/drafts') }, 'Drafts'),
-  el('button', { class: 'btn secondary', onClick: () => goEditor('student', 'eval') }, 'Evaluation')
-      ]),
-      el('div', { class: 'home-actions', style: 'display:flex; gap:8px; flex-wrap:wrap;' }, [
-  el('button', { class: 'btn secondary', onClick: () => navigate('#/instructor/cases') }, 'Dashboard'),
-  el('button', { class: 'btn secondary', onClick: () => navigate('#/instructor/cases?create=true') }, 'Create New Case'),
-  el('button', { class: 'btn secondary', onClick: () => goEditor('faculty', 'eval') }, 'Eval Editor')
-      ])
-    ]
-  ];
-
-  rows.forEach(([left, right]) => {
-    columns.append(left, right);
-  });
-
-  // Responsive columns
-  const setCols = () => { columns.style.gridTemplateColumns = window.innerWidth >= 900 ? '1fr 1fr' : '1fr'; };
-  setCols();
-  window.addEventListener('resize', setCols, { passive: true });
-
-  // Final container: hero spans full width, then columns (+ help already spanning inside columns)
-  const container = el('div', { class: 'home-container', style: 'display:grid; gap:12px;' }, [
-    hero,
-  columns
+  // Build main panels
+  const studentPanel = el('div', { class: 'panel' }, [
+    el('h2', {}, 'Student'),
+    el('p', { class: 'muted', style: 'margin:6px 0 12px 0;' }, 'Work on assigned cases and manage your drafts.'),
+    el('div', { class: 'home-actions', style: 'display:flex; gap:8px; flex-wrap:wrap;' }, [
+      el('button', { class: 'btn primary', onClick: () => navigate('#/student/cases') }, 'Dashboard'),
+      el('button', { class: 'btn primary', onClick: () => navigate('#/student/drafts') }, `Drafts${draftsCount ? ` (${draftsCount})` : ''}`),
+      el('button', { class: 'btn primary', onClick: () => goEditor('student', 'eval') }, 'Evaluation')
+    ])
   ]);
+
+  const facultyPanel = el('div', { class: 'panel' }, [
+    el('h2', {}, 'Faculty'),
+    el('p', { class: 'muted', style: 'margin:6px 0 12px 0;' }, 'Create and edit cases; preview as a student.'),
+    el('div', { class: 'home-actions', style: 'display:flex; gap:8px; flex-wrap:wrap;' }, [
+      el('button', { class: 'btn primary', onClick: () => navigate('#/instructor/cases') }, 'Dashboard'),
+      el('button', { class: 'btn primary', onClick: () => navigate('#/instructor/cases?create=true') }, 'Create New Case'),
+      el('button', { class: 'btn primary', onClick: () => goEditor('faculty', 'eval') }, 'Eval Editor')
+    ])
+  ]);
+
+  // Side panels
+  const whatsNew = buildWhatsNewPanel();
+  const help = buildHelpPanel();
+
+  // Optional resume card at top of main column
+  const resumeCard = buildResumeCard(lastHash, cases);
+
+  // Two-column grid: side (compact) and main (prominent)
+  const leftCol = el('div', { class: 'col-side', style: 'display:grid; gap:12px;' }, [whatsNew, help]);
+  const rightColChildren = [];
+  if (resumeCard) rightColChildren.push(resumeCard);
+  rightColChildren.push(studentPanel, facultyPanel);
+  const rightCol = el('div', { class: 'col-main', style: 'display:grid; gap:12px;' }, rightColChildren);
+
+  const grid = el('div', { class: 'home-grid', style: 'display:grid; gap:12px; grid-template-columns: 1fr; align-items:start;' }, [leftCol, rightCol]);
+
+  // Responsive: make main column wider on desktop
+  const setGrid = () => {
+    grid.style.gridTemplateColumns = window.innerWidth >= 900 ? 'minmax(260px, 1fr) minmax(420px, 2fr)' : '1fr';
+  };
+  setGrid();
+  window.addEventListener('resize', setGrid, { passive: true });
+
+  // Final container: hero full width, then two-column grid
+  const container = el('div', { class: 'home-container', style: 'display:grid; gap:12px;' }, [hero, grid]);
 
   app.append(container);
 });

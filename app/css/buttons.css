@@ -45,6 +45,15 @@
 .btn.outline { background: transparent; border-color: var(--und-green); color: var(--und-green); font-weight: 600; }
 .btn.outline:hover { background: var(--und-green-light); border-color: var(--und-green-dark); color: var(--und-green-dark); }
 
+/* Orange variant (UND orange) for Feedback button */
+.btn.orange { background: var(--und-orange); border-color: var(--und-orange); color: #fff; font-weight: 600; }
+.btn.orange:hover { background: var(--und-orange-dark); border-color: var(--und-orange-dark); }
+
+/* Subtle red (outline) variant for destructive actions */
+/* Rest: very light red border, white fill; Hover: soft red fill + darker red border/text */
+.btn.subtle-danger { background: #fff; border-color: #f3e8e8; color: #dc2626; font-weight: 600; }
+.btn.subtle-danger:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; transform: none; box-shadow: none; }
+
 /* Inline SVGs follow text color */
 .btn:not(.icon-btn) svg { width: 16px; height: 16px; fill: currentColor; }
 
@@ -123,3 +132,8 @@
 [data-theme="light"] .btn.primary:hover { background: var(--und-green-dark); border-color: var(--und-green-dark); }
 [data-theme="light"] .btn.secondary { background: #fff; border-color: var(--und-green); color: var(--text); }
 [data-theme="light"] .btn.secondary:hover { background: #f8f9fa; border-color: var(--und-green); color: var(--und-green); font-weight: 700; }
+[data-theme="light"] .btn.subtle-danger { background: #fff; border-color: #f3e8e8; color: #dc2626; }
+[data-theme="light"] .btn.subtle-danger:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; box-shadow: none; transform: none; }
+/* Light theme orange hover keeps brand contrast */
+[data-theme="light"] .btn.orange { background: var(--und-orange); border-color: var(--und-orange); color: #fff; }
+[data-theme="light"] .btn.orange:hover { background: var(--und-orange-dark); border-color: var(--und-orange-dark); }

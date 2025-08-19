@@ -188,10 +188,10 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     activeSection: 'subjective',
     onSectionChange: (sectionId) => switchTo(sectionId),
     isFacultyMode: isFacultyMode,
-  caseData: { ...c, ...draft, editorSettings: (c.editorSettings || draft.editorSettings) },
+  caseData: { ...c, id: caseId, ...draft, editorSettings: (c.editorSettings || draft.editorSettings) },
     caseInfo: {
       // Prefer explicit fields, then canonical meta/snapshot fallbacks
-      title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
+      title: (draft.noteTitle && draft.noteTitle.trim()) || c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
       setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
       age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
       sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
@@ -217,6 +217,12 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       // Normalize sex for snapshot to lower-case if looks like a label
       c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
       c.snapshot.dob = updatedInfo.dob;
+      // For student-owned blank notes, mirror into draft so it persists across reloads
+      if (!isFacultyMode && String(caseId).startsWith('blank')) {
+        draft.noteTitle = updatedInfo.title;
+        draft.meta = { ...(draft.meta || {}), setting: updatedInfo.setting, acuity: updatedInfo.acuity, title: updatedInfo.title };
+        draft.snapshot = { ...(draft.snapshot || {}), age: updatedInfo.age, sex: (updatedInfo.sex || '').toLowerCase() || 'unspecified', dob: updatedInfo.dob };
+      }
       
       // Save the case
       save();
@@ -344,6 +350,11 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         c.snapshot.age = updatedInfo.age;
         c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
         c.snapshot.dob = updatedInfo.dob;
+        if (!isFacultyMode && String(caseId).startsWith('blank')) {
+          draft.noteTitle = updatedInfo.title;
+          draft.meta = { ...(draft.meta || {}), setting: updatedInfo.setting, acuity: updatedInfo.acuity, title: updatedInfo.title };
+          draft.snapshot = { ...(draft.snapshot || {}), age: updatedInfo.age, sex: (updatedInfo.sex || '').toLowerCase() || 'unspecified', dob: updatedInfo.dob };
+        }
         save();
         refreshChartProgress();
       },
@@ -529,6 +540,11 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
           c.snapshot.age = updatedInfo.age;
           c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
           c.snapshot.dob = updatedInfo.dob;
+         if (!isFacultyMode && String(caseId).startsWith('blank')) {
+           draft.noteTitle = updatedInfo.title;
+           draft.meta = { ...(draft.meta || {}), setting: updatedInfo.setting, acuity: updatedInfo.acuity, title: updatedInfo.title };
+           draft.snapshot = { ...(draft.snapshot || {}), age: updatedInfo.age, sex: (updatedInfo.sex || '').toLowerCase() || 'unspecified', dob: updatedInfo.dob };
+         }
          debouncedSave(); // Use debounced save instead of immediate save
        },
            onEditorSettingsChange: (nextSettings) => {

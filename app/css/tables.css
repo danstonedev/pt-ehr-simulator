@@ -62,6 +62,41 @@
 .table tbody tr { transition: background 0.2s ease; }
 .table tbody tr:hover { background: var(--und-green-light); }
 
+/* Dashboard cases tables: dark gradient header with white text */
+.cases-table thead th {
+  background: linear-gradient(180deg, #111 0%, #222 100%);
+  color: #fff;
+}
+.cases-table thead th.sortable:hover {
+  background: linear-gradient(180deg, #111 0%, #222 100%); /* keep gradient on hover */
+}
+
+/* Simple status labels used in Draft Status column */
+.cases-table .status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  border: 1px solid transparent;
+}
+.cases-table .status--not-started {
+  color: var(--text-muted);
+  border-color: var(--border-light);
+  background: transparent;
+}
+.cases-table .status--in-progress {
+  color: var(--und-orange);
+  background: var(--und-orange-light);
+  border-color: rgba(255, 103, 31, 0.35);
+}
+.cases-table .status--complete {
+  color: var(--und-green);
+  background: var(--und-green-light);
+  border-color: rgba(0, 154, 68, 0.35);
+}
+
 /* Regional assessment tables */
 .regional-assessment .table { width: 100%; border-collapse: collapse; margin: var(--space-2) 0; font-size: 12px; }
 .regional-assessment .table th { background: var(--bg2); padding: var(--space-1) var(--space-1); text-align: left; border: none; font-size: 14px; font-weight: 600; color: var(--text); text-transform: capitalize; letter-spacing: 0.3px; border-bottom: none; }

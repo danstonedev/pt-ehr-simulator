@@ -249,7 +249,7 @@ function showCaseCreationModal() {
         el('div', { style: 'display: flex; gap: 12px; justify-content: flex-end;' }, [
           el('button', {
             type: 'button',
-            class: 'btn secondary',
+            class: 'btn neutral',
             style: 'padding: 12px 24px; font-size: 14px;',
             onclick: () => document.body.removeChild(modal)
           }, 'Cancel'),
@@ -537,7 +537,7 @@ route('#/instructor/cases', async (app) => {
         el('div', { class: 'flex-between', style: 'margin-bottom: 20px;' }, [
           el('h2', {}, 'Faculty Dashboard'),
           el('button', { 
-            class: 'btn secondary',
+            class: 'btn primary',
             style: 'display: flex; align-items: center; gap: 8px;',
             onclick: (e) => {
               e.preventDefault();
@@ -586,7 +586,7 @@ route('#/instructor/cases', async (app) => {
           })
         ]),
         // Setting filter
-  el('div', { class: 'col' }, [
+        el('div', { class: 'col' }, [
           (() => {
             const select = el('select', {
               style: 'width: 150px;',
@@ -722,7 +722,7 @@ route('#/instructor/cases', async (app) => {
       );
     }
     
-    const table = el('table', { class: 'table' }, [
+  const table = el('table', { class: 'table cases-table' }, [
       el('thead', {}, el('tr', {}, [
         createSortableHeader('Case Title', 'title'),
         createSortableHeader('Setting', 'setting'),
@@ -741,7 +741,7 @@ route('#/instructor/cases', async (app) => {
           el('td', { style: 'white-space: nowrap;' }, [
             el('button', { 
               class: 'btn small primary',
-              style: 'display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;',
+              style: 'margin-right: 8px;',
               onClick: async (e) => {
                 showSharePopup(studentLink);
                 try { await navigator.clipboard.writeText(studentLink); } catch {}
@@ -755,30 +755,30 @@ route('#/instructor/cases', async (app) => {
             ]),
             el('button', { 
               class: 'btn small primary',
-              style: 'display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;',
+              style: 'margin-right: 8px;',
               onClick: () => navigate(`#/instructor/editor?case=${c.id}&v=${c.latestVersion || 0}&encounter=eval`) 
             }, [
               el('span', { html: createIcon('edit') }),
               'Edit'
             ]),
             el('button', { 
-              class: 'btn small secondary',
-              style: 'display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;',
+              class: 'btn small primary',
+              style: 'margin-right: 8px;',
               onClick: () => navigate(`#/student/editor?case=${c.id}&v=${c.latestVersion}&encounter=eval`) 
             }, [
               el('span', { html: createIcon('preview') }),
               'Student View'
             ]),
             el('button', { 
-              class: 'btn small secondary',
-              style: 'display: inline-flex; align-items: center; gap: 6px; margin-right: 8px;',
+              class: 'btn small primary',
+              style: 'margin-right: 8px;',
               onClick: () => navigate(`#/student/editor?case=${c.id}&v=${c.latestVersion}&encounter=eval&key=true`) 
             }, [
               el('span', { html: createIcon('preview') }),
               'Answer Key'
             ]),
             el('button', {
-              class: 'btn small neutral danger-hover',
+              class: 'btn small subtle-danger',
               style: 'display: inline-flex; align-items: center; gap: 6px;',
               onClick: async () => {
                 if (confirm(`Are you sure you want to delete "${c.title}"?`)) {

@@ -4,22 +4,11 @@ import { el } from '../../ui/utils.js';
 route('#/student/cases', async (app) => {
   app.innerHTML = ''; // Clear previous content
   
-  // Header with navigation
-  const header = el('div', {class: 'panel'}, [
-    el('div', {class: 'flex-between'}, [
-      el('h2', {}, 'Student Cases'),
-      el('div', {}, [
-        el('button', {
-          class: 'btn',
-          onClick: () => navigate('#/home')
-        }, 'Home')
-      ])
-    ])
-  ]);
+  // No separate header container; everything lives in the main panel below
 
   try {
     // Get all available cases
-    const cases = await listCases();
+  const cases = await listCases();
     
     // Ensure cases is an array
     if (!Array.isArray(cases)) {
@@ -116,40 +105,98 @@ route('#/student/cases', async (app) => {
     }
 
     // Panel container for the list + table (to match faculty layout)
+    let searchTerm = '';
     const casesPanel = el('div', { class: 'panel' }, [
-      el('h3', {}, 'Available Cases'),
-      el('p', { class: 'small' }, 'Select a case to begin or continue working on your documentation.')
+      el('div', { class: 'flex-between', style: 'margin-bottom: 16px; align-items:center; gap:12px;' }, [
+        el('div', {}, [
+          el('h2', {}, 'Student Dashboard'),
+          el('p', { class: 'small' }, 'Select a case to begin or continue working on your documentation.')
+        ])
+      ]),
+      el('input', {
+        type: 'text',
+        placeholder: 'Search cases by title, setting, diagnosis, or acuity...',
+        style: 'width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; margin-bottom: 16px;',
+        onInput: (e) => { searchTerm = (e.target.value || '').toLowerCase(); renderTable(); }
+      })
     ]);
     app.append(casesPanel);
 
-    const table = el('table', {class:'table'}, [
-      el('thead', {}, el('tr', {}, [
-        el('th', {}, 'Case Title'),
-        el('th', {}, 'Setting'),
-        el('th', {}, 'Diagnosis'),
-        el('th', {}, 'Draft Status'),
-        el('th', {}, ''),
-      ])),
-      el('tbody', {}, cases.map(c => {
+    function openCreateNoteModal() {
+      const overlay = el('div', {
+        style: 'position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;',
+        onclick: (e) => { if (e.target === overlay) document.body.removeChild(overlay); }
+      });
+      const defaultTitle = `Blank SOAP Note — ${new Date().toLocaleDateString()}`;
+      const content = el('div', {
+        style: 'background:white; padding:24px; border-radius:12px; width:92%; max-width:520px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);'
+      }, [
+        el('h3', { style: 'margin-top:0;' }, 'Create SOAP Note'),
+        el('p', { class: 'small', style: 'margin-top:4px; color:#4b5563;' }, 'Give your note a title so you can find it later.'),
+        el('label', { class: 'form-label-standard', style: 'margin-top:12px;' }, 'Note Title'),
+        el('input', {
+          id: 'student-note-title-input',
+          type: 'text',
+          class: 'form-input-standard',
+          value: defaultTitle,
+          placeholder: 'e.g., Shoulder Pain Eval - Aug 2025',
+          style: 'width:100%; box-sizing:border-box;'
+        }),
+        el('div', { style: 'display:flex; gap:8px; justify-content:flex-end; margin-top:18px;' }, [
+          el('button', { class: 'btn secondary', onClick: () => document.body.removeChild(overlay) }, 'Cancel'),
+          el('button', { class: 'btn primary', onClick: () => {
+            const input = content.querySelector('#student-note-title-input');
+            const title = (input && input.value ? input.value : '').trim() || 'Blank SOAP Note';
+            const id = `blank-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}`;
+            try {
+              // Initialize minimal draft so it appears in the list with the chosen title
+              const draftKey = `draft_${id}_eval`;
+              const initialDraft = { noteTitle: title, __savedAt: Date.now() };
+              localStorage.setItem(draftKey, JSON.stringify(initialDraft));
+            } catch (e) { console.warn('Could not pre-save blank note draft:', e); }
+            document.body.removeChild(overlay);
+            navigate(`#/student/editor?case=${id}&v=0&encounter=eval`);
+          } }, 'Create')
+        ])
+      ]);
+      overlay.append(content);
+      document.body.append(overlay);
+      setTimeout(() => content.querySelector('#student-note-title-input')?.focus(), 0);
+    }
+
+    function renderTable() {
+      const filtered = cases.filter(c => {
+        const title = c.title || c.caseObj?.meta?.title || '';
+        const setting = c.caseObj?.meta?.setting || '';
+        const diagnosis = c.caseObj?.meta?.diagnosis || '';
+        const acuity = c.caseObj?.meta?.acuity || '';
+        return `${title} ${setting} ${diagnosis} ${acuity}`.toLowerCase().includes(searchTerm);
+      });
+
+      const table = el('table', {class:'table cases-table'}, [
+        el('thead', {}, el('tr', {}, [
+          el('th', {}, 'Case Title'),
+          el('th', {}, 'Setting'),
+          el('th', {}, 'Diagnosis'),
+          el('th', {}, 'Draft Status'),
+          el('th', {}, ''),
+        ])),
+        el('tbody', {}, filtered.map(c => {
         const draftInfo = drafts[c.id];
         const evalDraft = draftInfo?.eval;
         
         let statusContent;
         if (evalDraft && evalDraft.hasContent) {
-          const statusClass = evalDraft.completionPercent >= 80 ? 'success' : 
-                            evalDraft.completionPercent >= 50 ? 'warning' : 'info';
-          statusContent = el('div', {class: 'draft-status'}, [
-            el('div', {class: `progress-bar ${statusClass}`}, [
-              el('div', {class: 'progress-fill', style: `width: ${evalDraft.completionPercent}%`})
-            ]),
-            el('span', {class: 'small'}, `${evalDraft.completionPercent}% complete`)
-          ]);
+          const isComplete = evalDraft.completionPercent === 100;
+          const statusText = isComplete ? 'Complete' : 'In-Progress';
+          const statusClass = isComplete ? 'status--complete' : 'status--in-progress';
+          statusContent = el('span', { class: `status ${statusClass}` }, statusText);
         } else {
-          statusContent = el('span', {class: 'text-muted'}, 'Not started');
+          statusContent = el('span', { class: 'status status--not-started' }, 'Not Started');
         }
         
-        const buttonText = evalDraft && evalDraft.hasContent ? 'Continue Working' : 'Start Case';
-        const buttonClass = evalDraft && evalDraft.hasContent ? 'btn primary small' : 'btn secondary small';
+  const buttonText = evalDraft && evalDraft.hasContent ? 'Continue Working' : 'Start Case';
+  const buttonClass = 'btn primary small';
         
         // Create action buttons
         const actionButtons = [
@@ -158,6 +205,36 @@ route('#/student/cases', async (app) => {
             onClick: () => navigate(`#/student/editor?case=${c.id}&v=0&encounter=eval`)
           }, buttonText)
         ];
+
+        // Add Reset for faculty-created case drafts and Remove for student blank notes
+        const isBlankNote = String(c.id || '').startsWith('blank');
+        const localStorageKey = `draft_${c.id}_eval`;
+        if (isBlankNote) {
+          actionButtons.push(' ');
+          actionButtons.push(el('button', {
+            class: 'btn subtle-danger small',
+            title: 'Delete this blank note',
+            onClick: () => {
+              if (confirm('Delete this blank SOAP note? This cannot be undone.')) {
+                localStorage.removeItem(localStorageKey);
+                // Also remove from listing cache by reloading route
+                navigate('#/student/cases');
+              }
+            }
+          }, 'Remove'));
+        } else {
+          actionButtons.push(' ');
+          actionButtons.push(el('button', {
+            class: 'btn subtle-danger small',
+            title: 'Reset your draft work for this case',
+            onClick: () => {
+              if (confirm('Reset your draft for this case? This will clear your local work.')) {
+                localStorage.removeItem(localStorageKey);
+                navigate('#/student/cases');
+              }
+            }
+          }, 'Reset'));
+        }
         
         // Add download button if case is 100% complete
         if (evalDraft && evalDraft.completionPercent === 100) {
@@ -462,18 +539,77 @@ route('#/student/cases', async (app) => {
           el('td', {}, statusContent),
           el('td', {}, actionButtons)
         ]);
-      }))
-    ]);
-  // Add the table inside the panel container
-  casesPanel.append(table);
-
-    // Show summary if there are any drafts
-    const totalDrafts = Object.keys(drafts).length;
-    if (totalDrafts > 0) {
-      app.append(el('div', {class: 'panel'}, [
-        el('p', {class: 'small text-muted'}, `You have ${totalDrafts} case(s) with saved draft work.`)
-      ]));
+        }))
+      ]);
+      // Render
+      const existing = casesPanel.querySelector('table');
+      if (existing) existing.remove();
+      casesPanel.append(table);
     }
+
+    // Initial render
+    renderTable();
+
+    // Show list of your blank notes with remove buttons and a Create button
+    try {
+      const blankItems = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('draft_blank')) {
+          try {
+            const raw = localStorage.getItem(key);
+            const data = raw ? JSON.parse(raw) : {};
+            const ts = data && data.__savedAt ? data.__savedAt : null;
+            const title = (data && data.noteTitle && data.noteTitle.trim()) || key.replace('draft_', '').replace('_eval','');
+            blankItems.push({ key, title, ts: ts || 0 });
+          } catch {}
+        }
+      }
+
+      // Sort newest first
+      blankItems.sort((a, b) => (b.ts - a.ts) || a.title.localeCompare(b.title));
+
+      const headerRow = el('div', { class: 'flex-between', style: 'align-items:center; gap:12px; margin-bottom: 8px;' }, [
+        el('h3', { style: 'margin: 0;' }, 'My Blank Notes'),
+        el('div', {}, [
+          el('button', {
+            class: 'btn primary',
+            title: 'Create a blank SOAP note not attached to a case',
+            onClick: () => openCreateNoteModal()
+          }, 'Create SOAP Note')
+        ])
+      ]);
+
+      const panelChildren = [
+        headerRow,
+        el('p', { class: 'small', style: 'margin-top:0;' }, 'Manage scratch SOAP notes not tied to a case.')
+      ];
+
+      if (blankItems.length > 0) {
+        const list = el('ul', { style: 'margin: 8px 0 0 0; padding-left: 18px;' });
+        blankItems.forEach(({ key, title }) => {
+          const noteId = key.replace('draft_', '').replace('_eval','');
+          const li = el('li', { style: 'margin-bottom: 6px;' }, [
+            el('span', { style: 'margin-right: 12px; font-weight: 500;' }, title),
+            el('button', {
+              class: 'btn primary small',
+              style: 'margin-right: 6px;',
+              onClick: () => navigate(`#/student/editor?case=${noteId}&v=0&encounter=eval`)
+            }, 'Open'),
+            el('button', {
+              class: 'btn subtle-danger small',
+              onClick: () => { if (confirm('Delete this blank note?')) { localStorage.removeItem(key); navigate('#/student/cases'); } }
+            }, 'Remove')
+          ]);
+          list.append(li);
+        });
+        panelChildren.push(list);
+      } else {
+        panelChildren.push(el('p', { class: 'small', style: 'color: var(--text-muted); margin-top: 8px;' }, 'No blank notes yet. Create one to get started.'));
+      }
+
+      app.append(el('div', { class: 'panel' }, panelChildren));
+    } catch {}
 
   } catch (error) {
     console.error("Failed to render student cases:", error);
