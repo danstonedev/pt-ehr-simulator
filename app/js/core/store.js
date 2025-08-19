@@ -6,6 +6,30 @@ import { validateCase, ensureDataIntegrity, migrateOldCaseData } from './schema.
 const CASES_KEY = 'pt_emr_cases';
 const CASE_COUNTER_KEY = 'pt_emr_case_counter';
 
+// Local dev detection (only auto-publish to server when running locally)
+const IS_LOCAL_DEV = (typeof window !== 'undefined') && (
+  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+);
+// Explicit toggle for optional local server sync (avoids noisy 5173 errors by default)
+const USE_LOCAL_SERVER = (typeof window !== 'undefined') && (
+  (IS_LOCAL_DEV && window.location.port === '5173') || localStorage.getItem('useLocalServer') === '1'
+);
+
+// Lightweight debounce for auto-publish so we don't spam the server
+let __publishScheduled = false;
+function scheduleAutoPublish() {
+  if (!USE_LOCAL_SERVER) return; // Skip when local server sync is disabled/not running
+  if (__publishScheduled) return;
+  __publishScheduled = true;
+  setTimeout(async () => {
+    try {
+      await publishToServer();
+    } finally {
+      __publishScheduled = false;
+    }
+  }, 500);
+}
+
 // --- Case Storage Helpers ---
 
 function loadCasesFromStorage() {
@@ -51,82 +75,112 @@ function getNextCaseId() {
   }
 }
 
-// --- Initialize with sample data if empty ---
-function initializeSampleData() {
-  const cases = loadCasesFromStorage();
-  if (Object.keys(cases).length === 0) {
-    console.log('🎯 No cases found - initializing with sample data');
-    
-    const sampleCase = {
-      id: 'demo_case_1',
-      title: 'Low Back Pain - Acute Episode',
-      latestVersion: 0,
-      caseObj: {
-        meta: {
-          title: 'Low Back Pain - Acute Episode',
-          setting: 'Outpatient',
-          regions: ['lumbar_spine'],
-          acuity: 'acute',
-          diagnosis: 'Musculoskeletal'
-        },
-        snapshot: {
-          age: '45',
-          sex: 'female',
-          teaser: 'A 45-year-old female presents with acute low back pain after lifting heavy boxes.'
-        },
-        history: {
-          chief_complaint: 'Low back pain for 3 days',
-          hpi: 'Patient reports sudden onset of sharp low back pain while lifting heavy boxes at work 3 days ago.',
-          pmh: ['No significant past medical history'],
-          meds: ['Ibuprofen 400mg as needed'],
-          red_flag_signals: []
-        },
-        findings: {
-          vitals: { bp: '120/80', hr: '72', rr: '16', temp: '98.6', o2sat: '98%', pain: '7/10' },
-          rom: {},
-          mmt: {},
-          special_tests: [],
-          gait: { device: 'none', distance_m: 50 },
-          outcome_options: []
-        },
-        encounters: {
-          eval: { 
-            notes_seed: 'Initial evaluation for acute low back pain',
-            subjective: {
-              chiefComplaint: 'Low back pain for 3 days',
-              currentHistory: 'Patient reports sudden onset of sharp low back pain while lifting heavy boxes at work 3 days ago. Pain is 7/10 in intensity, sharp and stabbing in nature.',
-              additionalHistory: 'No radiation down legs. Pain worse with bending forward and prolonged sitting. Improved with rest and ibuprofen.'
-            },
-            objective: {
-              inspection: { visual: 'Patient appears uncomfortable, guarded posture' },
-              palpation: { findings: 'Tenderness over L4-L5 paraspinals' },
-              neuro: { screening: 'DTRs 2+ and symmetric, sensation intact' },
-              functional: { assessment: 'Difficulty with forward bending, normal gait pattern' }
-            }
-          },
-          daily: [],
-          progress: null,
-          discharge: null
+// --- Initialize with data file (app/data/cases.json) if empty; fallback to sample ---
+async function ensureCasesInitialized() {
+  const existing = loadCasesFromStorage();
+  if (Object.keys(existing).length > 0) return existing;
+
+  try {
+    // Optional local server (only when explicitly enabled)
+    if (USE_LOCAL_SERVER) {
+      try {
+        const serverRes = await fetch('http://localhost:5173/cases', { cache: 'no-store' });
+        if (serverRes.ok) {
+          const serverJson = await serverRes.json();
+          if (serverJson && typeof serverJson === 'object' && !Array.isArray(serverJson)) {
+            Object.keys(serverJson).forEach(id => {
+              if (serverJson[id] && serverJson[id].caseObj) {
+                serverJson[id].caseObj = migrateOldCaseData(serverJson[id].caseObj);
+                serverJson[id].caseObj = ensureDataIntegrity(serverJson[id].caseObj);
+              }
+            });
+            saveCasesToStorage(serverJson);
+            console.log('🟢 Initialized cases from server');
+            return serverJson;
+          }
         }
+      } catch {}
+    }
+
+    // Try to load canonical website cases
+    const res = await fetch('data/cases.json', { cache: 'no-store' });
+    if (res.ok) {
+      const json = await res.json();
+      if (json && typeof json === 'object' && !Array.isArray(json)) {
+        // Migrate/integrity-check each case
+        Object.keys(json).forEach(id => {
+          if (json[id] && json[id].caseObj) {
+            json[id].caseObj = migrateOldCaseData(json[id].caseObj);
+            json[id].caseObj = ensureDataIntegrity(json[id].caseObj);
+          }
+        });
+        saveCasesToStorage(json);
+        console.log('📥 Initialized cases from data/cases.json');
+        return json;
       }
-    };
-    
-    const initialCases = { [sampleCase.id]: sampleCase };
-    saveCasesToStorage(initialCases);
-    return initialCases;
+    }
+  } catch (e) {
+    console.warn('Unable to load data/cases.json, falling back to sample data.', e);
   }
-  return cases;
+
+  // Fallback sample if nothing else available
+  console.log('🎯 No cases found - initializing with sample data');
+  const sampleCase = {
+    id: 'demo_case_1',
+    title: 'Low Back Pain - Acute Episode',
+    latestVersion: 0,
+    caseObj: {
+      meta: {
+        title: 'Low Back Pain - Acute Episode',
+        setting: 'Outpatient',
+        regions: ['lumbar_spine'],
+        acuity: 'acute',
+        diagnosis: 'Musculoskeletal'
+      },
+      snapshot: {
+        age: '45',
+        sex: 'female',
+        teaser: 'A 45-year-old female presents with acute low back pain after lifting heavy boxes.'
+      },
+      history: {
+        chief_complaint: 'Low back pain for 3 days',
+        hpi: 'Patient reports sudden onset of sharp low back pain while lifting heavy boxes at work 3 days ago.',
+        pmh: ['No significant past medical history'],
+        meds: ['Ibuprofen 400mg as needed'],
+        red_flag_signals: []
+      },
+      findings: {
+        vitals: { bp: '120/80', hr: '72', rr: '16', temp: '98.6', o2sat: '98%', pain: '7/10' },
+        rom: {},
+        mmt: {},
+        special_tests: [],
+        gait: { device: 'none', distance_m: 50 },
+        outcome_options: []
+      },
+      encounters: {
+        eval: { 
+          notes_seed: 'Initial evaluation for acute low back pain'
+        },
+        daily: [],
+        progress: null,
+        discharge: null
+      }
+    }
+  };
+  const initialCases = { [sampleCase.id]: sampleCase };
+  saveCasesToStorage(initialCases);
+  return initialCases;
 }
 
 // --- Public API (matches original backend interface) ---
 
 export const listCases = async () => {
-  const cases = initializeSampleData();
+  const cases = await ensureCasesInitialized();
   return Object.values(cases);
 };
 
 export const getCase = async (id) => {
-  const cases = loadCasesFromStorage();
+  const cases = await ensureCasesInitialized();
   const caseData = cases[id];
   if (caseData && caseData.caseObj) {
     // Apply data migrations and integrity checks
@@ -158,6 +212,8 @@ export const createCase = async (caseData) => {
   const cases = loadCasesFromStorage();
   cases[newCase.id] = newCase;
   saveCasesToStorage(cases);
+  // Auto-publish to local server if available
+  scheduleAutoPublish();
   
   console.log('✅ Case created:', newCase.id);
   return newCase;
@@ -184,6 +240,8 @@ export const updateCase = async (id, caseData) => {
   cases[id].latestVersion = (cases[id].latestVersion || 0) + 1;
   
   saveCasesToStorage(cases);
+  // Auto-publish to local server if available
+  scheduleAutoPublish();
   
   console.log('✅ Case updated:', id);
   return cases[id];
@@ -194,12 +252,38 @@ export const deleteCase = async (id) => {
   if (cases[id]) {
     delete cases[id];
     saveCasesToStorage(cases);
+  // Auto-publish to local server if available
+  scheduleAutoPublish();
     console.log('✅ Case deleted:', id);
   }
   return { ok: true };
 };
 
 export const upsertCase = (c) => (c.id ? updateCase(c.id, c.caseObj) : createCase(c));
+
+// --- Export helpers for website publishing ---
+export const exportCasesMap = () => {
+  // Returns the full cases dictionary keyed by id for writing to app/data/cases.json
+  return loadCasesFromStorage();
+};
+
+// Optional: publish current cases to basic server (if running)
+export const publishToServer = async () => {
+  if (!USE_LOCAL_SERVER) return false;
+  try {
+    const map = loadCasesFromStorage();
+    const resp = await fetch('http://localhost:5173/cases', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(map)
+    });
+    if (!resp.ok) throw new Error('Server returned ' + resp.status);
+    return true;
+  } catch (e) {
+    console.warn('Publish to server failed:', e);
+    return false;
+  }
+};
 
 // --- Draft Management (unchanged - these were already localStorage-based) ---
 

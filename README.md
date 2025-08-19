@@ -1,4 +1,4 @@
-# PT EMR Simulator - Pure Frontend Application
+# PT EMR Simulator — Pure Frontend Application (Single-source in app/)
 
 A comprehensive Physical Therapy Electronic Medical Record simulator built as a **pure frontend application** with no backend dependencies.
 
@@ -12,7 +12,16 @@ A comprehensive Physical Therapy Electronic Medical Record simulator built as a 
 
 ## 🚀 Quick Start
 
-### Option 1: Simple Python Server (Recommended)
+### Option 1: Root launcher (serves app/)
+
+PowerShell (Windows):
+
+```powershell
+./start_servers_simple.ps1
+# Open http://localhost:3000
+```
+
+### Option 2: Simple Python server from app/
 
 ```bash
 cd app
@@ -20,13 +29,13 @@ python -m http.server 3000
 # Open http://localhost:3000
 ```
 
-### Option 2: VS Code Live Server
+### Option 3: VS Code Live Server
 
 1. Install Live Server extension in VS Code
 2. Right-click `app/index.html`
 3. Select "Open with Live Server"
 
-### Option 3: Use the PowerShell Script
+### Option 4: App-level PowerShell script
 
 ```powershell
 cd app
@@ -36,9 +45,10 @@ cd app
 ## 📁 Project Structure
 
 ```text
-app/
+app/  ← single source of truth for the site
 ├── index.html                       # Main application entry
 ├── start_servers_simple.ps1         # Simple startup script
+├── .nojekyll                        # Ensure GH Pages serves as static app
 ├── css/                             # Stylesheets & print styles
 ├── js/                              # Modular JavaScript application
 │   ├── core/                        # Core application logic
@@ -57,7 +67,7 @@ app/
 │   │   │   └── billing/             # ICD-10 & CPT code management
 │   │   └── index.js                 # Features barrel export
 │   ├── modules/                     # Shared utility modules
-│   │   ├── GoalLinker.js            # Goal tracking system
+│   │   ├── GoalLinker.js            # Deprecated stub (safe no-op)
 │   ├── features/soap/objective/EditableTable.js  # Standardized editable table used across app
 │   ├── services/                    # External service integrations
 │   │   └── document-export.js       # Word document generation
@@ -71,6 +81,10 @@ app/
 │       ├── instructor/              # Faculty-specific views
 │       └── case_editor.js           # Main case editing interface
 └── data/                            # Initial sample data (optional)
+
+Repository root
+├── start_servers_simple.ps1         # Delegates to app/start_servers_simple.ps1
+└── .github/workflows/static.yml     # GitHub Pages deployment (publishes app/)
 ```
 
 ## 🏗️ Architecture & Code Organization
@@ -139,3 +153,11 @@ This version eliminates the previous FastAPI backend complexity:
 - ✅ Faculty can create complete case content (answer keys)
 
 Start developing immediately with no environment setup! 🎉
+
+## 📦 Deployment (GitHub Pages)
+
+- Changes pushed to the main branch are automatically deployed via GitHub Actions.
+- The workflow uploads only the `app/` directory artifact to Pages.
+- A `.nojekyll` file in `app/` ensures assets are served without Jekyll processing.
+
+If your Pages URL hasn’t updated yet, check the Actions tab for the latest “Deploy static content to Pages” run.

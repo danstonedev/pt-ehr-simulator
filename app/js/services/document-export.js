@@ -468,12 +468,21 @@ export function exportToWord(caseData, draft) {
   elements.push(createSectionDivider());
   elements.push(createSectionHeader('PLAN'));
     const plan = (draft && draft.plan) || {};
-    // Plan of Care
+    // SMART Goals first
+    elements.push(createSectionHeader('SMART Goals & Outcomes', 2));
+    const goalRows = plan.goalsTable && typeof plan.goalsTable === 'object' ? Object.values(plan.goalsTable) : [];
+    if (goalRows && goalRows.length) {
+      const goalsData = goalRows.map((row, i) => [String(i + 1), (row.goalText || row.goal || '').toString()]);
+      elements.push(createFormattedTable(goalsData, ['#', 'Goal']));
+    } else {
+      elements.push(createBodyParagraph('No goals documented'));
+    }
+    // Plan of Care next
     elements.push(createSectionHeader('Plan of Care', 2));
     const pocLines = [];
     if (plan.treatmentPlan) pocLines.push(`Treatment Plan & Interventions: ${plan.treatmentPlan}`);
     if (plan.patientEducation) pocLines.push(`Patient Education: ${plan.patientEducation}`);
-  elements.push(createBodyParagraph(pocLines.join('\n') || '', { indentLeft: FORMAT.indent.level1 }));
+    elements.push(createBodyParagraph(pocLines.join('\n') || '', { indentLeft: FORMAT.indent.level1 }));
     // In-Clinic Treatment Plan (Frequency/Duration + Exercise table)
     elements.push(createSectionHeader('In-Clinic Treatment Plan', 2));
     const sched = [];
@@ -487,15 +496,6 @@ export function exportToWord(caseData, draft) {
     if (exerciseRows && exerciseRows.length) {
       const exerciseData = exerciseRows.map((row, i) => [String(i + 1), (row.exerciseText || row.exercise || '').toString()]);
       elements.push(createFormattedTable(exerciseData, ['#', 'In-Clinic Exercises / Interventions']));
-    }
-    // SMART Goals table (simple)
-    elements.push(createSectionHeader('SMART Goals & Outcomes', 2));
-    const goalRows = plan.goalsTable && typeof plan.goalsTable === 'object' ? Object.values(plan.goalsTable) : [];
-    if (goalRows && goalRows.length) {
-      const goalsData = goalRows.map((row, i) => [String(i + 1), (row.goalText || row.goal || '').toString()]);
-      elements.push(createFormattedTable(goalsData, ['#', 'Goal']));
-    } else {
-      elements.push(createBodyParagraph('No goals documented'));
     }
 
   // BILLING Section

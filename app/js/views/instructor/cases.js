@@ -1,5 +1,5 @@
 import { route, navigate } from '../../core/router.js';
-import { listCases, deleteCase, createCase } from '../../core/store.js';
+import * as store from '../../core/store.js';
 import { el } from '../../ui/utils.js';
 import { createIcon } from '../../ui/Icons.js';
 
@@ -350,7 +350,7 @@ async function handleCaseCreationAsync(title, setting, age, gender, acuity, dob)
       }
     };
     
-    const newCase = await createCase(caseData);
+  const newCase = await store.createCase(caseData);
     console.log('✅ Created case with ID:', newCase.id);
     
     // Close modal
@@ -394,8 +394,9 @@ route('#/instructor/cases', async (app) => {
   function renderSearchAndTable() {
     const container = el('div', {});
     
-    // Search bar
-    const searchContainer = el('div', { style: 'margin-bottom: 20px;' }, [
+    // Actions row (Search)
+    const actionsRow = el('div', { style: 'display:flex; gap:12px; align-items:center; margin-bottom: 20px;' }, [
+      // Search bar
       el('input', {
         type: 'text',
         placeholder: 'Search cases by title, setting, diagnosis, or acuity...',
@@ -410,7 +411,7 @@ route('#/instructor/cases', async (app) => {
 
     const tableContainer = el('div', { id: 'table-container' });
     
-    container.append(searchContainer, tableContainer);
+    container.append(actionsRow, tableContainer);
     
     function renderTable() {
       // Filter cases based on search
@@ -522,7 +523,7 @@ route('#/instructor/cases', async (app) => {
     app.append(loadingIndicator);
 
     try {
-      allCases = await listCases();
+  allCases = await store.listCases();
     } catch (error) {
       console.error('Failed to load cases:', error);
       app.innerHTML = ''; // Clear loading indicator
@@ -782,7 +783,7 @@ route('#/instructor/cases', async (app) => {
               onClick: async () => {
                 if (confirm(`Are you sure you want to delete "${c.title}"?`)) {
                   try {
-                    await deleteCase(c.id);
+                    await store.deleteCase(c.id);
                     await loadAndRender(); // Reload all data and re-render the view
                   } catch (error) {
                     console.error('Failed to delete case:', error);

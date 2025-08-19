@@ -63,9 +63,9 @@ export function createPlanSection(planData, onUpdate) {
     onUpdate(data);
   };
 
-  // Create subsections
-  section.append(TreatmentPlan.create(data, updateField));
+  // Create subsections (SMART Goals first, then Plan of Care)
   section.append(GoalSetting.create(data, updateField));
+  section.append(TreatmentPlan.create(data, updateField));
 
   return section;
 }

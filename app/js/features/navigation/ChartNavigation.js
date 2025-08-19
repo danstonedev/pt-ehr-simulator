@@ -929,7 +929,7 @@ export function createChartNavigation(config) {
     subjective: ['hpi', 'pain-assessment', 'functional-status', 'additional-history'],
   objective: ['general-observations', 'inspection', 'palpation', 'regional-assessment', 'neurological-screening', 'functional-movement', 'treatment-performed'],
     assessment: ['primary-impairments', 'icf-classification', 'pt-diagnosis', 'clinical-reasoning'],
-  plan: ['treatment-plan', 'in-clinic-treatment-plan', 'goal-setting'],
+  plan: ['goal-setting', 'treatment-plan', 'in-clinic-treatment-plan'],
   billing: ['diagnosis-codes', 'cpt-codes', 'orders-referrals']
   };
   const subsectionTitleMap = {
