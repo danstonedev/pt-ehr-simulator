@@ -7,7 +7,7 @@
     <meta name="ms-forms-url" content="https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAGOOEaDTU0VTjQwuUNYNFAzSU5MUDNVTENWNjJFT1hOUC4u">
   <title>PT Sim-ER (MVP v2)</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23007acc'/><text x='8' y='12' text-anchor='middle' fill='white' font-family='Arial' font-size='10' font-weight='bold'>E</text></svg>">
-  <link rel="stylesheet" href="css/styles.css?v=20250820-002" />
+  <link rel="stylesheet" href="css/styles.css?v=20250820-003" />
   <link rel="stylesheet" href="css/sidebar.css?v=20250818-002" />
   <link rel="stylesheet" href="css/print.css" media="print" />
   <!-- Webfont: Oswald (Trade Gothic alternative) for brand label -->
@@ -47,7 +47,8 @@
 
   <!-- Educational ribbon at page bottom -->
   <div class="edu-ribbon no-print" role="note" aria-label="Educational Use Only">
-    <span>Educational Use Only</span>
+    <span class="edu-left">Educational Use Only</span>
+    <span class="edu-right" id="lastUpdateText" aria-live="polite"></span>
   </div>
 
   <!-- Removed fixed footer disclaimer to prevent blocking content -->
@@ -95,6 +96,62 @@
         toggle.classList.add('is-dark');
         toggle.classList.remove('is-light');
       }
+
+      // Last Update (GitHub) ribbon text
+      (function setupLastUpdate() {
+        const el = document.getElementById('lastUpdateText');
+        if (!el) return;
+        // Show a quick placeholder
+        el.textContent = '';
+        const CACHE_KEY = 'last_update_cache_v1';
+        const CACHE_TTL_MS = 1000 * 60 * 30; // 30 minutes
+        const owner = 'danstonedev';
+        const repo = 'pt-ehr-simulator';
+        const branch = 'main';
+
+        function formatDateTime(d) {
+          try {
+            const dt = typeof d === 'string' ? new Date(d) : d;
+            return dt.toLocaleString(undefined, {
+              year: 'numeric', month: 'short', day: '2-digit',
+              hour: '2-digit', minute: '2-digit'
+            });
+          } catch {
+            return '';
+          }
+        }
+
+        function apply(dateStr) {
+          if (!dateStr) return;
+          el.textContent = `Last update: ${formatDateTime(dateStr)}`;
+        }
+
+        try {
+          const cachedRaw = localStorage.getItem(CACHE_KEY);
+          if (cachedRaw) {
+            const cached = JSON.parse(cachedRaw);
+            if (cached.time && (Date.now() - cached.time) < CACHE_TTL_MS && cached.date) {
+              apply(cached.date);
+            }
+          }
+        } catch {}
+
+        // Fetch from GitHub (unauthenticated; low rate limits but okay for a small page)
+        fetch(`https://api.github.com/repos/${owner}/${repo}/commits/${branch}`)
+          .then(r => r.ok ? r.json() : Promise.reject(r.status))
+          .then(data => {
+            const dateStr = data && data.commit && data.commit.committer && data.commit.committer.date;
+            if (dateStr) {
+              apply(dateStr);
+              try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ time: Date.now(), date: dateStr }));
+              } catch {}
+            }
+          })
+          .catch(() => {
+            // If offline or rate-limited, leave cached value (if any). Otherwise noop.
+          });
+      })();
 
       // Feedback modal wiring
       const feedbackBtn = document.getElementById('feedbackBtn');

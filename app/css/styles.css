@@ -265,6 +265,7 @@ p {
   font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  padding: 0 12px; /* side padding for layout */
   padding-bottom: env(safe-area-inset-bottom);
 }
 /* Gradient top accent line: darker orange → flame orange */
@@ -275,6 +276,15 @@ p {
   background: linear-gradient(90deg, var(--und-orange-dark) 0%, var(--und-orange) 100%);
 }
 .edu-ribbon span { opacity: 0.9; }
+/* Left/Right inline layout */
+.edu-ribbon { gap: 8px; }
+.edu-ribbon .edu-left { margin-right: auto; }
+.edu-ribbon .edu-right { margin-left: auto; white-space: nowrap; }
+/* Small flame orange text on right */
+.edu-ribbon .edu-right { color: var(--und-orange); font-weight: 600; letter-spacing: 0.04em; text-transform: none; font-size: 11px; }
+@media (max-width: 480px) {
+  .edu-ribbon .edu-right { font-size: 10px; }
+}
 
 /* Avoid content being hidden behind fixed bottom ribbon */
 /* Add a bit of extra breathing room below content so the fixed ribbon never overlaps */
