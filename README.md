@@ -131,7 +131,7 @@ This application runs entirely in the browser:
 - ✅ No server setup complexity
 - ✅ No database configuration
 - ✅ No Python/Node.js environment issues
-- ✅ Works on any static hosting (GitHub Pages, Netlify, etc.)
+- ✅ Works on static hosting (e.g., GitHub Pages)
 - ✅ Perfect for demos and development
 
 ## 💡 Architecture Benefits
@@ -144,7 +144,7 @@ This application runs entirely in the browser:
 
 ## 🔄 Recent Migration
 
-This version eliminates the previous FastAPI backend complexity:
+This version eliminates the previous FastAPI/Azure Functions backend complexity:
 
 - ✅ All CRUD operations now use localStorage
 - ✅ Case management handled client-side
@@ -153,6 +153,13 @@ This version eliminates the previous FastAPI backend complexity:
 - ✅ Faculty can create complete case content (answer keys)
 
 Start developing immediately with no environment setup! 🎉
+
+Optional AI endpoint
+- You can configure an external AI HTTP endpoint (any provider) by setting one of:
+	- window.AI_GENERATE_URL on the page, or
+	- <meta name="ai-generate-url" content="https://your-endpoint" />, or
+	- localStorage key aiGenerateUrl
+- If not set, the app falls back to the built-in deterministic generator. No serverless provider is required.
 
 ## 📦 Deployment (GitHub Pages)
 

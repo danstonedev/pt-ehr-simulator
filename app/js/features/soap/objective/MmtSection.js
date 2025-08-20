@@ -30,16 +30,17 @@ export function createMmtSection(regionKey, region, mmtData, onChange) {
   ];
 
   const table = createBilateralTable({
-  title: 'Manual Muscle Testing',
+    title: 'Manual Muscle Testing',
     items: region.mmt,
     data: mmtData,
     onChange,
     valueType: 'select',
     options: mmtGrades,
-    normalValues: true,
-  notesColumn: true,
-  nameColumnLabel: 'Muscle / Movement',
-  showTitle: true
+    normalValues: false, // remove Normal column entirely
+    notesColumn: true,
+    nameColumnLabel: 'Manual Muscle Testing', // use green title as first column header
+    showTitle: false, // hide green band title
+    notesWidth: '35%'
   });
 
   container.appendChild(table.element);

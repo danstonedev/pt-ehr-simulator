@@ -1,0 +1,17 @@
+{
+  "name": "pt-emr-ai-azure-function",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minimal Azure Functions HTTP endpoint to generate PT EMR cases from anchors.",
+  "license": "MIT",
+  "scripts": {
+    "start": "func start",
+    "build": "echo No build step needed",
+    "test": "node -e \"console.log('No tests')\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

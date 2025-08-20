@@ -253,7 +253,9 @@ export function createBilateralTable(config) {
     normalValues = true,
   notesColumn = true,
   nameColumnLabel = 'Name',
-  showTitle = true
+  showTitle = true,
+  embedNormalInName = false,
+  notesWidth
   } = config;
 
   // Group items by their base name (without side designation)
@@ -279,48 +281,55 @@ export function createBilateralTable(config) {
   });
 
   const columns = [
-    { field: 'name', label: nameColumnLabel, width: '25%' },
-    { field: 'left', label: 'Left', width: '20%', type: valueType, options },
-    { field: 'right', label: 'Right', width: '20%', type: valueType, options }
+    { field: 'name', label: nameColumnLabel, width: '35%' },
+    { field: 'left', label: 'Left', width: '15%', type: valueType, options },
+    { field: 'right', label: 'Right', width: '15%', type: valueType, options }
   ];
 
-  if (normalValues) {
+  if (normalValues && !embedNormalInName) {
     columns.push({ field: 'normal', label: 'Normal', width: '15%' });
   }
 
   if (notesColumn) {
-    columns.push({ field: 'notes', label: 'Notes', width: '20%' });
+    const computedNotesWidth = notesWidth || ((normalValues && embedNormalInName) ? '35%' : '20%');
+    columns.push({ field: 'notes', label: 'Notes', width: computedNotesWidth });
   }
 
   // Convert grouped data to table format
   const tableData = {};
+  const groupsByRowId = {};
   Object.keys(groups).forEach(groupName => {
     const group = groups[groupName];
     const rowId = groupName.toLowerCase().replace(/\s+/g, '-');
-    
-    tableData[rowId] = {
-      name: groupName,
+    groupsByRowId[rowId] = group;
+    const displayName = (normalValues && embedNormalInName && group.normal)
+      ? `${groupName} (${group.normal})`
+      : groupName;
+
+    const rowBase = {
+      name: displayName,
       left: data[group.left] || '',
-      right: data[group.right] || '',
-      normal: group.normal || '',
-      notes: data[`${rowId}-notes`] || ''
+      right: data[group.right] || ''
     };
+    if (!embedNormalInName && normalValues) rowBase.normal = group.normal || '';
+    if (notesColumn) rowBase.notes = data[`${rowId}-notes`] || '';
+    tableData[rowId] = rowBase;
   });
 
   return createEditableTable({
     title: showTitle ? title : undefined,
     columns,
     data: tableData,
-    onChange: (newData) => {
+  onChange: (newData) => {
       // Convert back to original format and call onChange
       const updatedData = { ...data };
       Object.keys(newData).forEach(rowId => {
         const row = newData[rowId];
-        const group = groups[row.name];
+    const group = groupsByRowId[rowId] || groups[row.name];
         
         if (group.left !== null) updatedData[group.left] = row.left;
         if (group.right !== null) updatedData[group.right] = row.right;
-        if (row.notes) updatedData[`${rowId}-notes`] = row.notes;
+    if (notesColumn) updatedData[`${rowId}-notes`] = row.notes || '';
       });
       onChange(updatedData);
     },

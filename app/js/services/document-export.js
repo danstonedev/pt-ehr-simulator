@@ -273,15 +273,23 @@ export function exportToWord(caseData, draft) {
       return entries.length > 0 ? entries.join(', ') : 'No MMT measurements recorded';
     };
 
-    // Helper function to format special tests
+    // Helper function to format special tests (Left/Right)
     const formatSpecialTests = (testsData) => {
       if (!testsData || typeof testsData !== 'object') return 'No special tests performed';
-      
       const entries = [];
-      Object.entries(testsData).forEach(([test, result]) => {
-        if (result) entries.push(`${test}: ${result}`);
+      Object.entries(testsData).forEach(([key, val]) => {
+        if (!val) return;
+        if (typeof val === 'object') {
+          const name = val.name || key;
+          const l = val.left ? `L: ${val.left}` : '';
+          const r = val.right ? `R: ${val.right}` : '';
+          const n = val.notes ? `Notes: ${val.notes}` : '';
+          const parts = [l, r, n].filter(Boolean).join(' | ');
+          if (parts) entries.push(`${name} — ${parts}`);
+        } else if (val) {
+          entries.push(`${key}: ${val}`);
+        }
       });
-      
       return entries.length > 0 ? entries.join(', ') : 'No special tests recorded';
     };
 
@@ -385,7 +393,7 @@ export function exportToWord(caseData, draft) {
     const ra = obj.regionalAssessments || {};
     const romObj = ra.rom || ra.romData || {};
     const mmtObj = ra.mmt || ra.mmtData || {};
-    const testsObj = ra.specialTests || ra.testData || {};
+  const testsObj = ra.specialTests || ra.testData || {};
     const describeTableLike = (dataObj, labelL = 'Left', labelR = 'Right') => {
       if (!dataObj || typeof dataObj !== 'object') return [];
       const lines = [];
@@ -405,14 +413,17 @@ export function exportToWord(caseData, draft) {
     const mmtLines = describeTableLike(mmtObj);
     const testLines = [];
     if (testsObj && typeof testsObj === 'object') {
-      Object.entries(testsObj).forEach(([testName, value]) => {
+      Object.entries(testsObj).forEach(([testId, value]) => {
         if (!value) return;
         if (typeof value === 'object') {
-          const res = value.result || value.findings || '';
-          const notes = value.notes ? ` (${value.notes})` : '';
-          if (res) testLines.push(`${testName}: ${res}${notes}`);
+          const name = value.name || testId;
+          const l = value.left ? `L: ${value.left}` : '';
+          const r = value.right ? `R: ${value.right}` : '';
+          const n = value.notes ? ` (${value.notes})` : '';
+          const parts = [l, r].filter(Boolean).join(' | ');
+          if (parts || n) testLines.push(`${name}: ${parts}${n}`);
         } else {
-          testLines.push(`${testName}: ${value}`);
+          testLines.push(`${testId}: ${value}`);
         }
       });
     }

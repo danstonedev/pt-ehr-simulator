@@ -24,10 +24,11 @@ export function createRomSection(regionKey, region, romData, onChange) {
     data: romData,
     onChange,
     valueType: 'text',
-    normalValues: true,
+  normalValues: true,
+  embedNormalInName: true,
   notesColumn: true,
-  nameColumnLabel: 'Movement',
-  showTitle: true
+  nameColumnLabel: 'Active Range of Motion (AROM)',
+  showTitle: false
   });
 
   container.appendChild(table.element);

@@ -23,13 +23,13 @@ export function createObjectiveSection(objectiveData, onUpdate) {
     neuro: { screening: '' },
     functional: { assessment: '' },
     regionalAssessments: {
-      expandedRegions: {},
-      romData: {},
-      mmtData: {},
-      testData: {}
+      selectedRegions: [],
+      rom: {},
+      mmt: {},
+      specialTests: {},
+      prom: {},
+      promExcluded: []
     },
-    rom: {},
-    mmt: {},
     treatmentPerformed: {
       patientEducation: '',
       modalities: '',
@@ -49,10 +49,12 @@ export function createObjectiveSection(objectiveData, onUpdate) {
   }
   if (!data.regionalAssessments) {
     data.regionalAssessments = {
-      expandedRegions: {},
-      romData: {},
-      mmtData: {},
-      testData: {}
+      selectedRegions: [],
+      rom: {},
+      mmt: {},
+      specialTests: {},
+      prom: {},
+      promExcluded: []
     };
   }
 
@@ -183,8 +185,10 @@ export function createObjectiveSection(objectiveData, onUpdate) {
     const cptAnchor = el('div', { id: 'objective-cpt-codes', class: 'section-anchor' }, [
       el('h4', { class: 'subsection-title' }, 'CPT Codes (for this visit)')
     ]);
+    // Indent only the CPT table content by inserting it inside the subsection anchor.
+    // The banner remains full-width due to CSS rule that pulls .subsection-title left.
+    cptAnchor.append(widget.element);
     section.append(cptAnchor);
-    section.append(widget.element);
   } catch (e) {
     // Fail quietly if not available in this context
     console.warn('CPT widget in Objective failed to mount:', e);

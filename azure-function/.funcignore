@@ -1,0 +1,7 @@
+*.js.map
+*.ts
+*.ts.map
+node_modules
+npm-debug.log
+local.settings.json
+**/*.swp

@@ -17,6 +17,25 @@
   <!-- Add docx generation library -->
   <script src="https://unpkg.com/docx@6.0.3/build/index.js"></script>
   <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script>
+    // Debug mode and console silencer
+    // Use ?debug=1 to enable logs (persists in localStorage); ?debug=0 to disable again
+    (function () {
+      try {
+        const url = new URL(window.location.href);
+        const debugParam = url.searchParams.get('debug');
+        if (debugParam === '1') localStorage.setItem('debug', '1');
+        if (debugParam === '0') localStorage.removeItem('debug');
+      } catch {}
+      const isDebug = localStorage.getItem('debug') === '1';
+      window.DEBUG = isDebug;
+      if (!isDebug) {
+        const noop = () => {};
+        try { console.log = noop; } catch {}
+        try { console.debug = noop; } catch {}
+      }
+    })();
+  </script>
 </head>
 <body>
   <!-- Skip to main content for keyboard and screen reader users -->
@@ -160,7 +179,7 @@
       if (feedbackBtn) {
         feedbackBtn.addEventListener('click', () => {
           // Try to resolve an MS Forms URL from multiple sources for flexibility
-          const metaEl = document.querySelector('meta[name="feedback-form-url"]');
+          const metaEl = document.querySelector('meta[name="feedback-form-url"], meta[name="ms-forms-url"]');
           const configuredUrl = (metaEl && metaEl.content) || window.FEEDBACK_FORM_URL || localStorage.getItem('feedbackFormUrl') || '';
 
           const overlay = document.createElement('div');

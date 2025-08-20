@@ -1,5 +1,6 @@
 import { route, navigate } from '../../core/router.js';
 import * as store from '../../core/store.js';
+import { generateCase } from '../../services/index.js';
 import { el } from '../../ui/utils.js';
 import { createIcon } from '../../ui/Icons.js';
 
@@ -271,6 +272,151 @@ function showCaseCreationModal() {
   }, 100);
 }
 
+// Prompt-driven Case Generation Modal
+function showPromptGenerationModal() {
+  const modal = el('div', {
+    style: `position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;`,
+    onclick: (e) => { if (e.target === modal) document.body.removeChild(modal); }
+  }, [
+    el('div', {
+      style: `background:#fff; padding:28px; border-radius:12px; max-width:720px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.15); color:#111;`,
+      onclick: (e) => e.stopPropagation()
+    }, [
+      el('h2', { style:'margin:0 0 12px 0;' }, 'Generate Case from Prompt'),
+      el('p', { class:'small', style:'margin:0 0 14px 0; color:#4b5563;' }, 'Provide a short scenario and anchors; we\'ll seed a realistic draft you can edit.'),
+      // Title (optional)
+      el('div', { style:'margin-bottom:12px;' }, [
+        el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Case Title (optional)'),
+        el('input', { id:'gen-title', type:'text', placeholder:'e.g., Rotator Cuff Tendinopathy (R)', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' })
+      ]),
+      // Scenario prompt
+      el('div', { style:'margin-bottom:12px;' }, [
+        el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Scenario Prompt (1–3 sentences) *'),
+        el('textarea', { id:'gen-prompt', rows:3, placeholder:'Key history/context to ground the case...', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; resize:vertical;' })
+      ]),
+      // Structured anchors row 1
+      el('div', { style:'display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;' }, [
+        // Region
+        (() => {
+          const regions = ['shoulder','knee','low back','neck','ankle','hip','elbow','wrist'];
+          const sel = el('select', { id:'gen-region', required:true, style:'flex:1; min-width:180px; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' });
+          sel.append(el('option', { value:'' }, 'Select region...'));
+          regions.forEach(r => sel.append(el('option', { value:r }, r)));
+          return el('div', { style:'flex:1; min-width:200px;' }, [
+            el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Body Region *'),
+            sel
+          ]);
+        })(),
+        // Condition
+        el('div', { style:'flex:1; min-width:200px;' }, [
+          el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Suspected Condition *'),
+          el('input', { id:'gen-condition', type:'text', placeholder:'e.g., Rotator cuff tendinopathy', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' })
+        ])
+      ]),
+      // Structured anchors row 2
+      el('div', { style:'display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;' }, [
+        // Setting
+        (() => { const sel = el('select', { id:'gen-setting', style:'flex:1; min-width:180px; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' });
+          sel.append(
+            el('option', { value:'' }, 'Select setting...'),
+            el('option', { value:'Outpatient' }, 'Outpatient'),
+            el('option', { value:'Inpatient' }, 'Inpatient'),
+            el('option', { value:'Home Health' }, 'Home Health'),
+            el('option', { value:'SNF' }, 'SNF'),
+            el('option', { value:'Acute Rehab' }, 'Acute Rehab')
+          );
+          return el('div', { style:'flex:1; min-width:200px;' }, [
+            el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Clinical Setting *'),
+            sel
+          ]);
+        })(),
+        // Acuity
+        (() => { const sel = el('select', { id:'gen-acuity', style:'flex:1; min-width:180px; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' });
+          sel.append(
+            el('option', { value:'' }, 'Select acuity...'),
+            el('option', { value:'acute' }, 'Acute'),
+            el('option', { value:'subacute' }, 'Subacute'),
+            el('option', { value:'chronic' }, 'Chronic')
+          );
+          return el('div', { style:'flex:1; min-width:200px;' }, [
+            el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Acuity *'),
+            sel
+          ]);
+        })()
+      ]),
+      // Structured anchors row 3
+      el('div', { style:'display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;' }, [
+        el('div', { style:'flex:1; min-width:160px;' }, [
+          el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Age (yrs)'),
+          el('input', { id:'gen-age', type:'number', min:1, max:120, placeholder:'45', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' })
+        ]),
+        el('div', { style:'flex:1; min-width:180px;' }, [
+          el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Sex'),
+          (() => { const sel = el('select', { id:'gen-sex', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' });
+            sel.append(el('option', { value:'' }, 'Select...'), el('option', { value:'female' }, 'Female'), el('option', { value:'male' }, 'Male'), el('option', { value:'unspecified' }, 'Unspecified'));
+            return sel; })()
+        ]),
+        el('div', { style:'flex:1; min-width:200px;' }, [
+          el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Pain (0–10)'),
+          el('input', { id:'gen-pain', type:'number', min:0, max:10, step:'1', placeholder:'5', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' })
+        ])
+      ]),
+      // Functional goal
+      el('div', { style:'margin-bottom:12px;' }, [
+        el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Functional Goal (optional)'),
+        el('input', { id:'gen-goal', type:'text', placeholder:'e.g., reach overhead to place dishes', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' })
+      ]),
+      // Buttons
+      el('div', { style:'display:flex; gap:10px; justify-content:flex-end; margin-top:6px;' }, [
+        el('button', { class:'btn neutral', onclick:() => document.body.removeChild(modal) }, 'Cancel'),
+        el('button', { class:'btn primary', onclick:() => handlePromptGeneration(modal) }, 'Generate Case')
+      ])
+    ])
+  ]);
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('gen-prompt')?.focus(), 0);
+}
+
+function handlePromptGeneration(modal) {
+  const v = (id) => (document.getElementById(id)?.value || '').trim();
+  const prompt = v('gen-prompt');
+  const region = v('gen-region');
+  const condition = v('gen-condition');
+  const setting = v('gen-setting');
+  const acuity = v('gen-acuity');
+  const age = parseInt(v('gen-age'), 10) || undefined;
+  const sex = v('gen-sex') || 'unspecified';
+  const pain = Math.max(0, Math.min(10, parseInt(v('gen-pain'), 10) || 0));
+  const goal = v('gen-goal');
+  let title = v('gen-title');
+
+  if (!prompt || !region || !condition || !setting || !acuity) {
+    alert('Please provide: Prompt, Region, Condition, Setting, and Acuity.');
+    return;
+  }
+  if (!title) title = `${capitalize(region)} ${capitalizeFirst(condition)} (${capitalize(acuity)})`;
+
+  const anchors = { title, prompt, region, condition, setting, acuity, age, sex, pain, goal };
+  const generated = generateCase(anchors);
+  createCaseFromGenerated(generated, modal);
+}
+
+function capitalize(s){ const t=(s||'').toString().trim(); return t ? t.charAt(0).toUpperCase()+t.slice(1) : t; }
+function capitalizeFirst(s){ const t=(s||'').trim(); return t ? t.charAt(0).toUpperCase()+t.slice(1) : t; }
+
+function createCaseFromGenerated(caseData, modal){
+  (async () => {
+    try {
+      const newCase = await store.createCase(caseData);
+      if (modal) document.body.removeChild(modal);
+      navigate(`#/instructor/editor?case=${newCase.id}`);
+    } catch (e) {
+      console.error('Failed to create generated case:', e);
+      alert('Could not create the case. See console for details.');
+    }
+  })();
+}
+
 function handleCaseCreation(e) {
   e.preventDefault();
   
@@ -536,17 +682,31 @@ route('#/instructor/cases', async (app) => {
       el('div', { class: 'panel' }, [
         el('div', { class: 'flex-between', style: 'margin-bottom: 20px;' }, [
           el('h2', {}, 'Faculty Dashboard'),
-          el('button', { 
-            class: 'btn primary',
-            style: 'display: flex; align-items: center; gap: 8px;',
-            onclick: (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              showCaseCreationModal();
-            }
-          }, [
-            el('span', { html: createIcon('plus') }),
-            'Create New Case'
+          el('div', { style: 'display:flex; gap:10px;' }, [
+            el('button', { 
+              class: 'btn primary',
+              style: 'display: flex; align-items: center; gap: 8px;',
+              onclick: (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showCaseCreationModal();
+              }
+            }, [
+              el('span', { html: createIcon('plus') }),
+              'Create New Case'
+            ]),
+            el('button', { 
+              class: 'btn secondary',
+              style: 'display: flex; align-items: center; gap: 8px;',
+              onclick: (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                showPromptGenerationModal();
+              }
+            }, [
+              el('span', { html: createIcon('edit') }),
+              'Generate from Prompt'
+            ])
           ])
         ]),
         renderSearchAndTable()

@@ -3,7 +3,3 @@
 // It intentionally defines no globals and performs no runtime actions.
 
 export const GoalLinker = Object.freeze({});
-
-if (typeof console !== 'undefined' && console.warn) {
-  console.warn('[DEPRECATED] GoalLinker is no longer used and will be removed.');
-}

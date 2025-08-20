@@ -164,24 +164,170 @@ function populateDraftFromCaseData(draft, caseData) {
   // This function converts case data structure to draft structure
   // Faculty members edit the "answer key" by populating the draft with case data
   
+  // 1) Subjective (history + eval subjective)
   if (caseData.history) {
-    draft.subjective.chiefComplaint = caseData.history.chief_complaint || '';
-    draft.subjective.historyOfPresentIllness = caseData.history.hpi || '';
-    // Map other case history fields to draft subjective fields
+    draft.subjective.chiefComplaint = caseData.history.chief_complaint || draft.subjective.chiefComplaint || '';
+    draft.subjective.historyOfPresentIllness = caseData.history.hpi || draft.subjective.historyOfPresentIllness || '';
+    // Common extras if present
+    if (Array.isArray(caseData.history.pmh)) draft.subjective.pastMedicalHistory = caseData.history.pmh.join(', ');
+    if (Array.isArray(caseData.history.meds)) draft.subjective.medicationsCurrent = caseData.history.meds.join(', ');
   }
-  
+  const evalSubj = caseData?.encounters?.eval?.subjective || {};
+  if (evalSubj) {
+    if (evalSubj.chiefComplaint) draft.subjective.chiefComplaint = evalSubj.chiefComplaint;
+    if (evalSubj.historyOfPresentIllness) draft.subjective.historyOfPresentIllness = evalSubj.historyOfPresentIllness;
+    if (evalSubj.painScale !== undefined) draft.subjective.painScale = String(evalSubj.painScale);
+    if (evalSubj.patientGoals) draft.subjective.patientGoals = evalSubj.patientGoals;
+  }
+
+  // 2) Objective (findings + eval objective)
   if (caseData.findings) {
-    // Map case findings to draft objective
-    if (caseData.findings.vitals) {
-      // Convert vitals data to objective format
-    }
-    if (caseData.findings.rom) {
-      draft.objective.rom = caseData.findings.rom;
-    }
-    if (caseData.findings.mmt) {
-      draft.objective.mmt = caseData.findings.mmt;
+    if (caseData.findings.rom) draft.objective.rom = caseData.findings.rom;
+    if (caseData.findings.mmt) draft.objective.mmt = caseData.findings.mmt;
+    if (caseData.findings.special_tests) {
+      // Ensure regional assessments container exists using the newer shape expected by the Objective UI
+      draft.objective.regionalAssessments = draft.objective.regionalAssessments || {
+        selectedRegions: [],
+        rom: {},
+        prom: {},
+        promExcluded: [],
+        mmt: {},
+        specialTests: {}
+      };
+      // Best-effort preselection of regions if present on the case (improves initial visibility)
+      const regions = (caseData.meta && Array.isArray(caseData.meta.regions)) ? caseData.meta.regions : [];
+      if (regions.length) {
+        // Merge with any existing selection, preserving order and uniqueness
+        const existing = new Set(draft.objective.regionalAssessments.selectedRegions || []);
+        regions.forEach(r => existing.add(r));
+        draft.objective.regionalAssessments.selectedRegions = Array.from(existing);
+      }
+      // Note: special_tests from findings are free-form; the UI derives test rows from the selected regions.
+      // We’ll leave specialTests values blank initially to avoid mismatches with dynamically generated row IDs.
     }
   }
+  const evalObj = caseData?.encounters?.eval?.objective || {};
+  if (evalObj) {
+    // Handle new regionalAssessments structure
+    if (evalObj.regionalAssessments) {
+      draft.objective.regionalAssessments = {
+        ...draft.objective.regionalAssessments,
+        ...evalObj.regionalAssessments
+      };
+    }
+    // Legacy support for old rom/mmt structure (if not using regionalAssessments)
+    if (evalObj.rom && !evalObj.regionalAssessments?.rom) {
+      draft.objective.regionalAssessments.rom = evalObj.rom;
+    }
+    if (evalObj.mmt && !evalObj.regionalAssessments?.mmt) {
+      draft.objective.regionalAssessments.mmt = evalObj.mmt;
+    }
+  }
+
+  // 3) Assessment
+  const evalAssess = caseData?.encounters?.eval?.assessment || {};
+  if (evalAssess) {
+    draft.assessment = {
+      ...draft.assessment,
+      primaryImpairments: evalAssess.primaryImpairments || draft.assessment.primaryImpairments || '',
+      ptDiagnosis: evalAssess.ptDiagnosis || draft.assessment.ptDiagnosis || '',
+      prognosticFactors: evalAssess.prognosticFactors || draft.assessment.prognosticFactors || '',
+      clinicalReasoning: evalAssess.clinicalReasoning || draft.assessment.clinicalReasoning || ''
+    };
+  }
+
+  // 4) Plan
+  const evalPlan = caseData?.encounters?.eval?.plan || {};
+  if (evalPlan) {
+    // Map common human-readable values to select enum values used by the UI
+    const normalizeFrequency = (v = '') => {
+      const s = String(v).toLowerCase();
+      if (!s) return '';
+      if (/(^|\b)1x(\b|\/|\s)/.test(s) || s.includes('1x per week')) return '1x-week';
+      if (/(^|\b)2x(\b|\/|\s)/.test(s) || s.includes('2x per week')) return '2x-week';
+      if (/(^|\b)3x(\b|\/|\s)/.test(s) || s.includes('3x per week')) return '3x-week';
+      if (/(^|\b)4x(\b|\/|\s)/.test(s) || s.includes('4x per week')) return '4x-week';
+      if (/(^|\b)5x(\b|\/|\s)/.test(s) || s.includes('5x per week') || s.includes('daily')) return '5x-week';
+      if (s.includes('2x per day') || s.includes('twice a day')) return '2x-day';
+      if (s.includes('prn')) return 'prn';
+      return s; // fall back to raw
+    };
+    const normalizeDuration = (v = '') => {
+      const s = String(v).toLowerCase();
+      if (!s) return '';
+      if (s.includes('2') && s.includes('week')) return '2-weeks';
+      if (s.includes('4') && s.includes('week')) return '4-weeks';
+      if (s.includes('6') && s.includes('week')) return '6-weeks';
+      if (s.includes('8') && s.includes('week')) return '8-weeks';
+      if (s.includes('12') && s.includes('week')) return '12-weeks';
+      if (s.includes('16') && s.includes('week')) return '16-weeks';
+      if (s.includes('6') && s.includes('month')) return '6-months';
+      if (s.includes('ongoing')) return 'ongoing';
+      return s;
+    };
+
+    draft.plan = {
+      ...draft.plan,
+      frequency: normalizeFrequency(evalPlan.frequency || draft.plan.frequency || ''),
+      duration: normalizeDuration(evalPlan.duration || draft.plan.duration || ''),
+      shortTermGoals: evalPlan.shortTermGoals || draft.plan.shortTermGoals || '',
+      longTermGoals: evalPlan.longTermGoals || draft.plan.longTermGoals || ''
+    };
+    // Provide a readable treatmentPlan string for the Plan UI
+    if (Array.isArray(evalPlan.interventions) && evalPlan.interventions.length) {
+      draft.plan.treatmentPlan = `Interventions: ${evalPlan.interventions.join(', ')}`;
+    }
+    // Seed simple goals table from STG/LTG if present and goalsTable empty
+    try {
+      const stg = (evalPlan.shortTermGoals || '').toString().trim();
+      const ltg = (evalPlan.longTermGoals || '').toString().trim();
+      const hasGoalsTable = draft.plan.goalsTable && Object.keys(draft.plan.goalsTable).length > 0;
+      if (!hasGoalsTable && (stg || ltg)) {
+        const tbl = {};
+        const add = (text) => {
+          const id = Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+          tbl[id] = { goalText: text };
+        };
+        if (stg) add(stg);
+        if (ltg) add(ltg);
+        draft.plan.goalsTable = tbl;
+      }
+    } catch {}
+  }
+
+  // 5) Billing
+  const evalBilling = caseData?.encounters?.eval?.billing || {};
+  if (evalBilling) {
+    draft.billing = {
+      ...draft.billing,
+      diagnosisCodes: Array.isArray(evalBilling.diagnosisCodes) ? evalBilling.diagnosisCodes : draft.billing.diagnosisCodes,
+      billingCodes: Array.isArray(evalBilling.billingCodes) ? evalBilling.billingCodes : draft.billing.billingCodes
+    };
+  }
+
+  // 6) Assessment addendum: ensure prognosis select is populated when available
+  try {
+    const evalAssess = caseData?.encounters?.eval?.assessment || {};
+    const prognosisRaw = evalAssess.prognosis || evalAssess.prognosticFactors || '';
+    if (prognosisRaw) {
+      const p = String(prognosisRaw).toLowerCase();
+      const map = {
+        'excellent': 'excellent',
+        'good': 'good',
+        'fair': 'fair',
+        'poor': 'poor',
+        'guarded': 'guarded'
+      };
+      const key = Object.keys(map).find(k => p.includes(k));
+      if (key) {
+        draft.assessment = { ...(draft.assessment || {}), prognosis: map[key], prognosticFactors: draft.assessment.prognosticFactors || '' };
+        // If we used prognosticFactors to carry prognosis earlier, keep it only if distinct
+        if (evalAssess.prognosticFactors && evalAssess.prognosticFactors.toLowerCase() === key) {
+          draft.assessment.prognosticFactors = '';
+        }
+      }
+    }
+  } catch {}
   
   // For now, return the original draft - this can be expanded as needed
   return draft;

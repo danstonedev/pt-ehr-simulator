@@ -383,6 +383,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
   if (!allAssessmentData.mmt) allAssessmentData.mmt = {};
   if (!allAssessmentData.specialTests) allAssessmentData.specialTests = {};
   if (!allAssessmentData.promExcluded) allAssessmentData.promExcluded = [];
+  
   // One-time data migration: if older data set endfeel to 'capsular' by default, clear it so the dropdown starts blank
   if (!allAssessmentData._promEndfeelMigrated) {
     try {
@@ -409,6 +410,27 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
   
   // Restore selected regions from saved data
   selectedRegions = new Set(allAssessmentData.selectedRegions || []);
+  
+  // Filter out any invalid region keys that don't exist in regionalAssessments
+  const validRegions = Array.from(selectedRegions).filter(regionKey => {
+    const isValid = regionalAssessments.hasOwnProperty(regionKey);
+    if (!isValid && regionKey) {
+      // Only warn in development when env is available; silently filter in browsers
+      const isDev = (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production');
+      if (isDev) {
+        console.warn(`Regional assessment: Invalid region "${regionKey}" filtered out.`);
+      }
+    }
+    return isValid;
+  });
+  
+  selectedRegions = new Set(validRegions);
+  
+  // Update the data if we filtered out invalid regions
+  if (validRegions.length !== allAssessmentData.selectedRegions.length) {
+    allAssessmentData.selectedRegions = validRegions;
+    onChange(allAssessmentData);
+  }
 
   // Header intentionally omitted per requirements
 
@@ -514,52 +536,60 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
   const combinedPromData = [];
     selectedRegions.forEach(regionKey => {
       const region = regionalAssessments[regionKey];
-      region.rom.forEach(romItem => {
-        combinedPromData.push({
-          ...romItem,
-          regionKey,
-          regionName: region.name
+      if (region && region.rom) {
+        region.rom.forEach(romItem => {
+          combinedPromData.push({
+            ...romItem,
+            regionKey,
+            regionName: region.name
+          });
         });
-      });
+      }
     });
 
     // Collect all ROM data from selected regions
     const combinedRomData = [];
     selectedRegions.forEach(regionKey => {
       const region = regionalAssessments[regionKey];
-      region.rom.forEach(romItem => {
-        combinedRomData.push({
-          ...romItem,
-          regionKey,
-          regionName: region.name
+      if (region && region.rom) {
+        region.rom.forEach(romItem => {
+          combinedRomData.push({
+            ...romItem,
+            regionKey,
+            regionName: region.name
+          });
         });
-      });
+      }
     });
 
     // Collect all MMT data from selected regions
     const combinedMmtData = [];
     selectedRegions.forEach(regionKey => {
       const region = regionalAssessments[regionKey];
-      region.mmt.forEach(mmtItem => {
-        combinedMmtData.push({
-          ...mmtItem,
-          regionKey,
-          regionName: region.name
+      if (region && region.mmt) {
+        region.mmt.forEach(mmtItem => {
+          combinedMmtData.push({
+            ...mmtItem,
+            regionKey,
+            regionName: region.name
+          });
         });
-      });
+      }
     });
 
     // Collect all Special Tests data from selected regions
     const combinedSpecialTestsData = [];
     selectedRegions.forEach(regionKey => {
       const region = regionalAssessments[regionKey];
-      region.specialTests.forEach(testItem => {
-        combinedSpecialTestsData.push({
-          ...testItem,
-          regionKey,
-          regionName: region.name
+      if (region && region.specialTests) {
+        region.specialTests.forEach(testItem => {
+          combinedSpecialTestsData.push({
+            ...testItem,
+            regionKey,
+            regionName: region.name
+          });
         });
-      });
+      }
     });
 
     // Create/update PROM section
@@ -593,41 +623,25 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
         const rowId = groupName.toLowerCase().replace(/\s+/g, '-');
         if (excludedSet.has(rowId)) return; // skip excluded rows
         const saved = allAssessmentData.prom[rowId] || {};
-        // Clear legacy default 'capsular' if no measurements were entered
-        const savedEndfeel = (saved.endfeel || '').toString();
-        const isSavedCapsular = savedEndfeel.toLowerCase() === 'capsular';
-        const noMeasurements = !((saved.left && String(saved.left).trim() !== '') || (saved.right && String(saved.right).trim() !== ''));
-        const computedEndfeel = (noMeasurements && isSavedCapsular)
-          ? ''
-          : (savedEndfeel || '');
+        const savedNotes = (saved.notes || saved.endfeel || '').toString();
+        const displayName = groups[groupName].normal
+          ? `${groupName} (${groups[groupName].normal})`
+          : groupName;
         tableData[rowId] = {
-          name: groupName,
+          name: displayName,
           left: saved.left || '',
           right: saved.right || '',
-          normal: groups[groupName].normal || '',
-          endfeel: computedEndfeel
+          notes: savedNotes
         };
       });
 
-      const endFeelOptions = [
-        { value: '', label: '' },
-        { value: 'firm', label: 'Firm' },
-        { value: 'soft', label: 'Soft' },
-        { value: 'hard', label: 'Hard' },
-        { value: 'empty', label: 'Empty' },
-        { value: 'spasm', label: 'Spasm' },
-        { value: 'springy', label: 'Springy' },
-        { value: 'capsular', label: 'Capsular' }
-      ];
-
   promTable = createEditableTable({
-        title: 'Passive Range of Motion (PROM)',
+        // No title; move label into first column header
         columns: [
-          { field: 'name', label: 'Movement', width: '25%' },
-          { field: 'left', label: 'Left', width: '20%' },
-          { field: 'right', label: 'Right', width: '20%' },
-          { field: 'normal', label: 'Normal', width: '15%' },
-          { field: 'endfeel', label: 'End-Feel', width: '20%', type: 'select', options: endFeelOptions }
+          { field: 'name', label: 'Passive Range of Motion (PROM)', width: '35%' },
+          { field: 'left', label: 'Left', width: '15%' },
+          { field: 'right', label: 'Right', width: '15%' },
+          { field: 'notes', label: 'Notes', width: '35%' }
         ],
         data: tableData,
         onChange: (newData) => {
@@ -638,7 +652,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
             updated[rowId] = {
               left: row.left || '',
               right: row.right || '',
-              endfeel: row.endfeel || ''
+              notes: row.notes || ''
             };
           });
 

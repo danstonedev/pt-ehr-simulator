@@ -31,30 +31,34 @@ export function createSpecialTestsSection(regionKey, region, testData, onChange)
   if (region.specialTests) {
     region.specialTests.forEach((test, index) => {
       const testId = `test-${index}`;
+      const legacy = testData[testId] || {};
+      const legacyResult = legacy.result || '';
       tableData[testId] = {
         name: test.name,
-        purpose: test.purpose,
-        result: testData[testId]?.result || '',
-        notes: testData[testId]?.notes || ''
+        left: legacy.left || legacyResult || '',
+        right: legacy.right || '',
+        notes: legacy.notes || ''
       };
     });
   }
 
   const table = createEditableTable({
-  title: 'Special Tests',
+      title: '', // hide green band title
     columns: [
-      { field: 'name', label: 'Test Name', width: '25%' },
-      { field: 'purpose', label: 'Purpose/Target', width: '30%' },
-      { field: 'result', label: 'Result', width: '15%', type: 'select', options: testResults },
-      { field: 'notes', label: 'Notes/Details', width: '30%' }
+        { field: 'name', label: 'Special Tests', width: '35%' }, // first column label uses green title text
+      { field: 'left', label: 'Left', width: '15%', type: 'select', options: testResults },
+      { field: 'right', label: 'Right', width: '15%', type: 'select', options: testResults },
+      { field: 'notes', label: 'Notes', width: '35%' }
     ],
     data: tableData,
-    onChange: (newData) => {
-      // Convert back to original format
+  onChange: (newData) => {
+      // Convert back to original format with L/R columns
       const updatedData = {};
       Object.keys(newData).forEach(testId => {
         updatedData[testId] = {
-          result: newData[testId].result,
+      name: newData[testId].name,
+          left: newData[testId].left,
+          right: newData[testId].right,
           notes: newData[testId].notes
         };
       });
