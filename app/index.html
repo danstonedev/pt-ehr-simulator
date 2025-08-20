@@ -22,15 +22,17 @@
   <!-- Skip to main content for keyboard and screen reader users -->
   <a class="skip-link" href="#app">Skip to main content</a>
   <header class="topbar no-print">
-    <a class="brand und-logo-link" href="#/" aria-label="University of North Dakota Home">
+    <div class="brand-row">
+      <a class="brand und-logo-link" href="#/" aria-label="University of North Dakota Home">
     <img class="und-logo" src="img/und-logotype-fullw.svg" alt="University of North Dakota" loading="eager" decoding="async" />
   <span class="brand-label">Physical Therapy EHR Simulator <span class="brand-label-suffix">| Proof of Concept</span></span>
-    </a>
+      </a>
+      <button id="feedbackBtn" class="btn orange small feedback-btn" type="button" aria-haspopup="dialog" aria-controls="feedbackDialog">Feedback</button>
+    </div>
     <nav id="primaryNav" class="topnav" role="navigation" aria-label="Primary">
       <a href="#/">Home</a>
       <a href="#/student/cases">Student</a>
       <a href="#/instructor/cases">Faculty</a>
-  <button id="feedbackBtn" class="btn orange small feedback-btn" type="button" aria-haspopup="dialog" aria-controls="feedbackDialog">Feedback</button>
       <button id="themeToggle" class="theme-toggle switch is-light" onclick="toggleTheme()" role="switch" aria-checked="false" aria-label="Switch to dark theme">
         <span class="switch-track" aria-hidden="true"></span>
         <span class="switch-thumb" aria-hidden="true">
