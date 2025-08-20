@@ -691,7 +691,7 @@ function createReadOnlyCaseHeader(caseInfo) {
   return card;
 }
 
-// Simple Case Details Modal (reuses modal styles from GoalLinker)
+// Simple Case Details Modal
 function openCaseDetailsModal(caseInfo) {
   const overlay = el('div', { class: 'goal-linker-modal', role: 'dialog', 'aria-modal': 'true' });
   overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });

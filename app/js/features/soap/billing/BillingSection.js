@@ -52,7 +52,7 @@ export const PTBilling = {
         class: 'compact-add-btn',
         title: 'Add Diagnosis Code',
         onclick: () => {
-          data.diagnosisCodes.push({ code: '', description: '', isPrimary: data.diagnosisCodes.length === 0 });
+          data.diagnosisCodes.push({ code: '', description: '', label: '', isPrimary: data.diagnosisCodes.length === 0 });
           updateField('diagnosisCodes', data.diagnosisCodes);
           renderDiagnosisCodes();
         }
@@ -197,7 +197,7 @@ export function createBillingCodesWidget(data, updateField) {
       class: 'compact-add-btn',
       title: 'Add Treatment Code',
       onclick: () => {
-        data.billingCodes.push({ code: '', units: 1, description: '', timeSpent: '' });
+        data.billingCodes.push({ code: '', units: 1, description: '', label: '', timeSpent: '' });
         updateField('billingCodes', data.billingCodes);
         render();
       }
@@ -319,9 +319,15 @@ function createDiagnosisCodeRow(codeEntry, index, data, updateField, renderCallb
     `,
     onchange: (e) => {
       data.diagnosisCodes[index].code = e.target.value;
-      // Update description based on selected code
+      // Update both description and label based on selected code
       const selectedOption = getPTICD10Codes().find(opt => opt.value === e.target.value);
-      data.diagnosisCodes[index].description = selectedOption ? selectedOption.description : '';
+      if (selectedOption) {
+        data.diagnosisCodes[index].description = selectedOption.description;
+        data.diagnosisCodes[index].label = selectedOption.label;
+      } else {
+        data.diagnosisCodes[index].description = '';
+        data.diagnosisCodes[index].label = '';
+      }
       updateField('diagnosisCodes', data.diagnosisCodes);
     }
   });
@@ -478,9 +484,15 @@ function createBillingCodeRow(codeEntry, index, data, updateField, renderCallbac
     `,
     onchange: (e) => {
       data.billingCodes[index].code = e.target.value;
-      // Update description based on selected code
+      // Update both description and label based on selected code
       const selectedOption = getPTCPTCodes().find(opt => opt.value === e.target.value);
-      data.billingCodes[index].description = selectedOption ? selectedOption.description : '';
+      if (selectedOption) {
+        data.billingCodes[index].description = selectedOption.description;
+        data.billingCodes[index].label = selectedOption.label;
+      } else {
+        data.billingCodes[index].description = '';
+        data.billingCodes[index].label = '';
+      }
       updateField('billingCodes', data.billingCodes);
       renderCallback();
     }

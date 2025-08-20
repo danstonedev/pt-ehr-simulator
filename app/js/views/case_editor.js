@@ -3,7 +3,7 @@ import { route, navigate, getCase, createCase, updateCase } from '../core/index.
 import { el, textareaAutoResize, printPage } from '../ui/utils.js';
 import { renderTabs } from '../ui/components.js';
 import { inputField, textAreaField, selectField, sectionHeader } from '../ui/form-components.js';
-// Icons not needed for pager arrows; using text markers <<< and >>>
+import { createIcon } from '../ui/Icons.js';
 import { exportToWord } from '../services/document-export.js';
 import {
   createSubjectiveSection,
@@ -188,10 +188,10 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     activeSection: 'subjective',
     onSectionChange: (sectionId) => switchTo(sectionId),
     isFacultyMode: isFacultyMode,
-  caseData: { ...c, id: caseId, ...draft, editorSettings: (c.editorSettings || draft.editorSettings) },
+  caseData: { ...c, ...draft, editorSettings: (c.editorSettings || draft.editorSettings) },
     caseInfo: {
       // Prefer explicit fields, then canonical meta/snapshot fallbacks
-      title: (draft.noteTitle && draft.noteTitle.trim()) || c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
+      title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
       setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
       age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
       sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
@@ -217,12 +217,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       // Normalize sex for snapshot to lower-case if looks like a label
       c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
       c.snapshot.dob = updatedInfo.dob;
-      // For student-owned blank notes, mirror into draft so it persists across reloads
-      if (!isFacultyMode && String(caseId).startsWith('blank')) {
-        draft.noteTitle = updatedInfo.title;
-        draft.meta = { ...(draft.meta || {}), setting: updatedInfo.setting, acuity: updatedInfo.acuity, title: updatedInfo.title };
-        draft.snapshot = { ...(draft.snapshot || {}), age: updatedInfo.age, sex: (updatedInfo.sex || '').toLowerCase() || 'unspecified', dob: updatedInfo.dob };
-      }
       
       // Save the case
       save();
@@ -350,11 +344,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         c.snapshot.age = updatedInfo.age;
         c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
         c.snapshot.dob = updatedInfo.dob;
-        if (!isFacultyMode && String(caseId).startsWith('blank')) {
-          draft.noteTitle = updatedInfo.title;
-          draft.meta = { ...(draft.meta || {}), setting: updatedInfo.setting, acuity: updatedInfo.acuity, title: updatedInfo.title };
-          draft.snapshot = { ...(draft.snapshot || {}), age: updatedInfo.age, sex: (updatedInfo.sex || '').toLowerCase() || 'unspecified', dob: updatedInfo.dob };
-        }
         save();
         refreshChartProgress();
       },
@@ -391,73 +380,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   const mainContainer = el('div', { 
     class: 'main-content-with-sidebar'
   }, contentElements);
-
-  // Helper: human-readable titles for sections
-  const sectionTitles = {
-    subjective: 'Subjective',
-    objective: 'Objective',
-    assessment: 'Assessment',
-    plan: 'Plan',
-    billing: 'Billing'
-  };
-
-  // Helper: scroll current section container to top accounting for headers
-  function scrollSectionToTop() {
-    const sec = document.querySelector('.section-content');
-    if (!sec) return;
-    const offset = getHeaderOffsetPx();
-    const rect = sec.getBoundingClientRect();
-    const targetY = Math.max(0, window.scrollY + rect.top - offset);
-    window.scrollTo({ top: targetY, behavior: 'auto' });
-  }
-
-  // Create bottom pager (Home | Prev | Next/Export)
-  function createBottomPager(currentId) {
-    const idx = sections.indexOf(currentId);
-    const atFirst = idx <= 0;
-    const atLast = idx >= sections.length - 1;
-
-  const showHome = currentId === 'subjective';
-  const homeBtn = showHome ? el('button', {
-      class: 'btn primary pager-btn pager-home',
-      'aria-label': 'Go to Home',
-      onClick: () => navigate('#/')
-  }, 'Home') : null;
-
-    const prevBtn = atFirst ? null : el('button', {
-      class: 'btn primary pager-btn pager-prev',
-      'aria-label': `Back: ${sectionTitles[sections[idx - 1]]}`,
-      onClick: () => {
-        const prevId = sections[idx - 1];
-        if (prevId) {
-          switchTo(prevId);
-          afterNextLayout(scrollSectionToTop);
-        }
-      }
-  }, `Back: ${sectionTitles[sections[idx - 1]]}`);
-
-  const nextAria = atLast ? 'Export to Word' : `Next: ${sectionTitles[sections[idx + 1]]}`;
-    const nextHandler = atLast
-      ? () => exportToWord(c, draft)
-      : () => {
-          const nextId = sections[idx + 1];
-          if (nextId) {
-            switchTo(nextId);
-            afterNextLayout(scrollSectionToTop);
-          }
-        };
-  const nextBtn = el('button', { class: 'btn primary pager-btn pager-next', 'aria-label': nextAria, onClick: nextHandler }, `${atLast ? 'Export to Word' : `Next: ${sectionTitles[sections[idx + 1]]}`}`);
-
-    return el('div', {
-      class: 'section-pager',
-      style: 'display:flex; gap:8px; justify-content:space-between; align-items:center; margin-top:24px; padding-top:16px; border-top:1px solid var(--und-green); flex-wrap:wrap; margin-bottom: calc(var(--edu-ribbon-h) + env(safe-area-inset-bottom) + 12px);'
-    }, [
-      // Left cluster: Home + Prev (if any)
-  el('div', { style: 'display:flex; gap:8px; flex-wrap:wrap;' }, [homeBtn, prevBtn].filter(Boolean)),
-      // Right cluster: Next/Export
-      el('div', { style: 'display:flex; gap:8px; flex-wrap:wrap;' }, [nextBtn])
-    ]);
-  }
 
   // Centralized initial scroll handler to apply percent-first, then anchor fallback
   function performInitialScrollIfNeeded(currentSectionId) {
@@ -540,11 +462,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
           c.snapshot.age = updatedInfo.age;
           c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
           c.snapshot.dob = updatedInfo.dob;
-         if (!isFacultyMode && String(caseId).startsWith('blank')) {
-           draft.noteTitle = updatedInfo.title;
-           draft.meta = { ...(draft.meta || {}), setting: updatedInfo.setting, acuity: updatedInfo.acuity, title: updatedInfo.title };
-           draft.snapshot = { ...(draft.snapshot || {}), age: updatedInfo.age, sex: (updatedInfo.sex || '').toLowerCase() || 'unspecified', dob: updatedInfo.dob };
-         }
          debouncedSave(); // Use debounced save instead of immediate save
        },
            onEditorSettingsChange: (nextSettings) => {
@@ -575,7 +492,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
  // Rebuild sidebar subsections from freshly rendered content
  if (window.refreshChartProgress) window.refreshChartProgress();
  performInitialScrollIfNeeded(s);
-      sec.append(createBottomPager(s));
      }
      if(s==='objective'){ 
        const objectiveSection = createObjectiveSection(
@@ -589,7 +505,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
        sec.append(objectiveSection);
  if (window.refreshChartProgress) window.refreshChartProgress();
  performInitialScrollIfNeeded(s);
-      sec.append(createBottomPager(s));
      }
      if(s==='assessment'){ 
        const assessmentSection = createAssessmentSection(
@@ -603,7 +518,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
        sec.append(assessmentSection);
  if (window.refreshChartProgress) window.refreshChartProgress();
  performInitialScrollIfNeeded(s);
-      sec.append(createBottomPager(s));
      }
      if(s==='plan'){ 
        const planSection = createPlanSection(
@@ -617,7 +531,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
        sec.append(planSection);
  if (window.refreshChartProgress) window.refreshChartProgress();
  performInitialScrollIfNeeded(s);
-      sec.append(createBottomPager(s));
        
        // Make refresh function available globally for goal linking
        window.refreshInterventionCard = (rowId) => {
@@ -636,8 +549,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
                }
              );
              planContent.replaceWith(refreshedPlanSection);
-        // Re-append pager after refresh to ensure it stays at bottom
-        currentSec.append(createBottomPager('plan'));
            }
          }
        };
@@ -654,7 +565,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
        sec.append(billingSection);
  if (window.refreshChartProgress) window.refreshChartProgress();
  performInitialScrollIfNeeded(s);
-      sec.append(createBottomPager(s));
      }
    }
    
