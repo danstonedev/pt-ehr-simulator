@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="feedback-form-url" content="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=kaA37Ka55UeY0JA9SkGSAwGKYhHD0ARFhMMXhnuRBv9URERONEpUNzZXU1hLRkhaRDJaNEk4UjJSRi4u&embed=true" />
+      <!-- Microsoft Forms Feedback Embed -->
+    <meta name="ms-forms-url" content="https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAGOOEaDTU0VTjQwuUNYNFAzSU5MUDNVTENWNjJFT1hOUC4u">
   <title>PT Sim-ER (MVP v2)</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23007acc'/><text x='8' y='12' text-anchor='middle' fill='white' font-family='Arial' font-size='10' font-weight='bold'>E</text></svg>">
-  <link rel="stylesheet" href="css/styles.css?v=20250818-002" />
+  <link rel="stylesheet" href="css/styles.css?v=20250820-002" />
   <link rel="stylesheet" href="css/sidebar.css?v=20250818-002" />
   <link rel="stylesheet" href="css/print.css" media="print" />
   <!-- Webfont: Oswald (Trade Gothic alternative) for brand label -->
@@ -22,8 +23,8 @@
   <a class="skip-link" href="#app">Skip to main content</a>
   <header class="topbar no-print">
     <a class="brand und-logo-link" href="#/" aria-label="University of North Dakota Home">
-      <img class="und-logo" src="img/und-logotype-fullw.svg" alt="University of North Dakota" loading="eager" decoding="async" />
-  <span class="brand-label">Physical Therapy EHR Simulator</span>
+    <img class="und-logo" src="img/und-logotype-fullw.svg" alt="University of North Dakota" loading="eager" decoding="async" />
+  <span class="brand-label">Physical Therapy EHR Simulator <span class="brand-label-suffix">| Proof of Concept</span></span>
     </a>
     <nav id="primaryNav" class="topnav" role="navigation" aria-label="Primary">
       <a href="#/">Home</a>
@@ -42,13 +43,7 @@
 
   <main id="app"></main>
 
-  <!-- Hidden Netlify form for capturing feedback submissions on deployed site -->
-  <form name="feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
-    <input type="text" name="subject" />
-    <textarea name="message"></textarea>
-    <input type="text" name="path" />
-    <input type="text" name="ua" />
-  </form>
+  <!-- Removed Netlify form (no Netlify integration) -->
 
   <!-- Educational ribbon at page bottom -->
   <div class="edu-ribbon no-print" role="note" aria-label="Educational Use Only">
@@ -163,29 +158,7 @@
               const text = (panel.querySelector('#feedbackText').value || '').trim();
               if (!text) { alert('Please enter your feedback before sending.'); return; }
               const subjectTxt = 'PT EHR Simulator Feedback';
-
-              // Try Netlify Forms submission first (works on deployed site)
-              try {
-                const payload = {
-                  'form-name': 'feedback',
-                  subject: subjectTxt,
-                  message: text,
-                  path: window.location.hash || window.location.pathname,
-                  ua: navigator.userAgent
-                };
-                const resp = await fetch('/', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                  body: encodeForm(payload)
-                });
-                if (resp && resp.ok) {
-                  alert('Thanks for the feedback!');
-                  document.body.removeChild(overlay);
-                  return;
-                }
-              } catch (_) { /* ignore and fall back */ }
-
-              // Fallback to mailto if Netlify submission is unavailable (local dev)
+              // Send via mailto
               const subject = encodeURIComponent(subjectTxt);
               const body = encodeURIComponent(text + '\n\n— Sent from PT EHR Simulator');
               window.location.href = `mailto:daniel.j.stone@UND.edu?subject=${subject}&body=${body}`;

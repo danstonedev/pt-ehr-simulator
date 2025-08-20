@@ -277,7 +277,21 @@ p {
 .edu-ribbon span { opacity: 0.9; }
 
 /* Avoid content being hidden behind fixed bottom ribbon */
-body:has(.edu-ribbon) { padding-bottom: calc(var(--edu-ribbon-h) + env(safe-area-inset-bottom)); }
+/* Add a bit of extra breathing room below content so the fixed ribbon never overlaps */
+body:has(.edu-ribbon) { padding-bottom: calc(var(--edu-ribbon-h) + env(safe-area-inset-bottom) + 16px); }
+
+/* Ensure primary containers also have clearance above the fixed ribbon */
+/* On home and simple pages (#app uses padding), and on editor pages (.main-content-with-sidebar) */
+body:has(.edu-ribbon) #app {
+  /* Add extra space at the very bottom so last panels/cards aren't obscured */
+  padding-bottom: calc(var(--edu-ribbon-h) + env(safe-area-inset-bottom) + 24px);
+}
+/* Note: Case editor handles bottom clearance locally (inline margins on action bars).
+   Avoid adding extra global padding here to prevent unnecessary spacing. */
+/* Home-only: ensure the last panels have breathing room above the fixed ribbon */
+.home-container {
+  padding-bottom: calc(var(--edu-ribbon-h) + env(safe-area-inset-bottom) + 28px);
+}
 
 /* Offset page content for fixed main header */
 /* Only add offset when a topbar exists */
@@ -1815,6 +1829,13 @@ header.topbar a.button {
   white-space: nowrap;
   font-size: 18px; /* smaller than previous 24px */
   text-decoration: none;
+}
+.brand-label .brand-label-suffix {
+  margin-left: 4px;
+  font-weight: 700;
+  color: var(--und-orange); /* flame orange for visibility */
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35); /* pop against dark header */
+  white-space: nowrap;
 }
 /* Reinstate subtle vertical divider before label */
 .brand-label::before {
