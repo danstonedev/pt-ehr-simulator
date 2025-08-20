@@ -51,3 +51,6 @@ data/backups/
 # *$py.class
 # venv/
 # env/
+
+# Prevent accidentally embedding a nested repository clone
+pt-ehr-simulator/
