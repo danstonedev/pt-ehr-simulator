@@ -64,11 +64,21 @@
 
 /* Dashboard cases tables: dark gradient header with white text */
 .cases-table thead th {
-  background: linear-gradient(180deg, #111 0%, #222 100%);
+  /* Use brand tokens instead of hardcoded hex */
+  background: linear-gradient(180deg, var(--und-black) 0%, var(--chrome-sidebar-right) 100%);
   color: #fff;
 }
 .cases-table thead th.sortable:hover {
-  background: linear-gradient(180deg, #111 0%, #222 100%); /* keep gradient on hover */
+  background: linear-gradient(180deg, var(--und-black) 0%, var(--chrome-sidebar-right) 100%); /* keep gradient on hover */
+}
+
+/* Active sort: slightly brighter header cell for the sorted column */
+.cases-table thead th[aria-sort] {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--und-black) 85%, white) 0%,
+  color-mix(in srgb, var(--chrome-sidebar-right) 85%, white) 100%
+  );
 }
 
 /* Simple status labels used in Draft Status column */
@@ -103,7 +113,8 @@
 .regional-assessment .table td { padding: var(--space-1); border: none; vertical-align: middle; background: var(--panel); color: var(--text); }
 .regional-assessment .table tr:nth-child(even) td { background: var(--table-stripe); }
 .regional-assessment .table input, 
-.regional-assessment .table select { border: 1px solid var(--input-border); padding: 2px var(--space-1); font-size: 12px; border-radius: var(--input-radius); background: var(--input-bg); color: var(--text); }
+.regional-assessment .table select { border: 1px solid var(--input-border); padding: 2px var(--space-1); font-size: 12px; border-radius: var(--input-radius); background: var(--input-bg); color: var(--input-text); }
+.regional-assessment .table select { background: var(--select-bg); color: var(--select-text); border-color: var(--select-border); }
 .regional-assessment .table input:focus, 
 .regional-assessment .table select:focus { border-color: var(--und-green); }
 
@@ -118,10 +129,23 @@
 .editable-table__add-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
 
 .editable-table__table { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; font-size: 14px; }
+
+/* Responsive: horizontal scroll for wide tables only on small screens */
+.table-responsive {
+  width: 100%;
+}
+@media (max-width: 768px) {
+  .table-responsive {
+  overflow-x: auto;
+  }
+  .table-responsive table {
+    min-width: 640px; /* ensure scroll appears when columns overflow */
+  }
+}
 .editable-table__table { width: 100%; border-collapse: collapse; border: none; border-radius: var(--radius-sm); overflow: hidden; font-size: 13px; }
 .editable-table__head {
   /* UND gray gradient across the header: darker left -> UND gray right */
-  background: linear-gradient(90deg, var(--sidebar-gray-right) 0%, var(--und-gray) 100%);
+  background: linear-gradient(90deg, var(--chrome-sidebar-right) 0%, var(--und-gray) 100%);
   position: relative;
 }
 .editable-table__header-cell { padding: var(--space-1) var(--space-2); text-align: left; font-size: 14px; font-weight: 600; color: var(--text); text-transform: capitalize; letter-spacing: 0.3px; border-bottom: 0; }
@@ -141,7 +165,35 @@
   .table th,
   .table td { padding: var(--space-2); }
 }
-.editable-table__input, .editable-table__select, .editable-table__textarea { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); padding: 2px var(--space-1); font-size: 12px; color: var(--text); border-radius: var(--input-radius); transition: border-color .2s, box-shadow .2s; }
+.editable-table__input, .editable-table__select, .editable-table__textarea { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); padding: 2px var(--space-1); font-size: 12px; color: var(--input-text); border-radius: var(--input-radius); transition: border-color .2s, box-shadow .2s; }
+/* Ensure selects visually match inputs, even in dark mode */
+.editable-table__select { background: var(--input-bg); color: var(--input-text); border-color: var(--input-border); }
+html[data-theme="dark"] .editable-table__select { background: var(--input-bg); color: var(--input-text); border-color: var(--input-border); color-scheme: dark; }
+
+/* When the select dropdown is open, ensure the menu background matches theme */
+html[data-theme="dark"] .editable-table__select option,
+html[data-theme="dark"] .editable-table__select optgroup { 
+  background-color: var(--input-bg);
+  color: var(--input-text);
+}
+html[data-theme="dark"] .editable-table__select option:hover { 
+  background-color: #2a3646; /* slightly lighter than input-bg for hover */
+  color: var(--input-text);
+}
+/* Light theme keeps native light menu for clarity */
+html:not([data-theme="dark"]) .editable-table__select option,
+html:not([data-theme="dark"]) .editable-table__select optgroup {
+  background-color: #ffffff;
+  color: #1a202c;
+}
+/* High-contrast state for the selected item in dark mode */
+html[data-theme="dark"] .editable-table__select option:checked { 
+  background-color: #374151; /* slate-700 for subtle highlight */
+  color: var(--input-text);
+}
+/* Placeholder-like first option styling */
+.editable-table__select option[disabled][value=""],
+.editable-table__select option[disabled]:first-child { color: var(--text-secondary); }
 .editable-table__textarea { resize: none; overflow: hidden; min-height: 32px; }
 .editable-table__textarea { padding-right: calc(var(--space-1) + 10px); padding-bottom: calc(var(--space-1) + 6px); }
 

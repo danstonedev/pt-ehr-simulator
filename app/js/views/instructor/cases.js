@@ -25,7 +25,7 @@ function showSharePopup(url) {
   });
   const card = el('div', {
     role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Share',
-    style: `background:#fff; color:#111; border-radius:12px; width:92%; max-width:520px; box-shadow:0 20px 45px rgba(0,0,0,0.2); padding:20px 20px 16px; position:relative;`,
+    style: `background:var(--bg); color:var(--text); border-radius:12px; width:92%; max-width:520px; box-shadow:0 20px 45px rgba(0,0,0,0.2); padding:20px 20px 16px; position:relative;`,
     onclick: (e) => e.stopPropagation()
   }, [
     el('div', { style: 'display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;' }, [
@@ -33,10 +33,10 @@ function showSharePopup(url) {
       el('button', { class: 'btn icon', 'aria-label': 'Close', style: 'border:none; background:transparent; font-size:18px; cursor:pointer; padding:4px;', onclick: () => document.body.removeChild(overlay) }, '✕')
     ]),
   (() => { const row = el('div', { style: 'display:flex; gap:8px; align-items:center; margin:8px 0 4px;' });
-            const input = el('input', { type: 'text', value: url, readOnly: true, style: 'flex:1; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' });
+            const input = el('input', { type: 'text', value: url, readOnly: true, style: 'flex:1; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;' });
             const copyBtn = el('button', { class: 'btn small primary', style: 'white-space:nowrap;', onclick: async () => { try { await navigator.clipboard.writeText(url); status.textContent = 'Copied!'; } catch { status.textContent = 'Copy failed. Select text to copy.'; input.select(); input.focus(); } setTimeout(() => { status.textContent = '' }, 2000); } }, 'Copy');
             row.append(input, copyBtn); return row; })(),
-  (() => { const s = el('div', { style: 'min-height:18px; font-size:12px; color:#059669; margin-top:2px;' }, ''); status = s; return s; })(),
+  (() => { const s = el('div', { style: 'min-height:18px; font-size:12px; color:var(--success); margin-top:2px;' }, ''); status = s; return s; })(),
     el('div', { style: 'display:flex; justify-content:flex-end; gap:8px; margin-top:8px;' }, [
       el('a', { href: url, target: '_blank', rel: 'noopener noreferrer', class: 'btn small secondary', style: 'text-decoration:none;' }, 'Open Link')
     ])
@@ -71,7 +71,8 @@ function showCaseCreationModal() {
   }, [
     el('div', {
       style: `
-        background: white;
+        background: var(--bg);
+        color: var(--text);
         padding: 32px;
         border-radius: 12px;
         max-width: 500px;
@@ -108,7 +109,7 @@ function showCaseCreationModal() {
         // DOB Row (moved up after Title)
         el('div', { style: 'margin-bottom: 16px;' }, [
           el('label', { 
-            style: 'display: block; margin-bottom: 8px; font-weight: 500; color: #374151;' 
+            style: 'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);' 
           }, 'DOB'),
           el('input', {
             type: 'date',
@@ -116,7 +117,7 @@ function showCaseCreationModal() {
             style: `
               width: 100%;
               padding: 12px;
-              border: 1px solid #d1d5db;
+              border: 1px solid var(--input-border);
               border-radius: 6px;
               font-size: 14px;
               box-sizing: border-box;
@@ -131,14 +132,14 @@ function showCaseCreationModal() {
               }
             }
           }),
-          el('div', { style: 'margin-top: 6px; font-size: 12px; color: #6b7280;' }, 'Age auto-fills when DOB is entered.')
+          el('div', { style: 'margin-top: 6px; font-size: 12px; color: var(--text-secondary);' }, 'Age auto-fills when DOB is entered.')
         ]),
         
   // Age and Sex Row
         el('div', { style: 'display: flex; gap: 16px; margin-bottom: 16px;' }, [
           el('div', { style: 'flex: 1;' }, [
             el('label', { 
-              style: 'display: block; margin-bottom: 8px; font-weight: 500; color: #374151;' 
+              style: 'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);' 
             }, 'Patient Age *'),
             el('input', {
               type: 'number',
@@ -149,7 +150,7 @@ function showCaseCreationModal() {
               style: `
                 width: 100%;
                 padding: 12px;
-                border: 1px solid #d1d5db;
+                border: 1px solid var(--input-border);
                 border-radius: 6px;
                 font-size: 14px;
                 box-sizing: border-box;
@@ -176,7 +177,7 @@ function showCaseCreationModal() {
           ]),
           el('div', { style: 'flex: 1;' }, [
             el('label', { 
-              style: 'display: block; margin-bottom: 8px; font-weight: 500; color: #374151;' 
+              style: 'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);' 
             }, 'Sex *'),
             el('select', {
               id: 'case-gender',
@@ -184,7 +185,7 @@ function showCaseCreationModal() {
               style: `
                 width: 100%;
                 padding: 12px;
-                border: 1px solid #d1d5db;
+                border: 1px solid var(--input-border);
                 border-radius: 6px;
                 font-size: 14px;
                 box-sizing: border-box;
@@ -224,7 +225,7 @@ function showCaseCreationModal() {
         // Acuity
         el('div', { style: 'margin-bottom: 24px;' }, [
           el('label', { 
-            style: 'display: block; margin-bottom: 8px; font-weight: 500; color: #374151;' 
+            style: 'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);' 
           }, 'Case Acuity *'),
           el('select', {
             id: 'case-acuity',
@@ -232,7 +233,7 @@ function showCaseCreationModal() {
             style: `
               width: 100%;
               padding: 12px;
-              border: 1px solid #d1d5db;
+              border: 1px solid var(--input-border);
               border-radius: 6px;
               font-size: 14px;
               box-sizing: border-box;
@@ -279,44 +280,44 @@ function showPromptGenerationModal() {
     onclick: (e) => { if (e.target === modal) document.body.removeChild(modal); }
   }, [
     el('div', {
-      style: `background:#fff; padding:28px; border-radius:12px; max-width:720px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.15); color:#111;`,
+      style: `background:var(--bg); padding:28px; border-radius:12px; max-width:720px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.15); color:var(--text);`,
       onclick: (e) => e.stopPropagation()
     }, [
-      el('h2', { style:'margin:0 0 12px 0;' }, 'Generate Case from Prompt'),
-      el('p', { class:'small', style:'margin:0 0 14px 0; color:#4b5563;' }, 'Provide a short scenario and anchors; we\'ll seed a realistic draft you can edit.'),
+  el('h2', { style:'margin:0 0 12px 0; color: var(--text);' }, 'Generate Case from Prompt'),
+  el('p', { class:'small', style:'margin:0 0 14px 0; color:var(--text-secondary);' }, 'Provide a short scenario and anchors; we\'ll seed a realistic draft you can edit.'),
       // Title (optional)
       el('div', { style:'margin-bottom:12px;' }, [
-        el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Case Title (optional)'),
-        el('input', { id:'gen-title', type:'text', placeholder:'e.g., Rotator Cuff Tendinopathy (R)', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' })
+  el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' }, 'Case Title (optional)'),
+  el('input', { id:'gen-title', type:'text', placeholder:'e.g., Rotator Cuff Tendinopathy (R)', style:'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;' })
       ]),
       // Scenario prompt
       el('div', { style:'margin-bottom:12px;' }, [
-        el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Scenario Prompt (1–3 sentences) *'),
-        el('textarea', { id:'gen-prompt', rows:3, placeholder:'Key history/context to ground the case...', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; resize:vertical;' })
+  el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' }, 'Scenario Prompt (1–3 sentences) *'),
+  el('textarea', { id:'gen-prompt', rows:3, placeholder:'Key history/context to ground the case...', style:'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; resize:vertical;' })
       ]),
       // Structured anchors row 1
       el('div', { style:'display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;' }, [
         // Region
         (() => {
           const regions = ['shoulder','knee','low back','neck','ankle','hip','elbow','wrist'];
-          const sel = el('select', { id:'gen-region', required:true, style:'flex:1; min-width:180px; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' });
+          const sel = el('select', { id:'gen-region', required:true, style:'flex:1; min-width:180px; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;' });
           sel.append(el('option', { value:'' }, 'Select region...'));
           regions.forEach(r => sel.append(el('option', { value:r }, r)));
           return el('div', { style:'flex:1; min-width:200px;' }, [
-            el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Body Region *'),
+            el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' }, 'Body Region *'),
             sel
           ]);
         })(),
         // Condition
         el('div', { style:'flex:1; min-width:200px;' }, [
-          el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Suspected Condition *'),
-          el('input', { id:'gen-condition', type:'text', placeholder:'e.g., Rotator cuff tendinopathy', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' })
+          el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' }, 'Suspected Condition *'),
+          el('input', { id:'gen-condition', type:'text', placeholder:'e.g., Rotator cuff tendinopathy', style:'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;' })
         ])
       ]),
       // Structured anchors row 2
       el('div', { style:'display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;' }, [
         // Setting
-        (() => { const sel = el('select', { id:'gen-setting', style:'flex:1; min-width:180px; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' });
+  (() => { const sel = el('select', { id:'gen-setting', style:'flex:1; min-width:180px; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;' });
           sel.append(
             el('option', { value:'' }, 'Select setting...'),
             el('option', { value:'Outpatient' }, 'Outpatient'),
@@ -326,12 +327,12 @@ function showPromptGenerationModal() {
             el('option', { value:'Acute Rehab' }, 'Acute Rehab')
           );
           return el('div', { style:'flex:1; min-width:200px;' }, [
-            el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Clinical Setting *'),
+            el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' }, 'Clinical Setting *'),
             sel
           ]);
         })(),
         // Acuity
-        (() => { const sel = el('select', { id:'gen-acuity', style:'flex:1; min-width:180px; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' });
+  (() => { const sel = el('select', { id:'gen-acuity', style:'flex:1; min-width:180px; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;' });
           sel.append(
             el('option', { value:'' }, 'Select acuity...'),
             el('option', { value:'acute' }, 'Acute'),
@@ -339,7 +340,7 @@ function showPromptGenerationModal() {
             el('option', { value:'chronic' }, 'Chronic')
           );
           return el('div', { style:'flex:1; min-width:200px;' }, [
-            el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Acuity *'),
+            el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' }, 'Acuity *'),
             sel
           ]);
         })()
@@ -347,24 +348,24 @@ function showPromptGenerationModal() {
       // Structured anchors row 3
       el('div', { style:'display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;' }, [
         el('div', { style:'flex:1; min-width:160px;' }, [
-          el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Age (yrs)'),
-          el('input', { id:'gen-age', type:'number', min:1, max:120, placeholder:'45', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' })
+          el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' }, 'Age (yrs)'),
+          el('input', { id:'gen-age', type:'number', min:1, max:120, placeholder:'45', style:'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;' })
         ]),
         el('div', { style:'flex:1; min-width:180px;' }, [
-          el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Sex'),
-          (() => { const sel = el('select', { id:'gen-sex', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' });
+          el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' }, 'Sex'),
+          (() => { const sel = el('select', { id:'gen-sex', style:'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;' });
             sel.append(el('option', { value:'' }, 'Select...'), el('option', { value:'female' }, 'Female'), el('option', { value:'male' }, 'Male'), el('option', { value:'unspecified' }, 'Unspecified'));
             return sel; })()
         ]),
         el('div', { style:'flex:1; min-width:200px;' }, [
-          el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Pain (0–10)'),
-          el('input', { id:'gen-pain', type:'number', min:0, max:10, step:'1', placeholder:'5', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' })
+          el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' }, 'Pain (0–10)'),
+          el('input', { id:'gen-pain', type:'number', min:0, max:10, step:'1', placeholder:'5', style:'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;' })
         ])
       ]),
       // Functional goal
       el('div', { style:'margin-bottom:12px;' }, [
-        el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:#374151;' }, 'Functional Goal (optional)'),
-        el('input', { id:'gen-goal', type:'text', placeholder:'e.g., reach overhead to place dishes', style:'width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:14px;' })
+  el('label', { style:'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' }, 'Functional Goal (optional)'),
+  el('input', { id:'gen-goal', type:'text', placeholder:'e.g., reach overhead to place dishes', style:'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;' })
       ]),
       // Buttons
       el('div', { style:'display:flex; gap:10px; justify-content:flex-end; margin-top:6px;' }, [
@@ -556,7 +557,7 @@ route('#/instructor/cases', async (app) => {
       })
     ]);
 
-    const tableContainer = el('div', { id: 'table-container' });
+  const tableContainer = el('div', { id: 'table-container', class: 'table-responsive' });
     
     container.append(actionsRow, tableContainer);
     
@@ -616,8 +617,10 @@ route('#/instructor/cases', async (app) => {
     const isActive = sortColumn === column;
     const isDesc = isActive && sortDirection === 'desc';
     
-    const header = document.createElement('th');
-    header.className = 'sortable';
+  const header = document.createElement('th');
+  header.className = 'sortable';
+  // Accessibility: indicate sort state for assistive tech and enable CSS highlighting
+  if (isActive) header.setAttribute('aria-sort', isDesc ? 'descending' : 'ascending');
     header.style.cssText = `
       cursor: pointer; 
       user-select: none; 
@@ -643,7 +646,7 @@ route('#/instructor/cases', async (app) => {
     
     // Add event listeners
   // Hover/underline handled via CSS theme
-    header.addEventListener('click', () => {
+  header.addEventListener('click', () => {
       if (sortColumn === column) {
         sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
       } else {

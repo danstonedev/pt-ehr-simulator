@@ -68,6 +68,12 @@ export function startRouter() {
     // Update navigation active states
     updateNavigation(hash);
     
+    // Expose a simple route key on <body> for route-scoped styling
+    try {
+      const routeKey = (path && path !== '#/' ? path.slice(2).replace(/\//g, '-') : 'home');
+      document.body.setAttribute('data-route', routeKey);
+    } catch {}
+
     app.innerHTML = '';
     await renderer(app, new URLSearchParams(query || ''), params);
   }

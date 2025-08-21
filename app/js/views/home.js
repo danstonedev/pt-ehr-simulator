@@ -11,9 +11,6 @@ function countDrafts(draftsMap) {
   return count;
 }
 
-// No separate resume panel; resume is offered inside Student/Faculty sections when available
-
-// removed featured demo cards
 
 function buildHelpPanel() {
   const onReset = async () => {
@@ -81,8 +78,8 @@ route('#/', async (app) => {
 
   // Hero panel (full-width)
   const hero = el('div', { class: 'panel' }, [
-  el('h1', {}, ['Physical Therapy EHR Simulator ', el('span', { style: 'font-weight:600; color: var(--und-orange);' }, '| Proof of Concept')]),
-    el('p', {}, 'Practice professional SOAP documentation and billing in a safe, offline environment.'),
+    el('h1', {}, 'Physical Therapy EHR Simulator'),
+    el('p', {}, 'Practice professional SOAP documentation and billing.'),
   ]);
 
   // Editor navigation helpers

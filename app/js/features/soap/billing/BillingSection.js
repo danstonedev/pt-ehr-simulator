@@ -447,20 +447,13 @@ function createBillingCodeRow(codeEntry, index, data, updateField, renderCallbac
   });
   
   // Add hover effect
-  row.onmouseover = () => row.style.background = 'rgba(249, 250, 251, 0.8)';
+  row.onmouseover = () => row.style.background = 'var(--und-green-light)';
   row.onmouseout = () => row.style.background = 'transparent';
 
   // CPT Code Selection
   const codeSelect = el('select', {
-    style: `
-      width: 100%;
-      padding: 4px 8px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      font-size: 14px;
-      background: white;
-      color: var(--text);
-    `,
+    class: 'editable-table__select',
+    style: 'width: 100%;',
     onchange: (e) => {
       data.billingCodes[index].code = e.target.value;
       // Update both description and label based on selected code
@@ -493,16 +486,8 @@ function createBillingCodeRow(codeEntry, index, data, updateField, renderCallbac
     value: codeEntry.units || 1,
     min: 1,
     max: 8,
-    style: `
-      width: 100%;
-      padding: 4px 8px;
-      border: 1px solid var(--input-border);
-      border-radius: 4px;
-      font-size: 14px;
-      background: var(--input-bg);
-      color: var(--text);
-      text-align: center;
-    `,
+    class: 'editable-table__input',
+    style: 'width: 100%; text-align: center;',
     onblur: (e) => {
       data.billingCodes[index].units = parseInt(e.target.value) || 1;
       updateField('billingCodes', data.billingCodes);
@@ -514,15 +499,8 @@ function createBillingCodeRow(codeEntry, index, data, updateField, renderCallbac
     type: 'text',
     value: codeEntry.timeSpent || '',
     placeholder: '30 minutes',
-    style: `
-      width: 100%;
-      padding: 4px 8px;
-      border: 1px solid var(--input-border);
-      border-radius: 4px;
-      font-size: 14px;
-      background: var(--input-bg);
-      color: var(--text);
-    `,
+    class: 'editable-table__input',
+    style: 'width: 100%;',
     onblur: (e) => {
       data.billingCodes[index].timeSpent = e.target.value;
       updateField('billingCodes', data.billingCodes);

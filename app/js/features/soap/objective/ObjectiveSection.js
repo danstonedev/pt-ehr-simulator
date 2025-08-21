@@ -4,7 +4,7 @@
 import { textAreaField } from '../../../ui/form-components.js';
 import { createMultiRegionalAssessment } from './RegionalAssessments.js';
 import { el } from '../../../ui/utils.js';
-import { createBillingCodesWidget } from '../billing/BillingSection.js';
+// CPT widget is intentionally only rendered in BillingSection to avoid duplication
 
 /**
  * Creates the complete objective assessment section with systematic examination approach
@@ -166,33 +166,7 @@ export function createObjectiveSection(objectiveData, onUpdate) {
   ]);
   section.append(performedSection);
 
-  // Shared CPT Codes editor mounted under Objective, linked to billing data
-  try {
-    // Access the shared draft if available (set by case_editor)
-    const draft = window.currentDraft || {};
-    const billing = draft.billing || {};
-    // Ensure array presence without overwriting
-    if (!Array.isArray(billing.billingCodes)) billing.billingCodes = [];
-    const widget = createBillingCodesWidget(billing, (field, value) => {
-      billing[field] = value;
-      draft.billing = billing;
-      // Save via global if available
-      if (typeof window.saveDraft === 'function') {
-        window.saveDraft();
-      }
-    });
-    // Insert a small heading to distinguish in Objective
-    const cptAnchor = el('div', { id: 'objective-cpt-codes', class: 'section-anchor' }, [
-      el('h4', { class: 'subsection-title' }, 'CPT Codes (for this visit)')
-    ]);
-    // Indent only the CPT table content by inserting it inside the subsection anchor.
-    // The banner remains full-width due to CSS rule that pulls .subsection-title left.
-    cptAnchor.append(widget.element);
-    section.append(cptAnchor);
-  } catch (e) {
-    // Fail quietly if not available in this context
-    console.warn('CPT widget in Objective failed to mount:', e);
-  }
+  // CPT Codes widget is rendered only in BillingSection to ensure single source of truth
   
   return section;
 }

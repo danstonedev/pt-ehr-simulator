@@ -20,13 +20,47 @@
 /* ========================================
   1) DESIGN TOKENS (Variables & System)
   ======================================== */
+/* Theme-agnostic chrome tokens (stable across themes) */
 :root {
+  /* Topbar gradient right stop and background remain dark for brand contrast */
+  --chrome-topbar-right: #0f172a; /* dark slate */
+  --chrome-topbar-bg: rgba(0,0,0,0.92);
+  /* Sidebar gradient stops used for gray chrome */
+  --chrome-sidebar-left: #1f2937;   /* slate-800 */
+  --chrome-sidebar-right: #111827;  /* slate-900 */
+
+  /* Theme-agnostic layout + primitives (same in light/dark) */
+  /* Layout tokens */
+  --topbar-h: 72px; /* unify top bar height (taller per request) */
+  --edu-ribbon-h: 28px; /* bottom ribbon height for readable text */
+  --sticky-header-h: 64px; /* unified sticky header height */
+  --sidebar-w: 280px; /* unify sidebar width */
+
+  /* Z-index layers */
+  --z-topbar: 3000;
+  --z-sidebar: 1000;
+  --z-case-header: 1001;
+  --z-sticky-header: 2000; /* always on top */
+  --z-footer: 1100;
+  --z-modal: 10000;
+
+  /* Spacing, radii, shadows */
+  --radius-sm: 6px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 20px;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; 
+  --space-5: 20px; --space-6: 24px;
+  --shadow-1: 0 2px 8px rgba(0,0,0,.1);
+  --shadow-2: 0 8px 18px rgba(0,0,0,.25);
+  /* Input radius token (used across inputs/buttons) */
+  --input-radius: var(--radius-md);
+}
+/* Dark theme tokens (apply when [data-theme="dark"]) */
+:root[data-theme="dark"] {
   /* Color tokens - Accessibility-compliant Dark Theme (WCAG AA) */
   --bg: #1a202c; 
   --panel: #2d3748; 
   --muted: #a0aec0; 
   --text: #f7fafc; /* Higher contrast */
-  --accent: #68d391; /* Improved contrast */
+  --accent: var(--und-green); /* Use brand green consistently */
   --accent2: var(--und-green); /* Map to UND green */
   --warn: #f6e05e; /* Better yellow contrast */
   --danger: #fc8181; /* Improved red contrast */
@@ -45,9 +79,21 @@
   --success: #68d391; 
   --primary: var(--und-green);
 
-  /* Input controls (consistent across themes) */
-  --input-bg: #ffffff;
-  --input-border: #a0aec0; /* darker gray for readability on white */
+  /* Input controls (dark theme appearance) */
+  --input-bg: #1f2937;      /* slate-800 */
+  --input-border: #374151;  /* slate-700 */
+  --input-text: #f9fafb;    /* near-white text */
+  /* Text on light surfaces regardless of theme (for white sidebar cards) */
+  --text-on-light: #111827;            /* slate-900 */
+  --text-secondary-on-light: #475569;  /* slate-600 */
+  /* Select (dropdown) controls - dark theme default */
+  --select-bg: #1f2937;      /* slate-800 */
+  --select-border: #374151;  /* slate-700 */
+  --select-text: #f9fafb;    /* near-white text */
+  /* Light surface variants (white cards on dark layouts) */
+  --surface-light: #ffffff;
+  --surface-light-border: #e5e7eb; /* slate-200 */
+  --surface-light-hover: #f9fafb;  /* slate-50 */
 
   /* Enhanced tokens with better contrast */
   --primary-light: var(--und-green-light);
@@ -63,12 +109,13 @@
   /* UND School Colors - Accessibility enhanced */
   --und-black: #000000;
   --und-gray: #a0aec0; /* Better contrast */
-  --und-green: #38a169; /* WCAG AA compliant */
-  --und-orange: #ed8936; /* Better orange contrast */
-  --und-green-light: rgba(56, 161, 105, 0.15);
-  --und-orange-light: rgba(237, 137, 54, 0.15);
-  --und-green-dark: #2f855a;
-  --und-orange-dark: #c05621;
+  /* Keep brand colors constant across themes */
+  --und-green: #009A44;
+  --und-orange: #FF671F;
+  --und-green-light: rgba(0, 154, 68, 0.08);
+  --und-orange-light: rgba(255, 103, 31, 0.08);
+  --und-green-dark: #007a35;
+  --und-orange-dark: #e55a1c;
   /* Sidebar gradient tokens (dark baseline) */
   --sidebar-gray-left: #1f2937;    /* slate-800 (darker) */
   --sidebar-gray-right: #111827;   /* slate-900 (even darker) */
@@ -81,6 +128,9 @@
 
   /* Gradients */
   --gradient-start: #0b0d10; --gradient-mid: #0f1320; --gradient-end: #0b0d10;
+  /* Home (landing) background gradient - dark theme (derived from UND gray) */
+  --home-bg-start: color-mix(in srgb, var(--und-gray) 26%, black);
+  --home-bg-end:   color-mix(in srgb, var(--und-gray) 46%, black);
   /* Topbar gradient right stop (subtle dark gray) */
   --topbar-gradient-right: #0f172a;
 
@@ -130,13 +180,13 @@
 #svg-sprite { display: none; }
 
 /* Light theme - Accessibility-compliant (WCAG AA) */
-:root[data-theme="light"] {
+:root {
   --bg: #ffffff; 
   --panel: #f7fafc; 
   --muted: #4a5568; /* Better contrast for muted text */
   --text: #1a202c; /* Higher contrast dark text */
   --surface: #f7fafc;
-  --accent: #38a169; /* WCAG AA compliant green */
+  --accent: var(--und-green); /* Keep brand green constant */
   --accent2: var(--und-green); /* Map to UND green */
   --warn: #d69e2e; /* Improved yellow */
   --danger: #e53e3e; /* Better red contrast */
@@ -156,6 +206,15 @@
   /* Input controls for light theme */
   --input-bg: #ffffff;
   --input-border: #cbd5e0; /* slightly darker than default border for readability */
+  --input-text: #1a202c; /* keep input text dark on white fields */
+  /* Selects in light theme remain light */
+  --select-bg: #ffffff;
+  --select-border: #cbd5e0;
+  --select-text: #1a202c;
+  /* Light surface tokens (same values in light theme) */
+  --surface-light: #ffffff;
+  --surface-light-border: #e5e7eb;
+  --surface-light-hover: #f9fafb;
   
   /* Button system for light theme */
   --btn-bg: #ffffff; 
@@ -165,6 +224,9 @@
   --gradient-start: #ffffff; 
   --gradient-mid: #f7fafc; 
   --gradient-end: #ffffff;
+  /* Home (landing) background gradient - light theme (derived from UND gray) */
+  --home-bg-start: color-mix(in srgb, var(--und-gray) 24%, white);
+  --home-bg-end:   color-mix(in srgb, var(--und-gray) 44%, white);
   /* Topbar gradient right stop for light theme (slate-800-ish) */
   --topbar-gradient-right: #1f2937;
   /* Keep a dark top bar in light mode for stronger brand contrast */
@@ -273,7 +335,7 @@ p {
   height: var(--edu-ribbon-h);
   display: flex; align-items: center; justify-content: center;
   /* Dark gradient: solid black → very dark gray to mirror topbar */
-  background: linear-gradient(90deg, #000000 0%, var(--topbar-gradient-right) 100%);
+  background: linear-gradient(90deg, #000000 0%, var(--chrome-topbar-right) 100%);
   color: #fff;
   font-size: 12px;
   letter-spacing: 0.06em;
@@ -316,6 +378,51 @@ body:has(.edu-ribbon) #app {
   padding-bottom: calc(var(--edu-ribbon-h) + env(safe-area-inset-bottom) + 28px);
 }
 
+/* Home-only background: subtle gray gradient to improve panel contrast */
+#app:has(.home-container) {
+  background: linear-gradient(180deg, var(--home-bg-start, #e5e7eb) 0%, var(--home-bg-end, #cbd5e0) 100%);
+}
+
+/* Also paint the page background so margins around #app are covered */
+body:has(#app .home-container) {
+  background: linear-gradient(180deg, var(--home-bg-start, #e5e7eb) 0%, var(--home-bg-end, #cbd5e0) 100%);
+}
+
+/* Apply the same UND Gray gradient to Student and Faculty dashboards */
+body[data-route="student-cases"],
+body[data-route="instructor-cases"] {
+  background: linear-gradient(180deg, var(--home-bg-start, #e5e7eb) 0%, var(--home-bg-end, #cbd5e0) 100%);
+}
+
+/* Also ensure the main app area uses the gradient for those routes */
+body[data-route="student-cases"] #app,
+body[data-route="instructor-cases"] #app {
+  background: linear-gradient(180deg, var(--home-bg-start, #e5e7eb) 0%, var(--home-bg-end, #cbd5e0) 100%);
+}
+
+/* Darker panel containers on Home, Student, Faculty dashboards */
+/* Light theme: increase UND Gray mix with white for deeper panels */
+html:not([data-theme="dark"]) body[data-route="home"],
+html:not([data-theme="dark"]) body[data-route="student-cases"],
+html:not([data-theme="dark"]) body[data-route="instructor-cases"] {
+  /* Use the same gray as the case editor background for containers */
+  --panel: var(--editor-bg);
+  --surface: var(--editor-bg);
+  /* Slightly darker border for definition on light editor gray */
+  --border: color-mix(in srgb, var(--editor-bg) 60%, black);
+}
+
+/* Dark theme: increase UND Gray mix with black for deeper panels */
+html[data-theme="dark"] body[data-route="home"],
+html[data-theme="dark"] body[data-route="student-cases"],
+html[data-theme="dark"] body[data-route="instructor-cases"] {
+  /* Mirror the editor background for containers in dark theme too */
+  --panel: var(--editor-bg);
+  --surface: var(--editor-bg);
+  /* Slightly lighter border for definition on dark editor background */
+  --border: color-mix(in srgb, var(--editor-bg) 46%, white);
+}
+
 /* Offset page content for fixed main header */
 /* Only add offset when a topbar exists */
 body:has(header.topbar) { padding-top: var(--topbar-h); }
@@ -342,7 +449,7 @@ body:has(header.topbar) { padding-top: var(--topbar-h); }
   position: absolute; top: 3px; left: 3px;
   width: 22px; height: 22px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--bg);
   display: grid; place-items: center;
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
   transition: transform .22s ease, background .2s ease;
@@ -350,6 +457,11 @@ body:has(header.topbar) { padding-top: var(--topbar-h); }
 .theme-toggle .icon { font-size: 14px; line-height: 1; }
 .theme-toggle .icon.sun { display: block; }
 .theme-toggle .icon.moon { display: none; }
+/* Tweak sun/moon SVG appearance */
+.theme-toggle .switch-thumb .icon { width: 14px; height: 14px; }
+/* Light theme: sun icon colored, dark theme: moon icon colored */
+html:not([data-theme="dark"]) .theme-toggle .icon.sun { color: var(--und-orange); }
+html[data-theme="dark"] .theme-toggle .icon.moon { color: var(--und-orange); }
 
 .theme-toggle.is-dark .switch-track { background: rgba(255,255,255,0.18); border-color: rgba(255,255,255,0.25); }
 .theme-toggle.is-dark .switch-thumb { transform: translateX(28px); }
@@ -385,21 +497,22 @@ body:has(header.topbar) { padding-top: var(--topbar-h); }
   }
 }
 
-/* Temporarily hide the theme toggle */
-#themeToggle { display: none !important; }
+/* Theme toggle is visible in the top-right of the header */
+/* (previous temporary hide removed) */
 
 /* UND-branded mini toggle used in subsection headers */
 .und-toggle { cursor: pointer; }
 .und-toggle-input { position: absolute; opacity: 0; width: 0; height: 0; }
 .und-toggle-track {
   width: 38px; height: 22px; border-radius: 999px;
-  background: #cbd5e1; /* gray off */
-  border: 1px solid #b6c1cd;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
   display: inline-flex; align-items: center; padding: 2px; box-sizing: border-box;
   transition: background .2s ease, border-color .2s ease;
 }
 .und-toggle-thumb {
-  width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  width: 18px; height: 18px; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  background: var(--bg);
   transition: transform .2s ease;
 }
 /* Checked (on) state: UND green */
@@ -413,7 +526,7 @@ body:has(header.topbar) { padding-top: var(--topbar-h); }
 /* Toggle label color and state cue */
 .subsection-visibility-toggle .toggle-text { color: rgba(255,255,255,0.85); letter-spacing: 0.03em; }
 .subsection-visibility-toggle .und-toggle-input:not(:checked) ~ .toggle-text { color: rgba(255,255,255,0.65); }
-.subsection-visibility-toggle .und-toggle-input:checked ~ .toggle-text { color: #e6fff1; }
+.subsection-visibility-toggle .und-toggle-input:checked ~ .toggle-text { color: var(--text); }
 
 /* Visually hide ON/OFF text (keep accessible) */
 .subsection-visibility-toggle .toggle-text {
@@ -463,7 +576,7 @@ body:has(header.topbar) { padding-top: var(--topbar-h); }
   /* Visual styling - clean professional design with exact height */
   /* Subtle left→right gradient: darker green to UND green */
   background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
-  color: white;
+  color: #fff;
   height: var(--sticky-header-h); /* Fixed height via variable */
   display: flex;
   align-items: center;
@@ -482,7 +595,7 @@ body:has(header.topbar) { padding-top: var(--topbar-h); }
 /* Sticky top bar section title */
 .sticky-top-bar .active-section-title {
   margin: 0;
-  color: white;
+  color: #fff;
   font-size: 18px;
   font-weight: 600;
   text-transform: uppercase;
@@ -506,9 +619,9 @@ body:has(header.topbar) { padding-top: var(--topbar-h); }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #fff;
-  color: #0f172a; /* Dark text for contrast on white pill */
-  border: 1px solid rgba(255,255,255,0.0);
+  background: var(--bg);
+  color: var(--text); /* text respects theme */
+  border: 1px solid transparent;
   border-radius: 999px;
   padding: 6px 10px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.15);
@@ -520,9 +633,9 @@ body:has(header.topbar) { padding-top: var(--topbar-h); }
   background: var(--muted);
 }
 .sticky-top-bar .save-status-pill .dot.saved { background: var(--success); }
-.sticky-top-bar .save-status-pill .dot.saving { background: #fbbf24; }
+.sticky-top-bar .save-status-pill .dot.saving { background: var(--warn); }
 .sticky-top-bar .save-status-pill .dot.error { background: var(--danger); }
-.sticky-top-bar .save-status-pill .text { font-size: 12px; font-weight: 600; color: #0f172a; }
+.sticky-top-bar .save-status-pill .text { font-size: 12px; font-weight: 600; color: var(--text); }
 
 /* Override button styling for UND Green header */
 .sticky-top-bar .btn.secondary {
@@ -530,13 +643,13 @@ body:has(header.topbar) { padding-top: var(--topbar-h); }
   font-size: 14px;
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
+  color: #fff;
 }
 
 .sticky-top-bar .btn.secondary:hover {
   background: rgba(255, 255, 255, 0.3);
   border-color: rgba(255, 255, 255, 0.5);
-  color: white;
+  color: #fff;
   transform: translateY(-1px);
 }
 .main-content-with-sidebar { 
@@ -617,7 +730,7 @@ body:has(header.topbar) { padding-top: var(--topbar-h); }
   /* Add horizontal padding so text doesn't touch the edges */
   padding: var(--space-2) var(--space-4);
   /* Match main navigation: black -> dark gray gradient */
-  background: linear-gradient(90deg, rgba(0,0,0,0.96) 0%, var(--topbar-gradient-right) 100%);
+  background: linear-gradient(90deg, rgba(0,0,0,0.96) 0%, var(--chrome-topbar-right) 100%);
   color: #fff;
   font-weight: 600;
   /* Subtle rounding for a cleaner pill-like header */
@@ -651,7 +764,7 @@ select,
   width: 100%; 
   padding: 12px var(--space-3); 
   background: var(--input-bg); 
-  color: var(--text);
+  color: var(--input-text);
   border: 1px solid var(--input-border); 
   border-radius: var(--input-radius); 
   outline: none; 
@@ -660,6 +773,14 @@ select,
   line-height: 1.5;
   min-height: 44px; /* Touch target size */
   font-family: inherit;
+}
+
+/* Global select dropdown theme: dark in dark theme, light in light theme */
+html[data-theme="dark"] select, 
+html[data-theme="dark"] .form-select {
+  background: var(--select-bg);
+  border-color: var(--select-border);
+  color: var(--select-text);
 }
 
 
@@ -709,6 +830,31 @@ textarea {
 }
 textarea::-webkit-scrollbar { display: none; }    /* Chrome/Safari/Edge */
 textarea::-webkit-resizer { display: none; }
+
+/* Placeholder color (muted relative to input text) */
+input::placeholder,
+textarea::placeholder,
+.form-input::placeholder,
+.form-textarea::placeholder,
+.form-input-standard::placeholder {
+  color: rgba(26, 32, 44, 0.55); /* fallback: based on --input-text (#1a202c) */
+}
+/* Dark theme placeholder color */
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder,
+html[data-theme="dark"] .form-input::placeholder,
+html[data-theme="dark"] .form-textarea::placeholder,
+html[data-theme="dark"] .form-input-standard::placeholder {
+  color: rgba(249, 250, 251, 0.55); /* near-white at 55% */
+}
+
+/* Radio/checkbox accent color in dark theme for native controls */
+html[data-theme="dark"] input[type="radio"],
+html[data-theme="dark"] input[type="checkbox"] {
+  accent-color: var(--und-green);
+  background: var(--input-bg);
+  border-color: var(--input-border);
+}
 
 /* ========================================
    9) ACCESSIBLE NAVIGATION & TABS
@@ -921,6 +1067,10 @@ textarea::-webkit-resizer { display: none; }
   min-width: 32px; 
   transition: all .2s ease; 
 }
+.pain-scale-btn:focus-visible {
+  outline: 3px solid var(--und-green);
+  outline-offset: 2px;
+}
 .pain-scale-btn:hover { 
   background: #ffffff; /* keep white on hover */
   box-shadow: 0 1px 0 rgba(0,0,0,0.06);
@@ -931,6 +1081,22 @@ textarea::-webkit-resizer { display: none; }
   border-color: var(--accent2); 
   color: #fff; 
   transform: scale(1.05);
+}
+/* Dark theme: make pain scale pills dark with light text */
+html[data-theme="dark"] .pain-scale-btn {
+  background: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--input-border);
+}
+html[data-theme="dark"] .pain-scale-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--input-border);
+  box-shadow: none;
+}
+html[data-theme="dark"] .pain-scale-btn.active {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: #fff;
 }
 .pain-scale-desc { 
   font-size: 12px; 
@@ -1450,7 +1616,7 @@ select:focus, .form-select:focus { transform: none; }
     --bg: #fff;
   }
   
-  :root[data-theme="dark"] {
+  html[data-theme="dark"] {
     --border: #fff;
     --text: #fff;
     --bg: #000;
@@ -1525,7 +1691,7 @@ select:focus, .form-select:focus { transform: none; }
   font-size: 0.875rem;
   width: 100%;
   background: var(--input-bg);
-  color: var(--text);
+  color: var(--input-text);
   font-family: inherit;
   line-height: 1.4;
   min-height: 44px; /* Touch target for accessibility */
@@ -1735,7 +1901,7 @@ select:focus, .form-select:focus { transform: none; }
     --danger: #ff0000;
   }
   
-  :root[data-theme="light"] {
+  :root {
     --border: #000000;
     --text: #000000;
     --bg: #ffffff;
@@ -1804,8 +1970,8 @@ header.topbar {
   box-sizing: border-box; /* include padding/border in height */
   height: var(--topbar-h);
   padding: 0 16px; /* no vertical padding so total height == --topbar-h */
-  /* Subtle left→right gradient: black to dark gray */
-  background: linear-gradient(90deg, rgba(0,0,0,0.96) 0%, var(--topbar-gradient-right) 100%);
+  /* Subtle left→right gradient: black to dark gray (theme-agnostic chrome) */
+  background: linear-gradient(90deg, rgba(0,0,0,0.96) 0%, var(--chrome-topbar-right) 100%);
   border-bottom: 1px solid var(--border);
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   box-shadow: 0 2px 6px rgba(0,0,0,0.06);
@@ -1835,6 +2001,14 @@ header.topbar .topnav a {
   text-decoration: none;
   font-weight: 600;
   border-bottom: 2px solid transparent;
+}
+/* Ensure the topnav sits on the right and aligns its items (links + toggle) */
+header.topbar .topnav {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
 }
 header.topbar .topnav a:hover { color: #ffffff; background: rgba(255,255,255,0.08); }
 header.topbar .topnav a:focus { outline-color: var(--und-green); }

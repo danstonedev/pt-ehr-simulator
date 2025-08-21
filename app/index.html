@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -7,8 +7,8 @@
     <meta name="ms-forms-url" content="https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAGOOEaDTU0VTjQwuUNYNFAzSU5MUDNVTENWNjJFT1hOUC4u">
   <title>PT Sim-ER (MVP v2)</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23007acc'/><text x='8' y='12' text-anchor='middle' fill='white' font-family='Arial' font-size='10' font-weight='bold'>E</text></svg>">
-  <link rel="stylesheet" href="css/styles.css?v=20250820-003" />
-  <link rel="stylesheet" href="css/sidebar.css?v=20250820-003" />
+  <link rel="stylesheet" href="css/styles.css?v=20250821-001" />
+  <link rel="stylesheet" href="css/sidebar.css?v=20250821-001" />
   <link rel="stylesheet" href="css/print.css" media="print" />
   <!-- Webfont: Oswald (Trade Gothic alternative) for brand label -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,11 +52,11 @@
       <a href="#/">Home</a>
       <a href="#/student/cases">Student</a>
       <a href="#/instructor/cases">Faculty</a>
-      <button id="themeToggle" class="theme-toggle switch is-light" onclick="toggleTheme()" role="switch" aria-checked="false" aria-label="Switch to dark theme">
+    <button id="themeToggle" class="theme-toggle switch is-light" onclick="toggleTheme()" role="switch" aria-checked="false" aria-label="Switch to dark theme">
         <span class="switch-track" aria-hidden="true"></span>
         <span class="switch-thumb" aria-hidden="true">
-          <span class="icon sun" aria-hidden="true">☀️</span>
-          <span class="icon moon" aria-hidden="true">🌙</span>
+      <svg class="icon sun" aria-hidden="true" focusable="false"><use href="#icon-sun"></use></svg>
+      <svg class="icon moon" aria-hidden="true" focusable="false"><use href="#icon-moon"></use></svg>
         </span>
       </button>
     </nav>
@@ -142,34 +142,44 @@
     <symbol id="icon-settings" viewBox="0 0 24 24">
       <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
     </symbol>
+    <!-- Sun/Moon icons for theme toggle -->
+    <symbol id="icon-sun" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="5" />
+      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
+      </g>
+    </symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24">
+      <path d="M21 12.6A9 9 0 1111.4 3a7.6 7.6 0 009.6 9.6z"/>
+    </symbol>
   </svg>
 
   <script>
-    // Theme toggle functionality
+    // Theme toggle functionality (light baseline, dark via data-theme="dark")
     function toggleTheme() {
       const root = document.documentElement;
       const toggle = document.getElementById('themeToggle');
-      const isLight = root.getAttribute('data-theme') === 'light';
-      if (isLight) {
-        // Switch to dark
+      const isDark = root.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        // Switch to light (remove attribute)
         root.removeAttribute('data-theme');
-        localStorage.setItem('theme', 'dark');
-        toggle.setAttribute('aria-checked', 'true');
-        toggle.setAttribute('aria-label', 'Switch to light theme');
-        toggle.classList.add('is-dark');
-        toggle.classList.remove('is-light');
-      } else {
-        // Switch to light
-        root.setAttribute('data-theme', 'light');
         localStorage.setItem('theme', 'light');
         toggle.setAttribute('aria-checked', 'false');
         toggle.setAttribute('aria-label', 'Switch to dark theme');
         toggle.classList.add('is-light');
         toggle.classList.remove('is-dark');
+      } else {
+        // Switch to dark
+        root.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+        toggle.setAttribute('aria-checked', 'true');
+        toggle.setAttribute('aria-label', 'Switch to light theme');
+        toggle.classList.add('is-dark');
+        toggle.classList.remove('is-light');
       }
     }
     
-    // Load saved theme on page load (coerce invalid to light)
+    // Load saved theme on page load (coerce invalid to light baseline)
     document.addEventListener('DOMContentLoaded', function() {
       let savedTheme = localStorage.getItem('theme');
       if (savedTheme !== 'light' && savedTheme !== 'dark') {
@@ -178,21 +188,21 @@
       }
       const toggle = document.getElementById('themeToggle');
 
-      if (savedTheme === 'light') {
-        document.documentElement.setAttribute('data-theme', 'light');
-        if (toggle) {
-          toggle.setAttribute('aria-checked', 'false');
-          toggle.setAttribute('aria-label', 'Switch to dark theme');
-          toggle.classList.add('is-light');
-          toggle.classList.remove('is-dark');
-        }
-      } else {
-        document.documentElement.removeAttribute('data-theme');
+      if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
         if (toggle) {
           toggle.setAttribute('aria-checked', 'true');
           toggle.setAttribute('aria-label', 'Switch to light theme');
           toggle.classList.add('is-dark');
           toggle.classList.remove('is-light');
+        }
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        if (toggle) {
+          toggle.setAttribute('aria-checked', 'false');
+          toggle.setAttribute('aria-label', 'Switch to dark theme');
+          toggle.classList.add('is-light');
+          toggle.classList.remove('is-dark');
         }
       }
 
@@ -266,7 +276,7 @@
           overlay.addEventListener('click', (e) => { if (e.target === overlay) document.body.removeChild(overlay); });
 
           const panel = document.createElement('div');
-          panel.style.cssText = 'background:#fff;padding:24px;border-radius:12px;width:92%;max-width:560px;box-shadow:0 20px 25px -5px rgba(0,0,0,.1);color:#111;';
+          panel.style.cssText = 'background:var(--bg);padding:24px;border-radius:12px;width:92%;max-width:560px;box-shadow:0 20px 25px -5px rgba(0,0,0,.1);color:var(--text);';
           if (configuredUrl) {
             // Build an embeddable URL (ensure embed=true present)
             let formSrc = configuredUrl.trim();
@@ -275,9 +285,9 @@
             }
             panel.innerHTML = `
               <h2 style="margin:0 0 8px 0;">Send Feedback</h2>
-              <p class="small" style="margin:0 0 12px 0;color:#4b5563;">This form is embedded from Microsoft Forms.</p>
+              <p class="small" style="margin:0 0 12px 0;color:var(--text-secondary);">This form is embedded from Microsoft Forms.</p>
               <div style="width:100%;height:560px;">
-                <iframe title="Feedback Form" src="${formSrc}" width="100%" height="100%" frameborder="0" marginwidth="0" marginheight="0" allowfullscreen webkitallowfullscreen mozallowfullscreen style="border:1px solid var(--input-border); border-radius:12px; background:#fff;"></iframe>
+                <iframe title="Feedback Form" src="${formSrc}" width="100%" height="100%" frameborder="0" marginwidth="0" marginheight="0" allowfullscreen webkitallowfullscreen mozallowfullscreen style="border:1px solid var(--input-border); border-radius:12px; background:var(--bg);"></iframe>
               </div>
               <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
                 <button class="btn secondary" type="button" id="cancelFeedback">Close</button>
@@ -287,7 +297,7 @@
           } else {
             panel.innerHTML = `
               <h2 style="margin:0 0 8px 0;">Send Feedback</h2>
-              <p class="small" style="margin:0 0 12px 0;color:#4b5563;">Share any issues or ideas. Your comments help improve the simulator.</p>
+              <p class="small" style="margin:0 0 12px 0;color:var(--text-secondary);">Share any issues or ideas. Your comments help improve the simulator.</p>
               <label for="feedbackText" class="form-label-standard" style="display:block;margin-bottom:6px;">Your feedback</label>
               <textarea id="feedbackText" rows="6" style="width:100%;box-sizing:border-box;border:1px solid var(--input-border);border-radius:8px;padding:10px;font-family:inherit;font-size:14px;resize:vertical;"></textarea>
               <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">

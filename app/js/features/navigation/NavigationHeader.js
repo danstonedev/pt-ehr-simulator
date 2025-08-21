@@ -178,12 +178,12 @@ export function createModeIndicator(isFacultyMode, isKeyMode) {
   if (isKeyMode) {
     return el('span', { 
       class: 'badge', 
-      style: 'background: var(--warning); color: white; margin-left: 8px;' 
+  style: 'background: var(--warning); color: var(--text); margin-left: 8px;' 
     }, 'KEY VIEW');
   } else if (isFacultyMode) {
     return el('span', { 
       class: 'badge', 
-  style: 'background: var(--und-green); color: white; margin-left: 8px;' 
+  style: 'background: var(--und-green); color: #fff; margin-left: 8px;' 
     }, 'FACULTY');
   }
   return null;

@@ -677,7 +677,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
       promContainer.appendChild(promTable.element);
     } else {
       promContainer.appendChild(el('div', {
-        style: 'padding: 20px; text-align: center; color: #888; background: #f9f9f9; border-radius: 6px;'
+        style: 'padding: 20px; text-align: center; color: var(--text-muted); background: var(--surface-secondary); border-radius: 6px;'
       }, 'Select regions above to display Passive Range of Motion (PROM) assessments'));
     }
 
@@ -696,7 +696,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
       romContainer.appendChild(romSection.element);
     } else {
       romContainer.appendChild(el('div', { 
-        style: 'padding: 20px; text-align: center; color: #888; background: #f9f9f9; border-radius: 6px;' 
+        style: 'padding: 20px; text-align: center; color: var(--text-muted); background: var(--surface-secondary); border-radius: 6px;' 
       }, 'Select regions above to display Range of Motion assessments'));
     }
 
@@ -715,7 +715,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
       mmtContainer.appendChild(mmtSection.element);
     } else {
       mmtContainer.appendChild(el('div', { 
-        style: 'padding: 20px; text-align: center; color: #888; background: #f9f9f9; border-radius: 6px;' 
+        style: 'padding: 20px; text-align: center; color: var(--text-muted); background: var(--surface-secondary); border-radius: 6px;' 
       }, 'Select regions above to display Manual Muscle Testing assessments'));
     }
 
@@ -734,7 +734,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
       specialTestsContainer.appendChild(specialTestsSection.element);
     } else {
       specialTestsContainer.appendChild(el('div', { 
-        style: 'padding: 20px; text-align: center; color: #888; background: #f9f9f9; border-radius: 6px;' 
+        style: 'padding: 20px; text-align: center; color: var(--text-muted); background: var(--surface-secondary); border-radius: 6px;' 
       }, 'Select regions above to display Special Tests assessments'));
     }
   };

@@ -129,10 +129,10 @@ route('#/student/cases', async (app) => {
       });
       const defaultTitle = `Blank SOAP Note — ${new Date().toLocaleDateString()}`;
       const content = el('div', {
-        style: 'background:white; padding:24px; border-radius:12px; width:92%; max-width:520px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);'
+        style: 'background:var(--bg); color:var(--text); padding:24px; border-radius:12px; width:92%; max-width:520px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);'
       }, [
         el('h3', { style: 'margin-top:0;' }, 'Create SOAP Note'),
-        el('p', { class: 'small', style: 'margin-top:4px; color:#4b5563;' }, 'Give your note a title so you can find it later.'),
+  el('p', { class: 'small', style: 'margin-top:4px; color:var(--text-secondary);' }, 'Give your note a title so you can find it later.'),
         el('label', { class: 'form-label-standard', style: 'margin-top:12px;' }, 'Note Title'),
         el('input', {
           id: 'student-note-title-input',
@@ -534,9 +534,10 @@ route('#/student/cases', async (app) => {
         }))
       ]);
       // Render
-      const existing = casesPanel.querySelector('table');
-      if (existing) existing.remove();
-      casesPanel.append(table);
+    const existing = casesPanel.querySelector('.table-responsive'); 
+    if (existing) existing.remove(); 
+    const wrapper = el('div', { class: 'table-responsive' }, table); 
+    casesPanel.append(wrapper); 
     }
 
     // Initial render

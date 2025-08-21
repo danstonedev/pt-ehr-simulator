@@ -7,8 +7,8 @@
   width: var(--sidebar-w);
   /* Leave room for fixed bottom ribbon and safe area to avoid cut off */
   height: calc(100vh - var(--topbar-h) - var(--edu-ribbon-h) - env(safe-area-inset-bottom));
-  /* Single gradient: black → dark gray */
-  background: linear-gradient(90deg, var(--und-black) 0%, var(--sidebar-gray-right) 100%);
+  /* Single gradient: black → dark gray (theme-agnostic chrome) */
+  background: linear-gradient(90deg, var(--und-black) 0%, var(--chrome-sidebar-right) 100%);
   border-right: 1px solid rgba(0,0,0,0.12);
   position: fixed; left: 0; top: var(--topbar-h);
   overflow-y: auto; overflow-x: visible; z-index: var(--z-sidebar);
@@ -16,7 +16,8 @@
   transition: transform 0.3s ease;
 }
 .chart-navigation.collapsed { transform: translateX(calc(-1 * var(--sidebar-w))); }
-[data-theme="dark"] .chart-navigation { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+/* Dark mode is represented by the absence of data-theme="light" on <html> */
+html[data-theme="dark"] .chart-navigation { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
 
 /* Ensure full height for chart navigation */
 body:has(.chart-navigation) { margin: 0; }
@@ -26,10 +27,12 @@ body:has(.chart-navigation) { margin: 0; }
 .chart-navigation li,
 .sidebar-nav-panel ul,
 .sidebar-nav-panel li { list-style: none; margin: 0; padding: 0; }
-/* General sidebar text on UND Gray */
-.chart-navigation { color: rgba(255,255,255,0.92); }
-/* Nav items and their children use near-white for contrast on UND Gray */
-.chart-navigation .section-nav-item, .chart-navigation .section-nav-item * { color: rgba(255,255,255,0.92); }
+/* General sidebar text on UND Gray chrome */
+html[data-theme="dark"] .chart-navigation { color: rgba(255,255,255,0.92); }
+html:not([data-theme="dark"]) .chart-navigation { color: var(--text); }
+/* Nav items and their children use near-white only in dark theme */
+html[data-theme="dark"] .chart-navigation .section-nav-item,
+html[data-theme="dark"] .chart-navigation .section-nav-item * { color: rgba(255,255,255,0.92); }
 /* Keep case header card using default text color (it has a light background) */
 .chart-navigation .case-header, .chart-navigation .case-header * { color: var(--text); }
 /* Optional: titles inside the gray zone can be pure white */
@@ -48,10 +51,12 @@ body:has(.chart-navigation) { margin: 0; }
   box-shadow: none;
   overflow: visible;
 }
+/* Ensure base text color is dark in light theme within the white-panel area */
+html:not([data-theme="dark"]) .sidebar-nav-panel { color: var(--text-on-light); }
 /* Case Info pill (card) */
 .case-info-card {
-  background: #ffffff;
-  border: 1px solid #64748b;
+  background: var(--surface-light);
+  border: 1px solid var(--surface-light-border);
   border-radius: 12px;
   padding: 12px;
   margin: 8px 0 12px 0;
@@ -60,8 +65,8 @@ body:has(.chart-navigation) { margin: 0; }
   transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 .case-info-card:hover {
-  background-color: #f9fafb;
-  border-color: #475569;
+  background-color: var(--surface-light-hover);
+  border-color: var(--surface-light-border);
 }
 .case-info-card:focus-visible {
   outline: 3px solid var(--und-orange);
@@ -79,28 +84,57 @@ body:has(.chart-navigation) { margin: 0; }
 /* Ensure text uses dark-on-light inside white card */
 .sidebar-nav-panel .case-info-card, 
 .sidebar-nav-panel .case-info-card * { color: var(--text); }
+/* Dark theme: case info card should be dark */
+html[data-theme="dark"] .sidebar-nav-panel .case-info-card {
+  background: var(--panel);
+  border-color: var(--border);
+}
+html[data-theme="dark"] .sidebar-nav-panel .case-info-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--border);
+}
 /* (Removed) Autosave status pill styles */
 /* Flat list items in white panel */
 .sidebar-nav-panel .section-nav-item {
-  background: #ffffff;
-  border: 1px solid #64748b; /* darker uniform gray outline */
+  background: var(--surface-light);
+  border: 1px solid var(--surface-light-border); /* use light surface border */
   box-shadow: none; /* keep flat card look */
   border-radius: 10px;
 }
 .sidebar-nav-panel .section-nav-item + .section-nav-item { margin-top: 6px; }
-.sidebar-nav-panel .section-nav-item:hover { background-color: #f9fafb; border-color: #475569; box-shadow: none; }
+.sidebar-nav-panel .section-nav-item:hover { background-color: var(--surface-light-hover); border-color: var(--surface-light-border); box-shadow: none; }
 .sidebar-nav-panel .section-nav-item.active {
-  background: #e8f6ef; /* more visible light green */
+  background: var(--und-green-light);
   border-color: var(--und-green);
   border-width: 2px;
   box-shadow: none;
 }
+/* Dark theme: tracker pills should be dark with lighter text */
+html[data-theme="dark"] .sidebar-nav-panel .section-nav-item {
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+html[data-theme="dark"] .sidebar-nav-panel .section-nav-item:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border);
+}
+html[data-theme="dark"] .sidebar-nav-panel .section-nav-item,
+html[data-theme="dark"] .sidebar-nav-panel .section-nav-item * { color: var(--text); }
+html[data-theme="dark"] .sidebar-nav-panel .section-nav-item .nav-progress-text { color: var(--text-secondary) !important; opacity: 0.95; }
 /* Make the progress subtext readable on active background */
 .sidebar-nav-panel .section-nav-item .nav-progress-text { color: var(--text-secondary) !important; opacity: 0.9; }
-/* Reset nav item text colors inside white panel */
-.sidebar-nav-panel .section-nav-item, .sidebar-nav-panel .section-nav-item * { color: var(--text); }
-.sidebar-nav-panel .nav-progress-text { color: var(--text-secondary); }
-/* Subsection list visuals inside the panel (rendered on dark gradient) */
+/* Reset nav item text colors inside white panel (broad to catch inline content) */
+html:not([data-theme="dark"]) .sidebar-nav-panel .section-nav-item,
+html:not([data-theme="dark"]) .sidebar-nav-panel .section-nav-item * { color: var(--text-on-light) !important; }
+html:not([data-theme="dark"]) .sidebar-nav-panel .section-nav-item .nav-progress-text { color: var(--text-secondary-on-light) !important; }
+/* Explicitly target the label text for extra safety */
+html:not([data-theme="dark"]) .sidebar-nav-panel .section-nav-item .nav-label { color: var(--text-on-light) !important; }
+
+/* Global safeguard: light theme forces dark text for any tracker pill inside the sidebar */
+html:not([data-theme="dark"]) .chart-navigation .section-nav-item,
+html:not([data-theme="dark"]) .chart-navigation .section-nav-item * { color: var(--text-on-light) !important; }
+html:not([data-theme="dark"]) .chart-navigation .section-nav-item .nav-progress-text { color: var(--text-secondary-on-light) !important; }
+/* Subsection list visuals inside the panel (rendered on dark gradient in both themes) */
 .sidebar-nav-panel .subsection-toc { border-left: 2px solid rgba(255,255,255,0.25); }
 .sidebar-nav-panel .subsection-item { color: rgba(255,255,255,0.92); }
 .sidebar-nav-panel .subsection-item:hover { color: #ffffff; background-color: rgba(255,255,255,0.08); }
@@ -129,7 +163,8 @@ body:has(.chart-navigation) { margin: 0; }
 .case-header button:hover {
   background-color: var(--bg-hover) !important;
 }
-[data-theme="dark"] .case-header { background: var(--bg-secondary); }
+/* Match dark state consistently (no data-theme="light") */
+html[data-theme="dark"] .case-header { background: var(--bg-secondary); }
 
 /* ========================================
    SIDEBAR NAVIGATION WITH PROGRESS
@@ -172,11 +207,7 @@ body:has(.chart-navigation) { margin: 0; }
   background-color: rgba(255,255,255,0.08);
 }
 /* Neutralize auto-highlight of current subsection for a simpler look */
-.sidebar-nav-panel .subsection-item.current-subsection {
-  color: rgba(255,255,255,0.85);
-  background: transparent;
-  border: none;
-}
+.sidebar-nav-panel .subsection-item.current-subsection { color: rgba(255,255,255,0.85); background: transparent; border: none; }
 
 /* Keyboard focus visibility */
 .sidebar-nav-panel .section-nav-item:focus-visible,
@@ -189,37 +220,56 @@ body:has(.chart-navigation) { margin: 0; }
 @media (prefers-contrast: more) {
   .sidebar-nav-panel { box-shadow: 0 0 0 2px #94a3b8; }
   .sidebar-nav-panel .section-nav-item { border-color: #64748b; background: #f3f4f6; }
-  .sidebar-nav-panel .section-nav-item.active { background: #e0f2ea; border-color: var(--und-green); box-shadow: 0 0 0 3px rgba(0,154,68,0.25); }
+  .sidebar-nav-panel .section-nav-item.active { background: #ffffff; border-color: var(--und-green); box-shadow: 0 0 0 3px rgba(0,154,68,0.25); }
   .sidebar-nav-panel .subsection-item.current-subsection { background: transparent; border-color: transparent; }
 }
-/* Progress percentage text inside section item on gray bg */
-.chart-navigation .nav-progress-text { color: rgba(255,255,255,0.85); }
+/* Progress percentage text styling */
+html[data-theme="dark"] .chart-navigation .nav-progress-text { color: rgba(255,255,255,0.85); }
 
 .section-anchor {
   scroll-margin-top: calc(var(--sticky-header-h) + var(--space-5));
 }
 
-/* Keep left border visible on non-active items inside the white panel */
-.sidebar-nav-panel .section-nav-item:not(.active) {
-  border-left: 1px solid #64748b; /* align left edge with darker outline */
+/* Keep left border accent only in light theme */
+html:not([data-theme="dark"]) .sidebar-nav-panel .section-nav-item:not(.active) {
+  border-left: 1px solid #64748b; /* slate-500 */
 }
-.sidebar-nav-panel .section-nav-item:hover:not(.active) {
-  border-left-color: #475569; /* match hover border color */
+html:not([data-theme="dark"]) .sidebar-nav-panel .section-nav-item:hover:not(.active) {
+  border-left-color: #475569; /* slate-600 */
 }
 
-/* Specificity lock: ensure white-panel nav cards use uniform dark borders */
-.sidebar-nav-panel .section-nav-item {
-  border: 1px solid #64748b !important; /* enforce consistent outline on all sides */
-  background: #ffffff !important;
-  box-shadow: none !important; /* avoid inner/outer glow that can lighten edges */
+/* Theme-scoped tracker pills to avoid conflicts */
+html:not([data-theme="dark"]) .sidebar-nav-panel .section-nav-item {
+  border: 1px solid var(--surface-light-border) !important;
+  background: var(--surface-light) !important;
+  box-shadow: none !important;
 }
-.sidebar-nav-panel .section-nav-item:hover {
-  border-color: #475569 !important;
-  background-color: #f9fafb !important;
+html:not([data-theme="dark"]) .sidebar-nav-panel .section-nav-item:hover {
+  border-color: var(--surface-light-border) !important;
+  background-color: var(--surface-light-hover) !important; /* not dark in light theme */
 }
-.sidebar-nav-panel .section-nav-item.active {
+html:not([data-theme="dark"]) .sidebar-nav-panel .section-nav-item.active {
   border: 2px solid var(--und-green) !important;
-  background: #e8f6ef !important;
+  background: var(--surface-light) !important; /* keep active pill white */
+  box-shadow: none !important;
+}
+/* Keep active state white even on hover in light theme */
+html:not([data-theme="dark"]) .sidebar-nav-panel .section-nav-item.active:hover {
+  background: var(--surface-light) !important;
+}
+
+html[data-theme="dark"] .sidebar-nav-panel .section-nav-item {
+  border: 1px solid var(--border) !important;
+  background: var(--panel) !important; /* dark pills in dark theme */
+  box-shadow: none !important;
+}
+html[data-theme="dark"] .sidebar-nav-panel .section-nav-item:hover {
+  border-color: var(--border) !important;
+  background-color: var(--bg-hover) !important;
+}
+html[data-theme="dark"] .sidebar-nav-panel .section-nav-item.active {
+  border: 2px solid var(--und-green) !important;
+  background: var(--und-green-light) !important; /* subtle green tint */
   box-shadow: none !important;
 }
 

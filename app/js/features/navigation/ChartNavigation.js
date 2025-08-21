@@ -105,7 +105,7 @@ function createSubsectionIndicator(status) {
           width: 12px;
           height: 12px;
           border-radius: 50%;
-          background: #ffffff;
+          background: var(--bg);
           margin-right: 6px;
           flex-shrink: 0;
         `
@@ -716,7 +716,7 @@ function openEditCaseModal(caseInfo, onSave) {
   }, [
     el('div', {
       style: `
-        background: white; padding: 32px; border-radius: 12px; max-width: 520px; width: 90%;
+        background: var(--bg); color: var(--text); padding: 32px; border-radius: 12px; max-width: 520px; width: 90%;
         box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
       `,
       onclick: (e) => e.stopPropagation()
@@ -730,21 +730,21 @@ function openEditCaseModal(caseInfo, onSave) {
         ]),
         // DOB (moved up)
         el('div', { style: 'margin-bottom: 16px;' }, [
-          el('label', { style: 'display: block; margin-bottom: 8px; font-weight: 500; color: #374151;' }, 'DOB'),
-          el('input', { type: 'date', id: 'edit-dob', value: caseInfo.dob || '', style: 'width:100%; padding:12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;', oninput: (e) => {
+          el('label', { style: 'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);' }, 'DOB'),
+          el('input', { type: 'date', id: 'edit-dob', value: caseInfo.dob || '', style: 'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;', oninput: (e) => {
             // If user is typing a DOB, mark as user-edited so age changes won't overwrite
             if (e.isTrusted) delete e.target.dataset.autofilled;
             const computed = computeAgeFromDob(e.target.value);
             const ageEl = document.getElementById('edit-age');
             if (computed && ageEl) ageEl.value = computed;
           } }),
-          el('div', { style: 'margin-top: 6px; font-size: 12px; color: #6b7280;' }, 'Age auto-fills when DOB is entered.')
+          el('div', { style: 'margin-top: 6px; font-size: 12px; color: var(--text-secondary);' }, 'Age auto-fills when DOB is entered.')
         ]),
         // Age/Sex
         el('div', { style: 'display: flex; gap: 16px; margin-bottom: 16px;' }, [
           el('div', { style: 'flex: 1;' }, [
-            el('label', { style: 'display: block; margin-bottom: 8px; font-weight: 500; color: #374151;' }, 'Patient Age'),
-            el('input', { type: 'number', id: 'edit-age', min: 0, max: 120, style: 'width:100%; padding:12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;', value: caseInfo.age || '', oninput: (e) => {
+            el('label', { style: 'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);' }, 'Patient Age'),
+            el('input', { type: 'number', id: 'edit-age', min: 0, max: 120, style: 'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;', value: caseInfo.age || '', oninput: (e) => {
               const dobEl = document.getElementById('edit-dob');
               if (!dobEl) return;
               // Only set/overwrite DOB if empty or previously auto-filled from age
@@ -763,8 +763,8 @@ function openEditCaseModal(caseInfo, onSave) {
             } })
           ]),
           el('div', { style: 'flex: 1;' }, [
-            el('label', { style: 'display: block; margin-bottom: 8px; font-weight: 500; color: #374151;' }, 'Sex'),
-            el('select', { id: 'edit-gender', style: 'width:100%; padding:12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;' }, [
+            el('label', { style: 'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);' }, 'Sex'),
+            el('select', { id: 'edit-gender', style: 'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;' }, [
               el('option', { value: '' }, 'Select...'),
               el('option', { value: 'Male', selected: caseInfo.sex === 'Male' ? '' : undefined }, 'Male'),
               el('option', { value: 'Female', selected: caseInfo.sex === 'Female' ? '' : undefined }, 'Female'),
@@ -788,8 +788,8 @@ function openEditCaseModal(caseInfo, onSave) {
   ]),
         // Acuity
         el('div', { style: 'margin-bottom: 24px;' }, [
-          el('label', { style: 'display: block; margin-bottom: 8px; font-weight: 500; color: #374151;' }, 'Case Acuity'),
-          el('select', { id: 'edit-acuity', style: 'width:100%; padding:12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;' }, [
+          el('label', { style: 'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);' }, 'Case Acuity'),
+          el('select', { id: 'edit-acuity', style: 'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;' }, [
             el('option', { value: '' }, 'Select acuity...'),
             el('option', { value: 'Routine', selected: caseInfo.acuity === 'Routine' ? '' : undefined }, 'Routine'),
             el('option', { value: 'Acute', selected: caseInfo.acuity === 'Acute' ? '' : undefined }, 'Acute'),
@@ -1007,7 +1007,7 @@ export function createChartNavigation(config) {
       complete: 'var(--und-green)'
     };
     const color = colors[status] || 'var(--border)';
-    return el('div', { style: `width: 12px; height: 12px; border-radius: 50%; background: ${status === 'empty' ? '#ffffff' : color}; border: 2px solid ${color}; margin-right: 10px; flex-shrink:0;` });
+    return el('div', { style: `width: 12px; height: 12px; border-radius: 50%; background: ${status === 'empty' ? 'var(--bg)' : color}; border: 2px solid ${color}; margin-right: 10px; flex-shrink:0;` });
   };
 
   // Create section navigation item
@@ -1027,6 +1027,7 @@ export function createChartNavigation(config) {
         style: 'margin-left: 12px; flex: 1;'
       }, [
         el('div', {
+          class: 'nav-label',
           style: `
             font-weight: ${isActive ? '600' : '500'};
             font-size: 14px;
@@ -1101,7 +1102,7 @@ export function createChartNavigation(config) {
       left: 20px;
       z-index: 1001;
   background: var(--und-green);
-      color: white;
+      color: #fff;
       border: none;
       padding: 12px;
       border-radius: 8px;
@@ -1262,7 +1263,7 @@ export function updateSaveStatus(sidebar, status) {
   if (statusDot && statusText) {
     switch (status) {
       case 'saving':
-        statusDot.style.background = '#fbbf24';
+  statusDot.style.background = 'var(--warning)';
         statusText.textContent = 'Saving...';
         break;
       case 'saved':
