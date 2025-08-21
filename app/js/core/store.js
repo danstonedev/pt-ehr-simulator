@@ -96,8 +96,19 @@ async function fetchJson(url) {
 // Load cases from manifest file-based layout: app/data/cases/manifest.json
 async function loadCasesFromManifest() {
   console.log('🔍 Loading cases from manifest...');
-  const manifest = await fetchJson('/data/cases/manifest.json');
-  console.log('📄 Manifest loaded:', manifest);
+  
+  // Try both possible paths for GitHub Pages compatibility
+  let manifest = await fetchJson('/data/cases/manifest.json');
+  if (!manifest) {
+    console.log('🔄 Trying alternative path...');
+    manifest = await fetchJson('./data/cases/manifest.json');
+  }
+  if (!manifest) {
+    console.log('� Trying relative path...');
+    manifest = await fetchJson('data/cases/manifest.json');
+  }
+  
+  console.log('�📄 Manifest loaded:', manifest);
   
   if (!manifest || !Array.isArray(manifest.categories)) {
     console.warn('❌ No valid manifest or categories found');
@@ -113,7 +124,17 @@ async function loadCasesFromManifest() {
       if (!c?.file) continue;
       console.log(`🔄 Loading case file: /data/${c.file}`);
       
-      const caseWrapper = await fetchJson(`/data/${c.file}`);
+      // Try multiple path variations for case files too
+      let caseWrapper = await fetchJson(`/data/${c.file}`);
+      if (!caseWrapper) {
+        console.log(`🔄 Trying alternative case path: ./data/${c.file}`);
+        caseWrapper = await fetchJson(`./data/${c.file}`);
+      }
+      if (!caseWrapper) {
+        console.log(`🔄 Trying relative case path: data/${c.file}`);
+        caseWrapper = await fetchJson(`data/${c.file}`);
+      }
+      
       if (!caseWrapper || !caseWrapper.id || !caseWrapper.caseObj) {
         console.warn(`❌ Failed to load case: ${c.file}`);
         continue;
