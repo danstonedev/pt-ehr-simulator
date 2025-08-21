@@ -13,25 +13,20 @@ import { el } from '../../../ui/utils.js';
 export function createAssessmentSection(assessmentData, onUpdate) {
   const section = el('div', { class: 'assessment-section' });
   
-  // Handle backward compatibility - if assessment is a string, migrate to object
-  let data = assessmentData;
-  if (typeof data === 'string') {
-    const oldAssessment = data;
-    data = {
-      primaryImpairments: oldAssessment,
-      bodyFunctions: '',
-      activityLimitations: '',
-      participationRestrictions: '',
-      ptDiagnosis: '',
-      prognosis: '',
-      prognosticFactors: '',
-      clinicalReasoning: ''
-    };
-    onUpdate(data); // Trigger migration save
-  }
+  // Assessment data should always be an object
+  const data = assessmentData || {
+    primaryImpairments: '',
+    bodyFunctions: '',
+    activityLimitations: '',
+    participationRestrictions: '',
+    ptDiagnosis: '',
+    prognosis: '',
+    prognosticFactors: '',
+    clinicalReasoning: ''
+  };
   
   // Initialize data structure if needed
-  data = {
+  const finalData = {
     primaryImpairments: '',
     bodyFunctions: '',
     activityLimitations: '',
@@ -45,8 +40,8 @@ export function createAssessmentSection(assessmentData, onUpdate) {
 
   // Update helper
   const updateField = (field, value) => {
-    data[field] = value;
-    onUpdate(data);
+    finalData[field] = value;
+    onUpdate(finalData);
   };
 
   // Primary Impairments
@@ -54,7 +49,7 @@ export function createAssessmentSection(assessmentData, onUpdate) {
     el('h4', { class: 'subsection-title' }, 'Primary Impairments'),
     textAreaField({
       label: 'Key Physical Impairments Identified',
-      value: data.primaryImpairments,
+      value: finalData.primaryImpairments,
       onChange: v => updateField('primaryImpairments', v)
     })
   ]);
@@ -65,17 +60,17 @@ export function createAssessmentSection(assessmentData, onUpdate) {
     el('h4', { class: 'subsection-title' }, 'ICF Classification'),
     textAreaField({
       label: 'Body Functions & Structures',
-      value: data.bodyFunctions,
+      value: finalData.bodyFunctions,
       onChange: v => updateField('bodyFunctions', v)
     }),
     textAreaField({
       label: 'Activity Limitations',
-      value: data.activityLimitations,
+      value: finalData.activityLimitations,
       onChange: v => updateField('activityLimitations', v)
     }),
     textAreaField({
       label: 'Participation Restrictions',
-      value: data.participationRestrictions,
+      value: finalData.participationRestrictions,
       onChange: v => updateField('participationRestrictions', v)
     })
   ]);
@@ -86,13 +81,13 @@ export function createAssessmentSection(assessmentData, onUpdate) {
     el('h4', { class: 'subsection-title' }, 'Physical Therapy Diagnosis & Prognosis'),
     inputField({
       label: 'PT Diagnosis/Movement System Diagnosis',
-      value: data.ptDiagnosis,
+      value: finalData.ptDiagnosis,
       onChange: v => updateField('ptDiagnosis', v),
       placeholder: 'e.g., Lumbar extension syndrome with mobility deficits'
     }),
     selectField({
       label: 'Prognosis',
-      value: data.prognosis,
+      value: finalData.prognosis,
       options: [
         {value: 'excellent', label: 'Excellent - Full recovery expected'},
         {value: 'good', label: 'Good - Significant improvement expected'},
@@ -104,7 +99,7 @@ export function createAssessmentSection(assessmentData, onUpdate) {
   }),
   textAreaField({
     label: 'Prognostic Factors',
-    value: data.prognosticFactors,
+    value: finalData.prognosticFactors,
     onChange: v => updateField('prognosticFactors', v)
   })
   ]);
@@ -115,7 +110,7 @@ export function createAssessmentSection(assessmentData, onUpdate) {
     el('h4', { class: 'subsection-title' }, 'Clinical Reasoning'),
     textAreaField({
       label: 'Clinical Reasoning & Hypothesis',
-      value: data.clinicalReasoning,
+      value: finalData.clinicalReasoning,
       onChange: v => updateField('clinicalReasoning', v)
     })
   ]);

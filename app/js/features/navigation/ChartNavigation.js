@@ -1,6 +1,5 @@
 // ChartNavigation.js - Professional EMR-style navigation with progress tracking
 import { el } from '../../ui/utils.js';
-import { createIcon } from '../../ui/Icons.js';
 import { exportToWord } from '../../services/document-export.js';
 
 /**
@@ -298,13 +297,12 @@ function getSubsectionStatus(subsectionData, subsectionType, fullSectionData = {
     
     // Objective subsections
     'regional-assessment': (data, section) => {
-      // New regional assessments live under section.regionalAssessments
       const ra = section?.regionalAssessments || data?.regionalAssessments || data;
       if (!ra || typeof ra !== 'object') return false;
       // Tables store values as nested objects; count content if any non-empty value exists
       const hasRom = ra.rom && isFieldComplete(ra.rom);
       const hasMmt = ra.mmt && isFieldComplete(ra.mmt);
-      const hasTests = (ra.specialTests || ra.testData) && isFieldComplete(ra.specialTests || ra.testData);
+      const hasTests = ra.specialTests && isFieldComplete(ra.specialTests);
       // Mark complete if any of the three sub-areas has entries
       return Boolean(hasRom || hasMmt || hasTests);
     },
@@ -315,21 +313,6 @@ function getSubsectionStatus(subsectionData, subsectionType, fullSectionData = {
     'palpation': (data, section) => {
       const palpation = section?.palpation?.findings || data;
       return isFieldComplete(palpation);
-    },
-    'rom': (data, section) => {
-      const romData = section?.rom || data;
-      if (!Array.isArray(romData) || romData.length === 0) return false;
-      return romData.every(item => isFieldComplete(item.measurement));
-    },
-    'mmt': (data, section) => {
-      const mmtData = section?.mmt || data;
-      if (!Array.isArray(mmtData) || mmtData.length === 0) return false;
-      return mmtData.every(item => isFieldComplete(item.grade));
-    },
-    'special-tests': (data, section) => {
-      const testsData = section?.specialTests || data;
-      if (!Array.isArray(testsData) || testsData.length === 0) return false;
-      return testsData.every(item => isFieldComplete(item.result));
     },
     'neuro': (data, section) => {
       const neuro = section?.neuro?.screening || data;

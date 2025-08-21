@@ -51,5 +51,5 @@ app.put('/cases', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`PT EMR basic server listening on http://localhost:${PORT}`);
+
 });

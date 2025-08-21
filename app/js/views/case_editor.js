@@ -3,7 +3,6 @@ import { route, navigate, getCase, createCase, updateCase } from '../core/index.
 import { el, textareaAutoResize, printPage } from '../ui/utils.js';
 import { renderTabs } from '../ui/components.js';
 import { inputField, textAreaField, selectField, sectionHeader } from '../ui/form-components.js';
-import { createIcon } from '../ui/Icons.js';
 import { exportToWord } from '../services/document-export.js';
 import {
   createSubjectiveSection,
@@ -35,17 +34,17 @@ import {
 // Modern modular SOAP section components
 
 route('#/student/editor', async (app, qs) => {
-  console.log('🎓 STUDENT ROUTE: Faculty mode should be FALSE');
+
   return renderCaseEditor(app, qs, false); // false = student mode
 });
 
 route('#/instructor/editor', async (app, qs) => {
-  console.log('🏫 INSTRUCTOR ROUTE: Faculty mode should be TRUE');
+
   return renderCaseEditor(app, qs, true); // true = faculty mode
 });
 
 async function renderCaseEditor(app, qs, isFacultyMode) {
-  console.log('🔧 RENDER CASE EDITOR: Faculty mode parameter:', isFacultyMode);
+
   
   const caseId = qs.get('case');
   const version = parseInt(qs.get('v') || '0', 10);
@@ -128,15 +127,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     return true;
   }
   
-  console.log('📋 Case Editor Parameters:', {
-    caseId,
-    version,
-    encounter,
-    faculty: isFacultyMode ? 'true' : 'false',
-    isFacultyMode,
-    isKeyMode,
-    fullURL: window.location.href
-  });
+
   
   if (!caseId) {
     app.innerHTML = '';
@@ -149,7 +140,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   
   // Redirect old "new" case routes to use the modal instead
   if (caseId === 'new') {
-    console.log('🔄 Redirecting old "new" case route to instructor dashboard');
+
     navigate('#/instructor/cases');
     return;
   }
@@ -174,13 +165,13 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   // For faculty mode with new cases, we'll show the integrated editor
   // No separate metadata form - everything is integrated
-  console.log('🏫 Rendering integrated faculty editor for case:', caseId);
+
 
   // Configuration
-  const encReq = {}; // TODO: This could be populated from case requirements in the future
+  const encReq = {}; // Encounter requirements configuration
 
   // Initialize draft using modular function - pass faculty mode for proper data handling
-  const draftManager = initializeDraft(caseId, encounter, isFacultyMode, c);
+  const draftManager = initializeDraft(caseId, encounter, isFacultyMode, c, isKeyMode);
   let { draft, save: originalSave, resetDraft } = draftManager;
   
   // Create chart navigation sidebar first
@@ -722,7 +713,7 @@ function createCaseMetadataPanel(caseObj, saveFunction) {
           
           try {
             const savedCase = await createCase(caseObj);
-            console.log('Case created successfully:', savedCase);
+
             
             // Navigate to the saved case in faculty mode
             const newUrl = `#/instructor/editor?case=${savedCase.id}`;

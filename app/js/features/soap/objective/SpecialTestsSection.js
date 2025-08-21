@@ -31,13 +31,11 @@ export function createSpecialTestsSection(regionKey, region, testData, onChange)
   if (region.specialTests) {
     region.specialTests.forEach((test, index) => {
       const testId = `test-${index}`;
-      const legacy = testData[testId] || {};
-      const legacyResult = legacy.result || '';
       tableData[testId] = {
         name: test.name,
-        left: legacy.left || legacyResult || '',
-        right: legacy.right || '',
-        notes: legacy.notes || ''
+        left: '',
+        right: '',
+        notes: ''
       };
     });
   }

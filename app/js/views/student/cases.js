@@ -99,7 +99,7 @@ route('#/student/cases', async (app) => {
           console.warn('Could not parse draft data for key:', key, error);
           // Remove corrupted draft data to prevent future errors
           localStorage.removeItem(key);
-          console.log('Removed corrupted draft data:', key);
+
         }
       }
     }
@@ -514,7 +514,7 @@ route('#/student/cases', async (app) => {
                   document.body.removeChild(a);
                   URL.revokeObjectURL(url);
                   
-                  console.log('Word document downloaded successfully from case list');
+
                 } catch (error) {
                   console.error('Document generation failed:', error);
                   alert('Document generation failed. Please check the console for details.');

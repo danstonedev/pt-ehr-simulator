@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Case Data</title>
+</head>
+<body>
+    <h1>Debug Case Data Structure</h1>
+    <button onclick="checkCaseData()">Check Shoulder Impingement Case</button>
+    <div id="output"></div>
+    
+    <script type="module">
+        import { store } from './app/js/core/store.js';
+        
+        window.checkCaseData = function() {
+            const cases = store.getAllCases();
+            const shoulderCase = cases.find(c => c.id === 'shoulder-impingement');
+            
+            if (!shoulderCase) {
+                document.getElementById('output').innerHTML = '<pre>❌ Case not found!</pre>';
+                return;
+            }
+            
+            const output = document.getElementById('output');
+            output.innerHTML = `
+                <h2>Case Data Structure:</h2>
+                <pre>${JSON.stringify(shoulderCase, null, 2)}</pre>
+                
+                <h2>encounters.eval structure:</h2>
+                <pre>${JSON.stringify(shoulderCase.encounters?.eval, null, 2)}</pre>
+                
+                <h2>Subjective data:</h2>
+                <pre>${JSON.stringify(shoulderCase.encounters?.eval?.subjective, null, 2)}</pre>
+                
+                <h2>Objective data:</h2>
+                <pre>${JSON.stringify(shoulderCase.encounters?.eval?.objective, null, 2)}</pre>
+            `;
+        };
+    </script>
+</body>
+</html>

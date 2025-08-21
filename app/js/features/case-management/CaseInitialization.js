@@ -60,6 +60,7 @@ function createDefaultDraft() {
       painLocation: '',
       painScale: '',
       painQuality: '',
+  painPattern: '',
       aggravatingFactors: '',
       easingFactors: '',
       functionalLimitations: '',
@@ -76,10 +77,12 @@ function createDefaultDraft() {
       neuro: { screening: '' },
       functional: { assessment: '' },
       regionalAssessments: {
-        expandedRegions: {},
-        romData: {},
-        mmtData: {},
-        testData: {}
+        selectedRegions: [],
+        rom: {},
+        prom: {},
+        promExcluded: [],
+        mmt: {},
+        specialTests: {}
       },
       rom: {}, 
       mmt: {} 
@@ -114,8 +117,7 @@ function createDefaultDraft() {
         { type: '', details: '' }
       ],
       skilledJustification: '',
-      treatmentNotes: '',
-      legacyText: ''
+      treatmentNotes: ''
     },
     // Instructor editor settings are stored on the case object; draft uses this only in faculty mode
     editorSettings: {
@@ -164,6 +166,80 @@ function populateDraftFromCaseData(draft, caseData) {
   // This function converts case data structure to draft structure
   // Faculty members edit the "answer key" by populating the draft with case data
   
+  // Helpers: normalizers and adapters for UI-enum/data-shape alignment
+  const normalizePainQuality = (val) => {
+    if (!val) return '';
+    const s = String(val).toLowerCase();
+    const map = [
+      { k: 'sharp-stabbing', m: /sharp|stab/ },
+      { k: 'dull-aching', m: /dull|ache/ },
+      { k: 'burning', m: /burn/ },
+      { k: 'throbbing-pulsing', m: /throb|puls/ },
+      { k: 'cramping', m: /cramp/ },
+      { k: 'tingling-pins-needles', m: /tingl|pins|paresthe/ },
+      { k: 'numbness', m: /numb/ },
+      { k: 'stiffness', m: /stiff/ }
+    ];
+    const hit = map.find(x => x.m.test(s));
+    return hit ? hit.k : '';
+  };
+  const normalizePainPattern = (val) => {
+    if (!val) return '';
+    const s = String(val).toLowerCase();
+    if (s.includes('constant')) return 'constant';
+    if (s.includes('intermittent')) return 'intermittent';
+    if (s.includes('morning')) return 'morning-stiffness';
+    if (s.includes('end of day') || s.includes('worsens') || s.includes('evening')) return 'end-of-day';
+  if (s.includes('activity') || s.includes('exercise') || s.includes('overhead')) return 'activity-related';
+  if (s.includes('position') || s.includes('lying') || s.includes('sleep')) return 'positional';
+  if (s.includes('weather') || s.includes('cold') || s.includes('rain')) return 'weather-related';
+    return '';
+  };
+  const normalizeMmtGrade = (val) => {
+    if (!val && val !== 0) return '';
+    const s = String(val).trim();
+    if (s.includes('/5')) return s; // already standardized
+    const base = s.replace(/[^0-9+\-]/g, '');
+    const to = (n) => `${n}/5`;
+    if (/^0$/.test(base)) return to(0);
+    if (/^1$/.test(base)) return to(1);
+    if (/^2$/.test(base)) return to(2);
+    if (/^3\+$/.test(base)) return '4-/5';
+    if (/^3-?$/.test(base)) return to(3);
+    if (/^4\+$/.test(base)) return '4+/5';
+    if (/^4-?$/.test(base)) return '4/5';
+    if (/^4-$/.test(base)) return '4-/5';
+    if (/^5-$/.test(base)) return '4+/5';
+    if (/^5$/.test(base)) return to(5);
+    return s;
+  };
+  // Transform PROM data like { 'flexion-right': '155' } into UI table rows
+  const buildPromTableData = (promObj = {}, selectedRegions = []) => {
+    const out = {};
+    const shoulderMap = [
+      { key: 'flexion', rowId: 'shoulder-flexion' },
+      { key: 'extension', rowId: 'shoulder-extension' },
+      { key: 'abduction', rowId: 'shoulder-abduction' },
+      { key: 'er', rowId: 'external-rotation' },
+      { key: 'ir', rowId: 'internal-rotation' }
+    ];
+    const doAssign = (rowId, side, val) => {
+      if (!val) return;
+      out[rowId] = out[rowId] || { left: '', right: '', notes: '' };
+      out[rowId][side] = String(val);
+    };
+    const isShoulder = (selectedRegions || []).includes('shoulder');
+    if (isShoulder) {
+      Object.entries(promObj).forEach(([k, v]) => {
+        const lower = k.toLowerCase();
+        const side = lower.includes('left') ? 'left' : (lower.includes('right') ? 'right' : '');
+        const mapHit = shoulderMap.find(m => lower.startsWith(m.key));
+        if (mapHit && side) doAssign(mapHit.rowId, side, v);
+      });
+    }
+    return out;
+  };
+
   // 1) Subjective (history + eval subjective)
   if (caseData.history) {
     draft.subjective.chiefComplaint = caseData.history.chief_complaint || draft.subjective.chiefComplaint || '';
@@ -171,6 +247,26 @@ function populateDraftFromCaseData(draft, caseData) {
     // Common extras if present
     if (Array.isArray(caseData.history.pmh)) draft.subjective.pastMedicalHistory = caseData.history.pmh.join(', ');
     if (Array.isArray(caseData.history.meds)) draft.subjective.medicationsCurrent = caseData.history.meds.join(', ');
+    if (Array.isArray(caseData.history.red_flag_signals)) draft.subjective.redFlags = caseData.history.red_flag_signals.join(', ');
+    if (Array.isArray(caseData.history.functional_goals)) {
+      const goals = caseData.history.functional_goals.join('; ');
+      // Only set if not explicitly provided in eval subjective
+      if (!draft.subjective.patientGoals) draft.subjective.patientGoals = goals;
+    }
+    // Map pain object (common in newer cases)
+    if (caseData.history.pain) {
+      const p = caseData.history.pain;
+      draft.subjective.painScale = p.level || draft.subjective.painScale || '';
+      draft.subjective.painLocation = p.location || draft.subjective.painLocation || '';
+      // Prefer enum for dropdown; keep free text fallback if no match
+      const pq = normalizePainQuality(p.quality);
+      draft.subjective.painQuality = pq || draft.subjective.painQuality || '';
+      // Pattern may be embedded in duration/timing text
+      const pp = normalizePainPattern(p.pattern || p.duration || '');
+      draft.subjective.painPattern = pp || draft.subjective.painPattern || '';
+      draft.subjective.aggravatingFactors = p.aggravating_factors || draft.subjective.aggravatingFactors || '';
+      draft.subjective.easingFactors = p.easing_factors || draft.subjective.easingFactors || '';
+    }
   }
   const evalSubj = caseData?.encounters?.eval?.subjective || {};
   if (evalSubj) {
@@ -178,6 +274,16 @@ function populateDraftFromCaseData(draft, caseData) {
     if (evalSubj.historyOfPresentIllness) draft.subjective.historyOfPresentIllness = evalSubj.historyOfPresentIllness;
     if (evalSubj.painScale !== undefined) draft.subjective.painScale = String(evalSubj.painScale);
     if (evalSubj.patientGoals) draft.subjective.patientGoals = evalSubj.patientGoals;
+  if (evalSubj.redFlags) draft.subjective.redFlags = evalSubj.redFlags;
+  if (evalSubj.painLocation) draft.subjective.painLocation = evalSubj.painLocation;
+  if (evalSubj.painQuality) draft.subjective.painQuality = normalizePainQuality(evalSubj.painQuality) || draft.subjective.painQuality;
+  if (evalSubj.painPattern) draft.subjective.painPattern = normalizePainPattern(evalSubj.painPattern) || draft.subjective.painPattern;
+  if (evalSubj.aggravatingFactors) draft.subjective.aggravatingFactors = evalSubj.aggravatingFactors;
+  if (evalSubj.easingFactors) draft.subjective.easingFactors = evalSubj.easingFactors;
+  if (evalSubj.functionalLimitations) draft.subjective.functionalLimitations = evalSubj.functionalLimitations;
+  if (evalSubj.priorLevel) draft.subjective.priorLevel = evalSubj.priorLevel;
+  if (evalSubj.medicationsCurrent) draft.subjective.medicationsCurrent = evalSubj.medicationsCurrent;
+  if (evalSubj.additionalHistory) draft.subjective.additionalHistory = evalSubj.additionalHistory;
   }
 
   // 2) Objective (findings + eval objective)
@@ -205,23 +311,79 @@ function populateDraftFromCaseData(draft, caseData) {
       // Note: special_tests from findings are free-form; the UI derives test rows from the selected regions.
       // We’ll leave specialTests values blank initially to avoid mismatches with dynamically generated row IDs.
     }
+    // Seed general exam narrative fields if available
+    if (caseData.findings.vitals && !draft.objective.text) {
+      const v = caseData.findings.vitals;
+      const parts = [];
+      if (v.bp) parts.push(`BP ${v.bp}`);
+      if (v.hr) parts.push(`HR ${v.hr}`);
+      if (v.rr) parts.push(`RR ${v.rr}`);
+      if (v.temp) parts.push(`Temp ${v.temp}`);
+      if (v.o2sat) parts.push(`SpO2 ${v.o2sat}`);
+      if (v.pain) parts.push(`Pain ${v.pain}`);
+      if (parts.length) draft.objective.text = `Vitals: ${parts.join(', ')}`;
+    }
   }
   const evalObj = caseData?.encounters?.eval?.objective || {};
   if (evalObj) {
+  if (evalObj.text) draft.objective.text = evalObj.text;
     // Handle new regionalAssessments structure
     if (evalObj.regionalAssessments) {
       draft.objective.regionalAssessments = {
         ...draft.objective.regionalAssessments,
         ...evalObj.regionalAssessments
       };
+      // Normalize MMT values to standard options and adapt PROM to table format
+      try {
+        const ra = draft.objective.regionalAssessments;
+        // MMT normalize
+        if (ra && ra.mmt && typeof ra.mmt === 'object') {
+          Object.keys(ra.mmt).forEach(k => { ra.mmt[k] = normalizeMmtGrade(ra.mmt[k]); });
+        }
+        // PROM data validation
+        if (ra && ra.prom && typeof ra.prom === 'object') {
+          // Ensure PROM data is in correct table format
+          if (!Array.isArray(ra.prom)) {
+            const selected = Array.isArray(ra.selectedRegions) ? ra.selectedRegions : [];
+            ra.prom = buildPromTableData(ra.prom, selected);
+          }
+        }
+      } catch {}
     }
-    // Legacy support for old rom/mmt structure (if not using regionalAssessments)
-    if (evalObj.rom && !evalObj.regionalAssessments?.rom) {
-      draft.objective.regionalAssessments.rom = evalObj.rom;
-    }
-    if (evalObj.mmt && !evalObj.regionalAssessments?.mmt) {
-      draft.objective.regionalAssessments.mmt = evalObj.mmt;
-    }
+    
+    // Map inspection/palpation/neuro/functional narratives
+    if (evalObj.inspection?.visual) draft.objective.inspection = { visual: evalObj.inspection.visual };
+    if (evalObj.palpation?.findings) draft.objective.palpation = { findings: evalObj.palpation.findings };
+    if (evalObj.neuro?.screening) draft.objective.neuro = { screening: evalObj.neuro.screening };
+    if (evalObj.functional?.assessment) draft.objective.functional = { assessment: evalObj.functional.assessment };
+    // Seed Treatment Performed subsection (objective) if not present
+    try {
+      const tp = (draft.objective.treatmentPerformed = draft.objective.treatmentPerformed || { patientEducation: '', modalities: '', therapeuticExercise: '', manualTherapy: '' });
+      if (!tp.patientEducation) {
+        const planEdu = caseData?.encounters?.eval?.plan?.patientEducation;
+        if (planEdu) tp.patientEducation = planEdu;
+      }
+      const tplan = caseData?.encounters?.eval?.plan?.treatmentPlan || '';
+      if (tplan) {
+        const extractParen = (label) => {
+          const re = new RegExp(label + "\\s*\\(([^)]*)\\)", 'i');
+          const m = tplan.match(re);
+          return m ? m[1].trim() : '';
+        };
+        if (!tp.manualTherapy) {
+          const mt = extractParen('Manual therapy');
+          if (mt) tp.manualTherapy = mt; else if (/manual/i.test(tplan)) tp.manualTherapy = 'Manual therapy techniques as outlined in plan.';
+        }
+        if (!tp.therapeuticExercise) {
+          const te = extractParen('therapeutic exercise');
+          if (te) tp.therapeuticExercise = te; else if (/therapeutic exercise/i.test(tplan)) tp.therapeuticExercise = 'Therapeutic exercise per plan.';
+        }
+        if (!tp.modalities) {
+          const mod = extractParen('symptom modulation') || (/(taping|ice|heat|ultrasound|estim|e\s*-\s*stim|modalit)/i.test(tplan) ? 'Symptom modulation (e.g., taping/ice/heat) as indicated.' : '');
+          if (mod) tp.modalities = mod;
+        }
+      }
+    } catch {}
   }
 
   // 3) Assessment
@@ -230,6 +392,9 @@ function populateDraftFromCaseData(draft, caseData) {
     draft.assessment = {
       ...draft.assessment,
       primaryImpairments: evalAssess.primaryImpairments || draft.assessment.primaryImpairments || '',
+  bodyFunctions: evalAssess.bodyFunctions || draft.assessment.bodyFunctions || '',
+  activityLimitations: evalAssess.activityLimitations || draft.assessment.activityLimitations || '',
+  participationRestrictions: evalAssess.participationRestrictions || draft.assessment.participationRestrictions || '',
       ptDiagnosis: evalAssess.ptDiagnosis || draft.assessment.ptDiagnosis || '',
       prognosticFactors: evalAssess.prognosticFactors || draft.assessment.prognosticFactors || '',
       clinicalReasoning: evalAssess.clinicalReasoning || draft.assessment.clinicalReasoning || ''
@@ -273,9 +438,20 @@ function populateDraftFromCaseData(draft, caseData) {
       shortTermGoals: evalPlan.shortTermGoals || draft.plan.shortTermGoals || '',
       longTermGoals: evalPlan.longTermGoals || draft.plan.longTermGoals || ''
     };
-    // Provide a readable treatmentPlan string for the Plan UI
-    if (Array.isArray(evalPlan.interventions) && evalPlan.interventions.length) {
+    // Map treatmentPlan string or derive from interventions array
+    if (typeof evalPlan.treatmentPlan === 'string' && evalPlan.treatmentPlan.trim()) {
+      draft.plan.treatmentPlan = evalPlan.treatmentPlan;
+    } else if (Array.isArray(evalPlan.interventions) && evalPlan.interventions.length) {
       draft.plan.treatmentPlan = `Interventions: ${evalPlan.interventions.join(', ')}`;
+    }
+    if (evalPlan.patientEducation) {
+      draft.plan.patientEducation = evalPlan.patientEducation;
+    }
+    if (evalPlan.exerciseTable && typeof evalPlan.exerciseTable === 'object') {
+      draft.plan.exerciseTable = evalPlan.exerciseTable;
+    }
+    if (evalPlan.goalsTable && typeof evalPlan.goalsTable === 'object') {
+      draft.plan.goalsTable = evalPlan.goalsTable;
     }
     // Seed simple goals table from STG/LTG if present and goalsTable empty
     try {
@@ -301,9 +477,25 @@ function populateDraftFromCaseData(draft, caseData) {
     draft.billing = {
       ...draft.billing,
       diagnosisCodes: Array.isArray(evalBilling.diagnosisCodes) ? evalBilling.diagnosisCodes : draft.billing.diagnosisCodes,
-      billingCodes: Array.isArray(evalBilling.billingCodes) ? evalBilling.billingCodes : draft.billing.billingCodes
+  billingCodes: Array.isArray(evalBilling.billingCodes) ? evalBilling.billingCodes : draft.billing.billingCodes,
+  ordersReferrals: Array.isArray(evalBilling.ordersReferrals) ? evalBilling.ordersReferrals : (draft.billing.ordersReferrals || [])
     };
   }
+
+  // 6) Meta/Snapshot helpers → note title and contextual info
+  try {
+    const title = caseData?.meta?.title || caseData?.title;
+    const age = caseData?.snapshot?.age;
+    const sex = caseData?.snapshot?.sex;
+    if (title && !draft.noteTitle) {
+      draft.noteTitle = title;
+    }
+    // Optionally prefix HPI with demographic context if HPI is empty
+    if (!draft.subjective.historyOfPresentIllness && (age || sex) && title) {
+      const sx = sex ? (sex[0].toUpperCase() + sex.slice(1)) : '';
+      draft.subjective.historyOfPresentIllness = `${age ? age + '-year-old ' : ''}${sx ? sx + ' ' : ''}presenting with ${title.toLowerCase()}.`;
+    }
+  } catch {}
 
   // 6) Assessment addendum: ensure prognosis select is populated when available
   try {
@@ -409,34 +601,30 @@ export async function initializeCase(caseId, isFacultyMode = false, isKeyMode = 
  * @param {string} encounter - Encounter type
  * @param {boolean} isFacultyMode - Whether in faculty mode
  * @param {Object} caseData - The case data object
+ * @param {boolean} isKeyMode - Whether in answer key mode
  * @returns {Object} Draft data and management functions
  */
-export function initializeDraft(caseId, encounter, isFacultyMode = false, caseData = null) {
+export function initializeDraft(caseId, encounter, isFacultyMode = false, caseData = null, isKeyMode = false) {
   let draft = createDefaultDraft();
   
-  console.log('🎯 INITIALIZING DRAFT:', {
-    caseId,
-    encounter, 
-    isFacultyMode,
-    hasCaseData: !!caseData
-  });
 
-  if (isFacultyMode) {
-    // FACULTY MODE: Load the case data (answer key) into the draft for editing
-    console.log('👩‍🏫 Faculty Mode: Loading case data into draft (answer key)');
+
+  if (isFacultyMode || isKeyMode) {
+    // FACULTY MODE OR KEY MODE: Load the case data (answer key) into the draft for editing/viewing
+
     
     if (caseData && caseId !== 'new') {
-      // Load existing case data into draft for faculty editing
+      // Load existing case data into draft for faculty editing or key viewing
       draft = populateDraftFromCaseData(draft, caseData);
-      console.log('📚 Loaded case data into faculty draft');
-      // If case has stored editor settings, use them in faculty draft
-      if (caseData.editorSettings) {
+
+      // If case has stored editor settings, use them in faculty draft (but not in key mode)
+      if (caseData.editorSettings && !isKeyMode) {
         draft.editorSettings = caseData.editorSettings;
       }
     }
   } else {
     // STUDENT MODE: Start with blank slate, but try to load any student progress
-    console.log('🎓 Student Mode: Starting with blank slate');
+
     // Students should respect case-level editor settings; do not store them in student draft
     delete draft.editorSettings;
   }
@@ -444,10 +632,10 @@ export function initializeDraft(caseId, encounter, isFacultyMode = false, caseDa
   // Development mode: Skip localStorage loading for NEW cases only to prevent cached data issues
   const isDevelopmentMode = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const isNewCase = caseId === 'new';
-  const skipLoading = isDevelopmentMode && isNewCase;
+  const skipLoading = isKeyMode || (isDevelopmentMode && isNewCase);
   
   if (skipLoading) {
-    console.log('Development mode: Skipping localStorage cache for new case (clean state)');
+
   } else {
     // Local storage key for this specific case
     const localStorageKey = `draft_${caseId}_${encounter}`;
@@ -476,12 +664,17 @@ export function initializeDraft(caseId, encounter, isFacultyMode = false, caseDa
           palpation: parsed.objective.palpation || { findings: '' },
           neuro: parsed.objective.neuro || { screening: '' },
           functional: parsed.objective.functional || { assessment: '' },
-          regionalAssessments: parsed.objective.regionalAssessments || {
-            expandedRegions: {},
-            romData: {},
-            mmtData: {},
-            testData: {}
-          }
+          regionalAssessments: (function() {
+            const ra = parsed.objective.regionalAssessments || {
+            selectedRegions: [],
+            rom: {},
+            prom: {},
+            promExcluded: [],
+            mmt: {},
+            specialTests: {}
+            };
+            return ra;
+          })()
         };
       }
       
@@ -492,7 +685,7 @@ export function initializeDraft(caseId, encounter, isFacultyMode = false, caseDa
       // For students, discard any editorSettings saved in local drafts to avoid stale overrides
       if (!isFacultyMode) {
         if (parsed.editorSettings) {
-          console.log('Discarding local editorSettings from student draft (using case settings)');
+
         }
         delete draft.editorSettings;
       } else if (parsed.editorSettings) {
@@ -501,7 +694,7 @@ export function initializeDraft(caseId, encounter, isFacultyMode = false, caseDa
       }
         if (parsed.billing) draft.billing = parsed.billing;
         
-        console.log('Loaded draft from local storage');
+
       }
     } catch (error) {
       console.warn('Could not load draft from localStorage:', error);
@@ -519,20 +712,13 @@ export function initializeDraft(caseId, encounter, isFacultyMode = false, caseDa
     // Don't save in key mode (read-only view)
     if (isKeyMode) return;
     
-    if (isFacultyMode && caseData) {
+  if (isFacultyMode && caseData) {
       // FACULTY MODE: Save draft content back to the case itself (create answer key)
-      console.log('👩‍🏫 Faculty Mode: Saving draft content to case (answer key)');
+
       
       try {
-        // Update case metadata from case info if available
-        if (typeof c !== 'undefined' && c) {
-          caseData.meta = caseData.meta || {};
-          caseData.meta.title = c.title || c.caseTitle || 'Untitled Case';
-          caseData.meta.setting = c.setting || 'Outpatient';
-          caseData.meta.patientAge = c.patientAge || c.age;
-          caseData.meta.patientGender = c.patientGender || c.sex;
-          caseData.meta.acuity = c.acuity || 'Routine';
-        }
+    // Ensure meta exists (do not attempt to overwrite from external variables)
+    caseData.meta = caseData.meta || {};
         
         // Update the case object with current draft content
         if (draft.subjective) {
@@ -566,7 +752,7 @@ export function initializeDraft(caseId, encounter, isFacultyMode = false, caseDa
           // For new cases, create a new case
           const { createCase } = await import('../../core/store.js');
           const newCase = await createCase(caseData);
-          console.log('✅ New case created with ID:', newCase.id);
+
           
           // Update the caseId for future saves (extract just the ID)
           currentCaseId = newCase.id;
@@ -578,7 +764,7 @@ export function initializeDraft(caseId, encounter, isFacultyMode = false, caseDa
           // For existing cases, update the existing case
           const { updateCase } = await import('../../core/store.js');
           await updateCase(currentCaseId, caseData);
-          console.log('✅ Case content saved to server (answer key updated)');
+
         }
         
         // Also save to localStorage for draft persistence
@@ -595,7 +781,7 @@ export function initializeDraft(caseId, encounter, isFacultyMode = false, caseDa
         // attach/update timestamp for listing/sorting
         draft.__savedAt = Date.now();
         localStorage.setItem(localStorageKey, JSON.stringify(draft));
-        console.log('🎓 Student draft saved locally');
+
       } catch (error) {
         console.warn('Could not save draft to localStorage:', error);
       }
@@ -607,7 +793,7 @@ export function initializeDraft(caseId, encounter, isFacultyMode = false, caseDa
     if (confirm('Are you sure you want to clear all your work? This cannot be undone.')) {
       draft = createDefaultDraft();
       localStorage.removeItem(localStorageKey);
-      console.log('Draft reset and cleared from local storage');
+
       return true; // Indicates reset occurred
     }
     return false; // Reset cancelled

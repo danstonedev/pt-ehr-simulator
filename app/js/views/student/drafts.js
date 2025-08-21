@@ -11,12 +11,12 @@ route('#/student/drafts', async (app, qs) => {
   try {
     // Get all case data to match case IDs with titles
     const allCases = await listCases();
-    console.log('Available cases from API:', allCases);
+
     const casesMap = {};
     allCases.forEach(caseWrapper => {
       casesMap[caseWrapper.id] = caseWrapper.title;
     });
-    console.log('Cases map:', casesMap);
+
 
     // Scan localStorage for draft keys
     const drafts = [];
@@ -40,7 +40,7 @@ route('#/student/drafts', async (app, qs) => {
           const caseId = keyWithoutPrefix.substring(0, lastUnderscoreIndex);
           const encounter = keyWithoutPrefix.substring(lastUnderscoreIndex + 1);
           
-          console.log('Found draft key:', key, 'parsed as:', { caseId, encounter });
+
           
           // Calculate completion percentage
           const sections = ['subjective', 'assessment', 'goals', 'plan', 'billing'];
@@ -127,7 +127,7 @@ route('#/student/drafts', async (app, qs) => {
             el('button', {
               class: 'btn primary',
               onClick: () => {
-                console.log('Navigating to editor with:', { caseId: draft.caseId, encounter: draft.encounter });
+
                 navigate(`#/student/editor?case=${draft.caseId}&v=0&encounter=${draft.encounter}`);
               }
             }, 'Continue Working'),

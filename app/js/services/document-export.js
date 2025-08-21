@@ -692,32 +692,20 @@ export function exportToWord(caseData, draft) {
   // ASSESSMENT Section (draft-first)
   elements.push(createSectionDivider());
   elements.push(createWebSectionHeader('ASSESSMENT'));
-    let assess = (draft && draft.assessment) || {};
-    // Normalize legacy string assessment to object shape
-    if (typeof assess === 'string') {
-      assess = {
-        primaryImpairments: assess,
-        bodyFunctions: '',
-        activityLimitations: '',
-        participationRestrictions: '',
-        ptDiagnosis: '',
-        prognosis: '',
-        prognosticFactors: '',
-        clinicalReasoning: ''
-      };
-    } else {
-      assess = {
-        primaryImpairments: '',
-        bodyFunctions: '',
-        activityLimitations: '',
-        participationRestrictions: '',
-        ptDiagnosis: '',
-        prognosis: '',
-        prognosticFactors: '',
-        clinicalReasoning: '',
-        ...assess
-      };
-    }
+  let assess = (draft && draft.assessment) || {};
+  // Assessment data should always be an object
+  assess = {
+    primaryImpairments: '',
+    bodyFunctions: '',
+    activityLimitations: '',
+    participationRestrictions: '',
+    ptDiagnosis: '',
+    prognosis: '',
+    prognosticFactors: '',
+    clinicalReasoning: '',
+    ...assess
+  };
+  
   elements.push(createSectionHeader('Primary Impairments', 2));
   if (assess.primaryImpairments) {
     elements.push(...createBulletedList([

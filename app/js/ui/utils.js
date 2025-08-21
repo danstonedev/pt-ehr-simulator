@@ -8,7 +8,6 @@ export function el(tag, attrs={}, children=[]){
       const eventName = k.slice(2).toLowerCase();
       e.addEventListener(eventName, v);
     }
-    else if(k==='html') e.innerHTML=v;
     else e.setAttribute(k,v);
   });
   if(!Array.isArray(children)) children=[children];

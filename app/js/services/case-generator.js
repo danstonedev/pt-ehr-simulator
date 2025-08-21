@@ -464,8 +464,8 @@ function buildUIPromTableData(items = [], promByJoint = {}, sideLetter = 'R') {
     out[key] = {
       left: prom.leftValue || '',
       right: prom.rightValue || '',
-  // Keep legacy endfeel as a note hint; UI treats this as free-text notes now
-  notes: (sideLetter === 'L' ? prom.leftEndFeel : prom.rightEndFeel) || ''
+      // Include endfeel data in notes field
+      notes: (sideLetter === 'L' ? prom.leftEndFeel : prom.rightEndFeel) || ''
     };
   });
   return out;

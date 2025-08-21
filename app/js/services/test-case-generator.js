@@ -36,32 +36,32 @@ const testCases = [
 ];
 
 function runTests() {
-  console.log('🧪 Testing Enhanced Case Generator with Template Integration');
+
   
   testCases.forEach((testCase, index) => {
-    console.log(`\n--- Test ${index + 1}: ${testCase.title} ---`);
+
     
     try {
       const generatedCase = generateCase(testCase);
       
       // Verify basic structure
-      console.log('✅ Case generated successfully');
-      console.log('📋 ROM Data Keys:', Object.keys(generatedCase.findings.rom));
-      console.log('💪 MMT Data Keys:', Object.keys(generatedCase.findings.mmt));
-      console.log('🔬 Special Tests Count:', generatedCase.findings.special_tests.length);
-      console.log('📊 Outcome Measure:', generatedCase.findings.outcome_options[0]?.tool);
-      console.log('🎯 Interventions:', generatedCase.encounters.eval.plan.interventions.length);
+
+
+
+
+
+
       
       // Check if we have realistic ROM values
       const romValues = Object.values(generatedCase.findings.rom);
       const hasRealisticRom = romValues.some(val => val && val.includes('°'));
-      console.log('📐 Realistic ROM Values:', hasRealisticRom ? '✅' : '❌');
+
       
       // Check condition-specific tests
       const hasConditionTests = generatedCase.findings.special_tests.some(test => 
         test.result === 'positive' || test.result.includes('positive')
       );
-      console.log('🎯 Condition-Specific Tests:', hasConditionTests ? '✅' : '❌');
+
       
     } catch (error) {
       console.error('❌ Error generating case:', error);
@@ -72,4 +72,4 @@ function runTests() {
 // Export for use in browser console
 window.testCaseGenerator = runTests;
 
-console.log('🚀 Case Generator Test Ready! Run window.testCaseGenerator() in console');
+

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PT EMR Wiring Tests</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 16px; }
+    .pass { color: #0a7; }
+    .fail { color: #c00; }
+    pre { background: #f6f8fa; padding: 8px; border-radius: 6px; overflow: auto; }
+    .test { margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <h1>PT EMR Simulator - Wiring Tests</h1>
+  <div id="results"></div>
+
+  <script type="module">
+    import { listCases, getCase } from '../js/core/store.js';
+    import { initializeDraft } from '../js/features/case-management/CaseInitialization.js';
+
+    const results = document.getElementById('results');
+    const log = (name, ok, details='') => {
+      const div = document.createElement('div');
+      div.className = 'test';
+      div.innerHTML = `<strong>${ok ? '✅' : '❌'} ${name}</strong>` + (details ? `<pre>${details}</pre>` : '');
+      div.classList.add(ok ? 'pass' : 'fail');
+      results.appendChild(div);
+    };
+
+    try {
+      // Clear local caches to make loader behavior deterministic for this run (cases in localStorage)
+      localStorage.removeItem('pt_emr_cases');
+      localStorage.removeItem('pt_emr_case_counter');
+      // Clear any draft_* keys to avoid stale merges in tests
+      const toClear = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('draft_')) toClear.push(k);
+      }
+      toClear.forEach(k => localStorage.removeItem(k));
+
+      // 1) Load cases (should include monolithic + manifest)
+      const casesList = await listCases();
+      const ids = new Set(casesList.map(c => c.id));
+      const hasShoulder = ids.has('case_shoulder_impingement_001');
+      const hasCervical = ids.has('case_cervical_radiculopathy_001');
+      log('Manifest overlay loads cases', hasShoulder && hasCervical, JSON.stringify({ count: casesList.length, ids: Array.from(ids) }, null, 2));
+
+      // 2) Get a shoulder case and verify key paths
+      const shoulderWrapper = await getCase('case_shoulder_impingement_001');
+      const shoulder = shoulderWrapper?.caseObj || {};
+      const pathsOk = !!(shoulder.encounters && shoulder.encounters.eval && shoulder.encounters.eval.subjective && shoulder.encounters.eval.objective && shoulder.encounters.eval.assessment && shoulder.encounters.eval.plan && shoulder.encounters.eval.billing);
+      log('Case structure has encounters.eval.* sections', pathsOk);
+
+      // 3) Seed a draft in key mode and verify mappings
+      const draftMgr = initializeDraft('case_shoulder_impingement_001', 'eval', true, shoulder, true);
+      const draft = draftMgr.draft;
+      const subjectiveOk = !!(draft.subjective?.chiefComplaint && draft.subjective?.historyOfPresentIllness && draft.subjective?.painLocation);
+      const objectiveOk = !!(draft.objective?.inspection?.visual && draft.objective?.palpation?.findings && draft.objective?.regionalAssessments?.selectedRegions?.length);
+      const assessmentOk = !!(draft.assessment?.primaryImpairments && draft.assessment?.ptDiagnosis && draft.assessment?.clinicalReasoning);
+      const planOk = !!(draft.plan?.treatmentPlan && draft.plan?.patientEducation && (draft.plan?.goalsTable || draft.plan?.exerciseTable));
+  const billingOk = !!(draft.billing?.diagnosisCodes?.length && draft.billing?.billingCodes?.length && Array.isArray(draft.billing?.ordersReferrals));
+  const subjExtrasOk = !!(draft.subjective?.redFlags);
+  log('Draft seeding maps subjective', subjectiveOk && subjExtrasOk, JSON.stringify(draft.subjective, null, 2));
+      log('Draft seeding maps objective', objectiveOk, JSON.stringify(draft.objective, null, 2));
+      log('Draft seeding maps assessment', assessmentOk, JSON.stringify(draft.assessment, null, 2));
+      log('Draft seeding maps plan', planOk, JSON.stringify({ goalsTable: draft.plan?.goalsTable, exerciseTable: draft.plan?.exerciseTable, patientEducation: draft.plan?.patientEducation }, null, 2));
+      log('Draft seeding maps billing', billingOk, JSON.stringify(draft.billing, null, 2));
+
+      // 4) Cervical case spot-check
+      const cervWrapper = await getCase('case_cervical_radiculopathy_001');
+      const cerv = cervWrapper?.caseObj || {};
+      const cervDraft = initializeDraft('case_cervical_radiculopathy_001', 'eval', true, cerv, true).draft;
+  const cervOk = !!(cervDraft.subjective?.historyOfPresentIllness && cervDraft.assessment?.ptDiagnosis && cervDraft.plan?.exerciseTable && Array.isArray(cervDraft.billing?.ordersReferrals));
+      log('Cervical case seeds key fields', cervOk, JSON.stringify({ subj: cervDraft.subjective, assess: cervDraft.assessment, plan: { exerciseTable: cervDraft.plan?.exerciseTable } }, null, 2));
+    } catch (e) {
+      log('Unhandled error in tests', false, String(e?.stack || e));
+    }
+  </script>
+</body>
+</html>

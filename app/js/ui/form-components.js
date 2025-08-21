@@ -9,25 +9,16 @@ import { el, textareaAutoResize } from './utils.js';
 
 /**
  * Enhanced Input Field Component
- * @param {object|string} options - Configuration options object OR legacy label string
+ * @param {object} options - Configuration options object
  */
 export function inputField(options = {}) {
-  // Handle both new props format and legacy format
-  let label, value, onChange, config;
-  
-  if (typeof options === 'string') {
-    // Legacy format: inputField(label, value, onChange, options)
-    label = arguments[0];
-    value = arguments[1];
-    onChange = arguments[2];
-    config = arguments[3] || {};
-  } else {
-    // New props format: inputField({ label, value, onChange, ...props })
-    label = options.label;
-    value = options.value;
-    onChange = options.onChange;
-    config = options;
-  }
+  // Modern props format: inputField({ label, value, onChange, ...props })
+  const {
+    label,
+    value,
+    onChange,
+    ...config
+  } = options;
 
   const {
     type = 'text',
@@ -93,27 +84,14 @@ export function inputField(options = {}) {
 
 /**
  * Enhanced TextArea Field Component
- * @param {object|string} options - Configuration options object OR legacy label string
+ * @param {object} options - Configuration options object
  */
 export function textAreaField(options = {}) {
-  // Handle both new props format and legacy format
-  let label, value, onChange, config;
-  
-  if (typeof options === 'string') {
-    // Legacy format: textAreaField(label, value, onChange, options)
-    label = arguments[0];
-    value = arguments[1];
-    onChange = arguments[2];
-    config = arguments[3] || {};
-  } else {
-    // New props format: textAreaField({ label, value, onChange, ...props })
-    label = options.label;
-    value = options.value;
-    onChange = options.onChange;
-    config = options;
-  }
-
+  // Modern props format: textAreaField({ label, value, onChange, ...props })
   const {
+    label,
+    value,
+    onChange,
     placeholder = '',
     disabled = false,
     required = false,
@@ -187,29 +165,15 @@ export function textAreaField(options = {}) {
 
 /**
  * Enhanced Select Field Component
- * @param {object|string} options - Configuration options object OR legacy label string
+ * @param {object} options - Configuration options object
  */
 export function selectField(options = {}) {
-  // Handle both new props format and legacy format
-  let label, value, optionsArray, onChange, config;
-  
-  if (typeof options === 'string') {
-    // Legacy format: selectField(label, value, options, onChange, config)
-    label = arguments[0];
-    value = arguments[1];
-    optionsArray = arguments[2];
-    onChange = arguments[3];
-    config = arguments[4] || {};
-  } else {
-    // New props format: selectField({ label, value, options, onChange, ...props })
-    label = options.label;
-    value = options.value;
-    optionsArray = options.options;
-    onChange = options.onChange;
-    config = options;
-  }
-
+  // Modern props format: selectField({ label, value, options, onChange, ...props })
   const {
+    label,
+    value,
+    options: optionsArray,
+    onChange,
     placeholder = 'Select...',
     disabled = false,
     required = false,
@@ -220,7 +184,7 @@ export function selectField(options = {}) {
     error = '',
     size = 'normal', // 'small', 'normal', 'large'
     allowEmpty = true
-  } = config;
+  } = options;
 
   // Create select element using direct DOM approach
   const select = document.createElement('select');

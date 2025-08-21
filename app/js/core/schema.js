@@ -90,10 +90,10 @@ export function makeBlankCase() {
         observations: ''
       },
       regionalAssessments: {
-        expandedRegions: {},
-        romData: {},
-        mmtData: {},
-        testData: {}
+        selectedRegions: [],
+        rom: {},
+        mmt: {},
+        specialTests: {}
       }
     },
     assessment: {
@@ -176,7 +176,7 @@ export function validateCase(c) {
 
 // New helper functions for data integrity
 export function ensureDataIntegrity(caseData) {
-  // Ensure both 'findings' and 'exam' structures exist for backward compatibility
+  // Ensure required data structures exist
   if (!caseData.exam && caseData.findings) {
     caseData.exam = { ...caseData.findings };
   }

@@ -221,15 +221,8 @@ export function createBillingSection(billingData, onUpdate) {
     id: 'billing-section'
   });
   
-  // Handle backward compatibility - if billing is a string, migrate to object
-  let data = billingData;
-  if (typeof data === 'string') {
-    data = {
-      legacyText: billingData,
-      diagnosisCodes: [],
-      billingCodes: []
-    };
-  }
+  // Billing data should always be an object
+  const data = billingData || {};
   
   // Initialize comprehensive data structure with default placeholder rows
   const defaultData = {
@@ -241,12 +234,11 @@ export function createBillingSection(billingData, onUpdate) {
     ],
     ordersReferrals: [
       { type: '', details: '' }
-    ],
-    legacyText: ''
+    ]
   };
   
   // Merge with existing data, but ensure arrays are properly initialized
-  data = {
+  const finalData = {
     ...defaultData,
     ...data,
     diagnosisCodes: Array.isArray(data?.diagnosisCodes) && data.diagnosisCodes.length > 0 
@@ -260,27 +252,14 @@ export function createBillingSection(billingData, onUpdate) {
       : defaultData.ordersReferrals
   };
 
-  // Migrate old primaryDiagnosis/secondaryDiagnosis to new diagnosisCodes array
-  if (data.primaryDiagnosis || data.secondaryDiagnosis) {
-    if (data.primaryDiagnosis && !data.diagnosisCodes.some(d => d.isPrimary)) {
-      data.diagnosisCodes.unshift({ code: data.primaryDiagnosis, description: '', isPrimary: true });
-    }
-    if (data.secondaryDiagnosis && !data.diagnosisCodes.some(d => d.code === data.secondaryDiagnosis)) {
-      data.diagnosisCodes.push({ code: data.secondaryDiagnosis, description: '', isPrimary: false });
-    }
-    // Clean up old fields
-    delete data.primaryDiagnosis;
-    delete data.secondaryDiagnosis;
-  }
-
   // Update helper
   const updateField = (field, value) => {
-    data[field] = value;
-    onUpdate(data);
+    finalData[field] = value;
+    onUpdate(finalData);
   };
 
   // Create billing interface via PTBilling component
-  section.append(PTBilling.create(data, updateField));
+  section.append(PTBilling.create(finalData, updateField));
 
   return section;
 }
@@ -641,6 +620,8 @@ function getPTICD10Codes() {
     { value: 'M54.12', label: 'M54.12 - Radiculopathy, cervical region', description: 'Nerve root compression in cervical spine' },
     
     // Shoulder Conditions
+  { value: 'M75.41', label: 'M75.41 - Impingement syndrome of right shoulder', description: 'Impingement syndrome, right shoulder' },
+  { value: 'M75.21', label: 'M75.21 - Bicipital tendinitis, right shoulder', description: 'Bicipital tendinitis, right shoulder' },
     { value: 'M25.511', label: 'M25.511 - Pain in right shoulder', description: 'Right shoulder pain, unspecified cause' },
     { value: 'M25.512', label: 'M25.512 - Pain in left shoulder', description: 'Left shoulder pain, unspecified cause' },
     { value: 'M75.30', label: 'M75.30 - Calcific tendinitis of unspecified shoulder', description: 'Calcific deposits in shoulder tendons' },

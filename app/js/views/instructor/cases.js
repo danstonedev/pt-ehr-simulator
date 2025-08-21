@@ -2,7 +2,7 @@ import { route, navigate } from '../../core/router.js';
 import * as store from '../../core/store.js';
 import { generateCase } from '../../services/index.js';
 import { el } from '../../ui/utils.js';
-import { createIcon } from '../../ui/Icons.js';
+// Stop importing JS icons; we'll use the HTML sprite via <use>
 
 // Compute age from a YYYY-MM-DD string
 function computeAgeFromDob(dobStr) {
@@ -497,7 +497,7 @@ async function handleCaseCreationAsync(title, setting, age, gender, acuity, dob)
     };
     
   const newCase = await store.createCase(caseData);
-    console.log('✅ Created case with ID:', newCase.id);
+
     
     // Close modal
     const modal = document.querySelector('[style*="z-index: 1000"]');
@@ -514,23 +514,24 @@ async function handleCaseCreationAsync(title, setting, age, gender, acuity, dob)
   }
 }
 
-console.log('📦 Imports loaded');
+
 
 route('#/instructor/cases', async (app) => {
   let allCases = [];
 
-  function createIcon(type) {
-    const icons = {
-      plus: '<svg width="16" height="16" viewBox="0 0 1024 1024"><path d="M474 152m8 0l60 0q8 0 8 8l0 704q0 8-8 8l-60 0q-8 0-8-8l0-704q0-8 8-8Z M152 474m0 8l0 60q0 8 8 8l704 0q8 0 8-8l0-60q0-8-8-8l-704 0q-8 0-8 8Z"/></svg>',
-      share: '<svg width="16" height="16" viewBox="0 0 1024 1024"><path d="M768 853.333333c64.8 0 117.333333-52.533333 117.333333-117.333333s-52.533333-117.333333-117.333333-117.333333c-29.866667 0-56.666667 11.2-77.866667 29.866666L426.666667 512c2.133333-10.666667 4.266667-21.333333 4.266666-32s-2.133333-21.333333-4.266666-32l263.466666-136.533333C711.111111 329.066667 738.133333 341.333333 768 341.333333c64.8 0 117.333333-52.533333 117.333333-117.333333S832.8 106.666667 768 106.666667s-117.333333 52.533333-117.333333 117.333333c0 10.666667 2.133333 21.333333 4.266666 32L391.466667 392.533333C370.266667 373.866667 343.466667 362.666667 313.6 362.666667c-64.8 0-117.333333 52.533333-117.333333 117.333333s52.533333 117.333333 117.333333 117.333333c29.866667 0 56.666667-11.2 77.866667-29.866666L654.933333 703.999999c-2.133333 10.666667-4.266667 21.333333-4.266666 32 0 64.8 52.533333 117.333333 117.333333 117.333333z"/></svg>',
-      edit: '<svg width="16" height="16" viewBox="0 0 1024 1024"><path d="M257.7 752c2 0 4-.2 6-.5L431.9 722c2-.4 3.9-1.3 5.3-2.8l423.9-423.9c3.9-3.9 3.9-10.2 0-14.1L694.9 114.9c-1.9-1.9-4.4-2.9-7.1-2.9s-5.2 1-7.1 2.9L256.8 538.8c-1.5 1.5-2.4 3.3-2.8 5.3l-29.5 168.2c-1.9 11.1 1.5 21.9 9.4 29.8 6.6 6.4 14.9 9.9 23.8 9.9z m67.4-174.4L687.8 215l73.3 73.3-362.7 362.6-88.9 15.7 15.6-89z"/><path d="M880 836H144c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32z"/></svg>',
-      preview: '<svg width="16" height="16" viewBox="0 0 1024 1024"><path d="M942.2 486.2C847.4 286.5 704.1 186 512 186c-192.2 0-335.4 100.5-430.2 300.3-7.7 16.2-7.7 35.2 0 51.5C176.6 737.5 319.9 838 512 838c192.2 0 335.4-100.5 430.2-300.3 7.7-16.2 7.7-35 0-51.5zM512 766c-161.3 0-279.4-81.8-362.7-254C232.6 339.8 350.7 258 512 258c161.3 0 279.4 81.8 362.7 254C791.5 684.2 673.4 766 512 766z"/><path d="M508 336c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176z m0 288c-61.9 0-112-50.1-112-112s50.1-112 112-112 112 50.1 112 112-50.1 112-112 112z"/></svg>',
-      delete: '<svg width="16" height="16" viewBox="0 0 1024 1024"><path d="M864 256H736v-80c0-35.3-28.7-64-64-64H352c-35.3 0-64 28.7-64 64v80H160c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h60.4l24.4 523c1.5 32.1 27.9 57 60 57h457.2c32.1 0 58.5-24.9 60-57L822.6 328H884c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32z m-504-72h304v72H360v-72z m371.3 656H292.7l-24.2-518h487l-24.2 518z"/></svg>',
-  sort: '<svg width="16" height="16" viewBox="0 0 1024 1024"><path fill="currentColor" d="M858.9 689L530.5 308.2c-9.4-10.9-27.5-10.9-37 0L165.1 689c-12.2 14.2-1.2 35 18.5 35h656.8c19.7 0 30.7-20.8 18.5-35z"/></svg>',
-  sortAsc: '<svg width="16" height="16" viewBox="0 0 1024 1024"><path fill="currentColor" d="M858.9 689L530.5 308.2c-9.4-10.9-27.5-10.9-37 0L165.1 689c-12.2 14.2-1.2 35 18.5 35h656.8c19.7 0 30.7-20.8 18.5-35z"/></svg>',
-  sortDesc: '<svg width="16" height="16" viewBox="0 0 1024 1024"><path fill="currentColor" d="M165.1 335l328.4 380.8c9.4 10.9 27.5 10.9 37 0L858.9 335c12.2-14.2 1.2-35-18.5-35H183.6c-19.7 0-30.7 20.8-18.5 35z"/></svg>'
-    };
-    return icons[type] || '';
+  // Tiny helper to create a sprite-based icon element
+  function spriteIcon(name, { className = 'icon', size } = {}) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('class', className);
+    if (size) {
+      svg.style.width = size;
+      svg.style.height = size;
+    }
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttribute('href', `#icon-${name}`);
+    svg.appendChild(use);
+    return svg;
   }
 
   let sortColumn = '';
@@ -633,10 +634,8 @@ route('#/instructor/cases', async (app) => {
     textSpan.style.fontWeight = '600';
     textSpan.textContent = text;
     
-  const icon = document.createElement('span');
-  icon.className = 'sort-icon';
-  icon.innerHTML = createIcon(isActive ? (isDesc ? 'sortDesc' : 'sortAsc') : 'sort');
-  icon.style.cssText = `opacity: ${isActive ? '0.9' : '0.5'};`;
+  const icon = spriteIcon(isActive ? (isDesc ? 'sortDesc' : 'sortAsc') : 'sort', { className: 'icon sort-icon' });
+  icon.style.opacity = isActive ? '0.9' : '0.5';
 
     container.appendChild(textSpan);
     container.appendChild(icon);
@@ -692,7 +691,7 @@ route('#/instructor/cases', async (app) => {
                 showCaseCreationModal();
               }
             }, [
-              el('span', { html: createIcon('plus') }),
+              spriteIcon('plus'),
               'Create New Case'
             ]),
             el('button', { 
@@ -704,7 +703,7 @@ route('#/instructor/cases', async (app) => {
                 showPromptGenerationModal();
               }
             }, [
-              el('span', { html: createIcon('edit') }),
+              spriteIcon('edit'),
               'Generate from Prompt'
             ])
           ])
@@ -910,7 +909,7 @@ route('#/instructor/cases', async (app) => {
                 setTimeout(() => { e.target.innerHTML = originalContent; }, 2000);
               }
             }, [
-              el('span', { html: createIcon('share') }),
+              spriteIcon('share'),
               'Share'
             ]),
             el('button', { 
@@ -918,7 +917,7 @@ route('#/instructor/cases', async (app) => {
               style: 'margin-right: 8px;',
               onClick: () => navigate(`#/instructor/editor?case=${c.id}&v=${c.latestVersion || 0}&encounter=eval`) 
             }, [
-              el('span', { html: createIcon('edit') }),
+              spriteIcon('edit'),
               'Edit'
             ]),
             el('button', { 
@@ -926,7 +925,7 @@ route('#/instructor/cases', async (app) => {
               style: 'margin-right: 8px;',
               onClick: () => navigate(`#/student/editor?case=${c.id}&v=${c.latestVersion}&encounter=eval`) 
             }, [
-              el('span', { html: createIcon('preview') }),
+              spriteIcon('preview'),
               'Student View'
             ]),
             el('button', { 
@@ -934,7 +933,7 @@ route('#/instructor/cases', async (app) => {
               style: 'margin-right: 8px;',
               onClick: () => navigate(`#/student/editor?case=${c.id}&v=${c.latestVersion}&encounter=eval&key=true`) 
             }, [
-              el('span', { html: createIcon('preview') }),
+              spriteIcon('preview'),
               'Answer Key'
             ]),
             el('button', {
@@ -952,7 +951,7 @@ route('#/instructor/cases', async (app) => {
                 }
               }
             }, [
-              el('span', { html: createIcon('delete') }),
+              spriteIcon('delete'),
               'Delete'
             ])
           ])

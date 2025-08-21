@@ -75,6 +75,37 @@ function getNextCaseId() {
   }
 }
 
+// Helper to fetch JSON safely
+async function fetchJson(url) {
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (_) {
+    return null;
+  }
+}
+
+// Load cases from manifest file-based layout: app/data/cases/manifest.json
+async function loadCasesFromManifest() {
+  const manifest = await fetchJson('/data/cases/manifest.json');
+  if (!manifest || !Array.isArray(manifest.categories)) return {};
+  const collected = {};
+  for (const cat of manifest.categories) {
+    if (!Array.isArray(cat.cases)) continue;
+    for (const c of cat.cases) {
+      if (!c?.file) continue;
+      const caseWrapper = await fetchJson(`/data/${c.file}`);
+      if (!caseWrapper || !caseWrapper.id || !caseWrapper.caseObj) continue;
+      // Ensure integrity/migrations
+      caseWrapper.caseObj = migrateOldCaseData(caseWrapper.caseObj);
+      caseWrapper.caseObj = ensureDataIntegrity(caseWrapper.caseObj);
+      collected[caseWrapper.id] = caseWrapper;
+    }
+  }
+  return collected;
+}
+
 // --- Initialize with data file (app/data/cases.json) if empty; fallback to sample ---
 async function ensureCasesInitialized() {
   const existing = loadCasesFromStorage();
@@ -95,36 +126,41 @@ async function ensureCasesInitialized() {
               }
             });
             saveCasesToStorage(serverJson);
-            console.log('🟢 Initialized cases from server');
+
             return serverJson;
           }
         }
       } catch {}
     }
 
-    // Try to load canonical website cases
-    const res = await fetch('data/cases.json', { cache: 'no-store' });
-    if (res.ok) {
-      const json = await res.json();
-      if (json && typeof json === 'object' && !Array.isArray(json)) {
-        // Migrate/integrity-check each case
-        Object.keys(json).forEach(id => {
-          if (json[id] && json[id].caseObj) {
-            json[id].caseObj = migrateOldCaseData(json[id].caseObj);
-            json[id].caseObj = ensureDataIntegrity(json[id].caseObj);
-          }
-        });
-        saveCasesToStorage(json);
-        console.log('📥 Initialized cases from data/cases.json');
-        return json;
-      }
+    // Try to load canonical website cases (monolithic file)
+  const json = await fetchJson('/data/cases.json');
+    let baseMap = {};
+    if (json && typeof json === 'object' && !Array.isArray(json)) {
+      Object.keys(json).forEach(id => {
+        if (json[id] && json[id].caseObj) {
+          json[id].caseObj = migrateOldCaseData(json[id].caseObj);
+          json[id].caseObj = ensureDataIntegrity(json[id].caseObj);
+        }
+      });
+      baseMap = json;
+
+    }
+
+    // Overlay any file-based cases from manifest (allows organized folders and incremental adds)
+    const manifestMap = await loadCasesFromManifest();
+    const merged = { ...baseMap, ...manifestMap };
+    if (Object.keys(merged).length > 0) {
+      saveCasesToStorage(merged);
+
+      return merged;
     }
   } catch (e) {
     console.warn('Unable to load data/cases.json, falling back to sample data.', e);
   }
 
   // Fallback sample if nothing else available
-  console.log('🎯 No cases found - initializing with sample data');
+
   const sampleCase = {
     id: 'demo_case_1',
     title: 'Low Back Pain - Acute Episode',
@@ -215,7 +251,7 @@ export const createCase = async (caseData) => {
   // Auto-publish to local server if available
   scheduleAutoPublish();
   
-  console.log('✅ Case created:', newCase.id);
+
   return newCase;
 };
 
@@ -243,7 +279,7 @@ export const updateCase = async (id, caseData) => {
   // Auto-publish to local server if available
   scheduleAutoPublish();
   
-  console.log('✅ Case updated:', id);
+
   return cases[id];
 };
 
@@ -254,7 +290,7 @@ export const deleteCase = async (id) => {
     saveCasesToStorage(cases);
   // Auto-publish to local server if available
   scheduleAutoPublish();
-    console.log('✅ Case deleted:', id);
+
   }
   return { ok: true };
 };
@@ -305,7 +341,7 @@ export const loadDraft = (caseId, encounter) => {
   const skipLoading = isDevelopmentMode && isNewCase;
   
   if (skipLoading) {
-    console.log('Development mode: Skipping localStorage load for new case');
+
     return null;
   }
   

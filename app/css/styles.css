@@ -116,6 +116,19 @@
   --editor-bg: #0f172a; /* dark slate for uniform background in editor */
 }
 
+/* Icon utility for sprite-based SVGs */
+.icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  fill: currentColor;
+}
+
+.btn .icon, .nav-link .icon { margin-right: .5rem; }
+
+/* Hide inline SVG sprite container */
+#svg-sprite { display: none; }
+
 /* Light theme - Accessibility-compliant (WCAG AA) */
 :root[data-theme="light"] {
   --bg: #ffffff; 
