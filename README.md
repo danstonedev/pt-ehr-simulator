@@ -1,31 +1,74 @@
-# PT EMR Simulator — Modernized Pure Frontend Application
+# PT EMR Simulator — Modern Physical Therapy Electronic Medical Record
 
-A comprehensive Physical Therapy Electronic Medical Record simulator built as a **modern pure frontend application** with no backend dependencies. Recently modernized with aggressive cleanup and contemporary JavaScript patterns.
+> **Professional-grade Physical Therapy documentation simulator with comprehensive SOAP workflow, advanced regional assessments, and embedded clinical cases. Built as a modern pure frontend application with contemporary theming system.**
 
-## ✨ Features
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-GitHub_Pages-blue?style=for-the-badge)](https://danstonedev.github.io/pt-ehr-simulator/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
+[![Built with TypeScript](https://img.shields.io/badge/Built%20with-Vanilla%20JS%20ES6+-yellow?style=for-the-badge)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
-- **Professional SOAP Documentation**: Complete Subjective, Objective, Assessment, Plan workflow
-- **Integrated Case Management**: Faculty create complete cases with embedded metadata
-- **Student Practice Environment**: Clean interface for practicing documentation
-- **Advanced Regional Assessments**: ROM, MMT, PROM, and special tests by body region
-- **Professional Billing**: Comprehensive ICD-10 and CPT code management with units
-- **ICF Framework**: Complete Body Functions, Activity Limitations, Participation Restrictions
-- **SMART Goals**: Evidence-based goal setting with measurable outcomes
-- **Word Export**: Professional document generation for completed notes
-- **Pure Frontend Architecture**: Zero backend dependencies, runs entirely in browser
+## ✨ Features & Capabilities
+
+### 🏥 **Professional SOAP Documentation**
+
+- **Complete clinical workflow**: Subjective, Objective, Assessment, Plan
+- **Advanced pain assessment**: Multiple pain scales, pattern tracking, functional impact
+- **Comprehensive history taking**: HPI, PMH, medications, red flag screening
+- **Evidence-based assessment**: ICF framework integration with clinical reasoning
+
+### 🎯 **Advanced Regional Assessments**
+
+- **Dynamic body region selection**: Shoulder, cervical spine, lumbar spine, and more
+- **Comprehensive measurement tools**: ROM, MMT, PROM with standardized scales
+- **Special testing protocols**: Region-specific orthopedic tests with interpretation
+- **Professional documentation**: Standardized forms with validation and notes
+
+### 💼 **Professional Practice Management**
+
+- **ICD-10 & CPT coding**: Comprehensive billing with units and time tracking
+- **SMART goals framework**: Evidence-based goal setting with measurable outcomes
+- **Exercise prescription**: Structured therapeutic exercise documentation
+- **Word document export**: Professional report generation for completed notes
+
+### 🎓 **Educational Excellence**
+
+- **Faculty dashboard**: Complete case creation and management tools
+- **Student practice environment**: Clean, distraction-free documentation interface
+- **Embedded clinical cases**: Tennis player shoulder pain, office worker cervical radiculopathy
+- **Answer key system**: Faculty-created reference materials for learning
+
+### 🎨 **Modern User Experience**
+
+- **Light & Dark themes**: Professional theming with consistent brand identity
+- **Responsive design**: Works seamlessly across desktop, tablet, and mobile
+- **Accessibility focused**: WCAG compliant with keyboard navigation and screen reader support
+- **Pure frontend architecture**: No server setup required, runs entirely in browser
 
 ## 🚀 Quick Start
 
-### Option 1: Root launcher (serves app/)
+> **No installation required!** This application runs entirely in your browser with zero setup complexity.
 
-PowerShell (Windows):
+### 🌐 **Option 1: Use Live Demo (Recommended)**
+
+**[🔗 Open PT EMR Simulator](https://danstonedev.github.io/pt-ehr-simulator/)**
+
+The application is deployed on GitHub Pages and ready to use immediately.
+
+### 💻 **Option 2: Run Locally**
+
+**PowerShell (Windows) - Recommended:**
 
 ```powershell
+# Clone the repository
+git clone https://github.com/danstonedev/pt-ehr-simulator.git
+cd pt-ehr-simulator
+
+# Launch the application (serves app/ directory)
 ./start_servers_simple.ps1
-# Open http://localhost:3000
+
+# Open http://localhost:3000 in your browser
 ```
 
-### Option 2: Simple Python server from app/
+**Python HTTP Server:**
 
 ```bash
 cd app
@@ -33,18 +76,29 @@ python -m http.server 3000
 # Open http://localhost:3000
 ```
 
-### Option 3: VS Code Live Server
+**VS Code Live Server Extension:**
 
-1. Install Live Server extension in VS Code
-2. Right-click `app/index.html`
-3. Select "Open with Live Server"
+1. Install the [Live Server extension](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer)
+2. Open the project in VS Code
+3. Right-click `app/index.html` → **"Open with Live Server"**
 
-### Option 4: App-level PowerShell script
+### 🎯 **Getting Started**
 
-```powershell
-cd app
-./start_servers_simple.ps1
-```
+1. **Faculty Users**: Navigate to **Faculty Dashboard** to create cases or view embedded examples
+2. **Students**: Visit **Student Dashboard** to practice documentation with provided cases
+3. **Demo Cases**: Two professional cases are included:
+   - 🎾 **Tennis Player - Shoulder Pain** (Impingement syndrome)
+   - 💻 **Office Worker - Cervical Radiculopathy** (C6 nerve root)
+
+### 🔧 **Troubleshooting**
+
+If you don't see the embedded cases in Faculty Dashboard:
+
+1. Open browser developer console (F12)
+2. Run: `ptStore.forceReloadCases()`
+3. Refresh the page
+
+This clears the localStorage cache and reloads cases from the manifest.
 
 ## 📁 Project Structure
 
