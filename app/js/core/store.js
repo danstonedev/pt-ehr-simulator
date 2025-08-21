@@ -133,79 +133,19 @@ async function ensureCasesInitialized() {
       } catch {}
     }
 
-    // Try to load canonical website cases (monolithic file)
-  const json = await fetchJson('/data/cases.json');
-    let baseMap = {};
-    if (json && typeof json === 'object' && !Array.isArray(json)) {
-      Object.keys(json).forEach(id => {
-        if (json[id] && json[id].caseObj) {
-          json[id].caseObj = migrateOldCaseData(json[id].caseObj);
-          json[id].caseObj = ensureDataIntegrity(json[id].caseObj);
-        }
-      });
-      baseMap = json;
-
-    }
-
-    // Overlay any file-based cases from manifest (allows organized folders and incremental adds)
+    // Load cases from manifest (new file-based structure)
     const manifestMap = await loadCasesFromManifest();
-    const merged = { ...baseMap, ...manifestMap };
-    if (Object.keys(merged).length > 0) {
-      saveCasesToStorage(merged);
-
-      return merged;
+    if (Object.keys(manifestMap).length > 0) {
+      saveCasesToStorage(manifestMap);
+      return manifestMap;
     }
   } catch (e) {
-    console.warn('Unable to load data/cases.json, falling back to sample data.', e);
+    console.warn('Unable to load cases from manifest, falling back to sample data.', e);
   }
 
-  // Fallback sample if nothing else available
-
-  const sampleCase = {
-    id: 'demo_case_1',
-    title: 'Low Back Pain - Acute Episode',
-    latestVersion: 0,
-    caseObj: {
-      meta: {
-        title: 'Low Back Pain - Acute Episode',
-        setting: 'Outpatient',
-        regions: ['lumbar_spine'],
-        acuity: 'acute',
-        diagnosis: 'Musculoskeletal'
-      },
-      snapshot: {
-        age: '45',
-        sex: 'female',
-        teaser: 'A 45-year-old female presents with acute low back pain after lifting heavy boxes.'
-      },
-      history: {
-        chief_complaint: 'Low back pain for 3 days',
-        hpi: 'Patient reports sudden onset of sharp low back pain while lifting heavy boxes at work 3 days ago.',
-        pmh: ['No significant past medical history'],
-        meds: ['Ibuprofen 400mg as needed'],
-        red_flag_signals: []
-      },
-      findings: {
-        vitals: { bp: '120/80', hr: '72', rr: '16', temp: '98.6', o2sat: '98%', pain: '7/10' },
-        rom: {},
-        mmt: {},
-        special_tests: [],
-        gait: { device: 'none', distance_m: 50 },
-        outcome_options: []
-      },
-      encounters: {
-        eval: { 
-          notes_seed: 'Initial evaluation for acute low back pain'
-        },
-        daily: [],
-        progress: null,
-        discharge: null
-      }
-    }
-  };
-  const initialCases = { [sampleCase.id]: sampleCase };
-  saveCasesToStorage(initialCases);
-  return initialCases;
+  // No cases available - return empty
+  console.warn('No cases found in manifest or storage');
+  return {};
 }
 
 // --- Public API (matches original backend interface) ---
