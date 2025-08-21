@@ -109,6 +109,7 @@ async function loadCasesFromManifest() {
 // --- Initialize with data file (app/data/cases.json) if empty; fallback to sample ---
 async function ensureCasesInitialized() {
   const existing = loadCasesFromStorage();
+  console.log('Existing cases in localStorage:', Object.keys(existing));
   if (Object.keys(existing).length > 0) return existing;
 
   try {
@@ -134,7 +135,9 @@ async function ensureCasesInitialized() {
     }
 
     // Load cases from manifest (new file-based structure)
+    console.log('Loading cases from manifest...');
     const manifestMap = await loadCasesFromManifest();
+    console.log('Loaded cases from manifest:', Object.keys(manifestMap));
     if (Object.keys(manifestMap).length > 0) {
       saveCasesToStorage(manifestMap);
       return manifestMap;
@@ -147,6 +150,13 @@ async function ensureCasesInitialized() {
   console.warn('No cases found in manifest or storage');
   return {};
 }
+
+// Force reload cases from manifest (clears localStorage cache)
+export const forceReloadCases = async () => {
+  console.log('Force reloading cases...');
+  localStorage.removeItem(CASES_KEY);
+  return await ensureCasesInitialized();
+};
 
 // --- Public API (matches original backend interface) ---
 

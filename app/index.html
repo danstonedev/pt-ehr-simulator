@@ -335,6 +335,12 @@
       }
     });
   </script>
+  <script type="module">
+    import * as store from './js/core/store.js';
+    // Make store available for debugging
+    window.ptStore = store;
+    console.log('PT Store available as window.ptStore - use ptStore.forceReloadCases() to refresh');
+  </script>
   <script type="module" src="js/core/router.js?v=20250820-004"></script>
 </body>
 </html>
