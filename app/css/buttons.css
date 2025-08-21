@@ -45,9 +45,19 @@
 .btn.outline { background: transparent; border-color: var(--und-green); color: var(--und-green); font-weight: 600; }
 .btn.outline:hover { background: var(--und-green-light); border-color: var(--und-green-dark); color: var(--und-green-dark); }
 
-/* Orange variant (UND orange) for Feedback button */
-.btn.orange { background: var(--und-orange); border-color: var(--und-orange); color: #fff; font-weight: 600; }
-.btn.orange:hover { background: var(--und-orange-dark); border-color: var(--und-orange-dark); }
+/* Orange variant (UND orange) for Feedback button - consistent across themes */
+.btn.orange { 
+  background: #374151; /* dark gray background */
+  border-color: var(--und-orange); 
+  color: #ffffff; /* white text */ 
+  font-weight: 500; 
+}
+.btn.orange:hover { 
+  background: var(--und-orange); 
+  border-color: var(--und-orange); 
+  color: #ffffff; /* white text on orange background */
+  font-weight: 600;
+}
 
 /* Subtle red (outline) variant for destructive actions */
 /* Rest: very light red border, white fill; Hover: soft red fill + darker red border/text */
@@ -134,6 +144,20 @@ html:not([data-theme="dark"]) .btn.secondary { background: #fff; border-color: v
 html:not([data-theme="dark"]) .btn.secondary:hover { background: #f8f9fa; border-color: var(--und-green); color: var(--und-green); font-weight: 700; }
 html:not([data-theme="dark"]) .btn.subtle-danger { background: #fff; border-color: #f3e8e8; color: #dc2626; }
 html:not([data-theme="dark"]) .btn.subtle-danger:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; box-shadow: none; transform: none; }
-/* Light theme orange hover keeps brand contrast */
-html:not([data-theme="dark"]) .btn.orange { background: var(--und-orange); border-color: var(--und-orange); color: #fff; }
-html:not([data-theme="dark"]) .btn.orange:hover { background: var(--und-orange-dark); border-color: var(--und-orange-dark); }
+/* Theme-specific overrides removed - using consistent styling above */
+
+/* Force consistent orange button styling across all themes */
+html:not([data-theme="dark"]) .btn.orange,
+html[data-theme="dark"] .btn.orange { 
+  background: #374151 !important; /* dark gray background */
+  border-color: var(--und-orange) !important; 
+  color: #ffffff !important; /* white text */ 
+  font-weight: 500; 
+}
+html:not([data-theme="dark"]) .btn.orange:hover,
+html[data-theme="dark"] .btn.orange:hover { 
+  background: var(--und-orange) !important; 
+  border-color: var(--und-orange) !important; 
+  color: #ffffff !important; /* white text on orange background */
+  font-weight: 600;
+}
