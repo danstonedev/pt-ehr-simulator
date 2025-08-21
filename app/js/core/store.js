@@ -78,31 +78,56 @@ function getNextCaseId() {
 // Helper to fetch JSON safely
 async function fetchJson(url) {
   try {
+    console.log(`🌐 Fetching: ${url}`);
     const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (_) {
+    if (!res.ok) {
+      console.warn(`❌ Fetch failed for ${url}: ${res.status} ${res.statusText}`);
+      return null;
+    }
+    const data = await res.json();
+    console.log(`✅ Successfully fetched: ${url}`);
+    return data;
+  } catch (error) {
+    console.error(`🚨 Error fetching ${url}:`, error);
     return null;
   }
 }
 
 // Load cases from manifest file-based layout: app/data/cases/manifest.json
 async function loadCasesFromManifest() {
+  console.log('🔍 Loading cases from manifest...');
   const manifest = await fetchJson('/data/cases/manifest.json');
-  if (!manifest || !Array.isArray(manifest.categories)) return {};
+  console.log('📄 Manifest loaded:', manifest);
+  
+  if (!manifest || !Array.isArray(manifest.categories)) {
+    console.warn('❌ No valid manifest or categories found');
+    return {};
+  }
+  
   const collected = {};
   for (const cat of manifest.categories) {
+    console.log(`📂 Processing category: ${cat.name}`);
     if (!Array.isArray(cat.cases)) continue;
+    
     for (const c of cat.cases) {
       if (!c?.file) continue;
+      console.log(`🔄 Loading case file: /data/${c.file}`);
+      
       const caseWrapper = await fetchJson(`/data/${c.file}`);
-      if (!caseWrapper || !caseWrapper.id || !caseWrapper.caseObj) continue;
+      if (!caseWrapper || !caseWrapper.id || !caseWrapper.caseObj) {
+        console.warn(`❌ Failed to load case: ${c.file}`);
+        continue;
+      }
+      
+      console.log(`✅ Successfully loaded case: ${caseWrapper.id}`);
       // Ensure integrity/migrations
       caseWrapper.caseObj = migrateOldCaseData(caseWrapper.caseObj);
       caseWrapper.caseObj = ensureDataIntegrity(caseWrapper.caseObj);
       collected[caseWrapper.id] = caseWrapper;
     }
   }
+  
+  console.log('📋 Total cases collected:', Object.keys(collected));
   return collected;
 }
 
