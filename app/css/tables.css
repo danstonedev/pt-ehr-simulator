@@ -40,10 +40,11 @@
 .table th {
   font-size: 14px; /* denser header */
   font-weight: 600;
-  color: var(--text);
+  color: #fff; /* White text on dark gradient */
   text-transform: capitalize;
   letter-spacing: 0.3px;
-  background: var(--bg-secondary);
+  /* Theme-aware gradient using CSS variables */
+  background: linear-gradient(90deg, var(--header-gradient-left) 0%, var(--header-gradient-right) 100%);
 }
 
 .table th.sortable {
@@ -62,22 +63,22 @@
 .table tbody tr { transition: background 0.2s ease; }
 .table tbody tr:hover { background: var(--und-green-light); }
 
-/* Dashboard cases tables: dark gradient header with white text */
+/* Dashboard cases tables: theme-aware gradient */
 .cases-table thead th {
-  /* Use brand tokens instead of hardcoded hex */
-  background: linear-gradient(180deg, var(--und-black) 0%, var(--chrome-sidebar-right) 100%);
+  /* Theme-aware gradient using CSS variables */
+  background: linear-gradient(90deg, var(--header-gradient-left) 0%, var(--header-gradient-right) 100%);
   color: #fff;
 }
 .cases-table thead th.sortable:hover {
-  background: linear-gradient(180deg, var(--und-black) 0%, var(--chrome-sidebar-right) 100%); /* keep gradient on hover */
+  background: linear-gradient(90deg, var(--header-gradient-left) 0%, var(--header-gradient-right) 100%); /* keep gradient on hover */
 }
 
 /* Active sort: slightly brighter header cell for the sorted column */
 .cases-table thead th[aria-sort] {
   background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--und-black) 85%, white) 0%,
-  color-mix(in srgb, var(--chrome-sidebar-right) 85%, white) 100%
+    90deg,
+    color-mix(in srgb, var(--header-gradient-left) 85%, white) 0%,
+  color-mix(in srgb, var(--header-gradient-right) 85%, white) 100%
   );
 }
 
@@ -144,8 +145,8 @@
 }
 .editable-table__table { width: 100%; border-collapse: collapse; border: none; border-radius: var(--radius-sm); overflow: hidden; font-size: 13px; }
 .editable-table__head {
-  /* UND gray gradient across the header: darker left -> UND gray right */
-  background: linear-gradient(90deg, var(--chrome-sidebar-right) 0%, var(--und-gray) 100%);
+  /* Theme-aware gradient using CSS variables */
+  background: linear-gradient(90deg, var(--header-gradient-left) 0%, var(--header-gradient-right) 100%);
   position: relative;
 }
 .editable-table__header-cell { padding: var(--space-1) var(--space-2); text-align: left; font-size: 14px; font-weight: 600; color: var(--text); text-transform: capitalize; letter-spacing: 0.3px; border-bottom: 0; }
@@ -177,18 +178,18 @@ html[data-theme="dark"] .editable-table__select optgroup {
   color: var(--input-text);
 }
 html[data-theme="dark"] .editable-table__select option:hover { 
-  background-color: #2a3646; /* slightly lighter than input-bg for hover */
+  background-color: var(--neutral-700); /* slightly lighter than input-bg for hover */
   color: var(--input-text);
 }
 /* Light theme keeps native light menu for clarity */
 html:not([data-theme="dark"]) .editable-table__select option,
 html:not([data-theme="dark"]) .editable-table__select optgroup {
-  background-color: #ffffff;
-  color: #1a202c;
+  background-color: var(--neutral-50);
+  color: var(--text);
 }
 /* High-contrast state for the selected item in dark mode */
 html[data-theme="dark"] .editable-table__select option:checked { 
-  background-color: #374151; /* slate-700 for subtle highlight */
+  background-color: var(--neutral-700); /* subtle highlight */
   color: var(--input-text);
 }
 /* Placeholder-like first option styling */

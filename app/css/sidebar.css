@@ -7,8 +7,8 @@
   width: var(--sidebar-w);
   /* Leave room for fixed bottom ribbon and safe area to avoid cut off */
   height: calc(100vh - var(--topbar-h) - var(--edu-ribbon-h) - env(safe-area-inset-bottom));
-  /* Single gradient: black → dark gray (theme-agnostic chrome) */
-  background: linear-gradient(90deg, var(--und-black) 0%, var(--chrome-sidebar-right) 100%);
+  /* Theme-aware gradient using CSS variables */
+  background: linear-gradient(90deg, var(--header-gradient-left) 0%, var(--header-gradient-right) 100%);
   border-right: 1px solid rgba(0,0,0,0.12);
   position: fixed; left: 0; top: var(--topbar-h);
   overflow-y: auto; overflow-x: visible; z-index: var(--z-sidebar);
