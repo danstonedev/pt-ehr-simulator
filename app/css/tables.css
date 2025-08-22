@@ -45,6 +45,7 @@
   letter-spacing: 0.3px;
   /* Theme-aware gradient using CSS variables */
   background: linear-gradient(90deg, var(--header-gradient-left) 0%, var(--header-gradient-right) 100%);
+  contain: layout style; /* Performance optimization for table headers */
 }
 
 .table th.sortable {
@@ -156,7 +157,11 @@
 /* Increase specificity so this wins over `.table th { border-bottom: none; }` */
 .table.editable-table__table th.editable-table__header-cell,
 .editable-table__head th.editable-table__header-cell { border-bottom: 0 !important; }
-.editable-table__row { border-bottom: none; transition: background 0.2s ease; }
+.editable-table__row { 
+  border-bottom: none; 
+  transition: background-color 0.2s ease; 
+  contain: layout style; /* Performance optimization for table rows */
+}
 .editable-table__row:hover { background: var(--und-green-light); }
 .editable-table__cell { padding: var(--space-1); vertical-align: middle; }
 

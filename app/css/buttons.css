@@ -41,23 +41,11 @@
 .btn.success { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
 .btn.success:hover { background: var(--accent-dark); border-color: var(--accent-dark); transform: translateY(-1px); }
 .btn.neutral { background: #fff; border-color: var(--border); color: var(--text); font-weight: 600; }
-.btn.neutral:hover { background: #f1f3f5; border-color: #adb5bd; color: var(--text); }
+.btn.neutral:hover { background: var(--neutral-100); border-color: var(--neutral-400); color: var(--text); }
 .btn.outline { background: transparent; border-color: var(--und-green); color: var(--und-green); font-weight: 600; }
 .btn.outline:hover { background: var(--und-green-light); border-color: var(--und-green-dark); color: var(--und-green-dark); }
 
-/* Orange variant (UND orange) for Feedback button - consistent across themes */
-.btn.orange { 
-  background: var(--neutral-800); /* Darker UND gray spectrum */
-  border-color: var(--und-orange); 
-  color: #ffffff; /* white text */ 
-  font-weight: 500; 
-}
-.btn.orange:hover { 
-  background: var(--und-orange); 
-  border-color: var(--und-orange); 
-  color: #ffffff; /* white text on orange background */
-  font-weight: 600;
-}
+/* Orange variant (UND orange) for Feedback button - uses theme-specific overrides below */
 
 /* Subtle red (outline) variant for destructive actions */
 /* Rest: very light red border, white fill; Hover: soft red fill + darker red border/text */
@@ -80,7 +68,7 @@
 .btn.icon-btn svg { width: 20px; height: 20px; fill: var(--icon-color); opacity: var(--icon-opacity); transition: opacity 0.2s ease; }
 .btn.icon-btn:hover { background: var(--btn-hover); border-color: var(--accent); }
 .btn.icon-btn:hover svg { opacity: 1; fill: var(--accent); }
-.btn.icon-btn.danger-hover:hover { background: #f1f3f5; border-color: #adb5bd; }
+.btn.icon-btn.danger-hover:hover { background: var(--neutral-100); border-color: var(--neutral-400); }
 .btn.icon-btn.danger-hover:hover svg { fill: var(--danger-dark); opacity: 1; }
 
 /* Compact add (+) button used in Billing tables */
@@ -125,39 +113,49 @@
 .remove-btn { width: 24px; height: 24px; border-radius: 4px; border: 1px solid #f3e8e8; background: #fefefe; color: #dc2626; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; }
 .remove-btn:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
 
-/* Legacy shims */
+/* Legacy shims for backward compatibility */
 .btn.btn-primary { background: var(--und-green); border-color: var(--und-green); color: #fff; }
 .btn.btn-primary:hover { background: var(--und-green-dark); border-color: var(--und-green-dark); }
 .btn.btn-secondary { background: #fff; border-color: var(--border); color: var(--text); }
-.btn.btn-secondary:hover { background: #f8f9fa; border-color: var(--und-green); }
+.btn.btn-secondary:hover { background: var(--neutral-50); border-color: var(--und-green); }
 .btn.btn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
 .btn.btn-danger:hover { background: var(--danger-dark); border-color: var(--danger-dark); }
 .btn-icon { width: 32px; height: 32px; padding: 4px; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); }
 .btn-icon svg { width: 18px; height: 18px; }
 
 /* Light theme overrides */
-html:not([data-theme="dark"]) .btn { border-color: #dee2e6; background: #fff; color: #495057; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-html:not([data-theme="dark"]) .btn:hover { background: #f8f9fa; border-color: #adb5bd; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+html:not([data-theme="dark"]) .btn { border-color: var(--neutral-300); background: #fff; color: var(--neutral-700); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+html:not([data-theme="dark"]) .btn:hover { background: var(--neutral-50); border-color: var(--neutral-400); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 html:not([data-theme="dark"]) .btn.primary { background: var(--und-green); border-color: var(--und-green); color: #fff; }
 html:not([data-theme="dark"]) .btn.primary:hover { background: var(--und-green-dark); border-color: var(--und-green-dark); }
 html:not([data-theme="dark"]) .btn.secondary { background: #fff; border-color: var(--und-green); color: var(--text); }
-html:not([data-theme="dark"]) .btn.secondary:hover { background: #f8f9fa; border-color: var(--und-green); color: var(--und-green); font-weight: 700; }
-html:not([data-theme="dark"]) .btn.subtle-danger { background: #fff; border-color: #f3e8e8; color: #dc2626; }
-html:not([data-theme="dark"]) .btn.subtle-danger:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; box-shadow: none; transform: none; }
-/* Theme-specific overrides removed - using consistent styling above */
-
-/* Force consistent orange button styling across all themes */
-html:not([data-theme="dark"]) .btn.orange,
-html[data-theme="dark"] .btn.orange { 
-  background: var(--neutral-800) !important; /* Darker UND gray spectrum */
-  border-color: var(--und-orange) !important; 
-  color: #ffffff !important; /* white text */ 
+html:not([data-theme="dark"]) .btn.secondary:hover { background: var(--neutral-50); border-color: var(--und-green); color: var(--und-green); font-weight: 700; }
+/* Orange button light theme override - ensure consistent styling */
+html:not([data-theme="dark"]) .btn.orange { 
+  background: var(--neutral-800); 
+  border-color: var(--und-orange); 
+  color: #ffffff; 
   font-weight: 500; 
 }
-html:not([data-theme="dark"]) .btn.orange:hover,
-html[data-theme="dark"] .btn.orange:hover { 
-  background: var(--und-orange) !important; 
-  border-color: var(--und-orange) !important; 
-  color: #ffffff !important; /* white text on orange background */
+html:not([data-theme="dark"]) .btn.orange:hover { 
+  background: var(--und-orange); 
+  border-color: var(--und-orange); 
+  color: #ffffff; 
+  font-weight: 600;
+}
+/* subtle-danger styling handled by base definition - no theme override needed */
+
+/* Orange button: consistent styling across all themes using proper cascade */
+.btn.orange { 
+  background: var(--neutral-800); /* Darker UND gray spectrum */
+  border-color: var(--und-orange); 
+  color: #ffffff; /* white text */ 
+  font-weight: 500; 
+}
+
+.btn.orange:hover { 
+  background: var(--und-orange); 
+  border-color: var(--und-orange); 
+  color: #ffffff; /* white text on orange background */
   font-weight: 600;
 }

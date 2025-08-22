@@ -97,8 +97,8 @@
   /* Text Colors */
   --text: var(--neutral-100);        /* Primary text */
   --text-secondary: var(--neutral-300);  /* Secondary text */
-  --text-muted: #a0aec0;          /* Muted text */
-  --muted: #a0aec0;
+  --text-muted: var(--neutral-400);          /* Muted text using UND gray spectrum */
+  --muted: var(--neutral-400);
   
   /* Interactive Colors */
   --accent: var(--und-green);      /* Primary accent */
@@ -123,16 +123,16 @@
   /* Input controls (dark theme) */
   --input-bg: var(--neutral-850);
   --input-border: var(--neutral-700);
-  --input-text: #f9fafb;
+  --input-text: var(--neutral-50);  /* UND gray spectrum instead of hard-coded */
   
   /* Text on light surfaces (for white sidebar cards) */
-  --text-on-light: #111827;
-  --text-secondary-on-light: #475569;
+  --text-on-light: var(--neutral-900);  /* UND gray spectrum instead of hard-coded */
+  --text-secondary-on-light: var(--neutral-600);
   
   /* Select controls (dark theme) */
   --select-bg: var(--neutral-850);
   --select-border: var(--neutral-700);
-  --select-text: #f9fafb;
+  --select-text: var(--neutral-50);  /* UND gray spectrum instead of hard-coded */
   
   /* Light surface variants */
   --surface-light: var(--neutral-50);
@@ -142,18 +142,18 @@
   /* Enhanced tokens with better contrast */
   --primary-light: var(--und-green-light);
   --accent2-light: var(--und-green-light);
-  --border-light: rgba(74, 85, 104, 0.6);
+  --border-light: rgba(189, 189, 189, 0.6);  /* UND neutral-400 with opacity */
   --danger-light: rgba(252, 129, 129, 0.15);
   --primary-dark: var(--und-green-dark); 
   --accent2-dark: var(--und-green-dark);
-  --accent-dark: #38a169; 
+  --accent-dark: var(--und-green-dark);  /* Use UND green instead of non-brand color */
   --danger-dark: #e53e3e;
   --bg-hover: rgba(255, 255, 255, 0.05);
 
   /* Button system */
   --btn-bg: var(--neutral-800);
   --btn-hover: var(--neutral-700);
-  --btn-primary: #2b6cb0;
+  --btn-primary: var(--und-green);  /* Use UND green instead of blue */
 
   /* Gradients - Neutral */
   --gradient-start: var(--neutral-900);
@@ -173,19 +173,8 @@
   --topbar-bg: rgba(0,0,0,0.92);
   --footer-bg: rgba(10,12,18,0.7);
   --inline-card-bg: var(--neutral-800);
-  --icon-color: #e6edf3;
+  --icon-color: var(--neutral-100);  /* UND gray spectrum instead of hard-coded */
   --icon-opacity: 1.0;
-  
-  /* Sidebar gradients */
-  --sidebar-gray-left: var(--neutral-850);
-  --sidebar-gray-right: var(--neutral-900);
-  --sidebar-rail: var(--und-green-dark);
-
-  /* Layout tokens */
-  --topbar-h: 72px; /* unify top bar height (taller per request) */
-  --edu-ribbon-h: 28px; /* bottom ribbon height for readable text */
-  --sticky-header-h: 64px; /* NEW UNIFIED HEIGHT to complement taller top bar */
-  --sidebar-w: 280px; /* unify sidebar width */
 
   /* Z-index layers */
   --z-topbar: 3000;
@@ -204,7 +193,7 @@
   /* Input radius token (overridable in contexts like tables) */
   --input-radius: var(--radius-md);
   /* Editor content background (used behind SOAP sections) */
-  --editor-bg: #404040; /* neutral gray for uniform background in editor */
+  --editor-bg: var(--neutral-700); /* UND gray spectrum for uniform background in editor */
 }
 
 /* Icon utility for sprite-based SVGs */
@@ -258,12 +247,12 @@
   /* Input controls for light theme */
   --input-bg: var(--neutral-50);
   --input-border: var(--neutral-300);
-  --input-text: #1a202c;
+  --input-text: var(--neutral-900);  /* UND gray spectrum instead of hard-coded */
   
   /* Selects in light theme */
   --select-bg: var(--neutral-50);
   --select-border: var(--neutral-300);
-  --select-text: #1a202c;
+  --select-text: var(--neutral-900);  /* UND gray spectrum instead of hard-coded */
   
   /* Light surface tokens */
   --surface-light: var(--neutral-50);
@@ -301,23 +290,10 @@
   /* Enhanced tokens for light theme with better contrast */
   --primary-light: var(--und-green-light);
   --accent2-light: var(--und-green-light);
-  --border-light: rgba(206, 212, 218, 0.6);
+  --border-light: rgba(224, 224, 224, 0.6);  /* UND neutral-300 with opacity */
   --danger-light: rgba(220, 53, 69, 0.1);
   --primary-dark: var(--und-green-dark); --accent2-dark: var(--und-green-dark);
 
-  /* UND School Colors - Light theme optimized */
-  --und-black: #000000;
-  --und-gray: #AEAEAE; /* Official UND Gray */
-  --und-green: #009A44;
-  --und-orange: #FF671F;
-  --und-green-light: rgba(0, 154, 68, 0.08);
-  --und-orange-light: rgba(255, 103, 31, 0.08);
-  --und-green-dark: #007a35;
-  /* Sidebar gradient tokens (light theme) */
-  --sidebar-gray-left: #4b5563;   /* slate-600 (darker) */
-  --sidebar-gray-right: var(--neutral-700);  /* semantic gray */
-  --sidebar-rail: var(--und-green-dark);
-  --und-orange-dark: #e55a1c;
   /* Editor content background for light theme (UND gray-tinted for better contrast) */
   --editor-bg: color-mix(in srgb, var(--und-gray) 15%, white);
 }
@@ -557,7 +533,6 @@ html[data-theme="dark"] .theme-toggle .icon.moon { color: var(--und-orange); }
 }
 
 /* Theme toggle is visible in the top-right of the header */
-/* (previous temporary hide removed) */
 
 /* UND-branded mini toggle used in subsection headers */
 .und-toggle { cursor: pointer; }
@@ -631,6 +606,7 @@ html[data-theme="dark"] .theme-toggle .icon.moon { color: var(--und-orange); }
   margin-left: var(--sidebar-w); 
   width: calc(100% - var(--sidebar-w)); 
   transition: margin-left .3s ease, width .3s ease;
+  contain: layout; /* Performance optimization for main content area */
   
   /* Visual styling - clean professional design with exact height */
   /* Subtle left→right gradient: darker green to UND green */
@@ -1039,6 +1015,9 @@ html[data-theme="dark"] input[type="checkbox"] {
   padding-left: var(--subsection-indent);
   /* Ensure anchored scroll positions are visible below fixed headers */
   scroll-margin-top: calc(var(--topbar-h) + var(--sticky-header-h));
+  /* Performance optimization - only render visible sections */
+  content-visibility: auto;
+  contain-intrinsic-size: 200px; /* Estimated section height */
 }
 
 /* Do not indent subsection titles; keep them aligned with the subsection edge */
