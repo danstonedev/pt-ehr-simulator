@@ -47,7 +47,7 @@
 
 /* Orange variant (UND orange) for Feedback button - consistent across themes */
 .btn.orange { 
-  background: #374151; /* dark gray background */
+  background: var(--neutral-800); /* Darker UND gray spectrum */
   border-color: var(--und-orange); 
   color: #ffffff; /* white text */ 
   font-weight: 500; 
@@ -149,7 +149,7 @@ html:not([data-theme="dark"]) .btn.subtle-danger:hover { background: #fee2e2; bo
 /* Force consistent orange button styling across all themes */
 html:not([data-theme="dark"]) .btn.orange,
 html[data-theme="dark"] .btn.orange { 
-  background: #374151 !important; /* dark gray background */
+  background: var(--neutral-800) !important; /* Darker UND gray spectrum */
   border-color: var(--und-orange) !important; 
   color: #ffffff !important; /* white text */ 
   font-weight: 500; 
