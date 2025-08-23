@@ -2,3 +2,7 @@ app/data/cases.json
 node_modules/
 dist/
 .eslintrc.json
+azure-function/**
+server/**
+debug-case-data.html
+package-lock.json
