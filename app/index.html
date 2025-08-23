@@ -27,28 +27,27 @@
     <!-- Add docx generation library -->
     <script src="https://unpkg.com/docx@6.0.3/build/index.js"></script>
     <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-    <script>
-      // Debug mode and console silencer
-      // Use ?debug=1 to enable logs (persists in localStorage); ?debug=0 to disable again
-      (function () {
+    <script type="module">
+      // Debug mode and console silencer (uses storage seam)
+      // Use ?debug=1 to enable logs (persists in storage); ?debug=0 to disable again
+      import { storage } from './js/core/index.js';
+      try {
+        const url = new URL(window.location.href);
+        const debugParam = url.searchParams.get('debug');
+        if (debugParam === '1') storage.setItem('debug', '1');
+        if (debugParam === '0') storage.removeItem('debug');
+      } catch {}
+      const isDebug = storage.getItem('debug') === '1';
+      window.DEBUG = isDebug;
+      if (!isDebug) {
+        const noop = () => {};
         try {
-          const url = new URL(window.location.href);
-          const debugParam = url.searchParams.get('debug');
-          if (debugParam === '1') localStorage.setItem('debug', '1');
-          if (debugParam === '0') localStorage.removeItem('debug');
+          console.log = noop;
         } catch {}
-        const isDebug = localStorage.getItem('debug') === '1';
-        window.DEBUG = isDebug;
-        if (!isDebug) {
-          const noop = () => {};
-          try {
-            console.log = noop;
-          } catch {}
-          try {
-            console.debug = noop;
-          } catch {}
-        }
-      })();
+        try {
+          console.debug = noop;
+        } catch {}
+      }
     </script>
   </head>
   <body>
@@ -228,16 +227,17 @@
       </symbol>
     </svg>
 
-    <script>
+    <script type="module">
+      import { storage } from './js/core/index.js';
       // Theme toggle functionality (light baseline, dark via data-theme="dark")
-      function toggleTheme() {
+      window.toggleTheme = function toggleTheme() {
         const root = document.documentElement;
         const toggle = document.getElementById('themeToggle');
         const isDark = root.getAttribute('data-theme') === 'dark';
         if (isDark) {
           // Switch to light (remove attribute)
           root.removeAttribute('data-theme');
-          localStorage.setItem('theme', 'light');
+          storage.setItem('theme', 'light');
           toggle.setAttribute('aria-checked', 'false');
           toggle.setAttribute('aria-label', 'Switch to dark theme');
           toggle.classList.add('is-light');
@@ -245,21 +245,21 @@
         } else {
           // Switch to dark
           root.setAttribute('data-theme', 'dark');
-          localStorage.setItem('theme', 'dark');
+          storage.setItem('theme', 'dark');
           toggle.setAttribute('aria-checked', 'true');
           toggle.setAttribute('aria-label', 'Switch to light theme');
           toggle.classList.add('is-dark');
           toggle.classList.remove('is-light');
         }
-      }
+      };
 
       // Load saved theme on page load (coerce invalid to light baseline)
       document.addEventListener('DOMContentLoaded', function () {
-        let savedTheme = localStorage.getItem('theme');
+        let savedTheme = storage.getItem('theme');
         if (savedTheme !== 'light' && savedTheme !== 'dark') {
           savedTheme = 'light';
           try {
-            localStorage.setItem('theme', 'light');
+            storage.setItem('theme', 'light');
           } catch {}
         }
         const toggle = document.getElementById('themeToggle');
@@ -315,7 +315,7 @@
           }
 
           try {
-            const cachedRaw = localStorage.getItem(CACHE_KEY);
+            const cachedRaw = storage.getItem(CACHE_KEY);
             if (cachedRaw) {
               const cached = JSON.parse(cachedRaw);
               if (cached.time && Date.now() - cached.time < CACHE_TTL_MS && cached.date) {
@@ -333,10 +333,7 @@
               if (dateStr) {
                 apply(dateStr);
                 try {
-                  localStorage.setItem(
-                    CACHE_KEY,
-                    JSON.stringify({ time: Date.now(), date: dateStr }),
-                  );
+                  storage.setItem(CACHE_KEY, JSON.stringify({ time: Date.now(), date: dateStr }));
                 } catch {}
               }
             })
@@ -356,7 +353,7 @@
             const configuredUrl =
               (metaEl && metaEl.content) ||
               window.FEEDBACK_FORM_URL ||
-              localStorage.getItem('feedbackFormUrl') ||
+              storage.getItem('feedbackFormUrl') ||
               '';
 
             const overlay = document.createElement('div');

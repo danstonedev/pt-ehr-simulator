@@ -38,6 +38,7 @@
     <script type="module">
       import { listCases, getCase } from '../js/core/store.js';
       import { initializeDraft } from '../js/features/case-management/CaseInitialization.js';
+      import { storage } from '../js/core/index.js';
 
       const results = document.getElementById('results');
       const log = (name, ok, details = '') => {
@@ -51,15 +52,11 @@
 
       try {
         // Clear local caches to make loader behavior deterministic for this run (cases in storage)
-        localStorage.removeItem('pt_emr_cases');
-        localStorage.removeItem('pt_emr_case_counter');
+        storage.removeItem('pt_emr_cases');
+        storage.removeItem('pt_emr_case_counter');
         // Clear any draft_* keys to avoid stale merges in tests
-        const toClear = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i);
-          if (k && k.startsWith('draft_')) toClear.push(k);
-        }
-        toClear.forEach((k) => localStorage.removeItem(k));
+        const toClear = storage.keys().filter((k) => k && k.startsWith('draft_'));
+        toClear.forEach((k) => storage.removeItem(k));
 
         // 1) Load cases (should include monolithic + manifest)
         const casesList = await listCases();
