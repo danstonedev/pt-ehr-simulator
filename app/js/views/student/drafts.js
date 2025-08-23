@@ -1,4 +1,5 @@
 import { route, navigate } from '../../core/router.js';
+import { navigate as urlNavigate } from '../../core/url.js';
 import { listCases } from '../../core/store.js';
 import { storage } from '../../core/index.js';
 import { el } from '../../ui/utils.js';
@@ -145,9 +146,11 @@ route('#/student/drafts', async (app, qs) => {
               {
                 class: 'btn primary',
                 onClick: () => {
-                  navigate(
-                    `#/student/editor?case=${draft.caseId}&v=0&encounter=${draft.encounter}`,
-                  );
+                  urlNavigate('/student/editor', {
+                    case: draft.caseId,
+                    v: 0,
+                    encounter: draft.encounter,
+                  });
                 },
               },
               'Continue Working',

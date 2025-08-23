@@ -257,6 +257,8 @@ You can configure an external AI HTTP endpoint (any provider) by setting one of:
 
 If not configured, the app uses the built-in deterministic case generator. No external services required.
 
+Note: Legacy Azure Functions sample code has been removed. If you need a server-side endpoint, any HTTP service will work—just provide its URL via one of the mechanisms above.
+
 ## 📦 Deployment (GitHub Pages)
 
 - Changes pushed to the main branch are automatically deployed via GitHub Actions.

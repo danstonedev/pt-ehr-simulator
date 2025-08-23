@@ -1,5 +1,6 @@
 import { route, navigate } from '../../core/router.js';
-import { getCase, listCases } from '../../core/store.js';
+import { navigate as urlNavigate } from '../../core/url.js';
+import { listCases } from '../../core/store.js';
 import { storage } from '../../core/index.js';
 import { el } from '../../ui/utils.js';
 route('#/student/cases', async (app) => {
@@ -201,7 +202,7 @@ route('#/student/cases', async (app) => {
                       console.warn('Could not pre-save blank note draft:', e);
                     }
                     document.body.removeChild(overlay);
-                    navigate(`#/student/editor?case=${id}&v=0&encounter=eval`);
+                    urlNavigate('/student/editor', { case: id, v: 0, encounter: 'eval' });
                   },
                 },
                 'Create',
@@ -263,7 +264,8 @@ route('#/student/cases', async (app) => {
                 'button',
                 {
                   class: buttonClass,
-                  onClick: () => navigate(`#/student/editor?case=${c.id}&v=0&encounter=eval`),
+                  onClick: () =>
+                    urlNavigate('/student/editor', { case: c.id, v: 0, encounter: 'eval' }),
                 },
                 buttonText,
               ),
@@ -737,7 +739,8 @@ route('#/student/cases', async (app) => {
               {
                 class: 'btn primary small',
                 style: 'margin-right: 6px;',
-                onClick: () => navigate(`#/student/editor?case=${noteId}&v=0&encounter=eval`),
+                onClick: () =>
+                  urlNavigate('/student/editor', { case: noteId, v: 0, encounter: 'eval' }),
               },
               'Open',
             ),

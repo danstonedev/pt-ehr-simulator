@@ -1,5 +1,6 @@
 // Home view - Rich Landing page for PT EMR Simulator
 import { route, navigate } from '../core/router.js';
+import { navigate as urlNavigate } from '../core/url.js';
 import { storage } from '../core/index.js';
 import { el } from '../ui/utils.js';
 import { listCases, listDrafts } from '../core/store.js';
@@ -105,10 +106,11 @@ route('#/', async (app) => {
       navigate(kind === 'student' ? '#/student/cases' : '#/instructor/cases');
       return;
     }
-    const base = kind === 'student' ? '#/student/editor' : '#/instructor/editor';
-    navigate(
-      `${base}?case=${encodeURIComponent(picked.caseId)}&v=${picked.version}&encounter=${encodeURIComponent(encounter)}`,
-    );
+    if (kind === 'student') {
+      urlNavigate('/student/editor', { case: picked.caseId, v: picked.version, encounter });
+    } else {
+      urlNavigate('/instructor/editor', { case: picked.caseId, v: picked.version, encounter });
+    }
   }
 
   // Build main panels
