@@ -1,4 +1,5 @@
 import { validateCase, ensureDataIntegrity, migrateOldCaseData } from './schema.js';
+import { storage } from './adapters/storageAdapter.js';
 
 // --- Pure Frontend Data Store (No Backend Required) ---
 // All data stored in localStorage with case/draft separation
@@ -35,7 +36,7 @@ function scheduleAutoPublish() {
 
 function loadCasesFromStorage() {
   try {
-    const stored = localStorage.getItem(CASES_KEY);
+    const stored = storage.getItem(CASES_KEY);
     if (stored) {
       const cases = JSON.parse(stored);
       // Apply migrations to all cases
@@ -56,7 +57,7 @@ function loadCasesFromStorage() {
 
 function saveCasesToStorage(cases) {
   try {
-    localStorage.setItem(CASES_KEY, JSON.stringify(cases));
+    storage.setItem(CASES_KEY, JSON.stringify(cases));
     return true;
   } catch (error) {
     console.error('Failed to save cases to storage:', error);
@@ -66,9 +67,9 @@ function saveCasesToStorage(cases) {
 
 function getNextCaseId() {
   try {
-    let counter = parseInt(localStorage.getItem(CASE_COUNTER_KEY) || '0', 10);
+    let counter = parseInt(storage.getItem(CASE_COUNTER_KEY) || '0', 10);
     counter++;
-    localStorage.setItem(CASE_COUNTER_KEY, counter.toString());
+    storage.setItem(CASE_COUNTER_KEY, counter.toString());
     return `case_${counter}`;
   } catch (error) {
     console.error('Failed to generate case ID:', error);
@@ -156,7 +157,7 @@ async function loadCasesFromManifest() {
 // --- Initialize with data file (app/data/cases.json) if empty; fallback to sample ---
 async function ensureCasesInitialized() {
   const existing = loadCasesFromStorage();
-  console.log('Existing cases in localStorage:', Object.keys(existing));
+  console.log('Existing cases in storage:', Object.keys(existing));
   if (Object.keys(existing).length > 0) return existing;
 
   try {
@@ -201,7 +202,7 @@ async function ensureCasesInitialized() {
 // Force reload cases from manifest (clears localStorage cache)
 export const forceReloadCases = async () => {
   console.log('Force reloading cases...');
-  localStorage.removeItem(CASES_KEY);
+  storage.removeItem(CASES_KEY);
   return await ensureCasesInitialized();
 };
 
@@ -301,7 +302,7 @@ export const exportCasesMap = () => {
 export const publishToServer = async () => {
   if (!USE_LOCAL_SERVER) return false;
   try {
-    const map = loadCasesFromStorage();
+    const map = storage.getItem(CASES_KEY);
     const resp = await fetch('http://localhost:5173/cases', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -320,7 +321,7 @@ export const publishToServer = async () => {
 export const saveDraft = (caseId, encounter, draftData) => {
   try {
     const key = `draft_${caseId}_${encounter}`;
-    localStorage.setItem(key, JSON.stringify(draftData));
+    storage.setItem(key, JSON.stringify(draftData));
     return true;
   } catch (error) {
     console.error('Failed to save draft:', error);
@@ -341,7 +342,7 @@ export const loadDraft = (caseId, encounter) => {
 
   try {
     const key = `draft_${caseId}_${encounter}`;
-    const stored = localStorage.getItem(key);
+    const stored = storage.getItem(key);
     if (stored) {
       const parsed = JSON.parse(stored);
       // Apply data migrations if needed
@@ -357,7 +358,7 @@ export const loadDraft = (caseId, encounter) => {
 export const deleteDraft = (caseId, encounter) => {
   try {
     const key = `draft_${caseId}_${encounter}`;
-    localStorage.removeItem(key);
+    storage.removeItem(key);
     return true;
   } catch (error) {
     console.error('Failed to delete draft:', error);
@@ -368,14 +369,15 @@ export const deleteDraft = (caseId, encounter) => {
 export const listDrafts = () => {
   try {
     const drafts = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
+    const keys = storage.keys();
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
       if (key && key.startsWith('draft_')) {
         const parts = key.split('_');
         if (parts.length >= 3) {
           const caseId = parts.slice(1, -1).join('_');
           const encounter = parts[parts.length - 1];
-          const data = JSON.parse(localStorage.getItem(key));
+          const data = JSON.parse(storage.getItem(key));
 
           if (!drafts[caseId]) drafts[caseId] = {};
           drafts[caseId][encounter] = data;

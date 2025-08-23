@@ -1,3 +1,4 @@
+import { storage } from './adapters/storageAdapter.js';
 // Router with proper initialization order and parameter handling
 
 const routes = {};
@@ -62,7 +63,7 @@ export function startRouter() {
     // Persist last route (exclude home/404) for Resume on the landing page
     try {
       if (path && path !== '#/' && path !== '#/404') {
-        localStorage.setItem('pt_emr_last_route', hash);
+        storage.setItem('pt_emr_last_route', hash);
       }
     } catch {}
 
