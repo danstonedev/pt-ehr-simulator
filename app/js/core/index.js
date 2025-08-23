@@ -4,3 +4,5 @@
 export { route, navigate, startRouter } from './router.js';
 export { getCase, createCase, updateCase, deleteCase, listCases } from './store.js';
 export { validateCase, ensureDataIntegrity, migrateOldCaseData } from './schema.js';
+export { storage } from './adapters/storageAdapter.js';
+export { url } from './adapters/urlAdapter.js';
