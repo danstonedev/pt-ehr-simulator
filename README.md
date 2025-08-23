@@ -98,7 +98,7 @@ If you don't see the embedded cases in Faculty Dashboard:
 2. Run: `ptStore.forceReloadCases()`
 3. Refresh the page
 
-This clears the localStorage cache and reloads cases from the manifest.
+This clears the storage adapter cache (browser storage) and reloads cases from the manifest.
 
 ## 📁 Project Structure
 
@@ -111,7 +111,7 @@ app/  ← single source of truth for the site
 ├── js/                              # Modular JavaScript application
 │   ├── core/                        # Core application logic
 │   │   ├── router.js                # Client-side routing system
-│   │   ├── store.js                 # localStorage-based data management
+│   │   ├── store.js                 # Browser storage via storage adapter (data management)
 │   │   ├── schema.js                # Data validation & migration
 │   │   └── index.js                 # Core module barrel export
 │   ├── features/                    # Feature-based organization
@@ -158,7 +158,7 @@ Repository root
 ### Core Application (`app/js/core/`)
 
 - **router.js**: Client-side routing with dynamic imports and parameter handling
-- **store.js**: localStorage-based CRUD operations with data persistence
+- **store.js**: CRUD operations backed by the storage adapter (browser storage/localStorage)
 - **schema.js**: Data validation, integrity checks, and migration utilities
 - **index.js**: Core module barrel export for simplified imports
 
@@ -191,7 +191,7 @@ Repository root
 
 ### Modern Data Architecture
 
-- **Cases**: Stored in localStorage with auto-initialization from sample data
+- **Cases**: Stored in browser storage (localStorage) via the storage adapter, with auto-initialization from sample data
 - **Student Drafts**: Isolated practice work saved separately per case/encounter
 - **Faculty Answer Keys**: Complete case content with integrated metadata editing
 - **Regional Assessments**: ROM, MMT, PROM, and special tests organized by body region
@@ -240,7 +240,7 @@ This version represents a comprehensive modernization and cleanup:
 ### Technical Architecture
 
 - **Pure frontend approach**: No backend complexity, runs entirely in browser
-- **localStorage persistence**: Robust data management with sample auto-initialization
+- **Browser storage via storage adapter**: Robust data management with sample auto-initialization
 - **Feature-based organization**: Logical grouping with barrel exports
 - **Modern form components**: Object-based API with comprehensive validation
 - **Professional error handling**: Appropriate logging for production debugging
@@ -253,7 +253,7 @@ You can configure an external AI HTTP endpoint (any provider) by setting one of:
 
 - `window.AI_GENERATE_URL` on the page, or
 - `<meta name="ai-generate-url" content="https://your-endpoint" />`, or
-- localStorage key `aiGenerateUrl`
+- Storage key `aiGenerateUrl` (settable via DevTools localStorage; read through the storage adapter)
 
 If not configured, the app uses the built-in deterministic case generator. No external services required.
 

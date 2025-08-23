@@ -27,7 +27,7 @@ app/data/cases/
 
 1. **Manifest First**: Application loads `manifest.json` to discover available cases
 2. **On-Demand Fetch**: Individual case files loaded when accessed
-3. **LocalStorage Cache**: Cases cached for performance, with force-reload capability
+3. **Browser Storage Cache (via storage adapter)**: Cases cached for performance, with force-reload capability
 4. **Faculty/Student Separation**: Answer keys isolated from student drafts
 
 ## 📚 Available Cases
@@ -163,5 +163,5 @@ The case system supports three distinct editor modes:
 
 - **Data Integrity**: All cases validated and migrated via `schema.js`
 - **Modern Patterns**: No backward compatibility, clean object-based APIs throughout
-- **Performance**: LocalStorage caching with `forceReloadCases()` utility
+- **Performance**: Browser storage caching (via storage adapter) with `forceReloadCases()` utility
 - **Maintainability**: Manifest-based organization with individual case files
