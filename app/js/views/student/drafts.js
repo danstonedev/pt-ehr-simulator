@@ -1,4 +1,4 @@
-import { route, navigate } from '../../core/router.js';
+import { route } from '../../core/router.js';
 import { navigate as urlNavigate } from '../../core/url.js';
 import { listCases } from '../../core/store.js';
 import { storage } from '../../core/index.js';
@@ -94,7 +94,7 @@ route('#/student/drafts', async (app, qs) => {
         el('div', {}, [
           el(
             'button',
-            { class: 'btn', onClick: () => navigate('#/student/cases') },
+            { class: 'btn', onClick: () => urlNavigate('/student/cases') },
             '← Back to Cases',
           ),
           ' ',
@@ -114,7 +114,7 @@ route('#/student/drafts', async (app, qs) => {
           ),
           el(
             'button',
-            { class: 'btn', onClick: () => navigate('#/student/cases') },
+            { class: 'btn', onClick: () => urlNavigate('/student/cases') },
             'Browse Cases',
           ),
         ]),
@@ -190,7 +190,7 @@ route('#/student/drafts', async (app, qs) => {
       ) {
         storage.removeItem(key);
         // Reload the page to reflect changes
-        navigate('#/student/drafts');
+        urlNavigate('/student/drafts');
       }
     }
 
@@ -201,7 +201,7 @@ route('#/student/drafts', async (app, qs) => {
         const keysToRemove = storage.keys().filter((k) => k && k.startsWith('draft_'));
         keysToRemove.forEach((key) => storage.removeItem(key));
         // Reload the page to reflect changes
-        navigate('#/student/drafts');
+        urlNavigate('/student/drafts');
       }
     }
   } catch (error) {

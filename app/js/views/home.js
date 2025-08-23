@@ -1,5 +1,5 @@
 // Home view - Rich Landing page for PT EMR Simulator
-import { route, navigate } from '../core/router.js';
+import { route } from '../core/router.js';
 import { navigate as urlNavigate } from '../core/url.js';
 import { storage } from '../core/index.js';
 import { el } from '../ui/utils.js';
@@ -32,7 +32,7 @@ function buildHelpPanel() {
       // storage.removeItem('pt_emr_last_route');
       alert('Data reset completed. Demo case restored.');
       // Soft refresh the home view
-      navigate('#/');
+      urlNavigate('/');
     } catch (e) {
       console.error('Reset failed:', e);
       alert('Reset failed. Please reload the page.');
@@ -103,7 +103,7 @@ route('#/', async (app) => {
       : null;
     const picked = lastParams || fallback;
     if (!picked) {
-      navigate(kind === 'student' ? '#/student/cases' : '#/instructor/cases');
+      urlNavigate(kind === 'student' ? '/student/cases' : '/instructor/cases');
       return;
     }
     if (kind === 'student') {
@@ -118,7 +118,7 @@ route('#/', async (app) => {
   studentActions.push(
     el(
       'button',
-      { class: 'btn primary', onClick: () => navigate('#/student/cases') },
+      { class: 'btn primary', onClick: () => urlNavigate('/student/cases') },
       'Student Dashboard',
     ),
   );
@@ -126,7 +126,7 @@ route('#/', async (app) => {
     studentActions.push(
       el(
         'button',
-        { class: 'btn primary', onClick: () => navigate(resumeInfo.hash) },
+        { class: 'btn primary', onClick: () => (location.hash = resumeInfo.hash) },
         'Resume Case',
       ),
     );
@@ -150,7 +150,7 @@ route('#/', async (app) => {
   facultyActions.push(
     el(
       'button',
-      { class: 'btn primary', onClick: () => navigate('#/instructor/cases') },
+      { class: 'btn primary', onClick: () => urlNavigate('/instructor/cases') },
       'Faculty Dashboard',
     ),
   );
@@ -158,7 +158,7 @@ route('#/', async (app) => {
     facultyActions.push(
       el(
         'button',
-        { class: 'btn primary', onClick: () => navigate(resumeInfo.hash) },
+        { class: 'btn primary', onClick: () => (location.hash = resumeInfo.hash) },
         'Resume Case',
       ),
     );

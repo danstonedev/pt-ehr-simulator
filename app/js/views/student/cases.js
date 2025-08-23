@@ -1,4 +1,4 @@
-import { route, navigate } from '../../core/router.js';
+import { route } from '../../core/router.js';
 import { navigate as urlNavigate } from '../../core/url.js';
 import { listCases } from '../../core/store.js';
 import { storage } from '../../core/index.js';
@@ -286,7 +286,7 @@ route('#/student/cases', async (app) => {
                       if (confirm('Delete this blank SOAP note? This cannot be undone.')) {
                         storage.removeItem(localStorageKey);
                         // Also remove from listing cache by reloading route
-                        navigate('#/student/cases');
+                        urlNavigate('/student/cases');
                       }
                     },
                   },
@@ -306,7 +306,7 @@ route('#/student/cases', async (app) => {
                         confirm('Reset your draft for this case? This will clear your local work.')
                       ) {
                         storage.removeItem(localStorageKey);
-                        navigate('#/student/cases');
+                        urlNavigate('/student/cases');
                       }
                     },
                   },
@@ -751,7 +751,7 @@ route('#/student/cases', async (app) => {
                 onClick: () => {
                   if (confirm('Delete this blank note?')) {
                     storage.removeItem(key);
-                    navigate('#/student/cases');
+                    urlNavigate('/student/cases');
                   }
                 },
               },

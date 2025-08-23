@@ -1,5 +1,5 @@
 // Modern Case Editor with Conservative Imports
-import { route, navigate, createCase } from '../core/index.js';
+import { route, createCase } from '../core/index.js';
 import { setQueryParams, onRouteChange, navigate as urlNavigate } from '../core/url.js';
 import { el, textareaAutoResize } from '../ui/utils.js';
 import {
@@ -141,7 +141,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   // Redirect old "new" case routes to use the modal instead
   if (caseId === 'new') {
-    navigate('#/instructor/cases');
+    urlNavigate('/instructor/cases');
     return;
   }
 
@@ -785,10 +785,11 @@ function createCaseMetadataPanel(caseObj, saveFunction) {
 
                     try {
                       const savedCase = await createCase(caseObj);
-
                       // Navigate to the saved case in faculty mode
-                      const newUrl = `#/instructor/editor?case=${savedCase.id}`;
-                      setTimeout(() => navigate(newUrl), 100);
+                      setTimeout(
+                        () => urlNavigate('/instructor/editor', { case: savedCase.id }),
+                        100,
+                      );
                     } catch (error) {
                       console.error('Failed to create case:', error);
                       alert('Failed to create case. Please try again.');
