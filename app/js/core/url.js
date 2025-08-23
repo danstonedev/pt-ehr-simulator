@@ -109,3 +109,16 @@ export const ParamCodec = {
     return typeof str === 'string' && str.length ? str.split(',') : [];
   },
 };
+
+/**
+ * Build a link string for a given path and params.
+ * opts:
+ *  - absolute (default true): when true, prefix with origin + pathname; otherwise returns just the hash part
+ */
+export function buildLink(path, params = {}, opts = { absolute: true }) {
+  const hash = buildHash(path, params);
+  if (opts && opts.absolute === false) return hash;
+  const origin = typeof location !== 'undefined' ? location.origin : '';
+  const basePath = typeof location !== 'undefined' ? location.pathname : '';
+  return origin + basePath + hash;
+}

@@ -1,5 +1,5 @@
 import { route } from '../../core/router.js';
-import { navigate as urlNavigate } from '../../core/url.js';
+import { navigate as urlNavigate, buildLink as buildUrlLink } from '../../core/url.js';
 import * as store from '../../core/store.js';
 import { generateCase } from '../../services/index.js';
 import { el } from '../../ui/utils.js';
@@ -1250,7 +1250,11 @@ route('#/instructor/cases', async (app) => {
         'tbody',
         {},
         cases.map((c) => {
-          const studentLink = `${window.location.origin}${window.location.pathname}#/student/editor?case=${c.id}&v=${c.latestVersion}&encounter=eval`;
+          const studentLink = buildUrlLink('/student/editor', {
+            case: c.id,
+            v: c.latestVersion || 0,
+            encounter: 'eval',
+          });
           const meta = c.caseObj?.meta || {};
           return el('tr', {}, [
             el('td', {}, c.title || meta.title || 'Untitled'),
