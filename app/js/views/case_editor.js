@@ -1,5 +1,6 @@
 // Modern Case Editor with Conservative Imports
 import { route, navigate, getCase, createCase, updateCase } from '../core/index.js';
+import { setQueryParams, onRouteChange } from '../core/url.js';
 import { el, textareaAutoResize, printPage } from '../ui/utils.js';
 import { renderTabs } from '../ui/components.js';
 import { inputField, textAreaField, selectField, sectionHeader } from '../ui/form-components.js';
@@ -363,6 +364,17 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     });
   }
 
+  // React to external URL changes (e.g., user edits hash or navigates)
+  try {
+    onRouteChange((e) => {
+      const { params } = e.detail || {};
+      const next = params && params.section ? String(params.section).toLowerCase() : '';
+      if (next && next !== active && isValidSection(next)) {
+        switchTo(next);
+      }
+    });
+  } catch {}
+
   // Make chart refresh available globally for components
   window.refreshChartProgress = refreshChartProgress;
 
@@ -439,6 +451,11 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   function switchTo(s) {
     active = s;
+
+    // Sync section to URL (replace by default to avoid history spam)
+    try {
+      setQueryParams({ section: s });
+    } catch {}
 
     // Update active section title in header
     updateActiveSectionTitle(stickyTopBar, active);
