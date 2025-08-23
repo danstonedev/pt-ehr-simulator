@@ -5,12 +5,38 @@
   "private": true,
   "scripts": {
     "build": "exit 0",
-    "start": "exit 0", 
-    "dev": "exit 0"
+    "start": "exit 0",
+    "dev": "exit 0",
+    "lint": "eslint \"app/js/**/*.js\"",
+    "format": "prettier -w .",
+    "check": "eslint \"app/js/**/*.js\" && prettier -c .",
+    "prepare": "husky"
   },
   "engines": {
     "node": ">=18"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {
+    "eslint": "^9.11.0",
+    "prettier": "^3.3.3",
+    "husky": "^9.1.4",
+    "lint-staged": "^15.2.10",
+    "globals": "^15.12.0"
+  },
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danstonedev/pt-ehr-simulator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/danstonedev/pt-ehr-simulator/issues"
+  },
+  "homepage": "https://github.com/danstonedev/pt-ehr-simulator#readme",
+  "lint-staged": {
+    "app/**/*.{js,jsx,css,html,json,md}": "prettier --write",
+    "*.{json,md,yml,yaml}": "prettier --write",
+    "!.husky/**": "echo skip"
+  }
 }
