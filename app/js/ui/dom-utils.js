@@ -10,7 +10,7 @@
  */
 export function el(tag, attrs = {}, children = []) {
   const element = document.createElement(tag);
-  
+
   // Set attributes and event handlers
   Object.entries(attrs).forEach(([key, value]) => {
     if (key === 'class') {
@@ -24,17 +24,17 @@ export function el(tag, attrs = {}, children = []) {
       element.setAttribute(key, value);
     }
   });
-  
+
   // Add children
   if (!Array.isArray(children)) children = [children];
-  children.forEach(child => {
+  children.forEach((child) => {
     if (typeof child === 'string') {
       element.appendChild(document.createTextNode(child));
     } else if (child instanceof Node) {
       element.appendChild(child);
     }
   });
-  
+
   return element;
 }
 
@@ -45,9 +45,9 @@ export function el(tag, attrs = {}, children = []) {
 export function textareaAutoResize(textarea) {
   const resizeHandler = () => {
     textarea.style.height = 'auto';
-    textarea.style.height = (textarea.scrollHeight + 4) + 'px';
+    textarea.style.height = textarea.scrollHeight + 4 + 'px';
   };
-  
+
   textarea.addEventListener('input', resizeHandler);
   resizeHandler(); // Initial resize
 }
@@ -60,6 +60,6 @@ export function textareaAutoResize(textarea) {
 export function createLoadingSpinner(message = 'Loading...') {
   return el('div', { class: 'loading-spinner' }, [
     el('div', { class: 'spinner' }),
-    el('span', {}, message)
+    el('span', {}, message),
   ]);
 }

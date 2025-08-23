@@ -5,7 +5,9 @@
  * Updates the status chip in the header
  * @param {string} text - Status text to display
  */
-export function setStatus(_text) { /* no-op: status chip removed */ }
+export function setStatus(_text) {
+  /* no-op: status chip removed */
+}
 
 /**
  * Downloads text content as a file

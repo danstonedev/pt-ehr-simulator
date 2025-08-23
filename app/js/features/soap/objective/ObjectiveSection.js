@@ -14,7 +14,7 @@ import { el } from '../../../ui/utils.js';
  */
 export function createObjectiveSection(objectiveData, onUpdate) {
   const section = el('div', { class: 'objective-section' });
-  
+
   // Initialize data structure if needed
   const data = {
     text: '',
@@ -28,15 +28,15 @@ export function createObjectiveSection(objectiveData, onUpdate) {
       mmt: {},
       specialTests: {},
       prom: {},
-      promExcluded: []
+      promExcluded: [],
     },
     treatmentPerformed: {
       patientEducation: '',
       modalities: '',
       therapeuticExercise: '',
-      manualTherapy: ''
+      manualTherapy: '',
     },
-    ...objectiveData
+    ...objectiveData,
   };
 
   // Ensure nested objects exist
@@ -45,7 +45,12 @@ export function createObjectiveSection(objectiveData, onUpdate) {
   if (!data.neuro) data.neuro = { screening: '' };
   if (!data.functional) data.functional = { assessment: '' };
   if (!data.treatmentPerformed) {
-    data.treatmentPerformed = { patientEducation: '', modalities: '', therapeuticExercise: '', manualTherapy: '' };
+    data.treatmentPerformed = {
+      patientEducation: '',
+      modalities: '',
+      therapeuticExercise: '',
+      manualTherapy: '',
+    };
   }
   if (!data.regionalAssessments) {
     data.regionalAssessments = {
@@ -54,7 +59,7 @@ export function createObjectiveSection(objectiveData, onUpdate) {
       mmt: {},
       specialTests: {},
       prom: {},
-      promExcluded: []
+      promExcluded: [],
     };
   }
 
@@ -76,67 +81,67 @@ export function createObjectiveSection(objectiveData, onUpdate) {
     textAreaField({
       label: 'Posture, Gait, Appearance, Vitals',
       value: data.text,
-      onChange: v => updateField('text', v)
-    })
+      onChange: (v) => updateField('text', v),
+    }),
   ]);
   section.append(generalObsSection);
-  
+
   // Inspection section
   const inspectionSection = el('div', { id: 'inspection', class: 'section-anchor' }, [
     el('h4', { class: 'subsection-title' }, 'Inspection'),
     textAreaField({
       label: 'Visual Assessment (swelling, deformity, skin changes, asymmetry)',
       value: data.inspection.visual || '',
-      onChange: v => updateField('inspection.visual', v)
-    })
+      onChange: (v) => updateField('inspection.visual', v),
+    }),
   ]);
   section.append(inspectionSection);
-  
+
   // Palpation section
   const palpationSection = el('div', { id: 'palpation', class: 'section-anchor' }, [
     el('h4', { class: 'subsection-title' }, 'Palpation'),
     textAreaField({
       label: 'Tenderness, Temperature, Muscle Tone, Tissue Quality',
       value: data.palpation.findings || '',
-      onChange: v => updateField('palpation.findings', v)
-    })
+      onChange: (v) => updateField('palpation.findings', v),
+    }),
   ]);
   section.append(palpationSection);
-  
+
   // Regional assessment section
   const regionalSection = el('div', { id: 'regional-assessment', class: 'section-anchor' }, [
-  el('h4', { class: 'subsection-title' }, 'Regional Assessment')
+    el('h4', { class: 'subsection-title' }, 'Regional Assessment'),
   ]);
-  
+
   // Use modular assessment components
   const multiAssessment = createMultiRegionalAssessment(
-      data.regionalAssessments || {},
-      assessmentData => {
-        updateField('regionalAssessments', assessmentData);
-      }
-    );
-    regionalSection.append(multiAssessment.element);
-    section.append(regionalSection);
-  
+    data.regionalAssessments || {},
+    (assessmentData) => {
+      updateField('regionalAssessments', assessmentData);
+    },
+  );
+  regionalSection.append(multiAssessment.element);
+  section.append(regionalSection);
+
   // Neurological screening
   const neuroSection = el('div', { id: 'neurological-screening', class: 'section-anchor' }, [
     el('h4', { class: 'subsection-title' }, 'Neurological Screening'),
     textAreaField({
       label: 'Reflexes, Sensation, Dermatomes, Myotomes, Neural Tension',
       value: data.neuro.screening || '',
-      onChange: v => updateField('neuro.screening', v)
-    })
+      onChange: (v) => updateField('neuro.screening', v),
+    }),
   ]);
   section.append(neuroSection);
-  
+
   // Functional movement assessment
   const functionalSection = el('div', { id: 'functional-movement', class: 'section-anchor' }, [
     el('h4', { class: 'subsection-title' }, 'Functional Movement Assessment'),
     textAreaField({
       label: 'Transfers, Ambulation, ADL Performance, Movement Patterns',
       value: data.functional.assessment || '',
-      onChange: v => updateField('functional.assessment', v)
-    })
+      onChange: (v) => updateField('functional.assessment', v),
+    }),
   ]);
   section.append(functionalSection);
 
@@ -146,27 +151,27 @@ export function createObjectiveSection(objectiveData, onUpdate) {
     textAreaField({
       label: 'Patient Education',
       value: data.treatmentPerformed.patientEducation || '',
-      onChange: v => updateField('treatmentPerformed.patientEducation', v)
+      onChange: (v) => updateField('treatmentPerformed.patientEducation', v),
     }),
     textAreaField({
       label: 'Modalities',
       value: data.treatmentPerformed.modalities || '',
-      onChange: v => updateField('treatmentPerformed.modalities', v)
+      onChange: (v) => updateField('treatmentPerformed.modalities', v),
     }),
     textAreaField({
       label: 'Therapeutic Exercise',
       value: data.treatmentPerformed.therapeuticExercise || '',
-      onChange: v => updateField('treatmentPerformed.therapeuticExercise', v)
+      onChange: (v) => updateField('treatmentPerformed.therapeuticExercise', v),
     }),
     textAreaField({
       label: 'Manual Therapy',
       value: data.treatmentPerformed.manualTherapy || '',
-      onChange: v => updateField('treatmentPerformed.manualTherapy', v)
-    })
+      onChange: (v) => updateField('treatmentPerformed.manualTherapy', v),
+    }),
   ]);
   section.append(performedSection);
 
   // CPT Codes widget is rendered only in BillingSection to ensure single source of truth
-  
+
   return section;
 }

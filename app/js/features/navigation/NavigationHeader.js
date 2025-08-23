@@ -14,10 +14,10 @@ import { el } from '../../ui/utils.js';
 export function createStickyTopBar(config) {
   const {
     activeSection = 'subjective',
-  onPreview = () => {},
-  onExitPreview = () => {},
-  isFacultyMode = false,
-  isPreviewMode = false
+    onPreview = () => {},
+    onExitPreview = () => {},
+    isFacultyMode = false,
+    isPreviewMode = false,
   } = config;
 
   // Section title mapping
@@ -25,51 +25,76 @@ export function createStickyTopBar(config) {
     subjective: 'Subjective Assessment',
     objective: 'Objective Examination',
     assessment: 'Assessment',
-  plan: 'Plan',
-    billing: 'Billing & Coding'
+    plan: 'Plan',
+    billing: 'Billing & Coding',
   };
 
   const topBar = el('div', {
-    class: 'sticky-top-bar'
+    class: 'sticky-top-bar',
   });
 
   // Left side: Active Section Title
-  const leftSection = el('div', {
-    class: 'left-section'
-  }, [
-    el('h2', {
-      class: 'active-section-title'
-    }, sectionTitles[activeSection] || activeSection)
-  ]);
+  const leftSection = el(
+    'div',
+    {
+      class: 'left-section',
+    },
+    [
+      el(
+        'h2',
+        {
+          class: 'active-section-title',
+        },
+        sectionTitles[activeSection] || activeSection,
+      ),
+    ],
+  );
 
   // Right side: Actions (Preview in faculty OR Back to Faculty in student-preview)
-  const rightSection = el('div', {
-    class: 'right-section'
-  }, [
-    // Save status pill (always present)
-    el('div', {
-      class: 'save-status-pill',
-  'aria-live': 'polite',
-  title: 'Autosaved to this browser (localStorage). Not synced to a server.'
-    }, [
-      el('span', { class: 'dot saved' }),
-  el('span', { class: 'text' }, 'Autosaved locally')
-    ]),
-    // Preview as Student button (for faculty only)
-    ...(isFacultyMode ? [
-      el('button', {
-        class: 'btn secondary',
-        onclick: onPreview
-      }, 'Preview as Student')
-    ] : []),
-    // Back to Faculty Editor button (only when viewing student preview)
-    ...(!isFacultyMode && isPreviewMode ? [
-      el('button', {
-        class: 'btn secondary',
-        onclick: onExitPreview
-      }, 'Back to Faculty Editor')
-    ] : [])
-  ]);
+  const rightSection = el(
+    'div',
+    {
+      class: 'right-section',
+    },
+    [
+      // Save status pill (always present)
+      el(
+        'div',
+        {
+          class: 'save-status-pill',
+          'aria-live': 'polite',
+          title: 'Autosaved to this browser (localStorage). Not synced to a server.',
+        },
+        [el('span', { class: 'dot saved' }), el('span', { class: 'text' }, 'Autosaved locally')],
+      ),
+      // Preview as Student button (for faculty only)
+      ...(isFacultyMode
+        ? [
+            el(
+              'button',
+              {
+                class: 'btn secondary',
+                onclick: onPreview,
+              },
+              'Preview as Student',
+            ),
+          ]
+        : []),
+      // Back to Faculty Editor button (only when viewing student preview)
+      ...(!isFacultyMode && isPreviewMode
+        ? [
+            el(
+              'button',
+              {
+                class: 'btn secondary',
+                onclick: onExitPreview,
+              },
+              'Back to Faculty Editor',
+            ),
+          ]
+        : []),
+    ],
+  );
 
   topBar.append(leftSection, rightSection);
   return topBar;
@@ -91,7 +116,7 @@ export function updateHeaderSaveStatus(topBar, status) {
   switch (status) {
     case 'saving':
       dot.classList.add('saving');
-  text.textContent = 'Saving locally...';
+      text.textContent = 'Saving locally...';
       break;
     case 'error':
       dot.classList.add('error');
@@ -99,7 +124,7 @@ export function updateHeaderSaveStatus(topBar, status) {
       break;
     default:
       dot.classList.add('saved');
-  text.textContent = 'Autosaved locally';
+      text.textContent = 'Autosaved locally';
   }
 }
 
@@ -113,8 +138,8 @@ export function updateActiveSectionTitle(topBar, activeSection) {
     subjective: 'Subjective Assessment',
     objective: 'Objective Examination',
     assessment: 'Assessment',
-  plan: 'Plan',
-    billing: 'Billing & Coding'
+    plan: 'Plan',
+    billing: 'Billing & Coding',
   };
 
   const titleElement = topBar.querySelector('.active-section-title');
@@ -131,16 +156,20 @@ export function updateActiveSectionTitle(topBar, activeSection) {
  */
 export function createTabNavigation(tabs, switchTo) {
   const tabsContainer = el('div', { class: 'tabs' });
-  
-  tabs.forEach(tab => {
-    const tabButton = el('button', {
-      class: `tab ${tab.active ? 'active' : ''}`,
-      onClick: () => switchTo(tab.id)
-    }, tab.label);
-    
+
+  tabs.forEach((tab) => {
+    const tabButton = el(
+      'button',
+      {
+        class: `tab ${tab.active ? 'active' : ''}`,
+        onClick: () => switchTo(tab.id),
+      },
+      tab.label,
+    );
+
     tabsContainer.append(tabButton);
   });
-  
+
   return tabsContainer;
 }
 
@@ -157,14 +186,14 @@ export function createSimpleTabs(activeSection, switchTo) {
     { id: 'assessment', label: 'Assessment' },
     { id: 'goals', label: 'Goals' },
     { id: 'plan', label: 'Plan' },
-    { id: 'billing', label: 'Billing' }
+    { id: 'billing', label: 'Billing' },
   ];
-  
-  const tabs = sections.map(section => ({
+
+  const tabs = sections.map((section) => ({
     ...section,
-    active: section.id === activeSection
+    active: section.id === activeSection,
   }));
-  
+
   return createTabNavigation(tabs, switchTo);
 }
 
@@ -176,15 +205,23 @@ export function createSimpleTabs(activeSection, switchTo) {
  */
 export function createModeIndicator(isFacultyMode, isKeyMode) {
   if (isKeyMode) {
-    return el('span', { 
-      class: 'badge', 
-  style: 'background: var(--warning); color: var(--text); margin-left: 8px;' 
-    }, 'KEY VIEW');
+    return el(
+      'span',
+      {
+        class: 'badge',
+        style: 'background: var(--warning); color: var(--text); margin-left: 8px;',
+      },
+      'KEY VIEW',
+    );
   } else if (isFacultyMode) {
-    return el('span', { 
-      class: 'badge', 
-  style: 'background: var(--und-green); color: #fff; margin-left: 8px;' 
-    }, 'FACULTY');
+    return el(
+      'span',
+      {
+        class: 'badge',
+        style: 'background: var(--und-green); color: #fff; margin-left: 8px;',
+      },
+      'FACULTY',
+    );
   }
   return null;
 }
@@ -199,27 +236,29 @@ export function createCaseMetadata(caseObj, encounter) {
   const metadata = el('div', { class: 'case-metadata' }, [
     el('div', { class: 'metadata-item' }, [
       el('strong', {}, 'Setting: '),
-      el('span', {}, caseObj.meta.setting)
+      el('span', {}, caseObj.meta.setting),
     ]),
     el('div', { class: 'metadata-item' }, [
       el('strong', {}, 'Encounter: '),
-      el('span', {}, encounter.toUpperCase())
-    ])
+      el('span', {}, encounter.toUpperCase()),
+    ]),
   ]);
-  
+
   if (caseObj.meta.regions && caseObj.meta.regions.length > 0) {
-    metadata.append(el('div', { class: 'metadata-item' }, [
-      el('strong', {}, 'Regions: '),
-      el('span', {}, caseObj.meta.regions.join(', '))
-    ]));
+    metadata.append(
+      el('div', { class: 'metadata-item' }, [
+        el('strong', {}, 'Regions: '),
+        el('span', {}, caseObj.meta.regions.join(', ')),
+      ]),
+    );
   }
-  
+
   return metadata;
 }
 
 /**
  * Global print function for print button
  */
-window.printPage = function() {
+window.printPage = function () {
   window.print();
 };

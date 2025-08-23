@@ -1,289 +1,384 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-      <!-- Microsoft Forms Feedback Embed -->
-    <meta name="ms-forms-url" content="https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAGOOEaDTU0VTjQwuUNYNFAzSU5MUDNVTENWNjJFT1hOUC4u">
-  <title>PT Sim-ER (MVP v2)</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23007acc'/><text x='8' y='12' text-anchor='middle' fill='white' font-family='Arial' font-size='10' font-weight='bold'>E</text></svg>">
-  <link rel="stylesheet" href="css/styles.css?v=20250821-001" />
-  <link rel="stylesheet" href="css/sidebar.css?v=20250821-001" />
-  <link rel="stylesheet" href="css/print.css" media="print" />
-  <!-- Webfont: Oswald (Trade Gothic alternative) for brand label -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
-  <!-- Add docx generation library -->
-  <script src="https://unpkg.com/docx@6.0.3/build/index.js"></script>
-  <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-  <script>
-    // Debug mode and console silencer
-    // Use ?debug=1 to enable logs (persists in localStorage); ?debug=0 to disable again
-    (function () {
-      try {
-        const url = new URL(window.location.href);
-        const debugParam = url.searchParams.get('debug');
-        if (debugParam === '1') localStorage.setItem('debug', '1');
-        if (debugParam === '0') localStorage.removeItem('debug');
-      } catch {}
-      const isDebug = localStorage.getItem('debug') === '1';
-      window.DEBUG = isDebug;
-      if (!isDebug) {
-        const noop = () => {};
-        try { console.log = noop; } catch {}
-        try { console.debug = noop; } catch {}
-      }
-    })();
-  </script>
-</head>
-<body>
-  <!-- Skip to main content for keyboard and screen reader users -->
-  <a class="skip-link" href="#app">Skip to main content</a>
-  <header class="topbar no-print">
-    <div class="brand-row">
-      <a class="brand und-logo-link" href="#/" aria-label="University of North Dakota Home">
-    <img class="und-logo" src="img/und-logotype-fullw.svg" alt="University of North Dakota" loading="eager" decoding="async" />
-  <span class="brand-label">Physical Therapy EHR Simulator <span class="brand-label-suffix">| Proof of Concept</span></span>
-      </a>
-  <button id="feedbackBtn" class="btn orange small feedback-btn" type="button" aria-haspopup="dialog" aria-controls="feedbackDialog">Submit Feedback</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Microsoft Forms Feedback Embed -->
+    <meta
+      name="ms-forms-url"
+      content="https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAGOOEaDTU0VTjQwuUNYNFAzSU5MUDNVTENWNjJFT1hOUC4u"
+    />
+    <title>PT Sim-ER (MVP v2)</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23007acc'/><text x='8' y='12' text-anchor='middle' fill='white' font-family='Arial' font-size='10' font-weight='bold'>E</text></svg>"
+    />
+    <link rel="stylesheet" href="css/styles.css?v=20250821-001" />
+    <link rel="stylesheet" href="css/sidebar.css?v=20250821-001" />
+    <link rel="stylesheet" href="css/print.css" media="print" />
+    <!-- Webfont: Oswald (Trade Gothic alternative) for brand label -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Add docx generation library -->
+    <script src="https://unpkg.com/docx@6.0.3/build/index.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <script>
+      // Debug mode and console silencer
+      // Use ?debug=1 to enable logs (persists in localStorage); ?debug=0 to disable again
+      (function () {
+        try {
+          const url = new URL(window.location.href);
+          const debugParam = url.searchParams.get('debug');
+          if (debugParam === '1') localStorage.setItem('debug', '1');
+          if (debugParam === '0') localStorage.removeItem('debug');
+        } catch {}
+        const isDebug = localStorage.getItem('debug') === '1';
+        window.DEBUG = isDebug;
+        if (!isDebug) {
+          const noop = () => {};
+          try {
+            console.log = noop;
+          } catch {}
+          try {
+            console.debug = noop;
+          } catch {}
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- Skip to main content for keyboard and screen reader users -->
+    <a class="skip-link" href="#app">Skip to main content</a>
+    <header class="topbar no-print">
+      <div class="brand-row">
+        <a class="brand und-logo-link" href="#/" aria-label="University of North Dakota Home">
+          <img
+            class="und-logo"
+            src="img/und-logotype-fullw.svg"
+            alt="University of North Dakota"
+            loading="eager"
+            decoding="async"
+          />
+          <span class="brand-label"
+            >Physical Therapy EHR Simulator
+            <span class="brand-label-suffix">| Proof of Concept</span></span
+          >
+        </a>
+        <button
+          id="feedbackBtn"
+          class="btn orange small feedback-btn"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="feedbackDialog"
+        >
+          Submit Feedback
+        </button>
+      </div>
+      <nav id="primaryNav" class="topnav" role="navigation" aria-label="Primary">
+        <a href="#/">Home</a>
+        <a href="#/student/cases">Student</a>
+        <a href="#/instructor/cases">Faculty</a>
+        <button
+          id="themeToggle"
+          class="theme-toggle switch is-light"
+          onclick="toggleTheme()"
+          role="switch"
+          aria-checked="false"
+          aria-label="Switch to dark theme"
+        >
+          <span class="switch-track" aria-hidden="true"></span>
+          <span class="switch-thumb" aria-hidden="true">
+            <svg class="icon sun" aria-hidden="true" focusable="false">
+              <use href="#icon-sun"></use>
+            </svg>
+            <svg class="icon moon" aria-hidden="true" focusable="false">
+              <use href="#icon-moon"></use>
+            </svg>
+          </span>
+        </button>
+      </nav>
+    </header>
+
+    <main id="app"></main>
+
+    <!-- Removed Netlify form (no Netlify integration) -->
+
+    <!-- Educational ribbon at page bottom -->
+    <div class="edu-ribbon no-print" role="note" aria-label="Educational Use Only">
+      <span class="edu-left">Educational Use Only</span>
+      <span class="edu-right" id="lastUpdateText" aria-live="polite"></span>
     </div>
-    <nav id="primaryNav" class="topnav" role="navigation" aria-label="Primary">
-      <a href="#/">Home</a>
-      <a href="#/student/cases">Student</a>
-      <a href="#/instructor/cases">Faculty</a>
-    <button id="themeToggle" class="theme-toggle switch is-light" onclick="toggleTheme()" role="switch" aria-checked="false" aria-label="Switch to dark theme">
-        <span class="switch-track" aria-hidden="true"></span>
-        <span class="switch-thumb" aria-hidden="true">
-      <svg class="icon sun" aria-hidden="true" focusable="false"><use href="#icon-sun"></use></svg>
-      <svg class="icon moon" aria-hidden="true" focusable="false"><use href="#icon-moon"></use></svg>
-        </span>
-      </button>
-    </nav>
-  </header>
 
-  <main id="app"></main>
+    <!-- Removed fixed footer disclaimer to prevent blocking content -->
 
-  <!-- Removed Netlify form (no Netlify integration) -->
+    <!-- Inline SVG sprite for icons -->
+    <svg xmlns="http://www.w3.org/2000/svg" id="svg-sprite" aria-hidden="true">
+      <symbol id="icon-eye" viewBox="64 64 896 896">
+        <path
+          d="M942.2 486.2C847.4 286.5 704.1 186 512 186c-192.2 0-335.4 100.5-430.2 300.3a60.3 60.3 0 000 51.5C176.6 737.5 319.9 838 512 838c192.2 0 335.4-100.5 430.2-300.3 7.7-16.2 7.7-35 0-51.5zM512 766c-161.3 0-279.4-81.8-362.7-254C232.6 339.8 350.7 258 512 258c161.3 0 279.4 81.8 362.7 254C791.5 684.2 673.4 766 512 766zm-4-430c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176zm0 288c-61.9 0-112-50.1-112-112s50.1-112 112-112 112 50.1 112 112-50.1 112-112 112z"
+        />
+      </symbol>
+      <symbol id="icon-download" viewBox="64 64 896 896">
+        <path
+          d="M505.7 661a8 8 0 0012.6 0l112-141.7c4.1-5.2.4-12.9-6.3-12.9h-74.1V168c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v338.3H400c-6.7 0-10.4 7.7-6.3 12.9l112 141.8zM878 626h-60c-4.4 0-8 3.6-8 8v154H214V634c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v198c0 17.7 14.3 32 32 32h684c17.7 0 32-14.3 32-32V634c0-4.4-3.6-8-8-8z"
+        />
+      </symbol>
+      <symbol id="icon-print" viewBox="64 64 896 896">
+        <path
+          d="M820 436h-16V312c0-4.4-3.6-8-8-8H228c-4.4 0-8 3.6-8 8v124h-16c-17.7 0-32 14.3-32 32v240c0 17.7 14.3 32 32 32h16v84c0 4.4 3.6 8 8 8h568c4.4 0 8-3.6 8-8v-84h16c17.7 0 32-14.3 32-32V468c0-17.7-14.3-32-32-32zM684 740H340V616h344v124zm0-476H340V200h344v64zm84 340c0 4.4-3.6 8-8 8h-56c-4.4 0-8-3.6-8-8v-56c0-4.4 3.6-8 8-8h56c4.4 0 8 3.6 8 8v56z"
+        />
+      </symbol>
+      <symbol id="icon-save" viewBox="64 64 896 896">
+        <path
+          d="M893.3 293.3L730.7 130.7c-7.5-7.5-16.7-13-26.7-16V112H144c-17.7 0-32 14.3-32 32v736c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V338.5c0-17-6.7-33.2-18.7-45.2zM384 184h256v104H384V184zm456 656H184V184h136v136c0 17.7 14.3 32 32 32h320c17.7 0 32-14.3 32-32V205.8l136 136V840z"
+        />
+      </symbol>
+      <symbol id="icon-edit" viewBox="64 64 896 896">
+        <path
+          d="M257.7 752c2 0 4-.2 6-.5L431.9 722c2-.4 3.9-1.3 5.3-2.8l423.9-423.9a9.96 9.96 0 000-14.1L694.9 114.9c-1.9-1.9-4.4-2.9-7.1-2.9s-5.2 1-7.1 2.9L256.8 538.8c-1.5 1.5-2.4 3.3-2.8 5.3l-29.5 168.2a33.5 33.5 0 009.4 29.8c6.6 6.4 15.1 9.9 24.3 9.9z"
+        />
+      </symbol>
+      <symbol id="icon-plus" viewBox="64 64 896 896">
+        <path
+          d="M482 152h60q8 0 8 8v704q0 8-8 8h-60q-8 0-8-8V160q0-8 8-8z M152 482h704q8 0 8 8v60q0 8-8 8H152q-8 0-8-8v-60q0-8 8-8z"
+        />
+      </symbol>
+      <symbol id="icon-close" viewBox="64 64 896 896">
+        <path
+          d="M563.8 512l262.5-312.9c4.4-5.2.7-13.1-6.1-13.1h-79.8c-4.7 0-9.2 2.1-12.3 5.7L511.6 449.8 295.1 191.7c-3.1-3.6-7.6-5.7-12.3-5.7H203c-6.8 0-10.5 7.9-6.1 13.1L459.4 512 196.9 824.9A7.95 7.95 0 00203 838h79.8c4.7 0 9.2-2.1 12.3-5.7l216.5-258.1 216.5 258.1c3.1 3.6 7.6 5.7 12.3 5.7h79.8c6.8 0 10.5-7.9 6.1-13.1L563.8 512z"
+        />
+      </symbol>
+      <symbol id="icon-chevron-down" viewBox="64 64 896 896">
+        <path
+          d="M884 256h-75c-5.1 0-9.9 2.5-12.9 6.6L512 654.2 227.9 262.6c-3-4.1-7.8-6.6-12.9-6.6h-75c-6.5 0-10.3 7.4-6.5 12.7l352.6 486.1c12.8 17.6 39 17.6 51.7 0l352.6-486.1c3.9-5.3.1-12.7-6.4-12.7z"
+        />
+      </symbol>
+      <symbol id="icon-copy" viewBox="64 64 896 896">
+        <path
+          d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.4c2 0 3.9-.7 5.3-2l.3-.3C375.7 949.9 384 934.2 384 917.4V896h312c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 864H414V746c0-22.1-17.9-40-40-40H256V256h408v608z"
+        />
+      </symbol>
+      <symbol id="icon-trash" viewBox="64 64 896 896">
+        <path
+          d="M360 184h-8c4.4 0 8-3.6 8-8v8h304v-8c0 4.4 3.6 8 8 8h-8v72h72v-80c0-35.3-28.7-64-64-64H352c-35.3 0-64 28.7-64 64v80h72v-72zm504 72H160c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h60.4l24.7 523c1.6 34.1 29.8 61 63.9 61h454c34.2 0 62.3-26.8 63.9-61l24.7-523H888c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32zM731.3 840H292.7l-24.2-512h487l-24.2 512z"
+        />
+      </symbol>
+      <symbol id="icon-chevron-left" viewBox="0 0 24 24">
+        <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+      </symbol>
+      <symbol id="icon-chevron-right" viewBox="0 0 24 24">
+        <path d="M8.59 16.59 10 18l6-6-6-6-1.41 1.41L13.17 12z" />
+      </symbol>
+      <symbol id="icon-sort" viewBox="0 0 24 24">
+        <path
+          d="M12 5.83L15.17 9l1.41-1.41L12 3 7.41 7.59 8.83 9L12 5.83zm0 12.34L8.83 15l-1.41 1.41L12 21l4.59-4.59L15.17 15L12 18.17z"
+        />
+      </symbol>
+      <symbol id="icon-sortAsc" viewBox="0 0 24 24">
+        <path d="M7.41 7.59L12 3l4.59 4.59L15.17 9 12 5.83 8.83 9z" />
+      </symbol>
+      <symbol id="icon-sortDesc" viewBox="0 0 24 24">
+        <path d="M16.59 16.41L12 21l-4.59-4.59L8.83 15 12 18.17 15.17 15z" />
+      </symbol>
+      <symbol id="icon-share" viewBox="0 0 24 24">
+        <path
+          d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92S19.61 16.08 18 16.08z"
+        />
+      </symbol>
+      <symbol id="icon-preview" viewBox="64 64 896 896">
+        <path
+          d="M942.2 486.2C847.4 286.5 704.1 186 512 186c-192.2 0-335.4 100.5-430.2 300.3a60.3 60.3 0 000 51.5C176.6 737.5 319.9 838 512 838c192.2 0 335.4-100.5 430.2-300.3 7.7-16.2 7.7-35 0-51.5zM512 766c-161.3 0-279.4-81.8-362.7-254C232.6 339.8 350.7 258 512 258c161.3 0 279.4 81.8 362.7 254C791.5 684.2 673.4 766 512 766zm-4-430c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176zm0 288c-61.9 0-112-50.1-112-112s50.1-112 112-112 112 50.1 112 112-50.1 112-112 112z"
+        />
+      </symbol>
+      <symbol id="icon-delete" viewBox="64 64 896 896">
+        <path
+          d="M360 184h-8c4.4 0 8-3.6 8-8v8h304v-8c0 4.4 3.6 8 8 8h-8v72h72v-80c0-35.3-28.7-64-64-64H352c-35.3 0-64 28.7-64 64v80h72v-72zm504 72H160c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h60.4l24.7 523c1.6 34.1 29.8 61 63.9 61h454c34.2 0 62.3-26.8 63.9-61l24.7-523H888c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32zM731.3 840H292.7l-24.2-512h487l-24.2 512z"
+        />
+      </symbol>
+      <symbol id="icon-check" viewBox="0 0 24 24">
+        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+      </symbol>
+      <symbol id="icon-home" viewBox="0 0 24 24">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+      </symbol>
+      <symbol id="icon-user" viewBox="0 0 24 24">
+        <path
+          d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+        />
+      </symbol>
+      <symbol id="icon-settings" viewBox="0 0 24 24">
+        <path
+          d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"
+        />
+      </symbol>
+      <!-- Sun/Moon icons for theme toggle -->
+      <symbol id="icon-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="5" />
+        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path
+            d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"
+          />
+        </g>
+      </symbol>
+      <symbol id="icon-moon" viewBox="0 0 24 24">
+        <path d="M21 12.6A9 9 0 1111.4 3a7.6 7.6 0 009.6 9.6z" />
+      </symbol>
+    </svg>
 
-  <!-- Educational ribbon at page bottom -->
-  <div class="edu-ribbon no-print" role="note" aria-label="Educational Use Only">
-    <span class="edu-left">Educational Use Only</span>
-    <span class="edu-right" id="lastUpdateText" aria-live="polite"></span>
-  </div>
-
-  <!-- Removed fixed footer disclaimer to prevent blocking content -->
-
-  <!-- Inline SVG sprite for icons -->
-  <svg xmlns="http://www.w3.org/2000/svg" id="svg-sprite" aria-hidden="true">
-    <symbol id="icon-eye" viewBox="64 64 896 896">
-      <path d="M942.2 486.2C847.4 286.5 704.1 186 512 186c-192.2 0-335.4 100.5-430.2 300.3a60.3 60.3 0 000 51.5C176.6 737.5 319.9 838 512 838c192.2 0 335.4-100.5 430.2-300.3 7.7-16.2 7.7-35 0-51.5zM512 766c-161.3 0-279.4-81.8-362.7-254C232.6 339.8 350.7 258 512 258c161.3 0 279.4 81.8 362.7 254C791.5 684.2 673.4 766 512 766zm-4-430c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176zm0 288c-61.9 0-112-50.1-112-112s50.1-112 112-112 112 50.1 112 112-50.1 112-112 112z"/>
-    </symbol>
-    <symbol id="icon-download" viewBox="64 64 896 896">
-      <path d="M505.7 661a8 8 0 0012.6 0l112-141.7c4.1-5.2.4-12.9-6.3-12.9h-74.1V168c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v338.3H400c-6.7 0-10.4 7.7-6.3 12.9l112 141.8zM878 626h-60c-4.4 0-8 3.6-8 8v154H214V634c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8v198c0 17.7 14.3 32 32 32h684c17.7 0 32-14.3 32-32V634c0-4.4-3.6-8-8-8z"/>
-    </symbol>
-    <symbol id="icon-print" viewBox="64 64 896 896">
-      <path d="M820 436h-16V312c0-4.4-3.6-8-8-8H228c-4.4 0-8 3.6-8 8v124h-16c-17.7 0-32 14.3-32 32v240c0 17.7 14.3 32 32 32h16v84c0 4.4 3.6 8 8 8h568c4.4 0 8-3.6 8-8v-84h16c17.7 0 32-14.3 32-32V468c0-17.7-14.3-32-32-32zM684 740H340V616h344v124zm0-476H340V200h344v64zm84 340c0 4.4-3.6 8-8 8h-56c-4.4 0-8-3.6-8-8v-56c0-4.4 3.6-8 8-8h56c4.4 0 8 3.6 8 8v56z"/>
-    </symbol>
-    <symbol id="icon-save" viewBox="64 64 896 896">
-      <path d="M893.3 293.3L730.7 130.7c-7.5-7.5-16.7-13-26.7-16V112H144c-17.7 0-32 14.3-32 32v736c0 17.7 14.3 32 32 32h736c17.7 0 32-14.3 32-32V338.5c0-17-6.7-33.2-18.7-45.2zM384 184h256v104H384V184zm456 656H184V184h136v136c0 17.7 14.3 32 32 32h320c17.7 0 32-14.3 32-32V205.8l136 136V840z"/>
-    </symbol>
-    <symbol id="icon-edit" viewBox="64 64 896 896">
-      <path d="M257.7 752c2 0 4-.2 6-.5L431.9 722c2-.4 3.9-1.3 5.3-2.8l423.9-423.9a9.96 9.96 0 000-14.1L694.9 114.9c-1.9-1.9-4.4-2.9-7.1-2.9s-5.2 1-7.1 2.9L256.8 538.8c-1.5 1.5-2.4 3.3-2.8 5.3l-29.5 168.2a33.5 33.5 0 009.4 29.8c6.6 6.4 15.1 9.9 24.3 9.9z"/>
-    </symbol>
-    <symbol id="icon-plus" viewBox="64 64 896 896">
-      <path d="M482 152h60q8 0 8 8v704q0 8-8 8h-60q-8 0-8-8V160q0-8 8-8z M152 482h704q8 0 8 8v60q0 8-8 8H152q-8 0-8-8v-60q0-8 8-8z"/>
-    </symbol>
-    <symbol id="icon-close" viewBox="64 64 896 896">
-      <path d="M563.8 512l262.5-312.9c4.4-5.2.7-13.1-6.1-13.1h-79.8c-4.7 0-9.2 2.1-12.3 5.7L511.6 449.8 295.1 191.7c-3.1-3.6-7.6-5.7-12.3-5.7H203c-6.8 0-10.5 7.9-6.1 13.1L459.4 512 196.9 824.9A7.95 7.95 0 00203 838h79.8c4.7 0 9.2-2.1 12.3-5.7l216.5-258.1 216.5 258.1c3.1 3.6 7.6 5.7 12.3 5.7h79.8c6.8 0 10.5-7.9 6.1-13.1L563.8 512z"/>
-    </symbol>
-    <symbol id="icon-chevron-down" viewBox="64 64 896 896">
-      <path d="M884 256h-75c-5.1 0-9.9 2.5-12.9 6.6L512 654.2 227.9 262.6c-3-4.1-7.8-6.6-12.9-6.6h-75c-6.5 0-10.3 7.4-6.5 12.7l352.6 486.1c12.8 17.6 39 17.6 51.7 0l352.6-486.1c3.9-5.3.1-12.7-6.4-12.7z"/>
-    </symbol>
-    <symbol id="icon-copy" viewBox="64 64 896 896">
-      <path d="M832 64H296c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h496v688c0 4.4 3.6 8 8 8h56c4.4 0 8-3.6 8-8V96c0-17.7-14.3-32-32-32zM704 192H192c-17.7 0-32 14.3-32 32v530.7c0 8.5 3.4 16.6 9.4 22.6l173.3 173.3c2.2 2.2 4.7 4 7.4 5.5v1.9h4.4c2 0 3.9-.7 5.3-2l.3-.3C375.7 949.9 384 934.2 384 917.4V896h312c17.7 0 32-14.3 32-32V224c0-17.7-14.3-32-32-32zM350 856.2L263.9 770H350v86.2zM664 864H414V746c0-22.1-17.9-40-40-40H256V256h408v608z"/>
-    </symbol>
-    <symbol id="icon-trash" viewBox="64 64 896 896">
-      <path d="M360 184h-8c4.4 0 8-3.6 8-8v8h304v-8c0 4.4 3.6 8 8 8h-8v72h72v-80c0-35.3-28.7-64-64-64H352c-35.3 0-64 28.7-64 64v80h72v-72zm504 72H160c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h60.4l24.7 523c1.6 34.1 29.8 61 63.9 61h454c34.2 0 62.3-26.8 63.9-61l24.7-523H888c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32zM731.3 840H292.7l-24.2-512h487l-24.2 512z"/>
-    </symbol>
-    <symbol id="icon-chevron-left" viewBox="0 0 24 24">
-      <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-    </symbol>
-    <symbol id="icon-chevron-right" viewBox="0 0 24 24">
-      <path d="M8.59 16.59 10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
-    </symbol>
-    <symbol id="icon-sort" viewBox="0 0 24 24">
-      <path d="M12 5.83L15.17 9l1.41-1.41L12 3 7.41 7.59 8.83 9L12 5.83zm0 12.34L8.83 15l-1.41 1.41L12 21l4.59-4.59L15.17 15L12 18.17z"/>
-    </symbol>
-    <symbol id="icon-sortAsc" viewBox="0 0 24 24">
-      <path d="M7.41 7.59L12 3l4.59 4.59L15.17 9 12 5.83 8.83 9z"/>
-    </symbol>
-    <symbol id="icon-sortDesc" viewBox="0 0 24 24">
-      <path d="M16.59 16.41L12 21l-4.59-4.59L8.83 15 12 18.17 15.17 15z"/>
-    </symbol>
-    <symbol id="icon-share" viewBox="0 0 24 24">
-      <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92S19.61 16.08 18 16.08z"/>
-    </symbol>
-    <symbol id="icon-preview" viewBox="64 64 896 896">
-      <path d="M942.2 486.2C847.4 286.5 704.1 186 512 186c-192.2 0-335.4 100.5-430.2 300.3a60.3 60.3 0 000 51.5C176.6 737.5 319.9 838 512 838c192.2 0 335.4-100.5 430.2-300.3 7.7-16.2 7.7-35 0-51.5zM512 766c-161.3 0-279.4-81.8-362.7-254C232.6 339.8 350.7 258 512 258c161.3 0 279.4 81.8 362.7 254C791.5 684.2 673.4 766 512 766zm-4-430c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176zm0 288c-61.9 0-112-50.1-112-112s50.1-112 112-112 112 50.1 112 112-50.1 112-112 112z"/>
-    </symbol>
-    <symbol id="icon-delete" viewBox="64 64 896 896">
-      <path d="M360 184h-8c4.4 0 8-3.6 8-8v8h304v-8c0 4.4 3.6 8 8 8h-8v72h72v-80c0-35.3-28.7-64-64-64H352c-35.3 0-64 28.7-64 64v80h72v-72zm504 72H160c-17.7 0-32 14.3-32 32v32c0 4.4 3.6 8 8 8h60.4l24.7 523c1.6 34.1 29.8 61 63.9 61h454c34.2 0 62.3-26.8 63.9-61l24.7-523H888c4.4 0 8-3.6 8-8v-32c0-17.7-14.3-32-32-32zM731.3 840H292.7l-24.2-512h487l-24.2 512z"/>
-    </symbol>
-    <symbol id="icon-check" viewBox="0 0 24 24">
-      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-    </symbol>
-    <symbol id="icon-home" viewBox="0 0 24 24">
-      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-    </symbol>
-    <symbol id="icon-user" viewBox="0 0 24 24">
-      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-    </symbol>
-    <symbol id="icon-settings" viewBox="0 0 24 24">
-      <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
-    </symbol>
-    <!-- Sun/Moon icons for theme toggle -->
-    <symbol id="icon-sun" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="5" />
-      <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
-      </g>
-    </symbol>
-    <symbol id="icon-moon" viewBox="0 0 24 24">
-      <path d="M21 12.6A9 9 0 1111.4 3a7.6 7.6 0 009.6 9.6z"/>
-    </symbol>
-  </svg>
-
-  <script>
-    // Theme toggle functionality (light baseline, dark via data-theme="dark")
-    function toggleTheme() {
-      const root = document.documentElement;
-      const toggle = document.getElementById('themeToggle');
-      const isDark = root.getAttribute('data-theme') === 'dark';
-      if (isDark) {
-        // Switch to light (remove attribute)
-        root.removeAttribute('data-theme');
-        localStorage.setItem('theme', 'light');
-        toggle.setAttribute('aria-checked', 'false');
-        toggle.setAttribute('aria-label', 'Switch to dark theme');
-        toggle.classList.add('is-light');
-        toggle.classList.remove('is-dark');
-      } else {
-        // Switch to dark
-        root.setAttribute('data-theme', 'dark');
-        localStorage.setItem('theme', 'dark');
-        toggle.setAttribute('aria-checked', 'true');
-        toggle.setAttribute('aria-label', 'Switch to light theme');
-        toggle.classList.add('is-dark');
-        toggle.classList.remove('is-light');
-      }
-    }
-    
-    // Load saved theme on page load (coerce invalid to light baseline)
-    document.addEventListener('DOMContentLoaded', function() {
-      let savedTheme = localStorage.getItem('theme');
-      if (savedTheme !== 'light' && savedTheme !== 'dark') {
-        savedTheme = 'light';
-        try { localStorage.setItem('theme', 'light'); } catch {}
-      }
-      const toggle = document.getElementById('themeToggle');
-
-      if (savedTheme === 'dark') {
-        document.documentElement.setAttribute('data-theme', 'dark');
-        if (toggle) {
+    <script>
+      // Theme toggle functionality (light baseline, dark via data-theme="dark")
+      function toggleTheme() {
+        const root = document.documentElement;
+        const toggle = document.getElementById('themeToggle');
+        const isDark = root.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+          // Switch to light (remove attribute)
+          root.removeAttribute('data-theme');
+          localStorage.setItem('theme', 'light');
+          toggle.setAttribute('aria-checked', 'false');
+          toggle.setAttribute('aria-label', 'Switch to dark theme');
+          toggle.classList.add('is-light');
+          toggle.classList.remove('is-dark');
+        } else {
+          // Switch to dark
+          root.setAttribute('data-theme', 'dark');
+          localStorage.setItem('theme', 'dark');
           toggle.setAttribute('aria-checked', 'true');
           toggle.setAttribute('aria-label', 'Switch to light theme');
           toggle.classList.add('is-dark');
           toggle.classList.remove('is-light');
         }
-      } else {
-        document.documentElement.removeAttribute('data-theme');
-        if (toggle) {
-          toggle.setAttribute('aria-checked', 'false');
-          toggle.setAttribute('aria-label', 'Switch to dark theme');
-          toggle.classList.add('is-light');
-          toggle.classList.remove('is-dark');
-        }
       }
 
-      // Last Update (GitHub) ribbon text
-      (function setupLastUpdate() {
-        const el = document.getElementById('lastUpdateText');
-        if (!el) return;
-        // Show a quick placeholder
-        el.textContent = '';
-        const CACHE_KEY = 'last_update_cache_v1';
-        const CACHE_TTL_MS = 1000 * 60 * 30; // 30 minutes
-        const owner = 'danstonedev';
-        const repo = 'pt-ehr-simulator';
-        const branch = 'main';
-
-        function formatDateTime(d) {
+      // Load saved theme on page load (coerce invalid to light baseline)
+      document.addEventListener('DOMContentLoaded', function () {
+        let savedTheme = localStorage.getItem('theme');
+        if (savedTheme !== 'light' && savedTheme !== 'dark') {
+          savedTheme = 'light';
           try {
-            const dt = typeof d === 'string' ? new Date(d) : d;
-            return dt.toLocaleString(undefined, {
-              year: 'numeric', month: 'short', day: '2-digit',
-              hour: '2-digit', minute: '2-digit'
+            localStorage.setItem('theme', 'light');
+          } catch {}
+        }
+        const toggle = document.getElementById('themeToggle');
+
+        if (savedTheme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          if (toggle) {
+            toggle.setAttribute('aria-checked', 'true');
+            toggle.setAttribute('aria-label', 'Switch to light theme');
+            toggle.classList.add('is-dark');
+            toggle.classList.remove('is-light');
+          }
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          if (toggle) {
+            toggle.setAttribute('aria-checked', 'false');
+            toggle.setAttribute('aria-label', 'Switch to dark theme');
+            toggle.classList.add('is-light');
+            toggle.classList.remove('is-dark');
+          }
+        }
+
+        // Last Update (GitHub) ribbon text
+        (function setupLastUpdate() {
+          const el = document.getElementById('lastUpdateText');
+          if (!el) return;
+          // Show a quick placeholder
+          el.textContent = '';
+          const CACHE_KEY = 'last_update_cache_v1';
+          const CACHE_TTL_MS = 1000 * 60 * 30; // 30 minutes
+          const owner = 'danstonedev';
+          const repo = 'pt-ehr-simulator';
+          const branch = 'main';
+
+          function formatDateTime(d) {
+            try {
+              const dt = typeof d === 'string' ? new Date(d) : d;
+              return dt.toLocaleString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+              });
+            } catch {
+              return '';
+            }
+          }
+
+          function apply(dateStr) {
+            if (!dateStr) return;
+            el.textContent = `Last update: ${formatDateTime(dateStr)}`;
+          }
+
+          try {
+            const cachedRaw = localStorage.getItem(CACHE_KEY);
+            if (cachedRaw) {
+              const cached = JSON.parse(cachedRaw);
+              if (cached.time && Date.now() - cached.time < CACHE_TTL_MS && cached.date) {
+                apply(cached.date);
+              }
+            }
+          } catch {}
+
+          // Fetch from GitHub (unauthenticated; low rate limits but okay for a small page)
+          fetch(`https://api.github.com/repos/${owner}/${repo}/commits/${branch}`)
+            .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+            .then((data) => {
+              const dateStr =
+                data && data.commit && data.commit.committer && data.commit.committer.date;
+              if (dateStr) {
+                apply(dateStr);
+                try {
+                  localStorage.setItem(
+                    CACHE_KEY,
+                    JSON.stringify({ time: Date.now(), date: dateStr }),
+                  );
+                } catch {}
+              }
+            })
+            .catch(() => {
+              // If offline or rate-limited, leave cached value (if any). Otherwise noop.
             });
-          } catch {
-            return '';
-          }
-        }
+        })();
 
-        function apply(dateStr) {
-          if (!dateStr) return;
-          el.textContent = `Last update: ${formatDateTime(dateStr)}`;
-        }
+        // Feedback modal wiring
+        const feedbackBtn = document.getElementById('feedbackBtn');
+        if (feedbackBtn) {
+          feedbackBtn.addEventListener('click', () => {
+            // Try to resolve an MS Forms URL from multiple sources for flexibility
+            const metaEl = document.querySelector(
+              'meta[name="feedback-form-url"], meta[name="ms-forms-url"]',
+            );
+            const configuredUrl =
+              (metaEl && metaEl.content) ||
+              window.FEEDBACK_FORM_URL ||
+              localStorage.getItem('feedbackFormUrl') ||
+              '';
 
-        try {
-          const cachedRaw = localStorage.getItem(CACHE_KEY);
-          if (cachedRaw) {
-            const cached = JSON.parse(cachedRaw);
-            if (cached.time && (Date.now() - cached.time) < CACHE_TTL_MS && cached.date) {
-              apply(cached.date);
-            }
-          }
-        } catch {}
+            const overlay = document.createElement('div');
+            overlay.id = 'feedbackDialog';
+            overlay.style.cssText =
+              'position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:10000;';
+            overlay.addEventListener('click', (e) => {
+              if (e.target === overlay) document.body.removeChild(overlay);
+            });
 
-        // Fetch from GitHub (unauthenticated; low rate limits but okay for a small page)
-        fetch(`https://api.github.com/repos/${owner}/${repo}/commits/${branch}`)
-          .then(r => r.ok ? r.json() : Promise.reject(r.status))
-          .then(data => {
-            const dateStr = data && data.commit && data.commit.committer && data.commit.committer.date;
-            if (dateStr) {
-              apply(dateStr);
-              try {
-                localStorage.setItem(CACHE_KEY, JSON.stringify({ time: Date.now(), date: dateStr }));
-              } catch {}
-            }
-          })
-          .catch(() => {
-            // If offline or rate-limited, leave cached value (if any). Otherwise noop.
-          });
-      })();
-
-      // Feedback modal wiring
-      const feedbackBtn = document.getElementById('feedbackBtn');
-      if (feedbackBtn) {
-        feedbackBtn.addEventListener('click', () => {
-          // Try to resolve an MS Forms URL from multiple sources for flexibility
-          const metaEl = document.querySelector('meta[name="feedback-form-url"], meta[name="ms-forms-url"]');
-          const configuredUrl = (metaEl && metaEl.content) || window.FEEDBACK_FORM_URL || localStorage.getItem('feedbackFormUrl') || '';
-
-          const overlay = document.createElement('div');
-          overlay.id = 'feedbackDialog';
-          overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:10000;';
-          overlay.addEventListener('click', (e) => { if (e.target === overlay) document.body.removeChild(overlay); });
-
-          const panel = document.createElement('div');
-          panel.style.cssText = 'background:var(--bg);padding:24px;border-radius:12px;width:92%;max-width:560px;box-shadow:0 20px 25px -5px rgba(0,0,0,.1);color:var(--text);';
-          if (configuredUrl) {
-            // Build an embeddable URL (ensure embed=true present)
-            let formSrc = configuredUrl.trim();
-            if (!/embed=true/i.test(formSrc)) {
-              formSrc += (formSrc.includes('?') ? '&' : '?') + 'embed=true';
-            }
-            panel.innerHTML = `
+            const panel = document.createElement('div');
+            panel.style.cssText =
+              'background:var(--bg);padding:24px;border-radius:12px;width:92%;max-width:560px;box-shadow:0 20px 25px -5px rgba(0,0,0,.1);color:var(--text);';
+            if (configuredUrl) {
+              // Build an embeddable URL (ensure embed=true present)
+              let formSrc = configuredUrl.trim();
+              if (!/embed=true/i.test(formSrc)) {
+                formSrc += (formSrc.includes('?') ? '&' : '?') + 'embed=true';
+              }
+              panel.innerHTML = `
               <h2 style="margin:0 0 8px 0;">Send Feedback</h2>
               <p class="small" style="margin:0 0 12px 0;color:var(--text-secondary);">This form is embedded from Microsoft Forms.</p>
               <div style="width:100%;height:560px;">
@@ -294,8 +389,8 @@
                 <a class="btn orange" id="openFormNewTab" href="${formSrc}" target="_blank" rel="noopener noreferrer">Open in new tab</a>
               </div>
             `;
-          } else {
-            panel.innerHTML = `
+            } else {
+              panel.innerHTML = `
               <h2 style="margin:0 0 8px 0;">Send Feedback</h2>
               <p class="small" style="margin:0 0 12px 0;color:var(--text-secondary);">Share any issues or ideas. Your comments help improve the simulator.</p>
               <label for="feedbackText" class="form-label-standard" style="display:block;margin-bottom:6px;">Your feedback</label>
@@ -305,42 +400,50 @@
                 <button class="btn orange" type="button" id="sendFeedback">Send Feedback</button>
               </div>
             `;
-          }
+            }
 
-          overlay.appendChild(panel);
-          document.body.appendChild(overlay);
-          if (!configuredUrl) { document.getElementById('feedbackText').focus(); }
+            overlay.appendChild(panel);
+            document.body.appendChild(overlay);
+            if (!configuredUrl) {
+              document.getElementById('feedbackText').focus();
+            }
 
-          panel.querySelector('#cancelFeedback').addEventListener('click', () => {
-            document.body.removeChild(overlay);
-          });
-          if (!configuredUrl) {
-            // Helper to URL-encode form data
-            const encodeForm = (data) => Object.keys(data)
-              .map((k) => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
-              .join('&');
-
-            panel.querySelector('#sendFeedback').addEventListener('click', async () => {
-              const text = (panel.querySelector('#feedbackText').value || '').trim();
-              if (!text) { alert('Please enter your feedback before sending.'); return; }
-              const subjectTxt = 'PT EHR Simulator Feedback';
-              // Send via mailto
-              const subject = encodeURIComponent(subjectTxt);
-              const body = encodeURIComponent(text + '\n\n— Sent from PT EHR Simulator');
-              window.location.href = `mailto:daniel.j.stone@UND.edu?subject=${subject}&body=${body}`;
+            panel.querySelector('#cancelFeedback').addEventListener('click', () => {
               document.body.removeChild(overlay);
             });
-          }
-        });
-      }
-    });
-  </script>
-  <script type="module">
-    import * as store from './js/core/store.js';
-    // Make store available for debugging
-    window.ptStore = store;
-    console.log('PT Store available as window.ptStore - use ptStore.forceReloadCases() to refresh');
-  </script>
-  <script type="module" src="js/core/router.js?v=20250820-004"></script>
-</body>
+            if (!configuredUrl) {
+              // Helper to URL-encode form data
+              const encodeForm = (data) =>
+                Object.keys(data)
+                  .map((k) => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
+                  .join('&');
+
+              panel.querySelector('#sendFeedback').addEventListener('click', async () => {
+                const text = (panel.querySelector('#feedbackText').value || '').trim();
+                if (!text) {
+                  alert('Please enter your feedback before sending.');
+                  return;
+                }
+                const subjectTxt = 'PT EHR Simulator Feedback';
+                // Send via mailto
+                const subject = encodeURIComponent(subjectTxt);
+                const body = encodeURIComponent(text + '\n\n— Sent from PT EHR Simulator');
+                window.location.href = `mailto:daniel.j.stone@UND.edu?subject=${subject}&body=${body}`;
+                document.body.removeChild(overlay);
+              });
+            }
+          });
+        }
+      });
+    </script>
+    <script type="module">
+      import * as store from './js/core/store.js';
+      // Make store available for debugging
+      window.ptStore = store;
+      console.log(
+        'PT Store available as window.ptStore - use ptStore.forceReloadCases() to refresh',
+      );
+    </script>
+    <script type="module" src="js/core/router.js?v=20250820-004"></script>
+  </body>
 </html>

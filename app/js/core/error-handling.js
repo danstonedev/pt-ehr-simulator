@@ -12,7 +12,7 @@ export const ErrorTypes = {
   STORAGE: 'storage',
   NETWORK: 'network',
   CASE_NOT_FOUND: 'case_not_found',
-  PERMISSION: 'permission'
+  PERMISSION: 'permission',
 };
 
 /**
@@ -23,13 +23,10 @@ export const ErrorTypes = {
  */
 export function createErrorDisplay(message, type = ErrorTypes.VALIDATION) {
   const errorClass = `error-display ${type}`;
-  
+
   return el('div', { class: errorClass }, [
     el('div', { class: 'error-icon' }, '⚠️'),
-    el('div', { class: 'error-content' }, [
-      el('strong', {}, 'Error'),
-      el('p', {}, message)
-    ])
+    el('div', { class: 'error-content' }, [el('strong', {}, 'Error'), el('p', {}, message)]),
   ]);
 }
 

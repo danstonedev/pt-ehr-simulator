@@ -1,17 +1,15 @@
-
-export function el(tag, attrs={}, children=[]){
-  const e=document.createElement(tag);
-  Object.entries(attrs).forEach(([k,v])=>{
-    if(k==='class') e.className=v;
-    else if(k.startsWith('on') && typeof v==='function') {
+export function el(tag, attrs = {}, children = []) {
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => {
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on') && typeof v === 'function') {
       // Convert onClick to click, onMouseOver to mouseover, etc.
       const eventName = k.slice(2).toLowerCase();
       e.addEventListener(eventName, v);
-    }
-    else e.setAttribute(k,v);
+    } else e.setAttribute(k, v);
   });
-  if(!Array.isArray(children)) children=[children];
-  children.forEach(c=>{
+  if (!Array.isArray(children)) children = [children];
+  children.forEach((c) => {
     if (typeof c === 'string') {
       e.appendChild(document.createTextNode(c));
     } else if (c instanceof Node) {
@@ -20,8 +18,13 @@ export function el(tag, attrs={}, children=[]){
   });
   return e;
 }
-export function download(filename,text){ const a=document.createElement('a'); a.href='data:text/json;charset=utf-8,'+encodeURIComponent(text); a.download=filename; a.click(); }
-export function textareaAutoResize(t){
+export function download(filename, text) {
+  const a = document.createElement('a');
+  a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(text);
+  a.download = filename;
+  a.click();
+}
+export function textareaAutoResize(t) {
   const computeBaseHeight = () => {
     const cs = window.getComputedStyle(t);
     let lineHeight = parseFloat(cs.lineHeight);
@@ -44,6 +47,9 @@ export function textareaAutoResize(t){
   };
   t.addEventListener('input', fit);
   // Defer first fit to ensure styles/placeholders applied
-  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(fit); else setTimeout(fit, 0);
+  if (typeof requestAnimationFrame === 'function') requestAnimationFrame(fit);
+  else setTimeout(fit, 0);
 }
-export function printPage(){ window.print(); }
+export function printPage() {
+  window.print();
+}

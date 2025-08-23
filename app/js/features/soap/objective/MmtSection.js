@@ -15,7 +15,7 @@ import { createBilateralTable } from './EditableTable.js';
 export function createMmtSection(regionKey, region, mmtData, onChange) {
   const container = el('div', {
     class: 'assessment-section mmt-section',
-    style: 'margin-bottom: 24px;'
+    style: 'margin-bottom: 24px;',
   });
 
   const mmtGrades = [
@@ -26,7 +26,7 @@ export function createMmtSection(regionKey, region, mmtData, onChange) {
     { value: '4-/5', label: '4-/5 - Less than normal resistance' },
     { value: '4/5', label: '4/5 - Moderate resistance' },
     { value: '4+/5', label: '4+/5 - Nearly normal resistance' },
-    { value: '5/5', label: '5/5 - Normal strength' }
+    { value: '5/5', label: '5/5 - Normal strength' },
   ];
 
   const table = createBilateralTable({
@@ -40,17 +40,16 @@ export function createMmtSection(regionKey, region, mmtData, onChange) {
     notesColumn: true,
     nameColumnLabel: 'Manual Muscle Testing', // use green title as first column header
     showTitle: false, // hide green band title
-    notesWidth: '35%'
+    notesWidth: '35%',
   });
 
   container.appendChild(table.element);
-
 
   return {
     element: container,
     rebuild: table.rebuild,
     getData: () => mmtData,
-    updateData: onChange
+    updateData: onChange,
   };
 }
 
@@ -64,9 +63,9 @@ export const mmtMuscleGroups = {
     { muscle: 'Upper Trap', side: 'R', normal: '5/5' },
     { muscle: 'Upper Trap', side: 'L', normal: '5/5' },
     { muscle: 'Levator Scapulae', side: 'R', normal: '5/5' },
-    { muscle: 'Levator Scapulae', side: 'L', normal: '5/5' }
+    { muscle: 'Levator Scapulae', side: 'L', normal: '5/5' },
   ],
-  
+
   'lumbar-spine': [
     { muscle: 'Hip Flexors', side: 'R', normal: '5/5' },
     { muscle: 'Hip Flexors', side: 'L', normal: '5/5' },
@@ -77,10 +76,10 @@ export const mmtMuscleGroups = {
     { muscle: 'Glut Max', side: 'R', normal: '5/5' },
     { muscle: 'Glut Max', side: 'L', normal: '5/5' },
     { muscle: 'Glut Med', side: 'R', normal: '5/5' },
-    { muscle: 'Glut Med', side: 'L', normal: '5/5' }
+    { muscle: 'Glut Med', side: 'L', normal: '5/5' },
   ],
-  
-  'shoulder': [
+
+  shoulder: [
     { muscle: 'Deltoid Anterior', side: 'R', normal: '5/5' },
     { muscle: 'Deltoid Anterior', side: 'L', normal: '5/5' },
     { muscle: 'Deltoid Middle', side: 'R', normal: '5/5' },
@@ -88,15 +87,15 @@ export const mmtMuscleGroups = {
     { muscle: 'Deltoid Posterior', side: 'R', normal: '5/5' },
     { muscle: 'Deltoid Posterior', side: 'L', normal: '5/5' },
     { muscle: 'Rotator Cuff', side: 'R', normal: '5/5' },
-    { muscle: 'Rotator Cuff', side: 'L', normal: '5/5' }
+    { muscle: 'Rotator Cuff', side: 'L', normal: '5/5' },
   ],
-  
-  'knee': [
+
+  knee: [
     { muscle: 'Quadriceps', side: 'R', normal: '5/5' },
     { muscle: 'Quadriceps', side: 'L', normal: '5/5' },
     { muscle: 'Hamstrings', side: 'R', normal: '5/5' },
-    { muscle: 'Hamstrings', side: 'L', normal: '5/5' }
-  ]
+    { muscle: 'Hamstrings', side: 'L', normal: '5/5' },
+  ],
 };
 
 /**

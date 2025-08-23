@@ -21,10 +21,10 @@ Generates a complete PT case study from provided clinical anchors.
 ```json
 {
   "title": "Test Shoulder Case",
-  "region": "shoulder", 
+  "region": "shoulder",
   "condition": "Rotator cuff tendinopathy",
   "age": 42,
-  "sex": "female", 
+  "sex": "female",
   "pain": 6,
   "goal": "Return to overhead lifting",
   "setting": "Outpatient",
@@ -96,7 +96,7 @@ Configure the PT EMR Simulator to use the local endpoint:
 
 ```html
 <!-- Meta tag configuration -->
-<meta name="ai-generate-url" content="http://localhost:7071/api/generate-case">
+<meta name="ai-generate-url" content="http://localhost:7071/api/generate-case" />
 ```
 
 ```javascript
@@ -170,18 +170,21 @@ az functionapp config appsettings set \
 Update the frontend meta tag with your deployed URL:
 
 ```html
-<meta name="ai-generate-url" content="https://your-function-app.azurewebsites.net/api/generate-case">
+<meta
+  name="ai-generate-url"
+  content="https://your-function-app.azurewebsites.net/api/generate-case"
+/>
 ```
 
 ## 🔒 Security & Configuration
 
 ### **Environment Variables**
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `OPENAI_API_KEY` | Your OpenAI API key for GPT-4 access | ✅ Yes |
-| `AzureWebJobsStorage` | Azure Storage connection string | ✅ Yes |
-| `FUNCTIONS_WORKER_RUNTIME` | Set to "node" | ✅ Yes |
+| Variable                   | Description                          | Required |
+| -------------------------- | ------------------------------------ | -------- |
+| `OPENAI_API_KEY`           | Your OpenAI API key for GPT-4 access | ✅ Yes   |
+| `AzureWebJobsStorage`      | Azure Storage connection string      | ✅ Yes   |
+| `FUNCTIONS_WORKER_RUNTIME` | Set to "node"                        | ✅ Yes   |
 
 ### **Function Configuration**
 

@@ -1,10 +1,9 @@
-
 // Router with proper initialization order and parameter handling
 
 const routes = {};
 
-export function route(path, render) { 
-  routes[path] = render; 
+export function route(path, render) {
+  routes[path] = render;
 }
 
 export { routes };
@@ -16,14 +15,16 @@ export function navigate(hash) {
 // Update navigation active states
 function updateNavigation(currentPath) {
   const navLinks = document.querySelectorAll('.topnav a');
-  navLinks.forEach(link => {
+  navLinks.forEach((link) => {
     link.classList.remove('active');
     link.removeAttribute('aria-current');
     const href = link.getAttribute('href');
-    if (href === currentPath || 
-        (currentPath.startsWith('#/student') && href === '#/student/cases') ||
-        (currentPath.startsWith('#/instructor') && href === '#/instructor/cases') ||
-        (currentPath === '#/' && href === '#/')) {
+    if (
+      href === currentPath ||
+      (currentPath.startsWith('#/student') && href === '#/student/cases') ||
+      (currentPath.startsWith('#/instructor') && href === '#/instructor/cases') ||
+      (currentPath === '#/' && href === '#/')
+    ) {
       link.classList.add('active');
       link.setAttribute('aria-current', 'page');
     }
@@ -32,16 +33,16 @@ function updateNavigation(currentPath) {
 
 export function startRouter() {
   const app = document.getElementById('app');
-  
+
   async function render() {
-  let hash = (window.location.hash || '#/').replace(/\/$/, '');
-  if (hash === '#') hash = '#/';
+    let hash = (window.location.hash || '#/').replace(/\/$/, '');
+    if (hash === '#') hash = '#/';
     const [path, query] = hash.split('?');
-    
+
     // First try exact match
     let renderer = routes[path];
     let params = {};
-    
+
     // If no exact match, try parameter matching
     if (!renderer) {
       for (const [routePath, routeRenderer] of Object.entries(routes)) {
@@ -53,11 +54,11 @@ export function startRouter() {
         }
       }
     }
-    
+
     // Fallback to 404
     if (!renderer) renderer = routes['#/404'];
     if (!renderer) return;
-    
+
     // Persist last route (exclude home/404) for Resume on the landing page
     try {
       if (path && path !== '#/' && path !== '#/404') {
@@ -67,10 +68,10 @@ export function startRouter() {
 
     // Update navigation active states
     updateNavigation(hash);
-    
+
     // Expose a simple route key on <body> for route-scoped styling
     try {
-      const routeKey = (path && path !== '#/' ? path.slice(2).replace(/\//g, '-') : 'home');
+      const routeKey = path && path !== '#/' ? path.slice(2).replace(/\//g, '-') : 'home';
       document.body.setAttribute('data-route', routeKey);
     } catch {}
 
@@ -85,9 +86,9 @@ export function startRouter() {
 function matchRoute(routePath, actualPath) {
   const routeSegments = routePath.split('/');
   const pathSegments = actualPath.split('/');
-  
+
   if (routeSegments.length !== pathSegments.length) return null;
-  
+
   const params = {};
   for (let i = 0; i < routeSegments.length; i++) {
     if (routeSegments[i].startsWith(':')) {
@@ -99,7 +100,7 @@ function matchRoute(routePath, actualPath) {
       return null;
     }
   }
-  
+
   return params;
 }
 
@@ -112,11 +113,11 @@ async function initializeApp() {
     import('../views/student/cases.js'),
     import('../views/student/drafts.js'),
     import('../views/instructor/cases.js?v=20250111-001'),
-  import('../views/case_editor.js?v=20250818-003'),
+    import('../views/case_editor.js?v=20250818-003'),
     import('../views/preview.js'),
-    import('../views/notfound.js')
+    import('../views/notfound.js'),
   ]);
-  
+
   // Start the router after all routes are registered
   startRouter();
 }

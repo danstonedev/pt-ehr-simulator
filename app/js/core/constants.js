@@ -4,7 +4,7 @@
 export const STORAGE_KEYS = {
   CASES: 'pt_emr_cases',
   CASE_COUNTER: 'pt_emr_case_counter',
-  USER_PREFERENCES: 'pt_emr_preferences'
+  USER_PREFERENCES: 'pt_emr_preferences',
 };
 
 export const ROUTES = {
@@ -14,7 +14,7 @@ export const ROUTES = {
   STUDENT_EDITOR: '#/student/editor',
   INSTRUCTOR_CASES: '#/instructor/cases',
   INSTRUCTOR_EDITOR: '#/instructor/editor',
-  PREVIEW: '#/preview'
+  PREVIEW: '#/preview',
 };
 
 export const APP_CONFIG = {
@@ -22,17 +22,28 @@ export const APP_CONFIG = {
   MAX_CASE_TITLE_LENGTH: 100,
   AUTO_SAVE_INTERVAL: 30000, // 30 seconds
   SUPPORTED_REGIONS: [
-    'Cervical', 'Thoracic', 'Lumbar', 'Shoulder', 'Elbow', 
-    'Wrist/Hand', 'Hip', 'Knee', 'Ankle/Foot'
+    'Cervical',
+    'Thoracic',
+    'Lumbar',
+    'Shoulder',
+    'Elbow',
+    'Wrist/Hand',
+    'Hip',
+    'Knee',
+    'Ankle/Foot',
   ],
   CLINICAL_SETTINGS: [
-    'Outpatient Orthopedic', 'Inpatient Acute', 'Skilled Nursing',
-    'Home Health', 'Pediatric', 'Neurologic Rehab'
-  ]
+    'Outpatient Orthopedic',
+    'Inpatient Acute',
+    'Skilled Nursing',
+    'Home Health',
+    'Pediatric',
+    'Neurologic Rehab',
+  ],
 };
 
 export const UI_CONSTANTS = {
   LOADING_DELAY: 100,
   ANIMATION_DURATION: 200,
-  DEBOUNCE_DELAY: 300
+  DEBOUNCE_DELAY: 300,
 };

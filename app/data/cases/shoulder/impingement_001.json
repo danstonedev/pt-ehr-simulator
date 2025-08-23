@@ -33,7 +33,10 @@
       "pmh": ["Remote rotator cuff tendinopathy 5 years ago (resolved with PT)"],
       "meds": ["Ibuprofen 400mg PRN"],
       "red_flag_signals": ["None"],
-      "functional_goals": ["Return to tennis pain-free", "Sleep through the night without shoulder pain"]
+      "functional_goals": [
+        "Return to tennis pain-free",
+        "Sleep through the night without shoulder pain"
+      ]
     },
     "findings": {
       "vitals": {
@@ -129,11 +132,27 @@
               "ir90-left": "60"
             },
             "specialTests": {
-              "test-0": { "left": "positive", "right": "positive", "notes": "Hawkins-Kennedy and Neer positive for pain" },
+              "test-0": {
+                "left": "positive",
+                "right": "positive",
+                "notes": "Hawkins-Kennedy and Neer positive for pain"
+              },
               "test-1": { "left": "negative", "right": "positive", "notes": "Painful arc 70-110°" },
-              "test-2": { "left": "negative", "right": "positive", "notes": "Empty can test positive for pain, mild weakness" },
-              "test-3": { "left": "negative", "right": "positive", "notes": "Speed's test positive for anterior groove pain" },
-              "test-4": { "left": "negative", "right": "negative", "notes": "Drop arm test negative" }
+              "test-2": {
+                "left": "negative",
+                "right": "positive",
+                "notes": "Empty can test positive for pain, mild weakness"
+              },
+              "test-3": {
+                "left": "negative",
+                "right": "positive",
+                "notes": "Speed's test positive for anterior groove pain"
+              },
+              "test-4": {
+                "left": "negative",
+                "right": "negative",
+                "notes": "Drop arm test negative"
+              }
             }
           }
         },
@@ -153,21 +172,45 @@
           "treatmentPlan": "Manual therapy (GH posterior/inferior mobilizations grade II–III; posterior capsule stretches; soft-tissue to RC/biceps), therapeutic exercise (progressive RC/Scap strengthening, motor control), neuromuscular re-ed (scapular mechanics, humeral head control), graded activity return to overhead sport, symptom modulation (taping as needed).",
           "patientEducation": "Activity modification (temporarily limit repetitive overhead/serves; avoid painful arcs; sleep with pillow supporting arm), graded exposure back to tennis (start groundstrokes, delay serves), ice post-activity, expectations for recovery (4–8 weeks), adherence to HEP.",
           "goalsTable": {
-            "goal_1": { "goalText": "Decrease worst pain to ≤3/10 with overhead activities within 4 weeks." },
-            "goal_2": { "goalText": "Achieve symmetric AROM: flexion ≥160° and abduction ≥160° without painful arc within 4–6 weeks." },
-            "goal_3": { "goalText": "Improve supraspinatus and ER strength to ≥5-/5 without pain within 6–8 weeks." },
-            "goal_4": { "goalText": "Resume tennis groundstrokes by week 4 and initiate graduated serving by week 6 without >24h symptom flare." },
+            "goal_1": {
+              "goalText": "Decrease worst pain to ≤3/10 with overhead activities within 4 weeks."
+            },
+            "goal_2": {
+              "goalText": "Achieve symmetric AROM: flexion ≥160° and abduction ≥160° without painful arc within 4–6 weeks."
+            },
+            "goal_3": {
+              "goalText": "Improve supraspinatus and ER strength to ≥5-/5 without pain within 6–8 weeks."
+            },
+            "goal_4": {
+              "goalText": "Resume tennis groundstrokes by week 4 and initiate graduated serving by week 6 without >24h symptom flare."
+            },
             "goal_5": { "goalText": "Improve QuickDASH from 34/100 to ≤15/100 within 6–8 weeks." }
           },
           "exerciseTable": {
-            "ex_1": { "exerciseText": "Pendulum/Codman's — 2–3x daily, 1–2 min each direction for symptom modulation." },
-            "ex_2": { "exerciseText": "Scapular setting + serratus punches (supine → standing) — 3x12, daily." },
-            "ex_3": { "exerciseText": "Isometric ER/IR at neutral — 5x30–45s holds, daily (pain ≤3/10 rule)." },
-            "ex_4": { "exerciseText": "Side-lying ER (progress to banded ER @ 30–45° abd) — 3x10–12, EOD." },
-            "ex_5": { "exerciseText": "Posterior capsule stretch (cross-body adduction) — 3x30–45s, 2–3x/day." },
-            "ex_6": { "exerciseText": "Closed-chain scapular clocks/wall slides with posterior tilt cue — 3x10, EOD." },
-            "ex_7": { "exerciseText": "Biceps load management (avoid provocative long-lever elevation early; progress to curls with elbow close to trunk) — 3x12, EOD." },
-            "ex_8": { "exerciseText": "Return-to-serve progression (weeks 4–8): 50% effort dry swings → half-court serves → full-court at 75–85% as tolerated, 2–3x/week." }
+            "ex_1": {
+              "exerciseText": "Pendulum/Codman's — 2–3x daily, 1–2 min each direction for symptom modulation."
+            },
+            "ex_2": {
+              "exerciseText": "Scapular setting + serratus punches (supine → standing) — 3x12, daily."
+            },
+            "ex_3": {
+              "exerciseText": "Isometric ER/IR at neutral — 5x30–45s holds, daily (pain ≤3/10 rule)."
+            },
+            "ex_4": {
+              "exerciseText": "Side-lying ER (progress to banded ER @ 30–45° abd) — 3x10–12, EOD."
+            },
+            "ex_5": {
+              "exerciseText": "Posterior capsule stretch (cross-body adduction) — 3x30–45s, 2–3x/day."
+            },
+            "ex_6": {
+              "exerciseText": "Closed-chain scapular clocks/wall slides with posterior tilt cue — 3x10, EOD."
+            },
+            "ex_7": {
+              "exerciseText": "Biceps load management (avoid provocative long-lever elevation early; progress to curls with elbow close to trunk) — 3x12, EOD."
+            },
+            "ex_8": {
+              "exerciseText": "Return-to-serve progression (weeks 4–8): 50% effort dry swings → half-court serves → full-court at 75–85% as tolerated, 2–3x/week."
+            }
           }
         },
         "billing": {
@@ -186,14 +229,44 @@
             }
           ],
           "billingCodes": [
-            { "code": "97161", "description": "PT Evaluation – Low Complexity", "label": "97161 – PT Evaluation (Low)", "units": 1, "timeSpent": "30 minutes" },
-            { "code": "97110", "description": "Therapeutic Exercise (strength, endurance, ROM, flexibility)", "label": "97110 – Therapeutic Exercise", "units": 2, "timeSpent": "30 minutes" },
-            { "code": "97140", "description": "Manual Therapy (joint mobilization, soft tissue)", "label": "97140 – Manual Therapy", "units": 1, "timeSpent": "15 minutes" },
-            { "code": "97530", "description": "Therapeutic Activities (functional activities, graded reaching)", "label": "97530 – Therapeutic Activities", "units": 1, "timeSpent": "15 minutes" }
+            {
+              "code": "97161",
+              "description": "PT Evaluation – Low Complexity",
+              "label": "97161 – PT Evaluation (Low)",
+              "units": 1,
+              "timeSpent": "30 minutes"
+            },
+            {
+              "code": "97110",
+              "description": "Therapeutic Exercise (strength, endurance, ROM, flexibility)",
+              "label": "97110 – Therapeutic Exercise",
+              "units": 2,
+              "timeSpent": "30 minutes"
+            },
+            {
+              "code": "97140",
+              "description": "Manual Therapy (joint mobilization, soft tissue)",
+              "label": "97140 – Manual Therapy",
+              "units": 1,
+              "timeSpent": "15 minutes"
+            },
+            {
+              "code": "97530",
+              "description": "Therapeutic Activities (functional activities, graded reaching)",
+              "label": "97530 – Therapeutic Activities",
+              "units": 1,
+              "timeSpent": "15 minutes"
+            }
           ],
           "ordersReferrals": [
-            { "type": "Imaging", "details": "If persistent pain/weakness after 4–6 weeks of PT or suspicion of tear → consider diagnostic ultrasound or MRI of right shoulder." },
-            { "type": "Pharmacologic", "details": "Continue NSAIDs PRN if tolerated; consider MD review if GI risk/history." }
+            {
+              "type": "Imaging",
+              "details": "If persistent pain/weakness after 4–6 weeks of PT or suspicion of tear → consider diagnostic ultrasound or MRI of right shoulder."
+            },
+            {
+              "type": "Pharmacologic",
+              "details": "Continue NSAIDs PRN if tolerated; consider MD review if GI risk/history."
+            }
           ]
         }
       },

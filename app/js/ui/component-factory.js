@@ -16,21 +16,25 @@ export function createButton(config) {
     size = 'medium', // 'small', 'medium', 'large'
     onClick,
     disabled = false,
-    icon
+    icon,
   } = config;
 
   const className = `btn ${variant} ${size}`;
   const children = [];
-  
+
   if (icon) children.push(icon);
   if (text) children.push(text);
 
-  return el('button', {
-    type,
-    class: className,
-    disabled,
-    onClick
-  }, children);
+  return el(
+    'button',
+    {
+      type,
+      class: className,
+      disabled,
+      onClick,
+    },
+    children,
+  );
 }
 
 /**
@@ -40,23 +44,23 @@ export function createButton(config) {
  */
 export function createCard(config) {
   const { title, content, actions, className = '' } = config;
-  
+
   const cardChildren = [];
-  
+
   if (title) {
-    cardChildren.push(el('div', { class: 'card-header' }, [
-      el('h3', { class: 'card-title' }, title)
-    ]));
+    cardChildren.push(
+      el('div', { class: 'card-header' }, [el('h3', { class: 'card-title' }, title)]),
+    );
   }
-  
+
   if (content) {
     cardChildren.push(el('div', { class: 'card-content' }, content));
   }
-  
+
   if (actions && actions.length > 0) {
     cardChildren.push(el('div', { class: 'card-actions' }, actions));
   }
-  
+
   return el('div', { class: `card ${className}` }, cardChildren);
 }
 
@@ -66,18 +70,11 @@ export function createCard(config) {
  * @returns {HTMLElement} Section element
  */
 export function createSection(config) {
-  const {
-    title,
-    content,
-    collapsible = false,
-    collapsed = false,
-    id,
-    className = ''
-  } = config;
+  const { title, content, collapsible = false, collapsed = false, id, className = '' } = config;
 
   const sectionId = id || `section_${Date.now()}`;
   const headerChildren = [el('h3', {}, title)];
-  
+
   if (collapsible) {
     const toggleButton = createButton({
       text: collapsed ? '▶' : '▼',
@@ -88,17 +85,21 @@ export function createSection(config) {
         const isHidden = contentEl.style.display === 'none';
         contentEl.style.display = isHidden ? 'block' : 'none';
         toggleButton.textContent = isHidden ? '▼' : '▶';
-      }
+      },
     });
     headerChildren.unshift(toggleButton);
   }
 
   return el('section', { class: `section ${className}`, id: sectionId }, [
     el('div', { class: 'section-header' }, headerChildren),
-    el('div', {
-      class: 'section-content',
-      id: `${sectionId}_content`,
-      style: collapsed ? 'display: none' : ''
-    }, content)
+    el(
+      'div',
+      {
+        class: 'section-content',
+        id: `${sectionId}_content`,
+        style: collapsed ? 'display: none' : '',
+      },
+      content,
+    ),
   ]);
 }

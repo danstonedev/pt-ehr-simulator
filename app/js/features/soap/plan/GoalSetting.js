@@ -15,35 +15,42 @@ export const GoalSetting = {
    * @returns {HTMLElement} Goal setting section
    */
   create(data, updateField) {
-    const section = el('div', { 
+    const section = el('div', {
       id: 'goal-setting',
-      class: 'section-anchor goal-setting-subsection' 
+      class: 'section-anchor goal-setting-subsection',
     });
-    
-  section.append(el('h4', { class: 'subsection-title' }, 'SMART Goals & Outcomes'));
 
-  // Ensure goals table exists
-  if (!data.goalsTable) {
-    data.goalsTable = {};
-  }
+    section.append(el('h4', { class: 'subsection-title' }, 'SMART Goals & Outcomes'));
 
-  // Single simple goals table: one text column + remove button, compact footer add, starter row
-  const goalsTable = createEditableTable({
-          title: '',
-          columns: [
-            { field: 'goalText', label: 'Goal', width: '100%', type: 'textarea', rows: 1, placeholder: 'Describe a clear, concise goal...' }
-          ],
-          data: data.goalsTable || {},
-          onChange: (newData) => updateField('goalsTable', newData),
-          addButtonText: '+ Add Goal',
-          compactAddButton: true,
-          startWithOneRow: true,
-          showHeader: false,
-          className: 'goals-table simple-goals'
-        });
+    // Ensure goals table exists
+    if (!data.goalsTable) {
+      data.goalsTable = {};
+    }
 
-        section.append(goalsTable.element);
+    // Single simple goals table: one text column + remove button, compact footer add, starter row
+    const goalsTable = createEditableTable({
+      title: '',
+      columns: [
+        {
+          field: 'goalText',
+          label: 'Goal',
+          width: '100%',
+          type: 'textarea',
+          rows: 1,
+          placeholder: 'Describe a clear, concise goal...',
+        },
+      ],
+      data: data.goalsTable || {},
+      onChange: (newData) => updateField('goalsTable', newData),
+      addButtonText: '+ Add Goal',
+      compactAddButton: true,
+      startWithOneRow: true,
+      showHeader: false,
+      className: 'goals-table simple-goals',
+    });
+
+    section.append(goalsTable.element);
 
     return section;
-  }
+  },
 };

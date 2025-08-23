@@ -50,6 +50,4 @@ app.put('/cases', (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-
-});
+app.listen(PORT, () => {});

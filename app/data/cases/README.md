@@ -45,7 +45,7 @@ app/data/cases/
 
 ### 💻 **Cervical Radiculopathy (C6)**
 
-- **File**: `cervical/radiculopathy_001.json`  
+- **File**: `cervical/radiculopathy_001.json`
 - **Patient**: 45-year-old office worker
 - **Presentation**: Neck pain with arm radiation
 - **Key Features**:
@@ -61,35 +61,35 @@ Each case file contains a complete wrapper with:
 ```json
 {
   "id": "case_shoulder_impingement_001",
-  "title": "Tennis Player - Shoulder Pain", 
+  "title": "Tennis Player - Shoulder Pain",
   "latestVersion": 0,
   "caseObj": {
-    "meta": { 
-      "title": "...", 
-      "setting": "...", 
-      "regions": [...], 
-      "acuity": "...", 
-      "diagnosis": "..." 
+    "meta": {
+      "title": "...",
+      "setting": "...",
+      "regions": [...],
+      "acuity": "...",
+      "diagnosis": "..."
     },
-    "snapshot": { 
-      "name": "...", 
-      "age": "...", 
-      "sex": "...", 
-      "dob": "...", 
-      "teaser": "..." 
+    "snapshot": {
+      "name": "...",
+      "age": "...",
+      "sex": "...",
+      "dob": "...",
+      "teaser": "..."
     },
-    "history": { 
-      "chief_complaint": "...", 
-      "hpi": "...", 
-      "pain": {...}, 
-      "pmh": [...], 
-      "meds": [...] 
+    "history": {
+      "chief_complaint": "...",
+      "hpi": "...",
+      "pain": {...},
+      "pmh": [...],
+      "meds": [...]
     },
-    "findings": { 
-      "vitals": {...}, 
-      "rom": {...}, 
-      "mmt": {...}, 
-      "special_tests": [...] 
+    "findings": {
+      "vitals": {...},
+      "rom": {...},
+      "mmt": {...},
+      "special_tests": [...]
     },
     "encounters": {
       "eval": {

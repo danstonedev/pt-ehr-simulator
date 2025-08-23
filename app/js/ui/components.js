@@ -6,11 +6,15 @@ import { el } from './utils.js';
 // onChange: function(tabId) called when a tab is clicked
 export function renderTabs(container, tabs, activeTab, onChange) {
   container.innerHTML = '';
-  tabs.forEach(tab => {
-    const tabEl = el('div', {
-      class: `tab ${activeTab === tab.id ? 'active' : ''}`,
-      onClick: () => onChange(tab.id)
-    }, tab.label);
+  tabs.forEach((tab) => {
+    const tabEl = el(
+      'div',
+      {
+        class: `tab ${activeTab === tab.id ? 'active' : ''}`,
+        onClick: () => onChange(tab.id),
+      },
+      tab.label,
+    );
     container.appendChild(tabEl);
   });
 }

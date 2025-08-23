@@ -16,18 +16,18 @@ import { GoalSetting } from './GoalSetting.js';
 export function createPlanSection(planData, onUpdate) {
   const section = el('div', {
     class: 'plan-section',
-    id: 'plan-section'
+    id: 'plan-section',
   });
-  
+
   // Initialize plan data structure
   let data = {
     // Treatment planning
     interventions: [],
     frequency: '',
     duration: '',
-    ...planData
+    ...planData,
   };
-  
+
   // Initialize comprehensive data structure for PT practice
   data = {
     // Treatment approach and interventions
@@ -36,25 +36,25 @@ export function createPlanSection(planData, onUpdate) {
     exercisePrescription: '',
     manualTherapy: '',
     modalities: [],
-    
+
     // Editable table data
-  exerciseTable: {},
+    exerciseTable: {},
     manualTherapyTable: {},
     modalitiesTable: {},
     scheduleTable: {},
     progressTable: {},
     educationTable: {},
-  goalsTable: {},
-    
+    goalsTable: {},
+
     // Scheduling and goals
     frequency: '',
     duration: '',
-  shortTermGoals: '',
-  longTermGoals: '',
+    shortTermGoals: '',
+    longTermGoals: '',
     patientEducation: '',
-    
+
     // Merge with provided planData
-    ...planData
+    ...planData,
   };
 
   // Update helper

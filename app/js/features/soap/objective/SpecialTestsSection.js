@@ -15,7 +15,7 @@ import { createEditableTable } from './EditableTable.js';
 export function createSpecialTestsSection(regionKey, region, testData, onChange) {
   const container = el('div', {
     class: 'assessment-section special-tests-section',
-    style: 'margin-bottom: 24px;'
+    style: 'margin-bottom: 24px;',
   });
 
   const testResults = [
@@ -23,7 +23,7 @@ export function createSpecialTestsSection(regionKey, region, testData, onChange)
     { value: 'positive', label: 'Positive' },
     { value: 'negative', label: 'Negative' },
     { value: 'inconclusive', label: 'Inconclusive' },
-    { value: 'unable', label: 'Unable to perform' }
+    { value: 'unable', label: 'Unable to perform' },
   ];
 
   // Convert region special tests to table format
@@ -35,36 +35,36 @@ export function createSpecialTestsSection(regionKey, region, testData, onChange)
         name: test.name,
         left: '',
         right: '',
-        notes: ''
+        notes: '',
       };
     });
   }
 
   const table = createEditableTable({
-      title: '', // hide green band title
+    title: '', // hide green band title
     columns: [
-        { field: 'name', label: 'Special Tests', width: '35%' }, // first column label uses green title text
+      { field: 'name', label: 'Special Tests', width: '35%' }, // first column label uses green title text
       { field: 'left', label: 'Left', width: '15%', type: 'select', options: testResults },
       { field: 'right', label: 'Right', width: '15%', type: 'select', options: testResults },
-      { field: 'notes', label: 'Notes', width: '35%' }
+      { field: 'notes', label: 'Notes', width: '35%' },
     ],
     data: tableData,
-  onChange: (newData) => {
+    onChange: (newData) => {
       // Convert back to original format with L/R columns
       const updatedData = {};
-      Object.keys(newData).forEach(testId => {
+      Object.keys(newData).forEach((testId) => {
         updatedData[testId] = {
-      name: newData[testId].name,
+          name: newData[testId].name,
           left: newData[testId].left,
           right: newData[testId].right,
-          notes: newData[testId].notes
+          notes: newData[testId].notes,
         };
       });
       onChange(updatedData);
-  },
-  showAddButton: false,
-  actionsHeaderLabel: '',
-    className: 'special-tests-table'
+    },
+    showAddButton: false,
+    actionsHeaderLabel: '',
+    className: 'special-tests-table',
   });
 
   container.appendChild(table.element);
@@ -75,7 +75,7 @@ export function createSpecialTestsSection(regionKey, region, testData, onChange)
     element: container,
     rebuild: table.rebuild,
     getData: () => testData,
-    updateData: onChange
+    updateData: onChange,
   };
 }
 
@@ -88,7 +88,7 @@ export const specialTestsByRegion = {
     { name: 'Upper Limb Tension Test', purpose: 'Neural tension' },
     { name: 'Cervical Distraction Test', purpose: 'Cervical radiculopathy' },
     { name: 'Vertebral Artery Test', purpose: 'Vertebrobasilar insufficiency' },
-    { name: 'Sharp-Purser Test', purpose: 'Atlantoaxial instability' }
+    { name: 'Sharp-Purser Test', purpose: 'Atlantoaxial instability' },
   ],
 
   'lumbar-spine': [
@@ -97,35 +97,35 @@ export const specialTestsByRegion = {
     { name: 'Prone Instability Test', purpose: 'Lumbar instability' },
     { name: 'Centralization Phenomena', purpose: 'Directional preference' },
     { name: 'FABERE/Patrick Test', purpose: 'Hip/SI joint pathology' },
-    { name: 'Posterior Shear Test', purpose: 'SI joint dysfunction' }
+    { name: 'Posterior Shear Test', purpose: 'SI joint dysfunction' },
   ],
 
-  'shoulder': [
+  shoulder: [
     { name: 'Neer Impingement Sign', purpose: 'Subacromial impingement' },
     { name: 'Hawkins-Kennedy Test', purpose: 'Subacromial impingement' },
     { name: 'Empty Can Test', purpose: 'Supraspinatus pathology' },
     { name: 'External Rotation Lag Sign', purpose: 'Infraspinatus/teres minor pathology' },
     { name: 'Apprehension Test', purpose: 'Anterior shoulder instability' },
-    { name: 'Load and Shift Test', purpose: 'Glenohumeral instability' }
+    { name: 'Load and Shift Test', purpose: 'Glenohumeral instability' },
   ],
 
-  'knee': [
+  knee: [
     { name: 'Lachman Test', purpose: 'ACL integrity' },
     { name: 'Anterior Drawer Test', purpose: 'ACL integrity' },
     { name: 'Posterior Drawer Test', purpose: 'PCL integrity' },
     { name: 'McMurray Test', purpose: 'Meniscal tear' },
     { name: 'Valgus Stress Test', purpose: 'MCL integrity' },
     { name: 'Varus Stress Test', purpose: 'LCL integrity' },
-    { name: 'Patellar Apprehension Test', purpose: 'Patellar instability' }
+    { name: 'Patellar Apprehension Test', purpose: 'Patellar instability' },
   ],
 
-  'ankle': [
+  ankle: [
     { name: 'Anterior Drawer Test', purpose: 'ATFL integrity' },
     { name: 'Talar Tilt Test', purpose: 'CFL integrity' },
     { name: 'Thompson Test', purpose: 'Achilles tendon rupture' },
     { name: 'Kleiger Test', purpose: 'Deltoid ligament/syndesmosis' },
-    { name: 'Squeeze Test', purpose: 'Syndesmosis injury' }
-  ]
+    { name: 'Squeeze Test', purpose: 'Syndesmosis injury' },
+  ],
 };
 
 /**

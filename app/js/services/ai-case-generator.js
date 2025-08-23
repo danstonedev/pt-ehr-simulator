@@ -6,9 +6,13 @@
 function getAiEndpoint() {
   try {
     // Preferred: global var (set early by host page)
-    if (typeof window !== 'undefined' && window.AI_GENERATE_URL) return String(window.AI_GENERATE_URL);
+    if (typeof window !== 'undefined' && window.AI_GENERATE_URL)
+      return String(window.AI_GENERATE_URL);
     // Meta tag override: <meta name="ai-generate-url" content="https://..." />
-    const meta = typeof document !== 'undefined' ? document.querySelector('meta[name="ai-generate-url"]') : null;
+    const meta =
+      typeof document !== 'undefined'
+        ? document.querySelector('meta[name="ai-generate-url"]')
+        : null;
     if (meta && meta.content) return String(meta.content);
     // Local storage (developer configurable)
     if (typeof localStorage !== 'undefined') {
@@ -26,7 +30,8 @@ function mapFrequencyToEnum(v = '') {
   if (/(^|\b)2x(\b|\/|\s)/.test(s) || s.includes('2x per week')) return '2x-week';
   if (/(^|\b)3x(\b|\/|\s)/.test(s) || s.includes('3x per week')) return '3x-week';
   if (/(^|\b)4x(\b|\/|\s)/.test(s) || s.includes('4x per week')) return '4x-week';
-  if (/(^|\b)5x(\b|\/|\s)/.test(s) || s.includes('5x per week') || s.includes('daily')) return '5x-week';
+  if (/(^|\b)5x(\b|\/|\s)/.test(s) || s.includes('5x per week') || s.includes('daily'))
+    return '5x-week';
   if (s.includes('2x per day') || s.includes('twice a day')) return '2x-day';
   if (s.includes('prn')) return 'prn';
   return s;
@@ -54,17 +59,25 @@ function coerceToCaseShape(ai, anchors) {
   const age = ai.patientAge || anchors.age || 45;
   const sex = (ai.patientGender || anchors.sex || 'unspecified').toLowerCase();
   const regionSlug = (() => {
-    const map = { 'low back': 'lumbar-spine', 'lumbar': 'lumbar-spine', 'neck': 'cervical-spine' };
+    const map = { 'low back': 'lumbar-spine', lumbar: 'lumbar-spine', neck: 'cervical-spine' };
     const key = (anchors.region || '').toLowerCase();
     return ai?.meta?.regions?.[0] || map[key] || key || 'shoulder';
   })();
 
   // Build containers with safe defaults
-  const meta = { title, setting, patientAge: age, patientGender: sex, acuity, diagnosis: ai?.meta?.diagnosis || 'Musculoskeletal', regions: [regionSlug] };
-  const snapshot = ai.snapshot || { age: String(age), sex, teaser: (ai?.snapshot?.teaser || '') };
+  const meta = {
+    title,
+    setting,
+    patientAge: age,
+    patientGender: sex,
+    acuity,
+    diagnosis: ai?.meta?.diagnosis || 'Musculoskeletal',
+    regions: [regionSlug],
+  };
+  const snapshot = ai.snapshot || { age: String(age), sex, teaser: ai?.snapshot?.teaser || '' };
   const history = ai.history || {};
   const findings = ai.findings || {};
-  const evalNode = (ai.encounters?.eval) || {};
+  const evalNode = ai.encounters?.eval || {};
 
   // Normalize plan enums if present
   if (evalNode.plan) {
@@ -76,29 +89,33 @@ function coerceToCaseShape(ai, anchors) {
   const subjective = {
     chiefComplaint: evalNode.subjective?.chiefComplaint || history.chief_complaint || '',
     historyOfPresentIllness: evalNode.subjective?.historyOfPresentIllness || history.hpi || '',
-    painScale: (evalNode.subjective?.painScale ?? anchors.pain ?? ''),
-    patientGoals: evalNode.subjective?.patientGoals || anchors.goal || ''
+    painScale: evalNode.subjective?.painScale ?? anchors.pain ?? '',
+    patientGoals: evalNode.subjective?.patientGoals || anchors.goal || '',
   };
   const objective = {
     rom: evalNode.objective?.rom || findings.rom || {},
-    mmt: evalNode.objective?.mmt || findings.mmt || {}
+    mmt: evalNode.objective?.mmt || findings.mmt || {},
   };
   const assessment = {
     primaryImpairments: evalNode.assessment?.primaryImpairments || '',
     ptDiagnosis: evalNode.assessment?.ptDiagnosis || anchors.condition || '',
     prognosis: (evalNode.assessment?.prognosis || '').toString().toLowerCase(),
-    prognosticFactors: evalNode.assessment?.prognosticFactors || ''
+    prognosticFactors: evalNode.assessment?.prognosticFactors || '',
   };
   const plan = {
     frequency: evalNode.plan?.frequency || '',
     duration: evalNode.plan?.duration || '',
     interventions: Array.isArray(evalNode.plan?.interventions) ? evalNode.plan.interventions : [],
     shortTermGoals: evalNode.plan?.shortTermGoals || '',
-    longTermGoals: evalNode.plan?.longTermGoals || ''
+    longTermGoals: evalNode.plan?.longTermGoals || '',
   };
   const billing = {
-    diagnosisCodes: Array.isArray(evalNode.billing?.diagnosisCodes) ? evalNode.billing.diagnosisCodes : [],
-    billingCodes: Array.isArray(evalNode.billing?.billingCodes) ? evalNode.billing.billingCodes : []
+    diagnosisCodes: Array.isArray(evalNode.billing?.diagnosisCodes)
+      ? evalNode.billing.diagnosisCodes
+      : [],
+    billingCodes: Array.isArray(evalNode.billing?.billingCodes)
+      ? evalNode.billing.billingCodes
+      : [],
   };
 
   return {
@@ -114,15 +131,15 @@ function coerceToCaseShape(ai, anchors) {
     history: {
       chief_complaint: history.chief_complaint || subjective.chiefComplaint || '',
       hpi: history.hpi || subjective.historyOfPresentIllness || '',
-      pmh: Array.isArray(history.pmh) ? history.pmh : (history.pmh ? [history.pmh] : []),
-      meds: Array.isArray(history.meds) ? history.meds : (history.meds ? [history.meds] : []),
-      red_flag_signals: Array.isArray(history.red_flag_signals) ? history.red_flag_signals : []
+      pmh: Array.isArray(history.pmh) ? history.pmh : history.pmh ? [history.pmh] : [],
+      meds: Array.isArray(history.meds) ? history.meds : history.meds ? [history.meds] : [],
+      red_flag_signals: Array.isArray(history.red_flag_signals) ? history.red_flag_signals : [],
     },
     findings: {
       rom: objective.rom || {},
       mmt: objective.mmt || {},
       special_tests: Array.isArray(findings.special_tests) ? findings.special_tests : [],
-      outcome_options: Array.isArray(findings.outcome_options) ? findings.outcome_options : []
+      outcome_options: Array.isArray(findings.outcome_options) ? findings.outcome_options : [],
     },
     encounters: {
       eval: {
@@ -130,9 +147,9 @@ function coerceToCaseShape(ai, anchors) {
         objective,
         assessment,
         plan,
-        billing
-      }
-    }
+        billing,
+      },
+    },
   };
 }
 
@@ -150,7 +167,7 @@ export async function generateCaseWithAI(anchors) {
     age: anchors.age,
     sex: anchors.sex,
     pain: anchors.pain,
-    goal: anchors.goal
+    goal: anchors.goal,
   };
 
   try {

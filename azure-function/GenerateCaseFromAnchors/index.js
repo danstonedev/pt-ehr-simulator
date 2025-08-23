@@ -9,7 +9,8 @@ function mapFrequencyToEnum(v = '') {
   if (/(^|\b)2x(\b|\/|\s)/.test(s) || s.includes('2x per week')) return '2x-week';
   if (/(^|\b)3x(\b|\/|\s)/.test(s) || s.includes('3x per week')) return '3x-week';
   if (/(^|\b)4x(\b|\/|\s)/.test(s) || s.includes('4x per week')) return '4x-week';
-  if (/(^|\b)5x(\b|\/|\s)/.test(s) || s.includes('5x per week') || s.includes('daily')) return '5x-week';
+  if (/(^|\b)5x(\b|\/|\s)/.test(s) || s.includes('5x per week') || s.includes('daily'))
+    return '5x-week';
   if (s.includes('2x per day') || s.includes('twice a day')) return '2x-day';
   if (s.includes('prn')) return 'prn';
   return s;
@@ -43,7 +44,7 @@ function regionSlug(region = '') {
     neck: 'cervical-spine',
     lumbar: 'lumbar-spine',
     'low back': 'lumbar-spine',
-    thoracic: 'thoracic-spine'
+    thoracic: 'thoracic-spine',
   };
   return map[r] || r || 'shoulder';
 }
@@ -81,21 +82,21 @@ function buildDeterministicCase(anchors = {}) {
       patientGender: sex,
       acuity,
       diagnosis: condition,
-      regions: [regionSlugVal]
+      regions: [regionSlugVal],
     },
     snapshot: { age: String(age), sex, teaser: `${age}y ${sex} with ${condition}` },
     history: {
       chief_complaint: anchors.cc || `Pain and limited ${region} function`,
       hpi,
-      pmh: ["HTN"],
-      meds: ["NSAIDs"],
-      red_flag_signals: []
+      pmh: ['HTN'],
+      meds: ['NSAIDs'],
+      red_flag_signals: [],
     },
     findings: {
       rom: {},
       mmt: {},
       special_tests: [],
-      outcome_options: []
+      outcome_options: [],
     },
     encounters: {
       eval: {
@@ -103,31 +104,31 @@ function buildDeterministicCase(anchors = {}) {
           chiefComplaint: anchors.cc || `Pain and limited ${region} function`,
           historyOfPresentIllness: hpi,
           painScale: anchors.pain ?? '',
-          patientGoals: anchors.goal || 'Reduce pain and return to activity'
+          patientGoals: anchors.goal || 'Reduce pain and return to activity',
         },
         objective: {
           rom: {},
-          mmt: {}
+          mmt: {},
         },
         assessment: {
           primaryImpairments: `${region} pain, decreased ROM, decreased strength`,
           ptDiagnosis: condition,
           prognosis: (anchors.prognosis || 'good').toLowerCase(),
-          prognosticFactors: 'No significant comorbidities.'
+          prognosticFactors: 'No significant comorbidities.',
         },
         plan: {
           frequency: planFrequency,
           duration: planDuration,
           interventions: ['Therapeutic Exercise', 'Manual Therapy', 'Patient Education'],
           shortTermGoals: stg,
-          longTermGoals: ltg
+          longTermGoals: ltg,
         },
         billing: {
           diagnosisCodes: ['M75.1'],
-          billingCodes: ['97110', '97140']
-        }
-      }
-    }
+          billingCodes: ['97110', '97140'],
+        },
+      },
+    },
   };
 }
 
@@ -141,8 +142,8 @@ module.exports = async function (context, req) {
         'Access-Control-Allow-Origin': origin,
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Max-Age': '86400'
-      }
+        'Access-Control-Max-Age': '86400',
+      },
     };
     return;
   }
@@ -155,16 +156,16 @@ module.exports = async function (context, req) {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': origin
+        'Access-Control-Allow-Origin': origin,
       },
-      body: result
+      body: result,
     };
   } catch (err) {
     context.log.error('Generation failed', err);
     context.res = {
       status: 500,
       headers: { 'Access-Control-Allow-Origin': origin },
-      body: { error: 'Generation failed' }
+      body: { error: 'Generation failed' },
     };
   }
 };

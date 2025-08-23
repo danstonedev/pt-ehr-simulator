@@ -40,47 +40,63 @@
 .table th {
   font-size: 14px; /* denser header */
   font-weight: 600;
-  color: #fff; /* White text on dark gradient */
+  color: #fff; /* White text on dark background */
   text-transform: capitalize;
   letter-spacing: 0.3px;
-  /* Theme-aware gradient using CSS variables */
-  background: linear-gradient(90deg, var(--header-gradient-left) 0%, var(--header-gradient-right) 100%);
+  /* Single color background instead of gradient for cleaner look */
+  background: var(--header-gradient-left);
   contain: layout style; /* Performance optimization for table headers */
 }
 
 .table th.sortable {
-  position: relative; cursor: pointer; -webkit-user-select: none; user-select: none;
-  transition: background .2s ease;
+  position: relative;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: background 0.2s ease;
 }
-.table th.sortable:hover { background-color: var(--bg-hover); }
+.table th.sortable:hover {
+  background-color: var(--bg-hover);
+}
 /* Remove legacy emoji arrows to avoid OS-styled blue icons */
-.table th.sortable::after, .table th.sortable:hover::after { content: none !important; }
+.table th.sortable::after,
+.table th.sortable:hover::after {
+  content: none !important;
+}
 
 /* Sort icon cleanup */
-.table th .sort-icon { display: inline-flex; align-items: center; margin-left: 6px; }
-.table th .sort-icon svg { width: 12px; height: 12px; fill: currentColor; }
+.table th .sort-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+}
+.table th .sort-icon svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
 
 /* Row hover */
-.table tbody tr { transition: background 0.2s ease; }
-.table tbody tr:hover { background: var(--und-green-light); }
+.table tbody tr {
+  transition: background 0.2s ease;
+}
+.table tbody tr:hover {
+  background: var(--und-green-light);
+}
 
-/* Dashboard cases tables: theme-aware gradient */
+/* Dashboard cases tables: single color header for cleaner look */
 .cases-table thead th {
-  /* Theme-aware gradient using CSS variables */
-  background: linear-gradient(90deg, var(--header-gradient-left) 0%, var(--header-gradient-right) 100%);
+  /* Single color background instead of gradient */
+  background: var(--header-gradient-left);
   color: #fff;
 }
 .cases-table thead th.sortable:hover {
-  background: linear-gradient(90deg, var(--header-gradient-left) 0%, var(--header-gradient-right) 100%); /* keep gradient on hover */
+  background: var(--header-gradient-left); /* keep single color on hover */
 }
 
 /* Active sort: slightly brighter header cell for the sorted column */
 .cases-table thead th[aria-sort] {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--header-gradient-left) 85%, white) 0%,
-  color-mix(in srgb, var(--header-gradient-right) 85%, white) 100%
-  );
+  background: color-mix(in srgb, var(--header-gradient-left) 85%, white);
 }
 
 /* Simple status labels used in Draft Status column */
@@ -110,27 +126,99 @@
 }
 
 /* Regional assessment tables */
-.regional-assessment .table { width: 100%; border-collapse: collapse; margin: var(--space-2) 0; font-size: 12px; }
-.regional-assessment .table th { background: var(--bg2); padding: var(--space-1) var(--space-1); text-align: left; border: none; font-size: 14px; font-weight: 600; color: var(--text); text-transform: capitalize; letter-spacing: 0.3px; border-bottom: none; }
-.regional-assessment .table td { padding: var(--space-1); border: none; vertical-align: middle; background: var(--panel); color: var(--text); }
-.regional-assessment .table tr:nth-child(even) td { background: var(--table-stripe); }
-.regional-assessment .table input, 
-.regional-assessment .table select { border: 1px solid var(--input-border); padding: 2px var(--space-1); font-size: 12px; border-radius: var(--input-radius); background: var(--input-bg); color: var(--input-text); }
-.regional-assessment .table select { background: var(--select-bg); color: var(--select-text); border-color: var(--select-border); }
-.regional-assessment .table input:focus, 
-.regional-assessment .table select:focus { border-color: var(--und-green); }
+.regional-assessment .table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-2) 0;
+  font-size: 12px;
+}
+.regional-assessment .table th {
+  background: var(--bg2);
+  padding: var(--space-1) var(--space-1);
+  text-align: left;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+  border-bottom: none;
+}
+.regional-assessment .table td {
+  padding: var(--space-1);
+  border: none;
+  vertical-align: middle;
+  background: var(--panel);
+  color: var(--text);
+}
+.regional-assessment .table tr:nth-child(even) td {
+  background: var(--table-stripe);
+}
+.regional-assessment .table input,
+.regional-assessment .table select {
+  border: 1px solid var(--input-border);
+  padding: 2px var(--space-1);
+  font-size: 12px;
+  border-radius: var(--input-radius);
+  background: var(--input-bg);
+  color: var(--input-text);
+}
+.regional-assessment .table select {
+  background: var(--select-bg);
+  color: var(--select-text);
+  border-color: var(--select-border);
+}
+.regional-assessment .table input:focus,
+.regional-assessment .table select:focus {
+  border-color: var(--und-green);
+}
 
 /* EditableTable */
-.editable-table { width: 100%; }
-.editable-table__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); }
-.editable-table__title { margin: 0; color: var(--accent2); font-size: 14px; font-weight: 600; }
+.editable-table {
+  width: 100%;
+}
+.editable-table__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+.editable-table__title {
+  margin: 0;
+  color: var(--accent2);
+  font-size: 14px;
+  font-weight: 600;
+}
 /* Ensure titles have a little breathing room from rounded containers so they never look clipped */
-.editable-table { margin-top: 6px; }
-.assessment-section .editable-table__header { margin-top: 2px; }
-.editable-table__add-btn { font-size: 12px; padding: var(--space-1) var(--space-3); border-radius: var(--radius-sm); border: none; background: var(--primary); color: #fff; cursor: pointer; transition: all .2s ease; }
-.editable-table__add-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.editable-table {
+  margin-top: 6px;
+}
+.assessment-section .editable-table__header {
+  margin-top: 2px;
+}
+.editable-table__add-btn {
+  font-size: 12px;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.editable-table__add-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
 
-.editable-table__table { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; font-size: 14px; }
+.editable-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  font-size: 14px;
+}
 
 /* Responsive: horizontal scroll for wide tables only on small screens */
 .table-responsive {
@@ -138,70 +226,137 @@
 }
 @media (max-width: 768px) {
   .table-responsive {
-  overflow-x: auto;
+    overflow-x: auto;
   }
   .table-responsive table {
     min-width: 640px; /* ensure scroll appears when columns overflow */
   }
 }
-.editable-table__table { width: 100%; border-collapse: collapse; border: none; border-radius: var(--radius-sm); overflow: hidden; font-size: 13px; }
+.editable-table__table {
+  width: 100%;
+  border-collapse: collapse;
+  border: none;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  font-size: 13px;
+}
 .editable-table__head {
-  /* Theme-aware gradient using CSS variables */
-  background: linear-gradient(90deg, var(--header-gradient-left) 0%, var(--header-gradient-right) 100%);
+  /* Single color background instead of gradient for cleaner look */
+  background: var(--header-gradient-left);
   position: relative;
 }
-.editable-table__header-cell { padding: var(--space-1) var(--space-2); text-align: left; font-size: 14px; font-weight: 600; color: var(--text); text-transform: capitalize; letter-spacing: 0.3px; border-bottom: 0; }
+.editable-table__header-cell {
+  padding: var(--space-1) var(--space-2);
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: capitalize;
+  letter-spacing: 0.3px;
+  border-bottom: 0;
+}
 /* Ensure darker header background on editable tables, override .table th background */
-.editable-table__head .editable-table__header-cell { background: transparent; color: #fff; }
+.editable-table__head .editable-table__header-cell {
+  background: transparent;
+  color: #fff;
+}
 /* Keep Actions header visible (can be blank via JS) to preserve alignment */
 /* Increase specificity so this wins over `.table th { border-bottom: none; }` */
 .table.editable-table__table th.editable-table__header-cell,
-.editable-table__head th.editable-table__header-cell { border-bottom: 0 !important; }
-.editable-table__row { 
-  border-bottom: none; 
-  transition: background-color 0.2s ease; 
+.editable-table__head th.editable-table__header-cell {
+  border-bottom: 0 !important;
+}
+.editable-table__row {
+  border-bottom: none;
+  transition: background-color 0.2s ease;
   contain: layout style; /* Performance optimization for table rows */
 }
-.editable-table__row:hover { background: var(--und-green-light); }
-.editable-table__cell { padding: var(--space-1); vertical-align: middle; }
+.editable-table__row:hover {
+  background: var(--und-green-light);
+}
+.editable-table__cell {
+  padding: var(--space-1);
+  vertical-align: middle;
+}
 
 /* Mobile table adjustments (migrated from styles.css) */
 @media (max-width: 768px) {
-  .table { font-size: 0.875rem; }
+  .table {
+    font-size: 0.875rem;
+  }
   .table th,
-  .table td { padding: var(--space-2); }
+  .table td {
+    padding: var(--space-2);
+  }
 }
-.editable-table__input, .editable-table__select, .editable-table__textarea { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); padding: 2px var(--space-1); font-size: 12px; color: var(--input-text); border-radius: var(--input-radius); transition: border-color .2s, box-shadow .2s; }
+.editable-table__input,
+.editable-table__select,
+.editable-table__textarea {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  padding: 2px var(--space-1);
+  font-size: 12px;
+  color: var(--input-text);
+  border-radius: var(--input-radius);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
 /* Ensure selects visually match inputs, even in dark mode */
-.editable-table__select { background: var(--input-bg); color: var(--input-text); border-color: var(--input-border); }
-html[data-theme="dark"] .editable-table__select { background: var(--input-bg); color: var(--input-text); border-color: var(--input-border); color-scheme: dark; }
+.editable-table__select {
+  background: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--input-border);
+}
+html[data-theme='dark'] .editable-table__select {
+  background: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--input-border);
+  color-scheme: dark;
+}
+/* Dark theme: make table textareas match selects' darker tone */
+html[data-theme='dark'] .editable-table__textarea {
+  background: var(--select-bg);
+  color: var(--select-text);
+  border-color: var(--select-border);
+}
 
 /* When the select dropdown is open, ensure the menu background matches theme */
-html[data-theme="dark"] .editable-table__select option,
-html[data-theme="dark"] .editable-table__select optgroup { 
+html[data-theme='dark'] .editable-table__select option,
+html[data-theme='dark'] .editable-table__select optgroup {
   background-color: var(--input-bg);
   color: var(--input-text);
 }
-html[data-theme="dark"] .editable-table__select option:hover { 
+html[data-theme='dark'] .editable-table__select option:hover {
   background-color: var(--neutral-700); /* slightly lighter than input-bg for hover */
   color: var(--input-text);
 }
 /* Light theme keeps native light menu for clarity */
-html:not([data-theme="dark"]) .editable-table__select option,
-html:not([data-theme="dark"]) .editable-table__select optgroup {
+html:not([data-theme='dark']) .editable-table__select option,
+html:not([data-theme='dark']) .editable-table__select optgroup {
   background-color: var(--neutral-50);
   color: var(--text);
 }
 /* High-contrast state for the selected item in dark mode */
-html[data-theme="dark"] .editable-table__select option:checked { 
+html[data-theme='dark'] .editable-table__select option:checked {
   background-color: var(--neutral-700); /* subtle highlight */
   color: var(--input-text);
 }
 /* Placeholder-like first option styling */
-.editable-table__select option[disabled][value=""],
-.editable-table__select option[disabled]:first-child { color: var(--text-secondary); }
-.editable-table__textarea { resize: none; overflow: hidden; min-height: 32px; }
-.editable-table__textarea { padding-right: calc(var(--space-1) + 10px); padding-bottom: calc(var(--space-1) + 6px); }
+.editable-table__select option[disabled][value=''],
+.editable-table__select option[disabled]:first-child {
+  color: var(--text-secondary);
+}
+.editable-table__textarea {
+  resize: none;
+  overflow: hidden;
+  min-height: 32px;
+}
+.editable-table__textarea {
+  padding-right: calc(var(--space-1) + 10px);
+  padding-bottom: calc(var(--space-1) + 6px);
+}
 
 /* Goals table: match standard input size and one-line textarea initial height */
 .goals-table .editable-table__input,
@@ -215,22 +370,58 @@ html[data-theme="dark"] .editable-table__select option:checked {
   padding-right: calc(var(--space-3) + 10px);
   padding-bottom: calc(var(--space-3) + 6px);
 }
-.editable-table__input:focus, .editable-table__select:focus, .editable-table__textarea:focus { outline: none; border-color: var(--und-green); box-shadow: 0 0 0 2px var(--und-green-light); }
-.editable-table__cell--actions { text-align: center; }
+.editable-table__input:focus,
+.editable-table__select:focus,
+.editable-table__textarea:focus {
+  outline: none;
+  border-color: var(--und-green);
+  box-shadow: 0 0 0 2px var(--und-green-light);
+}
+.editable-table__cell--actions {
+  text-align: center;
+}
 
 /* Bilateral table widths */
-.bilateral-table .editable-table__header-cell--name { width: 25%; }
+.bilateral-table .editable-table__header-cell--name {
+  width: 25%;
+}
 .bilateral-table .editable-table__header-cell--left,
-.bilateral-table .editable-table__header-cell--right { width: 20%; text-align: left; }
-.bilateral-table .editable-table__header-cell--normal { width: 15%; text-align: left; }
-.bilateral-table .editable-table__header-cell--notes { width: 20%; }
+.bilateral-table .editable-table__header-cell--right {
+  width: 20%;
+  text-align: left;
+}
+.bilateral-table .editable-table__header-cell--normal {
+  width: 15%;
+  text-align: left;
+}
+.bilateral-table .editable-table__header-cell--notes {
+  width: 20%;
+}
 .bilateral-table .editable-table__cell--left,
 .bilateral-table .editable-table__cell--right,
-.bilateral-table .editable-table__cell--normal { text-align: center; }
+.bilateral-table .editable-table__cell--normal {
+  text-align: center;
+}
 
-.mmt-grading-reference, .test-interpretation-reference { background: var(--bg-secondary); border-radius: var(--radius-sm); padding: var(--space-2); }
-.mmt-grading-reference summary, .test-interpretation-reference summary { cursor: pointer; font-weight: bold; color: var(--accent2); font-size: 12px; -webkit-user-select: none; user-select: none; }
-.mmt-grading-reference summary:hover, .test-interpretation-reference summary:hover { color: var(--accent2-dark); }
+.mmt-grading-reference,
+.test-interpretation-reference {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+}
+.mmt-grading-reference summary,
+.test-interpretation-reference summary {
+  cursor: pointer;
+  font-weight: bold;
+  color: var(--accent2);
+  font-size: 12px;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.mmt-grading-reference summary:hover,
+.test-interpretation-reference summary:hover {
+  color: var(--accent2-dark);
+}
 
 /* Align helper dropdowns with subsection inputs/tables */
 .section-anchor .mmt-grading-reference,
@@ -240,9 +431,15 @@ html[data-theme="dark"] .editable-table__select option:checked {
 }
 
 /* Goals tables accents */
-.goals-table .editable-table__head .editable-table__header-cell { background: transparent; color: #fff; border-bottom: 0; }
+.goals-table .editable-table__head .editable-table__header-cell {
+  background: transparent;
+  color: #fff;
+  border-bottom: 0;
+}
 
 /* Ensure no transform on focus for selects inside editable tables */
-.editable-table__select:focus { transform: none; }
+.editable-table__select:focus {
+  transform: none;
+}
 
 /* All table fields pick up var(--input-radius) via global input rules */

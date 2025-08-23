@@ -7,13 +7,14 @@ const CASES_KEY = 'pt_emr_cases';
 const CASE_COUNTER_KEY = 'pt_emr_case_counter';
 
 // Local dev detection (only auto-publish to server when running locally)
-const IS_LOCAL_DEV = (typeof window !== 'undefined') && (
-  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-);
+const IS_LOCAL_DEV =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 // Explicit toggle for optional local server sync (avoids noisy 5173 errors by default)
-const USE_LOCAL_SERVER = (typeof window !== 'undefined') && (
-  (IS_LOCAL_DEV && window.location.port === '5173') || localStorage.getItem('useLocalServer') === '1'
-);
+const USE_LOCAL_SERVER =
+  typeof window !== 'undefined' &&
+  ((IS_LOCAL_DEV && window.location.port === '5173') ||
+    localStorage.getItem('useLocalServer') === '1');
 
 // Lightweight debounce for auto-publish so we don't spam the server
 let __publishScheduled = false;
@@ -38,7 +39,7 @@ function loadCasesFromStorage() {
     if (stored) {
       const cases = JSON.parse(stored);
       // Apply migrations to all cases
-      Object.keys(cases).forEach(id => {
+      Object.keys(cases).forEach((id) => {
         if (cases[id] && cases[id].caseObj) {
           cases[id].caseObj = migrateOldCaseData(cases[id].caseObj);
           cases[id].caseObj = ensureDataIntegrity(cases[id].caseObj);
@@ -96,7 +97,7 @@ async function fetchJson(url) {
 // Load cases from manifest file-based layout: app/data/cases/manifest.json
 async function loadCasesFromManifest() {
   console.log('🔍 Loading cases from manifest...');
-  
+
   // Try both possible paths for GitHub Pages compatibility
   let manifest = await fetchJson('/data/cases/manifest.json');
   if (!manifest) {
@@ -107,23 +108,23 @@ async function loadCasesFromManifest() {
     console.log('� Trying relative path...');
     manifest = await fetchJson('data/cases/manifest.json');
   }
-  
+
   console.log('�📄 Manifest loaded:', manifest);
-  
+
   if (!manifest || !Array.isArray(manifest.categories)) {
     console.warn('❌ No valid manifest or categories found');
     return {};
   }
-  
+
   const collected = {};
   for (const cat of manifest.categories) {
     console.log(`📂 Processing category: ${cat.name}`);
     if (!Array.isArray(cat.cases)) continue;
-    
+
     for (const c of cat.cases) {
       if (!c?.file) continue;
       console.log(`🔄 Loading case file: /data/${c.file}`);
-      
+
       // Try multiple path variations for case files too
       let caseWrapper = await fetchJson(`/data/${c.file}`);
       if (!caseWrapper) {
@@ -134,12 +135,12 @@ async function loadCasesFromManifest() {
         console.log(`🔄 Trying relative case path: data/${c.file}`);
         caseWrapper = await fetchJson(`data/${c.file}`);
       }
-      
+
       if (!caseWrapper || !caseWrapper.id || !caseWrapper.caseObj) {
         console.warn(`❌ Failed to load case: ${c.file}`);
         continue;
       }
-      
+
       console.log(`✅ Successfully loaded case: ${caseWrapper.id}`);
       // Ensure integrity/migrations
       caseWrapper.caseObj = migrateOldCaseData(caseWrapper.caseObj);
@@ -147,7 +148,7 @@ async function loadCasesFromManifest() {
       collected[caseWrapper.id] = caseWrapper;
     }
   }
-  
+
   console.log('📋 Total cases collected:', Object.keys(collected));
   return collected;
 }
@@ -166,7 +167,7 @@ async function ensureCasesInitialized() {
         if (serverRes.ok) {
           const serverJson = await serverRes.json();
           if (serverJson && typeof serverJson === 'object' && !Array.isArray(serverJson)) {
-            Object.keys(serverJson).forEach(id => {
+            Object.keys(serverJson).forEach((id) => {
               if (serverJson[id] && serverJson[id].caseObj) {
                 serverJson[id].caseObj = migrateOldCaseData(serverJson[id].caseObj);
                 serverJson[id].caseObj = ensureDataIntegrity(serverJson[id].caseObj);
@@ -228,25 +229,24 @@ export const createCase = async (caseData) => {
   if (validationErrors.length > 0) {
     console.warn('Case validation warnings:', validationErrors);
   }
-  
+
   // Ensure data integrity
   const cleanedData = ensureDataIntegrity(caseData);
-  
+
   // Generate new case wrapper
   const newCase = {
     id: getNextCaseId(),
     title: cleanedData.meta?.title || 'Untitled Case',
     latestVersion: 0,
-    caseObj: cleanedData
+    caseObj: cleanedData,
   };
-  
+
   // Save to storage
   const cases = loadCasesFromStorage();
   cases[newCase.id] = newCase;
   saveCasesToStorage(cases);
   // Auto-publish to local server if available
   scheduleAutoPublish();
-  
 
   return newCase;
 };
@@ -257,24 +257,23 @@ export const updateCase = async (id, caseData) => {
   if (validationErrors.length > 0) {
     console.warn('Case validation warnings:', validationErrors);
   }
-  
+
   // Ensure data integrity
   const cleanedData = ensureDataIntegrity(caseData);
-  
+
   // Update existing case
   const cases = loadCasesFromStorage();
   if (!cases[id]) {
     throw new Error(`Case ${id} not found`);
   }
-  
+
   cases[id].caseObj = cleanedData;
   cases[id].title = cleanedData.meta?.title || cases[id].title;
   cases[id].latestVersion = (cases[id].latestVersion || 0) + 1;
-  
+
   saveCasesToStorage(cases);
   // Auto-publish to local server if available
   scheduleAutoPublish();
-  
 
   return cases[id];
 };
@@ -284,9 +283,8 @@ export const deleteCase = async (id) => {
   if (cases[id]) {
     delete cases[id];
     saveCasesToStorage(cases);
-  // Auto-publish to local server if available
-  scheduleAutoPublish();
-
+    // Auto-publish to local server if available
+    scheduleAutoPublish();
   }
   return { ok: true };
 };
@@ -307,7 +305,7 @@ export const publishToServer = async () => {
     const resp = await fetch('http://localhost:5173/cases', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(map)
+      body: JSON.stringify(map),
     });
     if (!resp.ok) throw new Error('Server returned ' + resp.status);
     return true;
@@ -332,15 +330,15 @@ export const saveDraft = (caseId, encounter, draftData) => {
 
 export const loadDraft = (caseId, encounter) => {
   // Skip localStorage loading for NEW cases in development mode only
-  const isDevelopmentMode = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isDevelopmentMode =
+    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const isNewCase = caseId === 'new';
   const skipLoading = isDevelopmentMode && isNewCase;
-  
-  if (skipLoading) {
 
+  if (skipLoading) {
     return null;
   }
-  
+
   try {
     const key = `draft_${caseId}_${encounter}`;
     const stored = localStorage.getItem(key);
@@ -378,7 +376,7 @@ export const listDrafts = () => {
           const caseId = parts.slice(1, -1).join('_');
           const encounter = parts[parts.length - 1];
           const data = JSON.parse(localStorage.getItem(key));
-          
+
           if (!drafts[caseId]) drafts[caseId] = {};
           drafts[caseId][encounter] = data;
         }

@@ -9,74 +9,96 @@ export function exportToWord(caseData, draft) {
   try {
     // Check if docx library is available
     if (typeof docx === 'undefined') {
-      console.error('Docx library not found. Available globals:', Object.keys(window || {}).filter(k => k.toLowerCase().includes('docx')));
+      console.error(
+        'Docx library not found. Available globals:',
+        Object.keys(window || {}).filter((k) => k.toLowerCase().includes('docx')),
+      );
       alert('Word export library not loaded. Please refresh the page and try again.');
       return;
     }
-    
-  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, HeadingLevel, AlignmentType, BorderStyle, WidthType, Footer, PageNumber, NumberOfTotalPages, UnderlineType, VerticalAlign, TableLayoutType, Header } = docx;
-    
+
+    const {
+      Document,
+      Packer,
+      Paragraph,
+      TextRun,
+      Table,
+      TableRow,
+      TableCell,
+      HeadingLevel,
+      AlignmentType,
+      BorderStyle,
+      WidthType,
+      Footer,
+      PageNumber,
+      NumberOfTotalPages,
+      UnderlineType,
+      VerticalAlign,
+      TableLayoutType,
+      Header,
+    } = docx;
+
     // Centralized formatting configuration matching case editor design
     const FORMAT = {
       // Font settings - Use system fonts for portability
-      font: "Calibri",
-      fontFallback: "Arial",
-      headingFont: "Calibri Light",
-      
+      font: 'Calibri',
+      fontFallback: 'Arial',
+      headingFont: 'Calibri Light',
+
       // Text sizes (maintain accessibility while matching design)
       sizes: {
-        title: 32,      // 16pt - Main document title (larger for impact)
-        heading1: 28,   // 14pt - Major sections (SUBJECTIVE, OBJECTIVE, etc.)
-        heading2: 24,   // 12pt - Subsections (Pain Assessment, etc.)
-        body: 22,       // 11pt - Body text (minimum accessible size)
-        small: 20       // 10pt - Table text, hints
+        title: 32, // 16pt - Main document title (larger for impact)
+        heading1: 28, // 14pt - Major sections (SUBJECTIVE, OBJECTIVE, etc.)
+        heading2: 24, // 12pt - Subsections (Pain Assessment, etc.)
+        body: 22, // 11pt - Body text (minimum accessible size)
+        small: 20, // 10pt - Table text, hints
       },
-      
-  // Colors matching UND theme; body text remains black for print
+
+      // Colors matching UND theme; body text remains black for print
       colors: {
         // Core
-        black: "000000",
-        white: "FFFFFF",
-        gray: "343a40",
-        grayText: "4B5563",
+        black: '000000',
+        white: 'FFFFFF',
+        gray: '343a40',
+        grayText: '4B5563',
         // Brand
-        blue: "009A44",            // UND Green (legacy key used across file)
-        green: "009A44",
-        darkBlue: "007a35",
-        accent: "009A44",
+        blue: '009A44', // UND Green (legacy key used across file)
+        green: '009A44',
+        darkBlue: '007a35',
+        accent: '009A44',
         // Web-like table theme
-        slateHeader: "374151",     // dark slate header
-        grid: "D1D5DB",            // light gray borders
-        inputBg: "F3F4F6",         // subtle input background (optional)
-        zebra: "F8FAFC",           // extra-light zebra (B/W friendly)
+        slateHeader: '374151', // dark slate header
+        grid: 'D1D5DB', // light gray borders
+        inputBg: 'F3F4F6', // subtle input background (optional)
+        zebra: 'F8FAFC', // extra-light zebra (B/W friendly)
         // Misc
-        red: "dc3545",
-        lightGray: "f8f9fa",
-        sectionBg: "2d3748"
+        red: 'dc3545',
+        lightGray: 'f8f9fa',
+        sectionBg: '2d3748',
       },
-      
+
       // Spacing (in points) - more generous for professional appearance
       spacing: {
-  beforeSection: 240,    // 12pt space before major sections (condensed)
-  afterSection: 120,     // 6pt space after major sections
-  beforeSubsection: 120, // 6pt space before subsections
-  afterSubsection: 80,   // ~4pt space after subsections
-  beforeParagraph: 40,   // ~2pt space before paragraphs
-  afterParagraph: 40,    // ~2pt space after paragraphs
-  lineSpacing: 240       // 1.0x line spacing (tighter)
+        beforeSection: 240, // 12pt space before major sections (condensed)
+        afterSection: 120, // 6pt space after major sections
+        beforeSubsection: 120, // 6pt space before subsections
+        afterSubsection: 80, // ~4pt space after subsections
+        beforeParagraph: 40, // ~2pt space before paragraphs
+        afterParagraph: 40, // ~2pt space after paragraphs
+        lineSpacing: 240, // 1.0x line spacing (tighter)
       },
-      
+
       // Table formatting
       table: {
         borderSize: 4,
-        cellPadding: 100  // 5pt in twentieths of a point
+        cellPadding: 100, // 5pt in twentieths of a point
       },
       // Indentation levels (in twips; 1 inch = 1440)
       indent: {
-        quarter: 360,  // 0.25"
-        level1: 720,   // 0.5"
-        level2: 1080   // 0.75"
-      }
+        quarter: 360, // 0.25"
+        level1: 720, // 0.5"
+        level2: 1080, // 0.75"
+      },
     };
 
     // Web-like dark header bar with UND-green underline
@@ -84,27 +106,35 @@ export function exportToWord(caseData, draft) {
       return new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
         borders: {
-          top: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+          top: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
           bottom: { style: BorderStyle.SINGLE, size: 16, color: FORMAT.colors.green },
-          left: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
-          right: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
-          insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
-          insideVertical: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" }
+          left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+          right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+          insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+          insideVertical: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
         },
         rows: [
           new TableRow({
             children: [
               new TableCell({
-                children: [new Paragraph({
-                  children: [createTextRun(text, { size: FORMAT.sizes.heading2, color: "FFFFFF", bold: true })],
-                  spacing: { before: 0, after: 0 }
-                })],
-                shading: { fill: "1E1E1E" },
-                margins: { top: 40, bottom: 40, left: 240, right: 240 }
-              })
-            ]
-          })
-        ]
+                children: [
+                  new Paragraph({
+                    children: [
+                      createTextRun(text, {
+                        size: FORMAT.sizes.heading2,
+                        color: 'FFFFFF',
+                        bold: true,
+                      }),
+                    ],
+                    spacing: { before: 0, after: 0 },
+                  }),
+                ],
+                shading: { fill: '1E1E1E' },
+                margins: { top: 40, bottom: 40, left: 240, right: 240 },
+              }),
+            ],
+          }),
+        ],
       });
     };
 
@@ -114,7 +144,7 @@ export function exportToWord(caseData, draft) {
       const cell = new TableCell({
         children: [new Paragraph('')],
         shading: undefined,
-        margins: { top: 80, bottom: 80, left: 0, right: 0 }
+        margins: { top: 80, bottom: 80, left: 0, right: 0 },
       });
       return new Table({
         rows: [new TableRow({ children: [cell] })],
@@ -125,8 +155,8 @@ export function exportToWord(caseData, draft) {
           left: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
           right: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
           insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-          insideVertical: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
-        }
+          insideVertical: { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+        },
       });
     };
 
@@ -146,114 +176,140 @@ export function exportToWord(caseData, draft) {
     };
 
     // Helper function to create styled text runs with fallback fonts
-  const createTextRun = (text, options = {}) => {
+    const createTextRun = (text, options = {}) => {
       return new TextRun({
         text: text?.toString() || '',
         font: options.font || FORMAT.font,
         size: options.size || FORMAT.sizes.body,
         color: options.color || FORMAT.colors.black,
         bold: options.bold || false,
-    italics: options.italics || false,
-    underline: options.underline
+        italics: options.italics || false,
+        underline: options.underline,
       });
     };
 
     // Helper function to create numbered section headers with left rule and keepNext
     const createSectionHeader = (text, level = 1, options = {}) => {
       const { prefix, pageBreakBefore = false, indentLeft } = options;
-      const spacing = level === 1 ? 
-        { before: FORMAT.spacing.beforeSection, after: FORMAT.spacing.afterSection } :
-        level === 2 ? 
-        { before: FORMAT.spacing.beforeSubsection, after: FORMAT.spacing.afterSubsection } :
-        { before: FORMAT.spacing.beforeParagraph, after: FORMAT.spacing.afterParagraph }; // Level 3
-      
+      const spacing =
+        level === 1
+          ? { before: FORMAT.spacing.beforeSection, after: FORMAT.spacing.afterSection }
+          : level === 2
+            ? { before: FORMAT.spacing.beforeSubsection, after: FORMAT.spacing.afterSubsection }
+            : { before: FORMAT.spacing.beforeParagraph, after: FORMAT.spacing.afterParagraph }; // Level 3
+
       // Level 1 headers: UND Green, uppercase, bold
       // Level 2 headers: Black text with UND-green underline
       // Level 3 headers: Dark gray, smaller, for sub-subsections
-      const textColor = level === 1 ? FORMAT.colors.blue : 
-                       level === 2 ? FORMAT.colors.black : 
-                       FORMAT.colors.gray;
+      const textColor =
+        level === 1 ? FORMAT.colors.blue : level === 2 ? FORMAT.colors.black : FORMAT.colors.gray;
       const label = prefix ? `${prefix} ${text}` : text;
       const textTransform = level === 1 ? label.toUpperCase() : label;
-      const fontSize = level === 1 ? FORMAT.sizes.heading1 : 
-                      level === 2 ? FORMAT.sizes.heading2 : 
-                      FORMAT.sizes.body;
-      const headingLevel = level === 1 ? HeadingLevel.HEADING_1 : 
-                          level === 2 ? HeadingLevel.HEADING_2 : 
-                          HeadingLevel.HEADING_3;
-        
-      const computedIndent = (typeof indentLeft !== 'undefined')
-        ? indentLeft
-        : (level === 2 ? FORMAT.indent.quarter : level === 3 ? FORMAT.indent.level2 : undefined);
+      const fontSize =
+        level === 1
+          ? FORMAT.sizes.heading1
+          : level === 2
+            ? FORMAT.sizes.heading2
+            : FORMAT.sizes.body;
+      const headingLevel =
+        level === 1
+          ? HeadingLevel.HEADING_1
+          : level === 2
+            ? HeadingLevel.HEADING_2
+            : HeadingLevel.HEADING_3;
 
-    return new Paragraph({
-        children: [createTextRun(textTransform, { 
-          size: fontSize,
-          color: textColor,
-      bold: true,
-      font: level === 1 ? FORMAT.headingFont : FORMAT.font
-        })],
+      const computedIndent =
+        typeof indentLeft !== 'undefined'
+          ? indentLeft
+          : level === 2
+            ? FORMAT.indent.quarter
+            : level === 3
+              ? FORMAT.indent.level2
+              : undefined;
+
+      return new Paragraph({
+        children: [
+          createTextRun(textTransform, {
+            size: fontSize,
+            color: textColor,
+            bold: true,
+            font: level === 1 ? FORMAT.headingFont : FORMAT.font,
+          }),
+        ],
         heading: headingLevel,
         spacing: spacing,
         keepNext: true,
         pageBreakBefore,
         indent: computedIndent ? { left: computedIndent } : undefined,
-        border: level === 1 
-          ? { left: { style: BorderStyle.SINGLE, size: 24, color: FORMAT.colors.blue } }
-          : level === 2 
-            ? { bottom: { style: BorderStyle.SINGLE, size: 16, color: FORMAT.colors.blue } }
-            : undefined
+        border:
+          level === 1
+            ? { left: { style: BorderStyle.SINGLE, size: 24, color: FORMAT.colors.blue } }
+            : level === 2
+              ? { bottom: { style: BorderStyle.SINGLE, size: 16, color: FORMAT.colors.blue } }
+              : undefined,
       });
     };
 
     // Helper function to create body paragraphs
-  const createBodyParagraph = (text, options = {}) => {
+    const createBodyParagraph = (text, options = {}) => {
       if (!text || text.trim() === '') {
         return new Paragraph({
-          children: [createTextRun('— not documented', { color: FORMAT.colors.gray, italics: true })],
-          spacing: { 
-            before: FORMAT.spacing.beforeParagraph, 
+          children: [
+            createTextRun('— not documented', { color: FORMAT.colors.gray, italics: true }),
+          ],
+          spacing: {
+            before: FORMAT.spacing.beforeParagraph,
             after: FORMAT.spacing.afterParagraph,
-            line: FORMAT.spacing.lineSpacing
-      },
-      indent: options.indentLeft ? { left: options.indentLeft } : undefined,
-      keepLines: options.keepLines || false
+            line: FORMAT.spacing.lineSpacing,
+          },
+          indent: options.indentLeft ? { left: options.indentLeft } : undefined,
+          keepLines: options.keepLines || false,
         });
       }
 
-      const textRuns = text.split('\n').map((line, index, array) => {
-        const runs = [createTextRun(line, options)];
-        if (index < array.length - 1) {
-          runs.push(new TextRun({ break: 1 }));
-        }
-        return runs;
-      }).flat();
+      const textRuns = text
+        .split('\n')
+        .map((line, index, array) => {
+          const runs = [createTextRun(line, options)];
+          if (index < array.length - 1) {
+            runs.push(new TextRun({ break: 1 }));
+          }
+          return runs;
+        })
+        .flat();
 
       return new Paragraph({
         children: textRuns,
-        spacing: { 
-          before: FORMAT.spacing.beforeParagraph, 
+        spacing: {
+          before: FORMAT.spacing.beforeParagraph,
           after: FORMAT.spacing.afterParagraph,
-          line: FORMAT.spacing.lineSpacing
+          line: FORMAT.spacing.lineSpacing,
         },
         indent: options.indentLeft ? { left: options.indentLeft } : undefined,
         keepLines: options.keepLines || false,
-        ...options
+        ...options,
       });
     };
 
     // Helper: create a simple bulleted list from lines with indentation
     const createBulletedList = (lines, indentLeft) => {
       if (!Array.isArray(lines) || lines.length === 0) return [];
-      return lines.map(line => new Paragraph({
-        children: [createTextRun(`• ${line}`, { size: FORMAT.sizes.body })],
-  spacing: { before: 0, after: 20, line: FORMAT.spacing.lineSpacing },
-        indent: indentLeft ? { left: indentLeft } : undefined
-      }));
+      return lines.map(
+        (line) =>
+          new Paragraph({
+            children: [createTextRun(`• ${line}`, { size: FORMAT.sizes.body })],
+            spacing: { before: 0, after: 20, line: FORMAT.spacing.lineSpacing },
+            indent: indentLeft ? { left: indentLeft } : undefined,
+          }),
+      );
     };
 
     // Helper: labeled line with bold label and normal value; optional bullet
-  const createLabelValueLine = (label, value, { indentLeft, bullet = false, compact = false } = {}) => {
+    const createLabelValueLine = (
+      label,
+      value,
+      { indentLeft, bullet = false, compact = false } = {},
+    ) => {
       const children = [];
       if (bullet) children.push(createTextRun('• ', { size: FORMAT.sizes.body }));
       if (label && label.trim()) {
@@ -262,49 +318,89 @@ export function exportToWord(caseData, draft) {
       children.push(createTextRun(value ?? ''));
       return new Paragraph({
         children,
-        spacing: compact ? { before: 0, after: 20, line: FORMAT.spacing.lineSpacing } : { before: 20, after: 20, line: FORMAT.spacing.lineSpacing },
-        indent: indentLeft ? { left: indentLeft } : undefined
+        spacing: compact
+          ? { before: 0, after: 20, line: FORMAT.spacing.lineSpacing }
+          : { before: 20, after: 20, line: FORMAT.spacing.lineSpacing },
+        indent: indentLeft ? { left: indentLeft } : undefined,
       });
     };
 
-  // Helper function to create UND-themed tables with proper formatting
+    // Helper function to create UND-themed tables with proper formatting
     const createFormattedTable = (data, headers = [], columnWidths, alignments = [], opts = {}) => {
       const rows = [];
-      
+
       // Add header row if provided - UND themed
       if (headers.length > 0) {
-        const headerCells = headers.map((header, i) => 
-          new TableCell({
-            children: [new Paragraph({
-              children: [createTextRun(header, { 
-                bold: true, 
-                size: FORMAT.sizes.small,
-                color: "FFFFFF" // White text on UND green background
-              })]
-            })],
-            shading: { fill: FORMAT.colors.blue }, // UND Green header background
-            verticalAlign: (typeof VerticalAlign !== 'undefined' ? VerticalAlign.CENTER : undefined),
-            margins: { top: FORMAT.table.cellPadding, bottom: FORMAT.table.cellPadding, left: FORMAT.table.cellPadding, right: FORMAT.table.cellPadding },
-            width: Array.isArray(columnWidths) && columnWidths[i] ? { size: columnWidths[i], type: WidthType.DXA } : undefined,
-            borders: i === 0 ? { left: { style: BorderStyle.SINGLE, size: 24, color: FORMAT.colors.blue } } : undefined
-          })
+        const headerCells = headers.map(
+          (header, i) =>
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    createTextRun(header, {
+                      bold: true,
+                      size: FORMAT.sizes.small,
+                      color: 'FFFFFF', // White text on UND green background
+                    }),
+                  ],
+                }),
+              ],
+              shading: { fill: FORMAT.colors.blue }, // UND Green header background
+              verticalAlign:
+                typeof VerticalAlign !== 'undefined' ? VerticalAlign.CENTER : undefined,
+              margins: {
+                top: FORMAT.table.cellPadding,
+                bottom: FORMAT.table.cellPadding,
+                left: FORMAT.table.cellPadding,
+                right: FORMAT.table.cellPadding,
+              },
+              width:
+                Array.isArray(columnWidths) && columnWidths[i]
+                  ? { size: columnWidths[i], type: WidthType.DXA }
+                  : undefined,
+              borders:
+                i === 0
+                  ? { left: { style: BorderStyle.SINGLE, size: 24, color: FORMAT.colors.blue } }
+                  : undefined,
+            }),
         );
         rows.push(new TableRow({ children: headerCells, tableHeader: true }));
       }
-      
+
       // Add data rows
       data.forEach((rowData, idx) => {
-        const cells = rowData.map((cellData, i) => 
-          new TableCell({
-            children: [new Paragraph({
-              children: [createTextRun(cellData?.toString() || '', { size: opts.textSize || FORMAT.sizes.small })],
-              alignment: alignments[i] === 'right' ? AlignmentType.RIGHT : alignments[i] === 'center' ? AlignmentType.CENTER : AlignmentType.LEFT
-            })],
-            margins: { top: FORMAT.table.cellPadding, bottom: FORMAT.table.cellPadding, left: FORMAT.table.cellPadding, right: FORMAT.table.cellPadding },
-            verticalAlign: (typeof VerticalAlign !== 'undefined' ? VerticalAlign.CENTER : undefined),
-            shading: (idx % 2 === 0) ? undefined : { fill: FORMAT.colors.zebra },
-            width: Array.isArray(columnWidths) && columnWidths[i] ? { size: columnWidths[i], type: WidthType.DXA } : undefined
-          })
+        const cells = rowData.map(
+          (cellData, i) =>
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    createTextRun(cellData?.toString() || '', {
+                      size: opts.textSize || FORMAT.sizes.small,
+                    }),
+                  ],
+                  alignment:
+                    alignments[i] === 'right'
+                      ? AlignmentType.RIGHT
+                      : alignments[i] === 'center'
+                        ? AlignmentType.CENTER
+                        : AlignmentType.LEFT,
+                }),
+              ],
+              margins: {
+                top: FORMAT.table.cellPadding,
+                bottom: FORMAT.table.cellPadding,
+                left: FORMAT.table.cellPadding,
+                right: FORMAT.table.cellPadding,
+              },
+              verticalAlign:
+                typeof VerticalAlign !== 'undefined' ? VerticalAlign.CENTER : undefined,
+              shading: idx % 2 === 0 ? undefined : { fill: FORMAT.colors.zebra },
+              width:
+                Array.isArray(columnWidths) && columnWidths[i]
+                  ? { size: columnWidths[i], type: WidthType.DXA }
+                  : undefined,
+            }),
         );
         rows.push(new TableRow({ children: cells, cantSplit: true }));
       });
@@ -318,8 +414,8 @@ export function exportToWord(caseData, draft) {
           left: { style: BorderStyle.SINGLE, size: FORMAT.table.borderSize },
           right: { style: BorderStyle.SINGLE, size: FORMAT.table.borderSize },
           insideHorizontal: { style: BorderStyle.SINGLE, size: FORMAT.table.borderSize },
-          insideVertical: { style: BorderStyle.SINGLE, size: FORMAT.table.borderSize }
-        }
+          insideVertical: { style: BorderStyle.SINGLE, size: FORMAT.table.borderSize },
+        },
       };
       if (Array.isArray(columnWidths) && columnWidths.length) {
         tableOptions.columnWidths = columnWidths;
@@ -334,17 +430,20 @@ export function exportToWord(caseData, draft) {
     };
 
     // Simple spacer paragraph to add vertical space between tables
-    const createSpacer = (before = 0, after = 160) => new Paragraph({
-      children: [new TextRun('')],
-      spacing: { before, after }
-    });
+    const createSpacer = (before = 0, after = 160) =>
+      new Paragraph({
+        children: [new TextRun('')],
+        spacing: { before, after },
+      });
 
     // Date formatting helper (e.g., Aug 20, 2025)
     const fmtDate = (d) => {
       try {
         const dt = d instanceof Date ? d : new Date(d);
         return dt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-      } catch { return ''; }
+      } catch {
+        return '';
+      }
     };
 
     // Clinical value formatters
@@ -381,164 +480,311 @@ export function exportToWord(caseData, draft) {
     // Main document content creation
     const elements = [];
 
-  // No document title per request
+    // No document title per request
 
-  // Patient Information Section header in black (use level-2 styling), no indent
-  elements.push(createSectionHeader('PATIENT INFORMATION', 2, { indentLeft: 0 }));
-    
+    // Patient Information Section header in black (use level-2 styling), no indent
+    elements.push(createSectionHeader('PATIENT INFORMATION', 2, { indentLeft: 0 }));
+
     // Prefer snapshot.dob, then top-level patientDOB, then meta.patientDOB
-    const dobValue = getSafeValue(caseData, 'snapshot.dob') || getSafeValue(caseData, 'patientDOB') || getSafeValue(caseData, 'meta.patientDOB', '');
+    const dobValue =
+      getSafeValue(caseData, 'snapshot.dob') ||
+      getSafeValue(caseData, 'patientDOB') ||
+      getSafeValue(caseData, 'meta.patientDOB', '');
     const computedAge = computeAgeFromDob(dobValue);
-    const ageValue = computedAge || getSafeValue(caseData, 'snapshot.age', getSafeValue(caseData, 'patientAge', 'Not specified'));
-    const genderValue = getSafeValue(caseData, 'snapshot.sex', getSafeValue(caseData, 'patientGender', 'Not specified'));
+    const ageValue =
+      computedAge ||
+      getSafeValue(caseData, 'snapshot.age', getSafeValue(caseData, 'patientAge', 'Not specified'));
+    const genderValue = getSafeValue(
+      caseData,
+      'snapshot.sex',
+      getSafeValue(caseData, 'patientGender', 'Not specified'),
+    );
 
     const subjQuick = (draft && draft.subjective) || {};
     // Output patient information as simple labeled lines (no table)
     const patientInfoLines = [
-      ['Patient Name', getSafeValue(caseData, 'snapshot.name', getSafeValue(caseData, 'title', 'Not specified'))],
+      [
+        'Patient Name',
+        getSafeValue(caseData, 'snapshot.name', getSafeValue(caseData, 'title', 'Not specified')),
+      ],
       ['DOB', dobValue || 'Not specified'],
       ['Age', ageValue || 'Not specified'],
       ['Gender', genderValue || 'Not specified'],
-      ['Primary Complaint', subjQuick.chiefComplaint || getSafeValue(caseData, 'history.chief_complaint', 'Not specified')],
-      ['Date of Evaluation', fmtDate(new Date())]
+      [
+        'Primary Complaint',
+        subjQuick.chiefComplaint ||
+          getSafeValue(caseData, 'history.chief_complaint', 'Not specified'),
+      ],
+      ['Date of Evaluation', fmtDate(new Date())],
     ];
 
     patientInfoLines.forEach(([label, value]) => {
-      elements.push(createLabelValueLine(label, value, { indentLeft: FORMAT.indent.level1, compact: true }));
+      elements.push(
+        createLabelValueLine(label, value, { indentLeft: FORMAT.indent.level1, compact: true }),
+      );
     });
 
-  // SUBJECTIVE Section (draft-first mapping)
-  elements.push(createSectionDivider());
-  elements.push(createWebSectionHeader('SUBJECTIVE'));
+    // SUBJECTIVE Section (draft-first mapping)
+    elements.push(createSectionDivider());
+    elements.push(createWebSectionHeader('SUBJECTIVE'));
     const subj = (draft && draft.subjective) || {};
-  elements.push(createSectionHeader('History of Present Illness', 2));
+    elements.push(createSectionHeader('History of Present Illness', 2));
     const hpiLines = [];
-    const chiefConcern = subj.chiefComplaint || getSafeValue(caseData, 'history.chief_complaint') || '';
-    const detailedHistory = subj.historyOfPresentIllness || getSafeValue(caseData, 'history.hpi') || '';
+    const chiefConcern =
+      subj.chiefComplaint || getSafeValue(caseData, 'history.chief_complaint') || '';
+    const detailedHistory =
+      subj.historyOfPresentIllness || getSafeValue(caseData, 'history.hpi') || '';
     if (chiefConcern) hpiLines.push(`Chief Concern: ${chiefConcern}`);
     if (detailedHistory) hpiLines.push(`Detailed History of Current Condition: ${detailedHistory}`);
     if (hpiLines.length) {
-      if (chiefConcern) elements.push(createLabelValueLine('Chief Concern', chiefConcern, { indentLeft: FORMAT.indent.level1 }));
-      if (detailedHistory) elements.push(createLabelValueLine('Detailed History of Current Condition', detailedHistory, { indentLeft: FORMAT.indent.level1 }));
+      if (chiefConcern)
+        elements.push(
+          createLabelValueLine('Chief Concern', chiefConcern, { indentLeft: FORMAT.indent.level1 }),
+        );
+      if (detailedHistory)
+        elements.push(
+          createLabelValueLine('Detailed History of Current Condition', detailedHistory, {
+            indentLeft: FORMAT.indent.level1,
+          }),
+        );
     } else {
-      elements.push(createBodyParagraph('— not documented', { indentLeft: FORMAT.indent.level1, italics: true, color: FORMAT.colors.grayText }));
+      elements.push(
+        createBodyParagraph('— not documented', {
+          indentLeft: FORMAT.indent.level1,
+          italics: true,
+          color: FORMAT.colors.grayText,
+        }),
+      );
     }
-  elements.push(createSectionHeader('Symptom Assessment', 2));
-    const painHasAny = !!(subj.painLocation || subj.painScale || subj.painQuality || subj.painPattern || subj.aggravatingFactors || subj.easingFactors);
+    elements.push(createSectionHeader('Symptom Assessment', 2));
+    const painHasAny = !!(
+      subj.painLocation ||
+      subj.painScale ||
+      subj.painQuality ||
+      subj.painPattern ||
+      subj.aggravatingFactors ||
+      subj.easingFactors
+    );
     if (painHasAny) {
-      if (subj.painLocation) elements.push(createLabelValueLine('Location', subj.painLocation, { indentLeft: FORMAT.indent.level1 }));
-      if (subj.painScale) elements.push(createLabelValueLine('Pain Scale', `${subj.painScale}/10`, { indentLeft: FORMAT.indent.level1 }));
-      if (subj.painQuality) elements.push(createLabelValueLine('Quality', subj.painQuality, { indentLeft: FORMAT.indent.level1 }));
-      if (subj.painPattern) elements.push(createLabelValueLine('Pattern', subj.painPattern, { indentLeft: FORMAT.indent.level1 }));
-      if (subj.aggravatingFactors) elements.push(createLabelValueLine('Aggravating', subj.aggravatingFactors, { indentLeft: FORMAT.indent.level1 }));
-      if (subj.easingFactors) elements.push(createLabelValueLine('Easing', subj.easingFactors, { indentLeft: FORMAT.indent.level1 }));
+      if (subj.painLocation)
+        elements.push(
+          createLabelValueLine('Location', subj.painLocation, { indentLeft: FORMAT.indent.level1 }),
+        );
+      if (subj.painScale)
+        elements.push(
+          createLabelValueLine('Pain Scale', `${subj.painScale}/10`, {
+            indentLeft: FORMAT.indent.level1,
+          }),
+        );
+      if (subj.painQuality)
+        elements.push(
+          createLabelValueLine('Quality', subj.painQuality, { indentLeft: FORMAT.indent.level1 }),
+        );
+      if (subj.painPattern)
+        elements.push(
+          createLabelValueLine('Pattern', subj.painPattern, { indentLeft: FORMAT.indent.level1 }),
+        );
+      if (subj.aggravatingFactors)
+        elements.push(
+          createLabelValueLine('Aggravating', subj.aggravatingFactors, {
+            indentLeft: FORMAT.indent.level1,
+          }),
+        );
+      if (subj.easingFactors)
+        elements.push(
+          createLabelValueLine('Easing', subj.easingFactors, { indentLeft: FORMAT.indent.level1 }),
+        );
     } else {
-      elements.push(createBodyParagraph('Pain assessment not completed', { indentLeft: FORMAT.indent.level1 }));
+      elements.push(
+        createBodyParagraph('Pain assessment not completed', { indentLeft: FORMAT.indent.level1 }),
+      );
     }
-  elements.push(createSectionHeader('Functional Status', 2));
+    elements.push(createSectionHeader('Functional Status', 2));
     const hasFunctional = !!(subj.functionalLimitations || subj.priorLevel || subj.patientGoals);
     if (hasFunctional) {
-      if (subj.functionalLimitations) elements.push(createLabelValueLine('Current Limitations', subj.functionalLimitations, { indentLeft: FORMAT.indent.level1 }));
-      if (subj.priorLevel) elements.push(createLabelValueLine('Prior Level of Function', subj.priorLevel, { indentLeft: FORMAT.indent.level1 }));
-      if (subj.patientGoals) elements.push(createLabelValueLine('Patient Goals', subj.patientGoals, { indentLeft: FORMAT.indent.level1 }));
+      if (subj.functionalLimitations)
+        elements.push(
+          createLabelValueLine('Current Limitations', subj.functionalLimitations, {
+            indentLeft: FORMAT.indent.level1,
+          }),
+        );
+      if (subj.priorLevel)
+        elements.push(
+          createLabelValueLine('Prior Level of Function', subj.priorLevel, {
+            indentLeft: FORMAT.indent.level1,
+          }),
+        );
+      if (subj.patientGoals)
+        elements.push(
+          createLabelValueLine('Patient Goals', subj.patientGoals, {
+            indentLeft: FORMAT.indent.level1,
+          }),
+        );
     } else {
-      elements.push(createBodyParagraph('Functional status not documented', { indentLeft: FORMAT.indent.level1 }));
+      elements.push(
+        createBodyParagraph('Functional status not documented', {
+          indentLeft: FORMAT.indent.level1,
+        }),
+      );
     }
-  elements.push(createSectionHeader('Additional History', 2));
+    elements.push(createSectionHeader('Additional History', 2));
     const hasAddHist = !!(subj.medicationsCurrent || subj.redFlags || subj.additionalHistory);
     if (hasAddHist) {
-      if (subj.medicationsCurrent) elements.push(createLabelValueLine('Current Medications', subj.medicationsCurrent, { indentLeft: FORMAT.indent.level1 }));
-      if (subj.redFlags) elements.push(createLabelValueLine('Red Flags/Screening', subj.redFlags, { indentLeft: FORMAT.indent.level1 }));
-      if (subj.additionalHistory) elements.push(createLabelValueLine('Additional Relevant History', subj.additionalHistory, { indentLeft: FORMAT.indent.level1 }));
+      if (subj.medicationsCurrent)
+        elements.push(
+          createLabelValueLine('Current Medications', subj.medicationsCurrent, {
+            indentLeft: FORMAT.indent.level1,
+          }),
+        );
+      if (subj.redFlags)
+        elements.push(
+          createLabelValueLine('Red Flags/Screening', subj.redFlags, {
+            indentLeft: FORMAT.indent.level1,
+          }),
+        );
+      if (subj.additionalHistory)
+        elements.push(
+          createLabelValueLine('Additional Relevant History', subj.additionalHistory, {
+            indentLeft: FORMAT.indent.level1,
+          }),
+        );
     } else {
-      elements.push(createBodyParagraph('No additional history provided', { indentLeft: FORMAT.indent.level1 }));
+      elements.push(
+        createBodyParagraph('No additional history provided', { indentLeft: FORMAT.indent.level1 }),
+      );
     }
 
-  // OBJECTIVE Section (draft-first)
-  elements.push(createSectionDivider());
-  elements.push(createWebSectionHeader('OBJECTIVE'));
+    // OBJECTIVE Section (draft-first)
+    elements.push(createSectionDivider());
+    elements.push(createWebSectionHeader('OBJECTIVE'));
     const obj = (draft && draft.objective) || {};
     // General observations & vitals
-  elements.push(createSectionHeader('General Observations & Vital Signs', 2));
-  elements.push(createBodyParagraph(obj.text || '', { indentLeft: FORMAT.indent.level1 }));
+    elements.push(createSectionHeader('General Observations & Vital Signs', 2));
+    elements.push(createBodyParagraph(obj.text || '', { indentLeft: FORMAT.indent.level1 }));
     // Inspection/Palpation
-  elements.push(createSectionHeader('Inspection', 2));
-  elements.push(createBodyParagraph(getSafeValue(obj, 'inspection.visual', ''), { indentLeft: FORMAT.indent.level1 }));
-  elements.push(createSectionHeader('Palpation', 2));
-  elements.push(createBodyParagraph(getSafeValue(obj, 'palpation.findings', ''), { indentLeft: FORMAT.indent.level1 }));
+    elements.push(createSectionHeader('Inspection', 2));
+    elements.push(
+      createBodyParagraph(getSafeValue(obj, 'inspection.visual', ''), {
+        indentLeft: FORMAT.indent.level1,
+      }),
+    );
+    elements.push(createSectionHeader('Palpation', 2));
+    elements.push(
+      createBodyParagraph(getSafeValue(obj, 'palpation.findings', ''), {
+        indentLeft: FORMAT.indent.level1,
+      }),
+    );
     // Regional Assessment - Enhanced table formatting
-  elements.push(createSectionHeader('Regional Assessment', 2));
+    elements.push(createSectionHeader('Regional Assessment', 2));
     const ra = obj.regionalAssessments || {};
 
     // Helper to slugify a movement name for PROM row keys
     const slug = (s) => (s || '').toString().toLowerCase().replace(/\s+/g, '-');
 
     // Build combined reference lists based on selected regions
-    const selected = Array.isArray(ra.selectedRegions) && ra.selectedRegions.length
-      ? ra.selectedRegions.filter(k => regionalAssessments[k])
-      : []; // if none selected, we won't render any tables
+    const selected =
+      Array.isArray(ra.selectedRegions) && ra.selectedRegions.length
+        ? ra.selectedRegions.filter((k) => regionalAssessments[k])
+        : []; // if none selected, we won't render any tables
 
-  // Use consistent column widths across Regional Assessment tables so L/R align between tables
-  // Web-like proportions scaled to fit 9360 twips printable width: ~50% / ~14% / ~14% / ~22%
-  // Derived from proposal (5200/1400/1400/2360) but scaled to 9360 total width
-  const RA_COL_WIDTHS = [3200, 1200, 1200, 3760];
+    // Use consistent column widths across Regional Assessment tables so L/R align between tables
+    // Web-like proportions scaled to fit 9360 twips printable width: ~50% / ~14% / ~14% / ~22%
+    // Derived from proposal (5200/1400/1400/2360) but scaled to 9360 total width
+    const RA_COL_WIDTHS = [3200, 1200, 1200, 3760];
 
-  // Web-like table factory: soft borders, dark slate header, roomy padding, zebra rows
-  function createWebLikeTable(data, headers = [], columnWidths, alignments = []) {
-    const rows = [];
-    if (headers.length) {
-      const headerCells = headers.map((h, i) => new TableCell({
-        children: [new Paragraph({
-          children: [createTextRun(h, { bold: true, size: FORMAT.sizes.small, color: FORMAT.colors.white })],
-          spacing: { before: 0, after: 0 }
-        })],
-        shading: { fill: FORMAT.colors.slateHeader },
-        margins: { top: 40, bottom: 40, left: 100, right: 100 },
-        verticalAlign: (typeof VerticalAlign !== 'undefined' ? VerticalAlign.CENTER : undefined),
-        width: Array.isArray(columnWidths) && columnWidths[i] ? { size: columnWidths[i], type: WidthType.DXA } : undefined
-      }));
-      rows.push(new TableRow({ children: headerCells, tableHeader: true }));
+    // Web-like table factory: soft borders, dark slate header, roomy padding, zebra rows
+    function createWebLikeTable(data, headers = [], columnWidths, alignments = []) {
+      const rows = [];
+      if (headers.length) {
+        const headerCells = headers.map(
+          (h, i) =>
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    createTextRun(h, {
+                      bold: true,
+                      size: FORMAT.sizes.small,
+                      color: FORMAT.colors.white,
+                    }),
+                  ],
+                  spacing: { before: 0, after: 0 },
+                }),
+              ],
+              shading: { fill: FORMAT.colors.slateHeader },
+              margins: { top: 40, bottom: 40, left: 100, right: 100 },
+              verticalAlign:
+                typeof VerticalAlign !== 'undefined' ? VerticalAlign.CENTER : undefined,
+              width:
+                Array.isArray(columnWidths) && columnWidths[i]
+                  ? { size: columnWidths[i], type: WidthType.DXA }
+                  : undefined,
+            }),
+        );
+        rows.push(new TableRow({ children: headerCells, tableHeader: true }));
+      }
+
+      data.forEach((rowData, rIdx) => {
+        const cells = rowData.map(
+          (cell, cIdx) =>
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    createTextRun((cell ?? '').toString(), {
+                      size: FORMAT.sizes.small,
+                      color: FORMAT.colors.black,
+                    }),
+                  ],
+                  spacing: { before: 0, after: 0 },
+                  alignment:
+                    alignments[cIdx] === 'right'
+                      ? AlignmentType.RIGHT
+                      : alignments[cIdx] === 'center'
+                        ? AlignmentType.CENTER
+                        : AlignmentType.LEFT,
+                }),
+              ],
+              margins: { top: 60, bottom: 60, left: 100, right: 100 },
+              verticalAlign:
+                typeof VerticalAlign !== 'undefined' ? VerticalAlign.CENTER : undefined,
+              shading: rIdx % 2 === 1 ? { fill: FORMAT.colors.zebra } : undefined,
+              width:
+                Array.isArray(columnWidths) && columnWidths[cIdx]
+                  ? { size: columnWidths[cIdx], type: WidthType.DXA }
+                  : undefined,
+            }),
+        );
+        rows.push(new TableRow({ children: cells, cantSplit: true }));
+      });
+
+      const table = new Table({
+        rows,
+        layout: typeof TableLayoutType !== 'undefined' ? TableLayoutType.FIXED : undefined,
+        width:
+          Array.isArray(columnWidths) && columnWidths.length
+            ? { size: columnWidths.reduce((a, b) => a + b, 0), type: WidthType.DXA }
+            : { size: 100, type: WidthType.PERCENTAGE },
+        borders: {
+          top: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
+          bottom: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
+          left: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
+          right: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
+          insideHorizontal: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
+          insideVertical: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
+        },
+      });
+
+      return table;
     }
 
-    data.forEach((rowData, rIdx) => {
-      const cells = rowData.map((cell, cIdx) => new TableCell({
-        children: [new Paragraph({
-          children: [createTextRun((cell ?? '').toString(), { size: FORMAT.sizes.small, color: FORMAT.colors.black })],
-          spacing: { before: 0, after: 0 },
-          alignment: alignments[cIdx] === 'right' ? AlignmentType.RIGHT : alignments[cIdx] === 'center' ? AlignmentType.CENTER : AlignmentType.LEFT
-        })],
-        margins: { top: 60, bottom: 60, left: 100, right: 100 },
-        verticalAlign: (typeof VerticalAlign !== 'undefined' ? VerticalAlign.CENTER : undefined),
-        shading: (rIdx % 2 === 1) ? { fill: FORMAT.colors.zebra } : undefined,
-        width: Array.isArray(columnWidths) && columnWidths[cIdx] ? { size: columnWidths[cIdx], type: WidthType.DXA } : undefined
-      }));
-      rows.push(new TableRow({ children: cells, cantSplit: true }));
-    });
-
-    const table = new Table({
-      rows,
-      layout: (typeof TableLayoutType !== 'undefined' ? TableLayoutType.FIXED : undefined),
-      width: Array.isArray(columnWidths) && columnWidths.length ? { size: columnWidths.reduce((a,b)=>a+b,0), type: WidthType.DXA } : { size: 100, type: WidthType.PERCENTAGE },
-      borders: {
-        top: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
-        bottom: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
-        left: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
-        right: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
-        insideHorizontal: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
-        insideVertical: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid }
-      }
-    });
-
-    return table;
-  }
-
-  // PROM (Passive ROM) export: rebuild rows from canonical definitions + saved values
+    // PROM (Passive ROM) export: rebuild rows from canonical definitions + saved values
     const promSaved = ra.prom || {};
     if (selected.length) {
       const promGroups = {};
-      selected.forEach(regionKey => {
+      selected.forEach((regionKey) => {
         const region = regionalAssessments[regionKey];
-        (region?.rom || []).forEach(item => {
+        (region?.rom || []).forEach((item) => {
           const baseName = item.name || item.joint || item.muscle;
           if (!promGroups[baseName]) {
             promGroups[baseName] = { normal: item.normal };
@@ -548,22 +794,31 @@ export function exportToWord(caseData, draft) {
 
       const excluded = new Set(ra.promExcluded || []);
       const promRows = Object.keys(promGroups)
-        .map(name => {
+        .map((name) => {
           const rowId = slug(name);
           if (excluded.has(rowId)) return null; // skip excluded items
           const saved = promSaved[rowId] || {};
-          const displayName = promGroups[name].normal ? `${name} (${promGroups[name].normal})` : name;
+          const displayName = promGroups[name].normal
+            ? `${name} (${promGroups[name].normal})`
+            : name;
           return [
             displayName,
             saved.left || '',
             saved.right || '',
-            (saved.notes || saved.endfeel || '')
+            saved.notes || saved.endfeel || '',
           ];
         })
         .filter(Boolean);
 
       if (promRows.length) {
-        elements.push(createWebLikeTable(promRows.map(r => [r[0], formatRom(r[1]), formatRom(r[2]), r[3]]), ['Passive Range of Motion (PROM)', 'Left', 'Right', 'Notes'], RA_COL_WIDTHS, ['left','right','right','left']));
+        elements.push(
+          createWebLikeTable(
+            promRows.map((r) => [r[0], formatRom(r[1]), formatRom(r[2]), r[3]]),
+            ['Passive Range of Motion (PROM)', 'Left', 'Right', 'Notes'],
+            RA_COL_WIDTHS,
+            ['left', 'right', 'right', 'left'],
+          ),
+        );
         elements.push(createSpacer(0, 160));
       }
     }
@@ -573,29 +828,37 @@ export function exportToWord(caseData, draft) {
     if (selected.length) {
       // Build groups with left/right index positions and normal values
       const romGroups = {};
-      selected.forEach(regionKey => {
+      selected.forEach((regionKey) => {
         const region = regionalAssessments[regionKey];
         (region?.rom || []).forEach((item, idx) => {
           const baseName = item.name || item.joint || item.muscle;
-          if (!romGroups[baseName]) romGroups[baseName] = { normal: item.normal, left: null, right: null, bilateral: null };
+          if (!romGroups[baseName])
+            romGroups[baseName] = { normal: item.normal, left: null, right: null, bilateral: null };
           if (item.side === 'L') romGroups[baseName].left = idx;
           else if (item.side === 'R') romGroups[baseName].right = idx;
           else romGroups[baseName].bilateral = idx;
         });
       });
 
-      const aromRows = Object.keys(romGroups).map(name => {
+      const aromRows = Object.keys(romGroups).map((name) => {
         const rowId = slug(name);
         const g = romGroups[name];
-        const leftVal = g.left != null ? (romSaved[g.left] || '') : '';
-        const rightVal = g.right != null ? (romSaved[g.right] || '') : '';
+        const leftVal = g.left != null ? romSaved[g.left] || '' : '';
+        const rightVal = g.right != null ? romSaved[g.right] || '' : '';
         const notesVal = romSaved[`${rowId}-notes`] || '';
         const displayName = g.normal ? `${name} (${g.normal})` : name;
         return [displayName, leftVal, rightVal, notesVal];
-  });
+      });
 
       if (aromRows.length) {
-        elements.push(createWebLikeTable(aromRows.map(r => [r[0], formatRom(r[1]), formatRom(r[2]), r[3]]), ['Active Range of Motion (AROM)', 'Left', 'Right', 'Notes'], RA_COL_WIDTHS, ['left','right','right','left']));
+        elements.push(
+          createWebLikeTable(
+            aromRows.map((r) => [r[0], formatRom(r[1]), formatRom(r[2]), r[3]]),
+            ['Active Range of Motion (AROM)', 'Left', 'Right', 'Notes'],
+            RA_COL_WIDTHS,
+            ['left', 'right', 'right', 'left'],
+          ),
+        );
         elements.push(createSpacer(0, 160));
       }
     }
@@ -604,28 +867,36 @@ export function exportToWord(caseData, draft) {
     const mmtSaved = ra.mmt || {};
     if (selected.length) {
       const mmtGroups = {};
-      selected.forEach(regionKey => {
+      selected.forEach((regionKey) => {
         const region = regionalAssessments[regionKey];
         (region?.mmt || []).forEach((item, idx) => {
           const baseName = item.name || item.joint || item.muscle;
-          if (!mmtGroups[baseName]) mmtGroups[baseName] = { left: null, right: null, bilateral: null };
+          if (!mmtGroups[baseName])
+            mmtGroups[baseName] = { left: null, right: null, bilateral: null };
           if (item.side === 'L') mmtGroups[baseName].left = idx;
           else if (item.side === 'R') mmtGroups[baseName].right = idx;
           else mmtGroups[baseName].bilateral = idx;
         });
       });
 
-      const mmtRows = Object.keys(mmtGroups).map(name => {
+      const mmtRows = Object.keys(mmtGroups).map((name) => {
         const rowId = slug(name);
         const g = mmtGroups[name];
-        const leftVal = g.left != null ? (mmtSaved[g.left] || '') : '';
-        const rightVal = g.right != null ? (mmtSaved[g.right] || '') : '';
+        const leftVal = g.left != null ? mmtSaved[g.left] || '' : '';
+        const rightVal = g.right != null ? mmtSaved[g.right] || '' : '';
         const notesVal = mmtSaved[`${rowId}-notes`] || '';
         return [name, leftVal, rightVal, notesVal];
-  });
+      });
 
       if (mmtRows.length) {
-        elements.push(createWebLikeTable(mmtRows.map(r => [r[0], formatMmt(r[1]), formatMmt(r[2]), r[3]]), ['Manual Muscle Testing', 'Left', 'Right', 'Notes'], RA_COL_WIDTHS, ['left','right','right','left']));
+        elements.push(
+          createWebLikeTable(
+            mmtRows.map((r) => [r[0], formatMmt(r[1]), formatMmt(r[2]), r[3]]),
+            ['Manual Muscle Testing', 'Left', 'Right', 'Notes'],
+            RA_COL_WIDTHS,
+            ['left', 'right', 'right', 'left'],
+          ),
+        );
         elements.push(createSpacer(0, 160));
       }
     }
@@ -634,51 +905,80 @@ export function exportToWord(caseData, draft) {
     const testsSaved = ra.specialTests || {};
     if (selected.length) {
       const combinedTests = [];
-      selected.forEach(regionKey => {
+      selected.forEach((regionKey) => {
         const region = regionalAssessments[regionKey];
-        (region?.specialTests || []).forEach(test => combinedTests.push(test));
+        (region?.specialTests || []).forEach((test) => combinedTests.push(test));
       });
 
       // Map saved values to UI display labels to mirror the page
       const labelizeTest = (val) => {
         if (!val) return 'Not performed';
-        const map = { positive: 'Positive', negative: 'Negative', inconclusive: 'Inconclusive', unable: 'Unable to perform' };
+        const map = {
+          positive: 'Positive',
+          negative: 'Negative',
+          inconclusive: 'Inconclusive',
+          unable: 'Unable to perform',
+        };
         return map[val] || val;
       };
 
       const testsRows = combinedTests.map((test, idx) => {
         const id = `test-${idx}`;
         const saved = testsSaved[id] || {};
-        return [test.name || '', labelizeTest(saved.left), labelizeTest(saved.right), saved.notes || ''];
-  });
+        return [
+          test.name || '',
+          labelizeTest(saved.left),
+          labelizeTest(saved.right),
+          saved.notes || '',
+        ];
+      });
 
       if (testsRows.length) {
-        elements.push(createWebLikeTable(testsRows, ['Special Tests', 'Left', 'Right', 'Notes'], RA_COL_WIDTHS, ['left','right','right','left']));
+        elements.push(
+          createWebLikeTable(
+            testsRows,
+            ['Special Tests', 'Left', 'Right', 'Notes'],
+            RA_COL_WIDTHS,
+            ['left', 'right', 'right', 'left'],
+          ),
+        );
         elements.push(createSpacer(0, 160));
       }
     }
-    
+
     // Add fallback message if no regional assessment data
-  const noRegionalData = !selected.length;
+    const noRegionalData = !selected.length;
     if (noRegionalData) {
-      elements.push(createBodyParagraph('No regional assessment data recorded', { indentLeft: FORMAT.indent.level1 }));
+      elements.push(
+        createBodyParagraph('No regional assessment data recorded', {
+          indentLeft: FORMAT.indent.level1,
+        }),
+      );
     }
-    
+
     // Add selected regions information if available
     const selectedRegions = selected || [];
     if (selectedRegions.length > 0) {
       elements.push(createSectionHeader('Regions Assessed', 3));
-      const names = selectedRegions.map(k => (regionalAssessments[k]?.name || k));
+      const names = selectedRegions.map((k) => regionalAssessments[k]?.name || k);
       elements.push(createBodyParagraph(names.join(', '), { indentLeft: FORMAT.indent.level1 }));
     }
-    
+
     // Neuro/Functional
-  elements.push(createSectionHeader('Neurological Screening', 2));
-  elements.push(createBodyParagraph(getSafeValue(obj, 'neuro.screening', ''), { indentLeft: FORMAT.indent.level1 }));
-  elements.push(createSectionHeader('Functional Movement Assessment', 2));
-  elements.push(createBodyParagraph(getSafeValue(obj, 'functional.assessment', ''), { indentLeft: FORMAT.indent.level1 }));
+    elements.push(createSectionHeader('Neurological Screening', 2));
+    elements.push(
+      createBodyParagraph(getSafeValue(obj, 'neuro.screening', ''), {
+        indentLeft: FORMAT.indent.level1,
+      }),
+    );
+    elements.push(createSectionHeader('Functional Movement Assessment', 2));
+    elements.push(
+      createBodyParagraph(getSafeValue(obj, 'functional.assessment', ''), {
+        indentLeft: FORMAT.indent.level1,
+      }),
+    );
     // Treatment Performed
-  elements.push(createSectionHeader('Treatment Performed', 2));
+    elements.push(createSectionHeader('Treatment Performed', 2));
     const tp = obj.treatmentPerformed || {};
     const tpLines = [];
     if (tp.patientEducation) tpLines.push(`Patient Education: ${tp.patientEducation}`);
@@ -689,74 +989,127 @@ export function exportToWord(caseData, draft) {
       elements.push(...createBulletedList(tpLines, FORMAT.indent.level1));
     }
 
-  // ASSESSMENT Section (draft-first)
-  elements.push(createSectionDivider());
-  elements.push(createWebSectionHeader('ASSESSMENT'));
-  let assess = (draft && draft.assessment) || {};
-  // Assessment data should always be an object
-  assess = {
-    primaryImpairments: '',
-    bodyFunctions: '',
-    activityLimitations: '',
-    participationRestrictions: '',
-    ptDiagnosis: '',
-    prognosis: '',
-    prognosticFactors: '',
-    clinicalReasoning: '',
-    ...assess
-  };
-  
-  elements.push(createSectionHeader('Primary Impairments', 2));
-  if (assess.primaryImpairments) {
-    elements.push(...createBulletedList([
-      `Key Physical Impairments Identified: ${assess.primaryImpairments}`
-    ], FORMAT.indent.level1));
-  } else {
-    elements.push(createBodyParagraph('— not documented', { indentLeft: FORMAT.indent.level1, italics: true, color: FORMAT.colors.grayText }));
-  }
-  elements.push(createSectionHeader('ICF Classification', 2));
-    const hasIcf = !!(assess.bodyFunctions || assess.activityLimitations || assess.participationRestrictions);
-    if (hasIcf) {
-      if (assess.bodyFunctions) elements.push(createLabelValueLine('Body Functions', assess.bodyFunctions, { indentLeft: FORMAT.indent.level1 }));
-      if (assess.activityLimitations) elements.push(createLabelValueLine('Activity Limitations', assess.activityLimitations, { indentLeft: FORMAT.indent.level1 }));
-      if (assess.participationRestrictions) elements.push(createLabelValueLine('Participation Restrictions', assess.participationRestrictions, { indentLeft: FORMAT.indent.level1 }));
+    // ASSESSMENT Section (draft-first)
+    elements.push(createSectionDivider());
+    elements.push(createWebSectionHeader('ASSESSMENT'));
+    let assess = (draft && draft.assessment) || {};
+    // Assessment data should always be an object
+    assess = {
+      primaryImpairments: '',
+      bodyFunctions: '',
+      activityLimitations: '',
+      participationRestrictions: '',
+      ptDiagnosis: '',
+      prognosis: '',
+      prognosticFactors: '',
+      clinicalReasoning: '',
+      ...assess,
+    };
+
+    elements.push(createSectionHeader('Primary Impairments', 2));
+    if (assess.primaryImpairments) {
+      elements.push(
+        ...createBulletedList(
+          [`Key Physical Impairments Identified: ${assess.primaryImpairments}`],
+          FORMAT.indent.level1,
+        ),
+      );
     } else {
-      elements.push(createBodyParagraph('— not documented', { indentLeft: FORMAT.indent.level1, italics: true, color: FORMAT.colors.grayText }));
+      elements.push(
+        createBodyParagraph('— not documented', {
+          indentLeft: FORMAT.indent.level1,
+          italics: true,
+          color: FORMAT.colors.grayText,
+        }),
+      );
     }
-  elements.push(createSectionHeader('Physical Therapy Diagnosis & Prognosis', 2));
-  const dxProg = [];
+    elements.push(createSectionHeader('ICF Classification', 2));
+    const hasIcf = !!(
+      assess.bodyFunctions ||
+      assess.activityLimitations ||
+      assess.participationRestrictions
+    );
+    if (hasIcf) {
+      if (assess.bodyFunctions)
+        elements.push(
+          createLabelValueLine('Body Functions', assess.bodyFunctions, {
+            indentLeft: FORMAT.indent.level1,
+          }),
+        );
+      if (assess.activityLimitations)
+        elements.push(
+          createLabelValueLine('Activity Limitations', assess.activityLimitations, {
+            indentLeft: FORMAT.indent.level1,
+          }),
+        );
+      if (assess.participationRestrictions)
+        elements.push(
+          createLabelValueLine('Participation Restrictions', assess.participationRestrictions, {
+            indentLeft: FORMAT.indent.level1,
+          }),
+        );
+    } else {
+      elements.push(
+        createBodyParagraph('— not documented', {
+          indentLeft: FORMAT.indent.level1,
+          italics: true,
+          color: FORMAT.colors.grayText,
+        }),
+      );
+    }
+    elements.push(createSectionHeader('Physical Therapy Diagnosis & Prognosis', 2));
+    const dxProg = [];
     const prognosisMap = {
       excellent: 'Excellent - Full recovery expected',
       good: 'Good - Significant improvement expected',
       fair: 'Fair - Moderate improvement expected',
       poor: 'Poor - Minimal improvement expected',
-      guarded: 'Guarded - Uncertain outcome'
+      guarded: 'Guarded - Uncertain outcome',
     };
     if (assess.ptDiagnosis) dxProg.push(`PT Diagnosis: ${assess.ptDiagnosis}`);
     if (assess.prognosis) {
       const progLabel = prognosisMap[assess.prognosis] || assess.prognosis;
       dxProg.push(`Prognosis: ${progLabel}`);
     }
-  if (assess.prognosticFactors) dxProg.push(`Prognostic Factors: ${assess.prognosticFactors}`);
+    if (assess.prognosticFactors) dxProg.push(`Prognostic Factors: ${assess.prognosticFactors}`);
     if (dxProg.length) {
-      dxProg.forEach(line => {
+      dxProg.forEach((line) => {
         const [label, ...rest] = line.split(': ');
         const value = rest.join(': ');
-        elements.push(createLabelValueLine(label, value, { indentLeft: FORMAT.indent.level1, bullet: false }));
+        elements.push(
+          createLabelValueLine(label, value, { indentLeft: FORMAT.indent.level1, bullet: false }),
+        );
       });
     } else {
-      elements.push(createBodyParagraph('— not documented', { indentLeft: FORMAT.indent.level1, italics: true, color: FORMAT.colors.grayText }));
+      elements.push(
+        createBodyParagraph('— not documented', {
+          indentLeft: FORMAT.indent.level1,
+          italics: true,
+          color: FORMAT.colors.grayText,
+        }),
+      );
     }
-  elements.push(createSectionHeader('Clinical Reasoning', 2));
-  if (assess.clinicalReasoning) {
-    elements.push(createBodyParagraph(assess.clinicalReasoning, { indentLeft: FORMAT.indent.level1, keepLines: true }));
-  } else {
-    elements.push(createBodyParagraph('— not documented', { indentLeft: FORMAT.indent.level1, italics: true, color: FORMAT.colors.grayText }));
-  }
+    elements.push(createSectionHeader('Clinical Reasoning', 2));
+    if (assess.clinicalReasoning) {
+      elements.push(
+        createBodyParagraph(assess.clinicalReasoning, {
+          indentLeft: FORMAT.indent.level1,
+          keepLines: true,
+        }),
+      );
+    } else {
+      elements.push(
+        createBodyParagraph('— not documented', {
+          indentLeft: FORMAT.indent.level1,
+          italics: true,
+          color: FORMAT.colors.grayText,
+        }),
+      );
+    }
 
-  // PLAN Section (draft-first)
-  elements.push(createSectionDivider());
-  elements.push(createWebSectionHeader('PLAN'));
+    // PLAN Section (draft-first)
+    elements.push(createSectionDivider());
+    elements.push(createWebSectionHeader('PLAN'));
     let plan = (draft && draft.plan) || {};
     // Normalize plan object with defaults
     plan = {
@@ -768,62 +1121,126 @@ export function exportToWord(caseData, draft) {
       goalsTable: {},
       shortTermGoals: '',
       longTermGoals: '',
-      ...plan
+      ...plan,
     };
     // SMART Goals first
-  elements.push(createSectionHeader('SMART Goals & Outcomes', 2));
-    const goalRows = plan.goalsTable && typeof plan.goalsTable === 'object' ? Object.values(plan.goalsTable) : [];
+    elements.push(createSectionHeader('SMART Goals & Outcomes', 2));
+    const goalRows =
+      plan.goalsTable && typeof plan.goalsTable === 'object' ? Object.values(plan.goalsTable) : [];
     if (goalRows && goalRows.length) {
-      const goalsData = goalRows.map((row, i) => [String(i + 1), (row.goalText || row.goal || '').toString()]);
-  elements.push(createWebLikeTable(goalsData, ['#', 'Goal'], undefined, ['right','left']));
+      const goalsData = goalRows.map((row, i) => [
+        String(i + 1),
+        (row.goalText || row.goal || '').toString(),
+      ]);
+      elements.push(createWebLikeTable(goalsData, ['#', 'Goal'], undefined, ['right', 'left']));
     } else {
       const hadAny = !!(plan.shortTermGoals || plan.longTermGoals);
       if (hadAny) {
-        if (plan.shortTermGoals) elements.push(createLabelValueLine('Short-term Goals', plan.shortTermGoals, { indentLeft: FORMAT.indent.level1 }));
-        if (plan.longTermGoals) elements.push(createLabelValueLine('Long-term Goals', plan.longTermGoals, { indentLeft: FORMAT.indent.level1 }));
+        if (plan.shortTermGoals)
+          elements.push(
+            createLabelValueLine('Short-term Goals', plan.shortTermGoals, {
+              indentLeft: FORMAT.indent.level1,
+            }),
+          );
+        if (plan.longTermGoals)
+          elements.push(
+            createLabelValueLine('Long-term Goals', plan.longTermGoals, {
+              indentLeft: FORMAT.indent.level1,
+            }),
+          );
       } else {
-        elements.push(createBodyParagraph('No goals documented', { indentLeft: FORMAT.indent.level1 }));
+        elements.push(
+          createBodyParagraph('No goals documented', { indentLeft: FORMAT.indent.level1 }),
+        );
       }
     }
     // Plan of Care next
-  elements.push(createSectionHeader('Plan of Care', 2));
+    elements.push(createSectionHeader('Plan of Care', 2));
     const pocLines = [];
-  if (plan.treatmentPlan) elements.push(createLabelValueLine('Treatment Plan & Interventions', plan.treatmentPlan, { indentLeft: FORMAT.indent.level1, bullet: false }));
-  if (plan.patientEducation) elements.push(createLabelValueLine('Patient Education', plan.patientEducation, { indentLeft: FORMAT.indent.level1, bullet: false }));
+    if (plan.treatmentPlan)
+      elements.push(
+        createLabelValueLine('Treatment Plan & Interventions', plan.treatmentPlan, {
+          indentLeft: FORMAT.indent.level1,
+          bullet: false,
+        }),
+      );
+    if (plan.patientEducation)
+      elements.push(
+        createLabelValueLine('Patient Education', plan.patientEducation, {
+          indentLeft: FORMAT.indent.level1,
+          bullet: false,
+        }),
+      );
     if (plan.treatmentPlan || plan.patientEducation) {
       // already added above
     } else {
-      elements.push(createBodyParagraph('— not documented', { indentLeft: FORMAT.indent.level1, italics: true, color: FORMAT.colors.grayText }));
+      elements.push(
+        createBodyParagraph('— not documented', {
+          indentLeft: FORMAT.indent.level1,
+          italics: true,
+          color: FORMAT.colors.grayText,
+        }),
+      );
     }
     // In-Clinic Treatment Plan (Frequency/Duration + Exercise table)
-  elements.push(createSectionHeader('In-Clinic Treatment Plan', 2));
+    elements.push(createSectionHeader('In-Clinic Treatment Plan', 2));
     const sched = [];
     if (plan.frequency) sched.push(`Frequency: ${plan.frequency}`);
     if (plan.duration) sched.push(`Duration: ${plan.duration}`);
     if (sched.length) {
-      sched.forEach(line => {
+      sched.forEach((line) => {
         const [label, ...rest] = line.split(': ');
-        elements.push(createLabelValueLine(label, rest.join(': '), { indentLeft: FORMAT.indent.level1, bullet: false }));
+        elements.push(
+          createLabelValueLine(label, rest.join(': '), {
+            indentLeft: FORMAT.indent.level1,
+            bullet: false,
+          }),
+        );
       });
     } else {
-      elements.push(createBodyParagraph('— not documented', { indentLeft: FORMAT.indent.level1, italics: true, color: FORMAT.colors.grayText }));
+      elements.push(
+        createBodyParagraph('— not documented', {
+          indentLeft: FORMAT.indent.level1,
+          italics: true,
+          color: FORMAT.colors.grayText,
+        }),
+      );
     }
     // Exercise simple table
-    const exerciseRows = plan.exerciseTable && typeof plan.exerciseTable === 'object' ? Object.values(plan.exerciseTable) : [];
+    const exerciseRows =
+      plan.exerciseTable && typeof plan.exerciseTable === 'object'
+        ? Object.values(plan.exerciseTable)
+        : [];
     if (exerciseRows && exerciseRows.length) {
-      const exerciseData = exerciseRows.map((row, i) => [String(i + 1), (row.exerciseText || row.exercise || '').toString()]);
-  elements.push(createWebLikeTable(exerciseData, ['#', 'In-Clinic Exercises / Interventions'], undefined, ['right','left']));
+      const exerciseData = exerciseRows.map((row, i) => [
+        String(i + 1),
+        (row.exerciseText || row.exercise || '').toString(),
+      ]);
+      elements.push(
+        createWebLikeTable(exerciseData, ['#', 'In-Clinic Exercises / Interventions'], undefined, [
+          'right',
+          'left',
+        ]),
+      );
     } else {
-      elements.push(createBodyParagraph('No in-clinic exercises documented', { indentLeft: FORMAT.indent.level1 }));
+      elements.push(
+        createBodyParagraph('No in-clinic exercises documented', {
+          indentLeft: FORMAT.indent.level1,
+        }),
+      );
     }
 
-  // BILLING Section
-  elements.push(createSectionDivider());
-  elements.push(createWebSectionHeader('BILLING'));
+    // BILLING Section
+    elements.push(createSectionDivider());
+    elements.push(createWebSectionHeader('BILLING'));
     const billing = (draft && draft.billing) || {};
     // ICD-10 Codes
-  elements.push(createSectionHeader('ICD-10 Codes', 2));
-    const icdRows = Array.isArray(billing.diagnosisCodes) ? billing.diagnosisCodes : (Array.isArray(billing.icdCodes) ? billing.icdCodes : []);
+    elements.push(createSectionHeader('ICD-10 Codes', 2));
+    const icdRows = Array.isArray(billing.diagnosisCodes)
+      ? billing.diagnosisCodes
+      : Array.isArray(billing.icdCodes)
+        ? billing.icdCodes
+        : [];
     if (icdRows.length) {
       icdRows.forEach((row, index) => {
         const primaryIndicator = row.isPrimary ? ' (Primary)' : '';
@@ -833,33 +1250,51 @@ export function exportToWord(caseData, draft) {
           // Try to find the label from the ICD-10 codes list based on the code
           const icdCodesList = [
             { value: 'M54.5', label: 'M54.5 - Low back pain' },
-            { value: 'M51.36', label: 'M51.36 - Other intervertebral disc degeneration, lumbar region' },
+            {
+              value: 'M51.36',
+              label: 'M51.36 - Other intervertebral disc degeneration, lumbar region',
+            },
             { value: 'M54.16', label: 'M54.16 - Radiculopathy, lumbar region' },
             { value: 'M54.2', label: 'M54.2 - Cervicalgia' },
-            { value: 'M50.30', label: 'M50.30 - Other cervical disc degeneration, unspecified cervical region' },
+            {
+              value: 'M50.30',
+              label: 'M50.30 - Other cervical disc degeneration, unspecified cervical region',
+            },
             { value: 'M54.12', label: 'M54.12 - Radiculopathy, cervical region' },
             { value: 'M25.511', label: 'M25.511 - Pain in right shoulder' },
             { value: 'M25.512', label: 'M25.512 - Pain in left shoulder' },
             { value: 'M75.30', label: 'M75.30 - Calcific tendinitis of unspecified shoulder' },
-            { value: 'M75.100', label: 'M75.100 - Unspecified rotator cuff tear or rupture of unspecified shoulder, not specified as traumatic' },
+            {
+              value: 'M75.100',
+              label:
+                'M75.100 - Unspecified rotator cuff tear or rupture of unspecified shoulder, not specified as traumatic',
+            },
             { value: 'M25.561', label: 'M25.561 - Pain in right knee' },
-            { value: 'M25.562', label: 'M25.562 - Pain in left knee' }
+            { value: 'M25.562', label: 'M25.562 - Pain in left knee' },
           ];
-          const foundCode = icdCodesList.find(c => c.value === row.code);
+          const foundCode = icdCodesList.find((c) => c.value === row.code);
           displayText = foundCode ? foundCode.label : `${row.code}: ${row.description}`;
         }
         if (!displayText) {
           displayText = `${row.code || 'No code'}: ${row.description || 'No description'}`;
         }
         const codeText = `${displayText}${primaryIndicator}`;
-        elements.push(createLabelValueLine('', codeText, { indentLeft: FORMAT.indent.level1, bullet: true }));
+        elements.push(
+          createLabelValueLine('', codeText, { indentLeft: FORMAT.indent.level1, bullet: true }),
+        );
       });
     } else {
-      elements.push(createBodyParagraph('No ICD-10 codes documented', { indentLeft: FORMAT.indent.level1 }));
+      elements.push(
+        createBodyParagraph('No ICD-10 codes documented', { indentLeft: FORMAT.indent.level1 }),
+      );
     }
     // CPT Codes
-  elements.push(createSectionHeader('CPT Codes', 2));
-    const cptRows = Array.isArray(billing.billingCodes) ? billing.billingCodes : (Array.isArray(billing.cptCodes) ? billing.cptCodes : []);
+    elements.push(createSectionHeader('CPT Codes', 2));
+    const cptRows = Array.isArray(billing.billingCodes)
+      ? billing.billingCodes
+      : Array.isArray(billing.cptCodes)
+        ? billing.cptCodes
+        : [];
     if (cptRows.length) {
       cptRows.forEach((row, index) => {
         // Use label if available, otherwise try to reconstruct it from code, finally fall back to description
@@ -885,9 +1320,9 @@ export function exportToWord(caseData, draft) {
             { value: '97018', label: '97018 - Paraffin Bath' },
             { value: '97022', label: '97022 - Whirlpool' },
             { value: '97032', label: '97032 - Electrical Stimulation (Manual)' },
-            { value: '97033', label: '97033 - Iontophoresis' }
+            { value: '97033', label: '97033 - Iontophoresis' },
           ];
-          const foundCode = cptCodesList.find(c => c.value === row.code);
+          const foundCode = cptCodesList.find((c) => c.value === row.code);
           displayText = foundCode ? foundCode.label : row.description;
         }
         if (!displayText) {
@@ -902,32 +1337,53 @@ export function exportToWord(caseData, draft) {
             codeText += ` (${additionalInfo})`;
           }
         }
-        elements.push(createLabelValueLine('', codeText, { indentLeft: FORMAT.indent.level1, bullet: true }));
+        elements.push(
+          createLabelValueLine('', codeText, { indentLeft: FORMAT.indent.level1, bullet: true }),
+        );
       });
     } else {
-      elements.push(createBodyParagraph('No CPT codes documented', { indentLeft: FORMAT.indent.level1 }));
+      elements.push(
+        createBodyParagraph('No CPT codes documented', { indentLeft: FORMAT.indent.level1 }),
+      );
     }
     // Orders & Referrals
-  elements.push(createSectionHeader('Orders & Referrals', 2));
+    elements.push(createSectionHeader('Orders & Referrals', 2));
     const ordRows = Array.isArray(billing.ordersReferrals) ? billing.ordersReferrals : [];
     if (ordRows.length) {
       ordRows.forEach((row, index) => {
         const orderText = `${row.type || 'No type'}: ${row.details || 'No details'}`;
-        elements.push(createLabelValueLine('', orderText, { indentLeft: FORMAT.indent.level1, bullet: true }));
+        elements.push(
+          createLabelValueLine('', orderText, { indentLeft: FORMAT.indent.level1, bullet: true }),
+        );
       });
     } else {
-      elements.push(createBodyParagraph('No orders or referrals documented', { indentLeft: FORMAT.indent.level1 }));
+      elements.push(
+        createBodyParagraph('No orders or referrals documented', {
+          indentLeft: FORMAT.indent.level1,
+        }),
+      );
     }
 
     // Create the document
     // Footer with patient identifiers and page numbers
     let footer = null;
-    const footerSupported = typeof Footer !== 'undefined' && typeof PageNumber !== 'undefined' && typeof NumberOfTotalPages !== 'undefined';
+    const footerSupported =
+      typeof Footer !== 'undefined' &&
+      typeof PageNumber !== 'undefined' &&
+      typeof NumberOfTotalPages !== 'undefined';
     if (footerSupported) {
-      const patientName = getSafeValue(caseData, 'snapshot.name', getSafeValue(caseData, 'title', 'Patient'));
+      const patientName = getSafeValue(
+        caseData,
+        'snapshot.name',
+        getSafeValue(caseData, 'title', 'Patient'),
+      );
       const idLeft = new Paragraph({
         alignment: AlignmentType.LEFT,
-        children: [createTextRun(`${patientName} | DOB: ${dobValue || ''} | DoS: ${fmtDate(new Date())}`, { size: FORMAT.sizes.small })]
+        children: [
+          createTextRun(`${patientName} | DOB: ${dobValue || ''} | DoS: ${fmtDate(new Date())}`, {
+            size: FORMAT.sizes.small,
+          }),
+        ],
       });
       const pageCenter = new Paragraph({
         alignment: AlignmentType.CENTER,
@@ -935,38 +1391,65 @@ export function exportToWord(caseData, draft) {
           createTextRun('Page ', { size: FORMAT.sizes.small }),
           PageNumber.CURRENT,
           createTextRun(' of ', { size: FORMAT.sizes.small }),
-          NumberOfTotalPages.CURRENT
-        ]
+          NumberOfTotalPages.CURRENT,
+        ],
       });
 
-      const isDraftExport = !!(draft && (draft.isDraft === true || draft.__isDraft === true || draft.__exportStatus === 'draft'));
-      const draftBanner = isDraftExport ? new Paragraph({
-        alignment: AlignmentType.CENTER,
-        children: [createTextRun('DRAFT – for educational use only', { size: FORMAT.sizes.small, bold: true, color: FORMAT.colors.gray })]
-      }) : null;
+      const isDraftExport = !!(
+        draft &&
+        (draft.isDraft === true || draft.__isDraft === true || draft.__exportStatus === 'draft')
+      );
+      const draftBanner = isDraftExport
+        ? new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+              createTextRun('DRAFT – for educational use only', {
+                size: FORMAT.sizes.small,
+                bold: true,
+                color: FORMAT.colors.gray,
+              }),
+            ],
+          })
+        : null;
 
       footer = new Footer({
-        children: [draftBanner, idLeft, pageCenter].filter(Boolean)
+        children: [draftBanner, idLeft, pageCenter].filter(Boolean),
       });
     }
 
     const sectionDef = {
       properties: {
         page: {
-          margin: { top: 1440, right: 1440, bottom: 1440, left: 1440, header: 720, footer: 720, gutter: 0 }
-        }
+          margin: {
+            top: 1440,
+            right: 1440,
+            bottom: 1440,
+            left: 1440,
+            header: 720,
+            footer: 720,
+            gutter: 0,
+          },
+        },
       },
       children: elements,
-      headers: typeof Header !== 'undefined' ? {
-        default: new Header({
-          children: [
-            new Paragraph({
-              alignment: AlignmentType.LEFT,
-              children: [createTextRun('PT Evaluation — University of North Dakota Physical Therapy Program', { size: FORMAT.sizes.small, color: FORMAT.colors.gray })]
-            })
-          ]
-        })
-      } : undefined
+      headers:
+        typeof Header !== 'undefined'
+          ? {
+              default: new Header({
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.LEFT,
+                    children: [
+                      createTextRun(
+                        'PT Evaluation — University of North Dakota Physical Therapy Program',
+                        { size: FORMAT.sizes.small, color: FORMAT.colors.gray },
+                      ),
+                    ],
+                  }),
+                ],
+              }),
+            }
+          : undefined,
     };
     if (footer) {
       sectionDef.footers = { default: footer };
@@ -982,60 +1465,63 @@ export function exportToWord(caseData, draft) {
           document: {
             run: {
               font: FORMAT.font,
-              size: FORMAT.sizes.body
+              size: FORMAT.sizes.body,
             },
             paragraph: {
               spacing: {
-                line: FORMAT.spacing.lineSpacing
-              }
-            }
-          }
+                line: FORMAT.spacing.lineSpacing,
+              },
+            },
+          },
         },
         // Additional style definitions for better typography
         paragraphStyles: [
           {
-            id: "Heading1UND",
-            name: "UND Heading 1",
-            basedOn: "Heading1",
+            id: 'Heading1UND',
+            name: 'UND Heading 1',
+            basedOn: 'Heading1',
             run: {
               font: FORMAT.headingFont,
               size: FORMAT.sizes.heading1,
               color: FORMAT.colors.blue,
-              bold: true
-            }
+              bold: true,
+            },
           },
           {
-            id: "Heading2UND", 
-            name: "UND Heading 2",
-            basedOn: "Heading2",
+            id: 'Heading2UND',
+            name: 'UND Heading 2',
+            basedOn: 'Heading2',
             run: {
               font: FORMAT.font,
               size: FORMAT.sizes.heading2,
               color: FORMAT.colors.darkBlue,
-              bold: true
-            }
-          }
-        ]
-      }
+              bold: true,
+            },
+          },
+        ],
+      },
     });
 
     // Generate and download the document
-    Packer.toBlob(doc).then(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `PT_Evaluation_${getSafeValue(caseData, 'snapshot.name', getSafeValue(caseData, 'title', 'Patient')).replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }).catch(error => {
-      console.error('Error generating document blob:', error);
-      alert('Failed to generate document file. Please try again.');
-    });
-
+    Packer.toBlob(doc)
+      .then((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `PT_Evaluation_${getSafeValue(caseData, 'snapshot.name', getSafeValue(caseData, 'title', 'Patient')).replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.docx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      })
+      .catch((error) => {
+        console.error('Error generating document blob:', error);
+        alert('Failed to generate document file. Please try again.');
+      });
   } catch (error) {
     console.error('Word document export failed:', error);
-    alert('Failed to export Word document. Please check that all required libraries are loaded and try again.');
+    alert(
+      'Failed to export Word document. Please check that all required libraries are loaded and try again.',
+    );
   }
 }

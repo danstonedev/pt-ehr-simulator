@@ -1,4 +1,3 @@
-
 export const ENUMS = {
   setting: ['Outpatient', 'Inpatient', 'Home Health', 'SNF', 'Acute Rehab', 'Other'],
   encounters: ['eval', 'daily', 'progress', 'discharge'],
@@ -7,24 +6,33 @@ export const ENUMS = {
   sex: ['male', 'female', 'other', 'unspecified'],
   prognosis: ['excellent', 'good', 'fair', 'poor', 'guarded'],
   regions: ['lumbar-spine', 'cervical-spine', 'shoulder', 'knee', 'ankle', 'hip', 'elbow', 'wrist'],
-  painQuality: ['sharp', 'dull', 'aching', 'burning', 'throbbing', 'stabbing', 'cramping', 'tingling']
+  painQuality: [
+    'sharp',
+    'dull',
+    'aching',
+    'burning',
+    'throbbing',
+    'stabbing',
+    'cramping',
+    'tingling',
+  ],
 };
 
 export function makeBlankCase() {
-  return { 
+  return {
     meta: {
-      title: '', 
-      setting: 'Outpatient', 
-      regions: [], 
-      acuity: 'unspecified', 
-      diagnosis: 'Musculoskeletal'
+      title: '',
+      setting: 'Outpatient',
+      regions: [],
+      acuity: 'unspecified',
+      diagnosis: 'Musculoskeletal',
     },
     snapshot: {
       name: '',
       age: '',
       sex: 'unspecified',
       dob: '',
-      teaser: ''
+      teaser: '',
     },
     history: {
       chief_complaint: '',
@@ -37,48 +45,48 @@ export function makeBlankCase() {
         aggravating_factors: '',
         easing_factors: '',
         onset: '',
-        duration: ''
+        duration: '',
       },
       pmh: [],
       meds: [],
       red_flag_signals: [],
-      functional_goals: []
+      functional_goals: [],
     },
     findings: {
-      vitals: { 
-        bp: '', 
-        hr: '', 
-        rr: '', 
-        temp: '', 
-        o2sat: '', 
-        pain: '' 
+      vitals: {
+        bp: '',
+        hr: '',
+        rr: '',
+        temp: '',
+        o2sat: '',
+        pain: '',
       },
       rom: {},
       mmt: {},
       special_tests: [],
-      gait: { 
-        device: 'none', 
+      gait: {
+        device: 'none',
         distance_m: 0,
         pattern: '',
-        observations: ''
+        observations: '',
       },
-      outcome_options: []
+      outcome_options: [],
     },
     // Updated structure to match actual usage in application
     exam: {
-      vitals: { 
-        bp: '', 
-        hr: '', 
-        rr: '', 
-        temp: '', 
-        o2sat: '', 
-        pain: '' 
+      vitals: {
+        bp: '',
+        hr: '',
+        rr: '',
+        temp: '',
+        o2sat: '',
+        pain: '',
       },
       inspection: {
-        visual: ''
+        visual: '',
       },
       palpation: {
-        findings: ''
+        findings: '',
       },
       range_of_motion: {},
       muscle_strength: {},
@@ -87,14 +95,14 @@ export function makeBlankCase() {
       gait: {
         pattern: '',
         device: '',
-        observations: ''
+        observations: '',
       },
       regionalAssessments: {
         selectedRegions: [],
         rom: {},
         mmt: {},
-        specialTests: {}
-      }
+        specialTests: {},
+      },
     },
     assessment: {
       primaryImpairments: '',
@@ -109,7 +117,7 @@ export function makeBlankCase() {
       icf_framework: {
         body_functions: '',
         activity_limitations: '',
-        participation_restrictions: ''
+        participation_restrictions: '',
       },
       visibility: {
         primaryImpairments: { studentKey: true, studentExaminer: true },
@@ -119,58 +127,60 @@ export function makeBlankCase() {
         ptDiagnosis: { studentKey: true, studentExaminer: false },
         prognosis: { studentKey: true, studentExaminer: false },
         prognosticFactors: { studentKey: true, studentExaminer: false },
-        clinicalReasoning: { studentKey: true, studentExaminer: false }
-      }
+        clinicalReasoning: { studentKey: true, studentExaminer: false },
+      },
     },
     plan: {
       goals: [],
       interventions: [],
       frequency: '',
       duration: '',
-      prognosis: ''
+      prognosis: '',
     },
     encounters: {
-      eval: { 
+      eval: {
         notes_seed: '',
-        completed_sections: []
+        completed_sections: [],
       },
       daily: [],
       progress: null,
-      discharge: null
-    }, 
-    assets: [] 
+      discharge: null,
+    },
+    assets: [],
   };
 }
 
 // Enhanced validation with specific field checks
 export function validateCase(c) {
-  const e = []; 
-  
+  const e = [];
+
   // Meta validation
   if (!c?.meta?.title) e.push('meta.title is required');
   if (c?.meta?.setting && !ENUMS.setting.includes(c.meta.setting)) e.push('meta.setting invalid');
-  if (c?.meta?.diagnosis && !ENUMS.diagnosis.includes(c.meta.diagnosis)) e.push('meta.diagnosis invalid');
+  if (c?.meta?.diagnosis && !ENUMS.diagnosis.includes(c.meta.diagnosis))
+    e.push('meta.diagnosis invalid');
   if (c?.meta?.acuity && !ENUMS.acuity.includes(c.meta.acuity)) e.push('meta.acuity invalid');
-  
+
   // Snapshot validation
   if (!c?.snapshot) e.push('snapshot is missing');
   if (c?.snapshot?.sex && !ENUMS.sex.includes(c.snapshot.sex)) e.push('snapshot.sex invalid');
-  
+
   // History validation
   if (!c?.history) e.push('history is missing');
-  if (c?.history?.red_flag_signals && !Array.isArray(c.history.red_flag_signals)) e.push('history.red_flag_signals must be array');
+  if (c?.history?.red_flag_signals && !Array.isArray(c.history.red_flag_signals))
+    e.push('history.red_flag_signals must be array');
   if (c?.history?.pmh && !Array.isArray(c.history.pmh)) e.push('history.pmh must be array');
   if (c?.history?.meds && !Array.isArray(c.history.meds)) e.push('history.meds must be array');
-  
+
   // Structure validation
   if (!c?.findings) e.push('findings is missing');
   if (!c?.encounters) e.push('encounters is missing');
-  
+
   // Assessment validation (if present)
   if (c?.assessment?.prognosis && !ENUMS.prognosis.includes(c.assessment.prognosis)) {
     e.push('assessment.prognosis invalid');
   }
-  
+
   return e;
 }
 
@@ -183,7 +193,7 @@ export function ensureDataIntegrity(caseData) {
   if (!caseData.findings && caseData.exam) {
     caseData.findings = { ...caseData.exam };
   }
-  
+
   // Ensure assessment has visibility structure for faculty mode
   if (caseData.assessment && !caseData.assessment.visibility) {
     caseData.assessment.visibility = {
@@ -194,10 +204,10 @@ export function ensureDataIntegrity(caseData) {
       ptDiagnosis: { studentKey: true, studentExaminer: false },
       prognosis: { studentKey: true, studentExaminer: false },
       prognosticFactors: { studentKey: true, studentExaminer: false },
-      clinicalReasoning: { studentKey: true, studentExaminer: false }
+      clinicalReasoning: { studentKey: true, studentExaminer: false },
     };
   }
-  
+
   return caseData;
 }
 
@@ -213,10 +223,10 @@ export function migrateOldCaseData(caseData) {
       ptDiagnosis: '',
       prognosis: '',
       prognosticFactors: '',
-      clinicalReasoning: ''
+      clinicalReasoning: '',
     };
   }
-  
+
   // Handle old subjective format
   if (typeof caseData.subjective === 'string') {
     const oldSubjective = caseData.subjective;
@@ -231,9 +241,9 @@ export function migrateOldCaseData(caseData) {
       pastMedicalHistory: '',
       medications: '',
       functionalGoals: '',
-      additionalHistory: ''
+      additionalHistory: '',
     };
   }
-  
+
   return ensureDataIntegrity(caseData);
 }

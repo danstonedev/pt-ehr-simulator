@@ -19,17 +19,17 @@ export function generateCase(anchors = {}) {
     acuity = 'chronic',
     setting = 'Outpatient',
     prompt = '',
-    goal = ''
+    goal = '',
   } = anchors;
 
   // Normalize inputs
   const normalizedAge = normalizeAge(age);
   const normalizedSex = normalizeSex(sex);
   const regionSlug = normalizeRegionSlug(region);
-  
+
   // Get comprehensive template for region using normalized slug
   const template = getRegionTemplate(regionSlug, acuity, condition, pain, goal);
-  
+
   // Generate comprehensive case structure
   return {
     title: title || `${capitalize(region)} ${capitalize(condition)} (${capitalize(acuity)})`,
@@ -40,7 +40,7 @@ export function generateCase(anchors = {}) {
     patientDOB: undefined,
     createdBy: 'faculty',
     createdAt: new Date().toISOString(),
-    
+
     // Metadata for case management
     meta: {
       title: title || template.teaser,
@@ -49,33 +49,33 @@ export function generateCase(anchors = {}) {
       patientGender: normalizedSex,
       acuity,
       diagnosis: 'Musculoskeletal',
-      regions: regionSlug ? [regionSlug] : []
+      regions: regionSlug ? [regionSlug] : [],
     },
-    
+
     // Case snapshot for quick reference
     snapshot: {
       age: String(normalizedAge),
       sex: normalizedSex,
-      teaser: template.teaser
+      teaser: template.teaser,
     },
-    
+
     // Clinical history
     history: {
       chief_complaint: template.chiefComplaint,
       hpi: prompt ? `${prompt} ${template.hpi}`.trim() : template.hpi,
       pmh: template.pmh || [],
       meds: template.meds || [],
-      red_flag_signals: template.redFlags || []
+      red_flag_signals: template.redFlags || [],
     },
-    
+
     // Clinical findings
     findings: {
       rom: template.rom || {},
       mmt: template.mmt || {},
       special_tests: template.specialTests || [],
-      outcome_options: template.outcome ? [template.outcome] : []
+      outcome_options: template.outcome ? [template.outcome] : [],
     },
-    
+
     // SOAP documentation structure
     encounters: {
       eval: {
@@ -83,7 +83,7 @@ export function generateCase(anchors = {}) {
           chiefComplaint: template.chiefComplaint,
           historyOfPresentIllness: prompt ? `${prompt} ${template.hpi}`.trim() : template.hpi,
           painScale: String(pain ?? ''),
-          patientGoals: goal || template.defaultGoal
+          patientGoals: goal || template.defaultGoal,
         },
         objective: {
           regionalAssessments: {
@@ -91,35 +91,41 @@ export function generateCase(anchors = {}) {
             rom: template.rom || {},
             mmt: template.mmt || {},
             prom: template.prom || {},
-            specialTests: template.specialTests || {}
-          }
+            specialTests: template.specialTests || {},
+          },
         },
         assessment: {
           primaryImpairments: template.impairments ? template.impairments.join('; ') : '',
           ptDiagnosis: condition,
           prognosis: template.prognosis?.toLowerCase() || 'good',
-          prognosticFactors: template.prognosticFactors || ''
+          prognosticFactors: template.prognosticFactors || '',
         },
         plan: {
           frequency: template.plan?.frequency || '',
           duration: template.plan?.duration || '',
           interventions: template.plan?.interventions || [],
           shortTermGoals: template.plan?.stg || '',
-          longTermGoals: template.plan?.ltg || ''
+          longTermGoals: template.plan?.ltg || '',
         },
         billing: {
-          diagnosisCodes: template.icd10 ? [{ 
-            code: template.icd10.code, 
-            description: template.icd10.desc, 
-            isPrimary: true 
-          }] : [],
-          billingCodes: template.cpt ? template.cpt.map(code => ({ 
-            code, 
-            units: '1' 
-          })) : []
-        }
-      }
-    }
+          diagnosisCodes: template.icd10
+            ? [
+                {
+                  code: template.icd10.code,
+                  description: template.icd10.desc,
+                  isPrimary: true,
+                },
+              ]
+            : [],
+          billingCodes: template.cpt
+            ? template.cpt.map((code) => ({
+                code,
+                units: '1',
+              }))
+            : [],
+        },
+      },
+    },
   };
 }
 
@@ -142,18 +148,18 @@ function normalizeSex(sex) {
 
 function normalizeAge(age) {
   const ageNum = parseInt(age);
-  return (!isNaN(ageNum) && ageNum > 0 && ageNum < 120) ? ageNum : 45;
+  return !isNaN(ageNum) && ageNum > 0 && ageNum < 120 ? ageNum : 45;
 }
 
 function normalizeRegionSlug(region) {
   const regionMap = {
     'low back': 'lumbar-spine',
     'lower back': 'lumbar-spine',
-    'lumbar': 'lumbar-spine',
-    'neck': 'cervical-spine',
-    'cervical': 'cervical-spine',
+    lumbar: 'lumbar-spine',
+    neck: 'cervical-spine',
+    cervical: 'cervical-spine',
     'upper back': 'thoracic-spine',
-    'thoracic': 'thoracic-spine'
+    thoracic: 'thoracic-spine',
   };
   const key = (region || '').toLowerCase().trim();
   return regionMap[key] || key || 'shoulder';
@@ -162,12 +168,31 @@ function normalizeRegionSlug(region) {
 function mapFrequencyToEnum(frequency = '') {
   const s = String(frequency).toLowerCase();
   if (!s) return '';
-  if (/(^|\b)1x(\b|\/|\s)/.test(s) || s.includes('1x per week') || s.includes('once per week')) return '1x-week';
-  if (/(^|\b)2x(\b|\/|\s)/.test(s) || s.includes('2x per week') || s.includes('twice per week')) return '2x-week';
-  if (/(^|\b)3x(\b|\/|\s)/.test(s) || s.includes('3x per week') || s.includes('three times per week')) return '3x-week';
-  if (/(^|\b)4x(\b|\/|\s)/.test(s) || s.includes('4x per week') || s.includes('four times per week')) return '4x-week';
-  if (/(^|\b)5x(\b|\/|\s)/.test(s) || s.includes('5x per week') || s.includes('daily') || s.includes('five times per week')) return '5x-week';
-  if (s.includes('2x per day') || s.includes('twice a day') || s.includes('twice daily')) return '2x-day';
+  if (/(^|\b)1x(\b|\/|\s)/.test(s) || s.includes('1x per week') || s.includes('once per week'))
+    return '1x-week';
+  if (/(^|\b)2x(\b|\/|\s)/.test(s) || s.includes('2x per week') || s.includes('twice per week'))
+    return '2x-week';
+  if (
+    /(^|\b)3x(\b|\/|\s)/.test(s) ||
+    s.includes('3x per week') ||
+    s.includes('three times per week')
+  )
+    return '3x-week';
+  if (
+    /(^|\b)4x(\b|\/|\s)/.test(s) ||
+    s.includes('4x per week') ||
+    s.includes('four times per week')
+  )
+    return '4x-week';
+  if (
+    /(^|\b)5x(\b|\/|\s)/.test(s) ||
+    s.includes('5x per week') ||
+    s.includes('daily') ||
+    s.includes('five times per week')
+  )
+    return '5x-week';
+  if (s.includes('2x per day') || s.includes('twice a day') || s.includes('twice daily'))
+    return '2x-day';
   if (s.includes('prn') || s.includes('as needed')) return 'prn';
   return s;
 }
@@ -190,30 +215,30 @@ function generateSmartGoals(region, condition, patientGoal, acuity, painLevel) {
   const timeframes = {
     acute: { short: '1-2 weeks', long: '4-6 weeks' },
     subacute: { short: '2-3 weeks', long: '6-8 weeks' },
-    chronic: { short: '3-4 weeks', long: '8-12 weeks' }
+    chronic: { short: '3-4 weeks', long: '8-12 weeks' },
   };
-  
+
   const timeframe = timeframes[acuity] || timeframes.chronic;
   const painReduction = Math.max(1, Math.floor(painLevel / 2));
-  
+
   const baseGoal = patientGoal || getDefaultGoalForRegion(region);
-  
+
   return {
     shortTerm: `In ${timeframe.short}, patient will demonstrate measurable progress toward ${baseGoal} with pain reduced by ${painReduction} points and improved function.`,
-    longTerm: `In ${timeframe.long}, patient will achieve ${baseGoal} with pain ≤ 2/10, restored strength/ROM, and return to desired activities.`
+    longTerm: `In ${timeframe.long}, patient will achieve ${baseGoal} with pain ≤ 2/10, restored strength/ROM, and return to desired activities.`,
   };
 }
 
 function getDefaultGoalForRegion(region) {
   const regionGoals = {
-    'shoulder': 'pain-free overhead reaching and lifting up to 20 lbs',
+    shoulder: 'pain-free overhead reaching and lifting up to 20 lbs',
     'cervical-spine': 'pain-free neck rotation and improved posture',
     'lumbar-spine': 'pain-free lifting and prolonged sitting tolerance',
-    'knee': 'pain-free stair climbing and return to recreational activities',
-    'ankle': 'pain-free weight bearing and improved balance',
-    'hip': 'improved mobility and return to functional activities',
-    'elbow': 'pain-free gripping and lifting activities',
-    'thoracic-spine': 'improved posture and reduced pain with prolonged activities'
+    knee: 'pain-free stair climbing and return to recreational activities',
+    ankle: 'pain-free weight bearing and improved balance',
+    hip: 'improved mobility and return to functional activities',
+    elbow: 'pain-free gripping and lifting activities',
+    'thoracic-spine': 'improved posture and reduced pain with prolonged activities',
   };
   return regionGoals[region] || 'improved function and reduced pain';
 }
@@ -224,146 +249,146 @@ function getDefaultGoalForRegion(region) {
 
 function processUIRomData(uiRomData, acuity, painLevel, affectedSide = 'R') {
   if (!uiRomData || !Array.isArray(uiRomData)) return {};
-  
+
   const romData = {};
-  
+
   const impairmentFactors = {
     acute: { percentage: 0.6, variation: 0.1 },
     subacute: { percentage: 0.75, variation: 0.1 },
-    chronic: { percentage: 0.8, variation: 0.15 }
+    chronic: { percentage: 0.8, variation: 0.15 },
   };
-  
+
   const factor = impairmentFactors[acuity] || impairmentFactors.chronic;
-  
+
   uiRomData.forEach((romItem, index) => {
     if (!romItem.motion) return;
-    
+
     const seed = (romItem.motion.charCodeAt(0) + index) / 100;
-    const randomFactor = 1 + (Math.sin(seed) * factor.variation);
+    const randomFactor = 1 + Math.sin(seed) * factor.variation;
     const impairment = factor.percentage * randomFactor;
-    
+
     // Parse normal values
     const leftNormal = parseInt(romItem.leftNormal) || 0;
     const rightNormal = parseInt(romItem.rightNormal) || 0;
-    
+
     // Calculate impaired values
     const leftValue = Math.round(leftNormal * (affectedSide === 'L' ? impairment : 0.95));
     const rightValue = Math.round(rightNormal * (affectedSide === 'R' ? impairment : 0.95));
-    
+
     romData[romItem.motion] = {
       leftValue: String(leftValue),
       rightValue: String(rightValue),
       leftNormal: String(leftNormal),
       rightNormal: String(rightNormal),
       leftPain: affectedSide === 'L' ? String(Math.min(painLevel, 8)) : '0',
-      rightPain: affectedSide === 'R' ? String(Math.min(painLevel, 8)) : '0'
+      rightPain: affectedSide === 'R' ? String(Math.min(painLevel, 8)) : '0',
     };
   });
-  
+
   return romData;
 }
 
 function processUIMMTData(uiMMTData, acuity, affectedSide = 'R') {
   if (!uiMMTData || !Array.isArray(uiMMTData)) return {};
-  
+
   const mmtData = {};
-  
+
   const gradesByAcuity = {
     acute: ['3-', '3', '3+'],
     subacute: ['3+', '4-', '4'],
-    chronic: ['4', '4+', '5-']
+    chronic: ['4', '4+', '5-'],
   };
-  
+
   const grades = gradesByAcuity[acuity] || gradesByAcuity.chronic;
-  
+
   uiMMTData.forEach((mmtItem, index) => {
     if (!mmtItem.muscle) return;
-    
+
     const gradeIndex = index % grades.length;
     const unaffectedGrade = '5';
-    
+
     mmtData[mmtItem.muscle] = {
       leftGrade: affectedSide === 'L' ? grades[gradeIndex] : unaffectedGrade,
-      rightGrade: affectedSide === 'R' ? grades[gradeIndex] : unaffectedGrade
+      rightGrade: affectedSide === 'R' ? grades[gradeIndex] : unaffectedGrade,
     };
   });
-  
+
   return mmtData;
 }
 
 function processUIPROMData(uiRomData, acuity, painLevel, affectedSide = 'R') {
   if (!uiRomData || !Array.isArray(uiRomData)) return {};
-  
+
   const promData = {};
-  
+
   // End-feel patterns based on acuity
   const endFeelPatterns = {
     acute: ['muscle spasm', 'empty', 'hard'],
     subacute: ['firm', 'hard', 'springy'],
-    chronic: ['firm', 'springy', 'hard']
+    chronic: ['firm', 'springy', 'hard'],
   };
-  
+
   const endFeels = endFeelPatterns[acuity] || endFeelPatterns.chronic;
-  
+
   const impairmentFactors = {
     acute: { percentage: 0.7, variation: 0.1 },
     subacute: { percentage: 0.8, variation: 0.1 },
-    chronic: { percentage: 0.85, variation: 0.1 }
+    chronic: { percentage: 0.85, variation: 0.1 },
   };
-  
+
   const factor = impairmentFactors[acuity] || impairmentFactors.chronic;
-  
+
   uiRomData.forEach((romItem, index) => {
     if (!romItem.motion) return;
-    
+
     const seed = (romItem.motion.charCodeAt(0) + index) / 100;
-    const randomFactor = 1 + (Math.sin(seed) * factor.variation);
+    const randomFactor = 1 + Math.sin(seed) * factor.variation;
     const impairment = factor.percentage * randomFactor;
-    
+
     // Parse normal values
     const leftNormal = parseInt(romItem.leftNormal) || 0;
     const rightNormal = parseInt(romItem.rightNormal) || 0;
-    
+
     // Calculate PROM values (typically slightly better than AROM)
     const leftValue = Math.round(leftNormal * (affectedSide === 'L' ? impairment + 0.1 : 0.98));
     const rightValue = Math.round(rightNormal * (affectedSide === 'R' ? impairment + 0.1 : 0.98));
-    
+
     // Select end-feel based on deterministic pattern
     const endFeelIndex = index % endFeels.length;
     const endFeel = endFeels[endFeelIndex];
-    
+
     promData[romItem.motion] = {
       leftValue: String(Math.min(leftValue, leftNormal)),
       rightValue: String(Math.min(rightValue, rightNormal)),
       leftEndFeel: affectedSide === 'L' ? endFeel : 'normal',
       rightEndFeel: affectedSide === 'R' ? endFeel : 'normal',
       leftPain: affectedSide === 'L' ? String(Math.max(0, painLevel - 1)) : '0',
-      rightPain: affectedSide === 'R' ? String(Math.max(0, painLevel - 1)) : '0'
+      rightPain: affectedSide === 'R' ? String(Math.max(0, painLevel - 1)) : '0',
     };
   });
-  
+
   return promData;
 }
 
 function formatSpecialTestsData(specialTestsArray = []) {
   if (!Array.isArray(specialTestsArray)) return {};
-  
+
   const testsData = {};
-  
+
   specialTestsArray.forEach((test, index) => {
     if (!test.name) return;
-    
+
     // Deterministic results based on test name and position
     const seed = test.name.charCodeAt(0) + index;
-    const isPositive = (seed % 3) === 0; // ~33% positive rate
-    const bilateralPositive = (seed % 5) === 0; // ~20% bilateral
-    
+    const isPositive = seed % 3 === 0; // ~33% positive rate
+    const bilateralPositive = seed % 5 === 0; // ~20% bilateral
+
     testsData[test.name] = {
       leftResult: bilateralPositive || isPositive ? 'positive' : 'negative',
-      rightResult: bilateralPositive || (isPositive && index % 2 === 1) ? 'positive' : 'negative'
+      rightResult: bilateralPositive || (isPositive && index % 2 === 1) ? 'positive' : 'negative',
     };
   });
-  
+
   return testsData;
 }
 
@@ -380,17 +405,17 @@ function getRegionTemplate(regionSlug, acuity, condition, painLevel, patientGoal
   }
 
   // Process UI data into clinical findings
-  const affectedSide = (painLevel > 6) ? 'bilateral' : 'R';
+  const affectedSide = painLevel > 6 ? 'bilateral' : 'R';
   const sideLetter = affectedSide === 'bilateral' ? 'R' : affectedSide;
-  
+
   const rom = processUIRomData(regionData.rom || [], acuity, painLevel, sideLetter);
   const mmt = processUIMMTData(regionData.mmt || [], acuity, sideLetter);
   const prom = processUIPROMData(regionData.rom || [], acuity, painLevel, sideLetter);
   const specialTests = formatSpecialTestsData(regionData.specialTests || []);
-  
+
   // Generate goals
   const goals = generateSmartGoals(regionSlug, condition, patientGoal, acuity, painLevel);
-  
+
   // Create comprehensive template
   return {
     teaser: `${capitalize(acuity)} ${condition.toLowerCase()} - ${capitalize(regionSlug.replace('-', ' '))}`,
@@ -408,17 +433,17 @@ function getRegionTemplate(regionSlug, acuity, condition, painLevel, patientGoal
       duration: mapDurationToEnum(getDurationForAcuity(acuity)),
       interventions: getInterventionsForRegion(regionSlug, acuity),
       stg: goals.shortTerm,
-      ltg: goals.longTerm
+      ltg: goals.longTerm,
     },
     icd10: getICD10ForCondition(condition),
     cpt: getCPTForAcuity(acuity),
-    prognosticFactors: generatePrognosticFactors(acuity, painLevel)
+    prognosticFactors: generatePrognosticFactors(acuity, painLevel),
   };
 }
 
 function getBasicTemplate(condition, acuity, painLevel, patientGoal) {
   const goals = generateSmartGoals('general', condition, patientGoal, acuity, painLevel);
-  
+
   return {
     teaser: `${capitalize(acuity)} ${condition.toLowerCase()}`,
     chiefComplaint: `${capitalize(acuity)} musculoskeletal pain and dysfunction`,
@@ -435,11 +460,11 @@ function getBasicTemplate(condition, acuity, painLevel, patientGoal) {
       duration: mapDurationToEnum(getDurationForAcuity(acuity)),
       interventions: ['Manual therapy', 'Therapeutic exercise', 'Patient education'],
       stg: goals.shortTerm,
-      ltg: goals.longTerm
+      ltg: goals.longTerm,
     },
     icd10: getICD10ForCondition(condition),
     cpt: getCPTForAcuity(acuity),
-    prognosticFactors: generatePrognosticFactors(acuity, painLevel)
+    prognosticFactors: generatePrognosticFactors(acuity, painLevel),
   };
 }
 
@@ -450,8 +475,8 @@ function getBasicTemplate(condition, acuity, painLevel, patientGoal) {
 function generateHPI(condition, acuity, region, painLevel) {
   const templates = {
     acute: `Patient reports sudden onset of ${region.replace('-', ' ')} pain following recent activity. Pain is ${painLevel}/10, constant, and significantly limiting function. No previous history of similar episodes.`,
-    subacute: `Patient describes ${region.replace('-', ' ')} pain that has persisted for several weeks following initial injury. Pain fluctuates between ${Math.max(1, painLevel-2)}-${painLevel}/10 depending on activity level.`,
-    chronic: `Patient reports persistent ${region.replace('-', ' ')} pain for several months. Pain averages ${painLevel}/10 and interferes with daily activities and sleep. Previous conservative treatments have provided minimal relief.`
+    subacute: `Patient describes ${region.replace('-', ' ')} pain that has persisted for several weeks following initial injury. Pain fluctuates between ${Math.max(1, painLevel - 2)}-${painLevel}/10 depending on activity level.`,
+    chronic: `Patient reports persistent ${region.replace('-', ' ')} pain for several months. Pain averages ${painLevel}/10 and interferes with daily activities and sleep. Previous conservative treatments have provided minimal relief.`,
   };
   return templates[acuity] || templates.chronic;
 }
@@ -461,9 +486,9 @@ function generateImpairments(region, acuity) {
   const acuitySpecific = {
     acute: ['Inflammation', 'Protective muscle guarding'],
     subacute: ['Tissue healing limitations', 'Movement compensations'],
-    chronic: ['Movement avoidance patterns', 'Deconditioning']
+    chronic: ['Movement avoidance patterns', 'Deconditioning'],
   };
-  return [...baseImpairments, ...acuitySpecific[acuity] || []];
+  return [...baseImpairments, ...(acuitySpecific[acuity] || [])];
 }
 
 function generatePrognosis(acuity, painLevel) {
@@ -486,7 +511,7 @@ function getFrequencyForAcuity(acuity) {
   const frequencies = {
     acute: '2-3x per week',
     subacute: '2x per week',
-    chronic: '2x per week'
+    chronic: '2x per week',
   };
   return frequencies[acuity] || frequencies.chronic;
 }
@@ -495,7 +520,7 @@ function getDurationForAcuity(acuity) {
   const durations = {
     acute: '4-6 weeks',
     subacute: '6-8 weeks',
-    chronic: '8-12 weeks'
+    chronic: '8-12 weeks',
   };
   return durations[acuity] || durations.chronic;
 }
@@ -503,22 +528,34 @@ function getDurationForAcuity(acuity) {
 function getInterventionsForRegion(region, acuity) {
   const base = ['Manual therapy', 'Therapeutic exercise', 'Patient education'];
   const regionSpecific = {
-    'shoulder': ['Joint mobilization', 'Rotator cuff strengthening'],
+    shoulder: ['Joint mobilization', 'Rotator cuff strengthening'],
     'cervical-spine': ['Cervical stabilization', 'Postural training'],
     'lumbar-spine': ['Core strengthening', 'Movement retraining'],
-    'knee': ['Quadriceps strengthening', 'Gait training'],
-    'ankle': ['Balance training', 'Proprioceptive exercises']
+    knee: ['Quadriceps strengthening', 'Gait training'],
+    ankle: ['Balance training', 'Proprioceptive exercises'],
   };
   return [...base, ...(regionSpecific[region] || [])];
 }
 
 function getICD10ForCondition(condition) {
   const icd10Map = {
-    'Rotator cuff tendinopathy': { code: 'M75.30', desc: 'Calcific tendinitis of shoulder, unspecified' },
-    'Cervical strain': { code: 'S13.4XXA', desc: 'Sprain of ligaments of cervical spine, initial encounter' },
-    'Lumbar strain': { code: 'S33.5XXA', desc: 'Sprain of ligaments of lumbar spine, initial encounter' },
+    'Rotator cuff tendinopathy': {
+      code: 'M75.30',
+      desc: 'Calcific tendinitis of shoulder, unspecified',
+    },
+    'Cervical strain': {
+      code: 'S13.4XXA',
+      desc: 'Sprain of ligaments of cervical spine, initial encounter',
+    },
+    'Lumbar strain': {
+      code: 'S33.5XXA',
+      desc: 'Sprain of ligaments of lumbar spine, initial encounter',
+    },
     'Knee osteoarthritis': { code: 'M17.9', desc: 'Osteoarthritis of knee, unspecified' },
-    'Ankle sprain': { code: 'S93.409A', desc: 'Sprain of unspecified ligament of unspecified ankle, initial encounter' }
+    'Ankle sprain': {
+      code: 'S93.409A',
+      desc: 'Sprain of unspecified ligament of unspecified ankle, initial encounter',
+    },
   };
   return icd10Map[condition] || { code: 'M79.3', desc: 'Panniculitis, unspecified' };
 }
@@ -528,7 +565,7 @@ function getCPTForAcuity(acuity) {
   const acuityCPT = {
     acute: ['97012'],
     subacute: ['97116'],
-    chronic: ['97535', '97530']
+    chronic: ['97535', '97530'],
   };
   return [...baseCPT, ...(acuityCPT[acuity] || [])];
 }
@@ -542,5 +579,5 @@ export {
   mapDurationToEnum,
   generateSmartGoals,
   getDefaultGoalForRegion,
-  getRegionTemplate
+  getRegionTemplate,
 };

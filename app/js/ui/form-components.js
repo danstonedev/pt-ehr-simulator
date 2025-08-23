@@ -13,12 +13,7 @@ import { el, textareaAutoResize } from './utils.js';
  */
 export function inputField(options = {}) {
   // Modern props format: inputField({ label, value, onChange, ...props })
-  const {
-    label,
-    value,
-    onChange,
-    ...config
-  } = options;
+  const { label, value, onChange, ...config } = options;
 
   const {
     type = 'text',
@@ -32,7 +27,7 @@ export function inputField(options = {}) {
     autocomplete = null,
     hint = '',
     error = '',
-    size = 'normal' // 'small', 'normal', 'large'
+    size = 'normal', // 'small', 'normal', 'large'
   } = config;
 
   // Create input element using direct DOM approach (like working direct input)
@@ -42,10 +37,11 @@ export function inputField(options = {}) {
   input.value = value || '';
   input.disabled = disabled;
   input.required = required;
-  input.className = `form-input form-input--${size} ${className} ${error ? 'form-input--error' : ''}`.trim();
-  
+  input.className =
+    `form-input form-input--${size} ${className} ${error ? 'form-input--error' : ''}`.trim();
+
   // Add direct event listener - use blur instead of input to avoid triggering on every keystroke
-  input.addEventListener('blur', e => {
+  input.addEventListener('blur', (e) => {
     onChange && onChange(e.target.value);
   });
 
@@ -57,19 +53,23 @@ export function inputField(options = {}) {
 
   // Build field wrapper
   const fieldElements = [
-    el('label', { 
-      class: `form-label ${required ? 'form-label--required' : ''}`,
-      for: id 
-    }, label)
+    el(
+      'label',
+      {
+        class: `form-label ${required ? 'form-label--required' : ''}`,
+        for: id,
+      },
+      label,
+    ),
   ];
 
   const inputWrapper = el('div', { class: 'form-input-wrapper' }, [input]);
-  
+
   // Add hint text if provided
   if (hint) {
     inputWrapper.appendChild(el('div', { class: 'form-hint' }, hint));
   }
-  
+
   // Add error message if provided
   if (error) {
     inputWrapper.appendChild(el('div', { class: 'form-error' }, error));
@@ -77,9 +77,14 @@ export function inputField(options = {}) {
 
   fieldElements.push(inputWrapper);
 
-  return el('div', { 
-    class: `form-field form-field--input ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''}`.trim()
-  }, fieldElements);
+  return el(
+    'div',
+    {
+      class:
+        `form-field form-field--input ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''}`.trim(),
+    },
+    fieldElements,
+  );
 }
 
 /**
@@ -95,14 +100,14 @@ export function textAreaField(options = {}) {
     placeholder = '',
     disabled = false,
     required = false,
-  rows = 2,
+    rows = 2,
     maxLength = null,
     autoResize = true,
     className = '',
     id = null,
     hint = '',
     error = '',
-    size = 'normal' // 'small', 'normal', 'large'
+    size = 'normal', // 'small', 'normal', 'large'
   } = options;
 
   // Create textarea element using direct DOM approach
@@ -111,11 +116,12 @@ export function textAreaField(options = {}) {
   textarea.disabled = disabled;
   textarea.required = required;
   textarea.rows = rows;
-  textarea.className = `form-textarea form-textarea--${size} ${className} ${error ? 'form-textarea--error' : ''}`.trim();
+  textarea.className =
+    `form-textarea form-textarea--${size} ${className} ${error ? 'form-textarea--error' : ''}`.trim();
   textarea.value = value || '';
-  
+
   // Add direct event listener - use blur instead of input to avoid triggering on every keystroke
-  textarea.addEventListener('blur', e => {
+  textarea.addEventListener('blur', (e) => {
     onChange && onChange(e.target.value);
   });
 
@@ -129,28 +135,36 @@ export function textAreaField(options = {}) {
 
   // Build field wrapper
   const fieldElements = [
-    el('label', { 
-      class: `form-label ${required ? 'form-label--required' : ''}`,
-      for: id 
-    }, label)
+    el(
+      'label',
+      {
+        class: `form-label ${required ? 'form-label--required' : ''}`,
+        for: id,
+      },
+      label,
+    ),
   ];
 
   const inputWrapper = el('div', { class: 'form-input-wrapper' }, [textarea]);
-  
+
   // Add character count if maxLength is set
   if (maxLength) {
-    const charCount = el('div', { class: 'form-char-count' }, `${(value || '').length}/${maxLength}`);
+    const charCount = el(
+      'div',
+      { class: 'form-char-count' },
+      `${(value || '').length}/${maxLength}`,
+    );
     textarea.addEventListener('input', () => {
       charCount.textContent = `${textarea.value.length}/${maxLength}`;
     });
     inputWrapper.appendChild(charCount);
   }
-  
+
   // Add hint text if provided
   if (hint) {
     inputWrapper.appendChild(el('div', { class: 'form-hint' }, hint));
   }
-  
+
   // Add error message if provided
   if (error) {
     inputWrapper.appendChild(el('div', { class: 'form-error' }, error));
@@ -158,9 +172,14 @@ export function textAreaField(options = {}) {
 
   fieldElements.push(inputWrapper);
 
-  return el('div', { 
-    class: `form-field form-field--textarea ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''}`.trim()
-  }, fieldElements);
+  return el(
+    'div',
+    {
+      class:
+        `form-field form-field--textarea ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''}`.trim(),
+    },
+    fieldElements,
+  );
 }
 
 /**
@@ -183,7 +202,7 @@ export function selectField(options = {}) {
     hint = '',
     error = '',
     size = 'normal', // 'small', 'normal', 'large'
-    allowEmpty = true
+    allowEmpty = true,
   } = options;
 
   // Create select element using direct DOM approach
@@ -191,13 +210,14 @@ export function selectField(options = {}) {
   select.disabled = disabled;
   select.required = required;
   select.multiple = multiple;
-  select.className = `form-select form-select--${size} ${className} ${error ? 'form-select--error' : ''}`.trim();
-  
+  select.className =
+    `form-select form-select--${size} ${className} ${error ? 'form-select--error' : ''}`.trim();
+
   // Add direct event listener using onchange property for maximum compatibility
-  select.onchange = function(e) {
+  select.onchange = function (e) {
     if (!onChange) return;
-    const selectedValue = multiple 
-      ? Array.from(e.target.selectedOptions).map(opt => opt.value)
+    const selectedValue = multiple
+      ? Array.from(e.target.selectedOptions).map((opt) => opt.value)
       : e.target.value;
     onChange(selectedValue);
   };
@@ -214,12 +234,12 @@ export function selectField(options = {}) {
   }
 
   // Add all options using direct DOM creation
-  optionsArray.forEach(option => {
+  optionsArray.forEach((option) => {
     const optionEl = document.createElement('option');
     optionEl.value = option.value;
     optionEl.textContent = option.label;
     optionEl.disabled = option.disabled || false;
-    
+
     // Handle selection for both single and multiple select
     if (multiple) {
       if (Array.isArray(value) && value.includes(option.value)) {
@@ -236,19 +256,23 @@ export function selectField(options = {}) {
 
   // Build field wrapper
   const fieldElements = [
-    el('label', { 
-      class: `form-label ${required ? 'form-label--required' : ''}`,
-      for: id 
-    }, label)
+    el(
+      'label',
+      {
+        class: `form-label ${required ? 'form-label--required' : ''}`,
+        for: id,
+      },
+      label,
+    ),
   ];
 
   const inputWrapper = el('div', { class: 'form-input-wrapper' }, [select]);
-  
+
   // Add hint text if provided
   if (hint) {
     inputWrapper.appendChild(el('div', { class: 'form-hint' }, hint));
   }
-  
+
   // Add error message if provided
   if (error) {
     inputWrapper.appendChild(el('div', { class: 'form-error' }, error));
@@ -256,9 +280,14 @@ export function selectField(options = {}) {
 
   fieldElements.push(inputWrapper);
 
-  return el('div', { 
-    class: `form-field form-field--select ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''}`.trim()
-  }, fieldElements);
+  return el(
+    'div',
+    {
+      class:
+        `form-field form-field--select ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''}`.trim(),
+    },
+    fieldElements,
+  );
 }
 
 /**
@@ -280,7 +309,7 @@ export function numberField(label, value, onChange, options = {}) {
     id = null,
     hint = '',
     error = '',
-    size = 'normal'
+    size = 'normal',
   } = options;
 
   const numberOptions = {
@@ -292,14 +321,19 @@ export function numberField(label, value, onChange, options = {}) {
     id,
     hint,
     error,
-    size
+    size,
   };
 
   // Use the input field but override the onChange to handle numbers
-  const field = inputField(label, value, (val) => {
-    const numValue = val === '' ? null : Number(val);
-    onChange(numValue);
-  }, numberOptions);
+  const field = inputField(
+    label,
+    value,
+    (val) => {
+      const numValue = val === '' ? null : Number(val);
+      onChange(numValue);
+    },
+    numberOptions,
+  );
 
   // Add number-specific attributes to the input
   const input = field.querySelector('input');
@@ -324,7 +358,7 @@ export function checkboxField(label, checked, onChange, options = {}) {
     className = '',
     id = null,
     hint = '',
-    error = ''
+    error = '',
   } = options;
 
   const checkbox = el('input', {
@@ -334,13 +368,17 @@ export function checkboxField(label, checked, onChange, options = {}) {
     required,
     id,
     class: `form-checkbox ${className}`.trim(),
-    onchange: e => onChange(e.target.checked)
+    onchange: (e) => onChange(e.target.checked),
   });
 
-  const labelEl = el('label', {
-    class: `form-label form-label--checkbox ${required ? 'form-label--required' : ''}`,
-    for: id
-  }, [checkbox, el('span', {}, label)]);
+  const labelEl = el(
+    'label',
+    {
+      class: `form-label form-label--checkbox ${required ? 'form-label--required' : ''}`,
+      for: id,
+    },
+    [checkbox, el('span', {}, label)],
+  );
 
   const fieldElements = [labelEl];
 
@@ -352,9 +390,14 @@ export function checkboxField(label, checked, onChange, options = {}) {
     fieldElements.push(el('div', { class: 'form-error' }, error));
   }
 
-  return el('div', { 
-    class: `form-field form-field--checkbox ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''}`.trim()
-  }, fieldElements);
+  return el(
+    'div',
+    {
+      class:
+        `form-field form-field--checkbox ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''}`.trim(),
+    },
+    fieldElements,
+  );
 }
 
 /**
@@ -373,7 +416,7 @@ export function radioField(label, value, options, onChange, config = {}) {
     className = '',
     hint = '',
     error = '',
-    inline = false
+    inline = false,
   } = config;
 
   const radioOptions = options.map((option, index) => {
@@ -387,24 +430,36 @@ export function radioField(label, value, options, onChange, config = {}) {
       disabled: disabled || option.disabled,
       required,
       class: 'form-radio',
-      onchange: e => onChange(e.target.value)
+      onchange: (e) => onChange(e.target.value),
     });
 
-    const radioLabel = el('label', {
-      for: radioId,
-      class: 'form-label form-label--radio'
-    }, [radio, el('span', {}, option.label)]);
+    const radioLabel = el(
+      'label',
+      {
+        for: radioId,
+        class: 'form-label form-label--radio',
+      },
+      [radio, el('span', {}, option.label)],
+    );
 
     return el('div', { class: 'form-radio-item' }, [radioLabel]);
   });
 
   const fieldElements = [
-    el('div', { 
-      class: `form-label ${required ? 'form-label--required' : ''}`
-    }, label),
-    el('div', { 
-      class: `form-radio-group ${inline ? 'form-radio-group--inline' : ''}`
-    }, radioOptions)
+    el(
+      'div',
+      {
+        class: `form-label ${required ? 'form-label--required' : ''}`,
+      },
+      label,
+    ),
+    el(
+      'div',
+      {
+        class: `form-radio-group ${inline ? 'form-radio-group--inline' : ''}`,
+      },
+      radioOptions,
+    ),
   ];
 
   if (hint) {
@@ -415,9 +470,14 @@ export function radioField(label, value, options, onChange, config = {}) {
     fieldElements.push(el('div', { class: 'form-error' }, error));
   }
 
-  return el('div', { 
-    class: `form-field form-field--radio ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''} ${className}`.trim()
-  }, fieldElements);
+  return el(
+    'div',
+    {
+      class:
+        `form-field form-field--radio ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''} ${className}`.trim(),
+    },
+    fieldElements,
+  );
 }
 
 // --- Utility Components ---
@@ -428,14 +488,10 @@ export function radioField(label, value, options, onChange, config = {}) {
  * @param {object} options - Configuration options
  */
 export function sectionHeader(text, options = {}) {
-  const {
-    level = 3,
-    className = '',
-    id = null
-  } = options;
+  const { level = 3, className = '', id = null } = options;
 
   const headerProps = {
-    class: `section-title section-title--h${level} ${className}`.trim()
+    class: `section-title section-title--h${level} ${className}`.trim(),
   };
 
   if (id) headerProps.id = id;
@@ -450,18 +506,16 @@ export function sectionHeader(text, options = {}) {
  * @param {object} options - Configuration options
  */
 export function fieldGroup(legend, fields, options = {}) {
-  const {
-    className = '',
-    disabled = false
-  } = options;
+  const { className = '', disabled = false } = options;
 
-  const fieldset = el('fieldset', {
-    class: `form-fieldset ${className} ${disabled ? 'form-fieldset--disabled' : ''}`.trim(),
-    disabled
-  }, [
-    el('legend', { class: 'form-legend' }, legend),
-    ...fields
-  ]);
+  const fieldset = el(
+    'fieldset',
+    {
+      class: `form-fieldset ${className} ${disabled ? 'form-fieldset--disabled' : ''}`.trim(),
+      disabled,
+    },
+    [el('legend', { class: 'form-legend' }, legend), ...fields],
+  );
 
   return fieldset;
 }

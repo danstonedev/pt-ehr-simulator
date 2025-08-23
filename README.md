@@ -149,7 +149,7 @@ Repository root
 
 ### Clean Modular Design (2025)
 
-- **Feature-based organization**: SOAP modules, navigation, case management grouped logically  
+- **Feature-based organization**: SOAP modules, navigation, case management grouped logically
 - **Modern ES6+ patterns**: Object destructuring, barrel exports, async/await throughout
 - **No legacy code**: Aggressive modernization with backward compatibility eliminated
 - **Professional error handling**: Appropriate console.error/warn for production debugging
@@ -158,7 +158,7 @@ Repository root
 ### Core Application (`app/js/core/`)
 
 - **router.js**: Client-side routing with dynamic imports and parameter handling
-- **store.js**: localStorage-based CRUD operations with data persistence  
+- **store.js**: localStorage-based CRUD operations with data persistence
 - **schema.js**: Data validation, integrity checks, and migration utilities
 - **index.js**: Core module barrel export for simplified imports
 
@@ -229,7 +229,7 @@ This version represents a comprehensive modernization and cleanup:
 ### Major Improvements
 
 - ✅ **Aggressive modernization**: Eliminated all backward compatibility code
-- ✅ **Clean codebase**: Removed debug statements, TODO comments, and temporary files  
+- ✅ **Clean codebase**: Removed debug statements, TODO comments, and temporary files
 - ✅ **Modern JavaScript**: ES6+ patterns with object destructuring throughout
 - ✅ **Professional data flow**: Direct field mapping without legacy wrappers
 - ✅ **Enhanced SOAP modules**: Complete regional assessments with ROM/MMT/PROM/tests
@@ -240,7 +240,7 @@ This version represents a comprehensive modernization and cleanup:
 ### Technical Architecture
 
 - **Pure frontend approach**: No backend complexity, runs entirely in browser
-- **localStorage persistence**: Robust data management with sample auto-initialization  
+- **localStorage persistence**: Robust data management with sample auto-initialization
 - **Feature-based organization**: Logical grouping with barrel exports
 - **Modern form components**: Object-based API with comprehensive validation
 - **Professional error handling**: Appropriate logging for production debugging
@@ -252,7 +252,7 @@ Start developing immediately with no environment setup required! 🎉
 You can configure an external AI HTTP endpoint (any provider) by setting one of:
 
 - `window.AI_GENERATE_URL` on the page, or
-- `<meta name="ai-generate-url" content="https://your-endpoint" />`, or  
+- `<meta name="ai-generate-url" content="https://your-endpoint" />`, or
 - localStorage key `aiGenerateUrl`
 
 If not configured, the app uses the built-in deterministic case generator. No external services required.
