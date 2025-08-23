@@ -2,6 +2,7 @@
 // Handles case loading, draft initialization, localStorage management, and error handling
 
 import { getCase } from '../../core/store.js';
+import { storage } from '../../core/index.js';
 import { el } from '../../ui/utils.js';
 
 /**
@@ -677,7 +678,7 @@ export function initializeDraft(
     delete draft.editorSettings;
   }
 
-  // Development mode: Skip localStorage loading for NEW cases only to prevent cached data issues
+  // Development mode: Skip local draft loading for NEW cases only to prevent cached data issues
   const isDevelopmentMode =
     window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const isNewCase = caseId === 'new';
@@ -685,12 +686,12 @@ export function initializeDraft(
 
   if (skipLoading) {
   } else {
-    // Local storage key for this specific case
+    // Storage key for this specific case
     const localStorageKey = `draft_${caseId}_${encounter}`;
 
-    // Try to load existing draft from localStorage
+    // Try to load existing draft from storage
     try {
-      const savedDraft = localStorage.getItem(localStorageKey);
+      const savedDraft = storage.getItem(localStorageKey);
       if (savedDraft) {
         const parsed = JSON.parse(savedDraft);
 
@@ -742,14 +743,14 @@ export function initializeDraft(
         if (parsed.billing) draft.billing = parsed.billing;
       }
     } catch (error) {
-      console.warn('Could not load draft from localStorage:', error);
+      console.warn('Could not load draft from storage:', error);
     }
   }
 
   // Track the current case ID (mutable for new case creation)
   let currentCaseId = caseId;
 
-  // Local storage key for saving (used by save function)
+  // Storage key for saving (used by save function)
   const localStorageKey = `draft_${caseId}_${encounter}`;
 
   // Save function - behavior depends on faculty mode
@@ -808,30 +809,30 @@ export function initializeDraft(
           await updateCase(currentCaseId, caseData);
         }
 
-        // Also save to localStorage for draft persistence
-        localStorage.setItem(localStorageKey, JSON.stringify(draft));
+        // Also save to storage for draft persistence
+        storage.setItem(localStorageKey, JSON.stringify(draft));
       } catch (error) {
         console.error('❌ Failed to save case content:', error);
-        // Fallback to localStorage only
-        localStorage.setItem(localStorageKey, JSON.stringify(draft));
+        // Fallback to storage only
+        storage.setItem(localStorageKey, JSON.stringify(draft));
       }
     } else {
-      // STUDENT MODE: Save to localStorage only (draft work)
+      // STUDENT MODE: Save to storage only (draft work)
       try {
         // attach/update timestamp for listing/sorting
         draft.__savedAt = Date.now();
-        localStorage.setItem(localStorageKey, JSON.stringify(draft));
+        storage.setItem(localStorageKey, JSON.stringify(draft));
       } catch (error) {
-        console.warn('Could not save draft to localStorage:', error);
+        console.warn('Could not save draft to storage:', error);
       }
     }
   };
 
-  // Clear draft and localStorage
+  // Clear draft and storage
   const resetDraft = () => {
     if (confirm('Are you sure you want to clear all your work? This cannot be undone.')) {
       draft = createDefaultDraft();
-      localStorage.removeItem(localStorageKey);
+      storage.removeItem(localStorageKey);
 
       return true; // Indicates reset occurred
     }

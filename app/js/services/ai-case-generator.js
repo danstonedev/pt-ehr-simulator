@@ -2,6 +2,8 @@
 // This module tries an AI endpoint to build a full case JSON. If not configured or it fails,
 // callers should fall back to the local deterministic generator.
 
+import { storage } from '../core/index.js';
+
 // Resolve AI endpoint from multiple configurable sources without hard-coding hosting providers.
 function getAiEndpoint() {
   try {
@@ -15,10 +17,10 @@ function getAiEndpoint() {
         : null;
     if (meta && meta.content) return String(meta.content);
     // Local storage (developer configurable)
-    if (typeof localStorage !== 'undefined') {
-      const ls = localStorage.getItem('aiGenerateUrl');
+    try {
+      const ls = storage.getItem('aiGenerateUrl');
       if (ls) return String(ls);
-    }
+    } catch {}
   } catch {}
   return '';
 }

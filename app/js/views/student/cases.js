@@ -1,5 +1,6 @@
 import { route, navigate } from '../../core/router.js';
 import { getCase, listCases } from '../../core/store.js';
+import { storage } from '../../core/index.js';
 import { el } from '../../ui/utils.js';
 route('#/student/cases', async (app) => {
   app.innerHTML = ''; // Clear previous content
@@ -32,13 +33,14 @@ route('#/student/cases', async (app) => {
       return;
     }
 
-    // Scan localStorage for existing drafts
+    // Scan storage for existing drafts
     const drafts = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
+    const keys = storage.keys();
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
       if (key && key.startsWith('draft_')) {
         try {
-          const draftData = JSON.parse(localStorage.getItem(key));
+          const draftData = JSON.parse(storage.getItem(key));
           const draftPrefix = 'draft_';
           const keyWithoutPrefix = key.substring(draftPrefix.length);
           const lastUnderscoreIndex = keyWithoutPrefix.lastIndexOf('_');
@@ -106,7 +108,7 @@ route('#/student/cases', async (app) => {
         } catch (error) {
           console.warn('Could not parse draft data for key:', key, error);
           // Remove corrupted draft data to prevent future errors
-          localStorage.removeItem(key);
+          storage.removeItem(key);
         }
       }
     }
@@ -194,7 +196,7 @@ route('#/student/cases', async (app) => {
                       // Initialize minimal draft so it appears in the list with the chosen title
                       const draftKey = `draft_${id}_eval`;
                       const initialDraft = { noteTitle: title, __savedAt: Date.now() };
-                      localStorage.setItem(draftKey, JSON.stringify(initialDraft));
+                      storage.setItem(draftKey, JSON.stringify(initialDraft));
                     } catch (e) {
                       console.warn('Could not pre-save blank note draft:', e);
                     }
@@ -280,7 +282,7 @@ route('#/student/cases', async (app) => {
                     title: 'Delete this blank note',
                     onClick: () => {
                       if (confirm('Delete this blank SOAP note? This cannot be undone.')) {
-                        localStorage.removeItem(localStorageKey);
+                        storage.removeItem(localStorageKey);
                         // Also remove from listing cache by reloading route
                         navigate('#/student/cases');
                       }
@@ -301,7 +303,7 @@ route('#/student/cases', async (app) => {
                       if (
                         confirm('Reset your draft for this case? This will clear your local work.')
                       ) {
-                        localStorage.removeItem(localStorageKey);
+                        storage.removeItem(localStorageKey);
                         navigate('#/student/cases');
                       }
                     },
@@ -323,7 +325,7 @@ route('#/student/cases', async (app) => {
                       try {
                         // Load the draft data for Word export
                         const draftKey = `draft_${c.id}_eval`;
-                        const savedDraft = localStorage.getItem(draftKey);
+                        const savedDraft = storage.getItem(draftKey);
                         if (!savedDraft) {
                           alert('Could not find draft data for export.');
                           return;
@@ -677,11 +679,12 @@ route('#/student/cases', async (app) => {
     // Show list of your blank notes with remove buttons and a Create button
     try {
       const blankItems = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
+      const keys = storage.keys();
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
         if (key && key.startsWith('draft_blank')) {
           try {
-            const raw = localStorage.getItem(key);
+            const raw = storage.getItem(key);
             const data = raw ? JSON.parse(raw) : {};
             const ts = data && data.__savedAt ? data.__savedAt : null;
             const title =
@@ -744,7 +747,7 @@ route('#/student/cases', async (app) => {
                 class: 'btn subtle-danger small',
                 onClick: () => {
                   if (confirm('Delete this blank note?')) {
-                    localStorage.removeItem(key);
+                    storage.removeItem(key);
                     navigate('#/student/cases');
                   }
                 },

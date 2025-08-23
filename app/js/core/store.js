@@ -14,8 +14,7 @@ const IS_LOCAL_DEV =
 // Explicit toggle for optional local server sync (avoids noisy 5173 errors by default)
 const USE_LOCAL_SERVER =
   typeof window !== 'undefined' &&
-  ((IS_LOCAL_DEV && window.location.port === '5173') ||
-    localStorage.getItem('useLocalServer') === '1');
+  ((IS_LOCAL_DEV && window.location.port === '5173') || storage.getItem('useLocalServer') === '1');
 
 // Lightweight debounce for auto-publish so we don't spam the server
 let __publishScheduled = false;
