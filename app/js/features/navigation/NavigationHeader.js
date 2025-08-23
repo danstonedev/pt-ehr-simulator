@@ -63,7 +63,7 @@ export function createStickyTopBar(config) {
         {
           class: 'save-status-pill',
           'aria-live': 'polite',
-          title: 'Autosaved to this browser (localStorage). Not synced to a server.',
+          title: 'Autosaved in this browser. Not synced to a server.',
         },
         [el('span', { class: 'dot saved' }), el('span', { class: 'text' }, 'Autosaved locally')],
       ),

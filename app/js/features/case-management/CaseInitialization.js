@@ -1,5 +1,5 @@
 // CaseInitialization.js - Case Setup & Data Management Module
-// Handles case loading, draft initialization, localStorage management, and error handling
+// Handles case loading, draft initialization, storage seam management, and error handling
 
 import { getCase } from '../../core/store.js';
 import { storage } from '../../core/index.js';

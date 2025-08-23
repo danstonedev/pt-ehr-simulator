@@ -50,7 +50,7 @@
       };
 
       try {
-        // Clear local caches to make loader behavior deterministic for this run (cases in localStorage)
+        // Clear local caches to make loader behavior deterministic for this run (cases in storage)
         localStorage.removeItem('pt_emr_cases');
         localStorage.removeItem('pt_emr_case_counter');
         // Clear any draft_* keys to avoid stale merges in tests

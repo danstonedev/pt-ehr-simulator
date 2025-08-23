@@ -2,7 +2,7 @@ import { validateCase, ensureDataIntegrity, migrateOldCaseData } from './schema.
 import { storage } from './adapters/storageAdapter.js';
 
 // --- Pure Frontend Data Store (No Backend Required) ---
-// All data stored in localStorage with case/draft separation
+// All data stored via storage adapter with case/draft separation
 
 const CASES_KEY = 'pt_emr_cases';
 const CASE_COUNTER_KEY = 'pt_emr_case_counter';
@@ -198,7 +198,7 @@ async function ensureCasesInitialized() {
   return {};
 }
 
-// Force reload cases from manifest (clears localStorage cache)
+// Force reload cases from manifest (clears storage cache)
 export const forceReloadCases = async () => {
   console.log('Force reloading cases...');
   storage.removeItem(CASES_KEY);
@@ -315,7 +315,7 @@ export const publishToServer = async () => {
   }
 };
 
-// --- Draft Management (unchanged - these were already localStorage-based) ---
+// --- Draft Management (using storage adapter seam) ---
 
 export const saveDraft = (caseId, encounter, draftData) => {
   try {
@@ -329,7 +329,7 @@ export const saveDraft = (caseId, encounter, draftData) => {
 };
 
 export const loadDraft = (caseId, encounter) => {
-  // Skip localStorage loading for NEW cases in development mode only
+  // Skip local draft loading for NEW cases in development mode only
   const isDevelopmentMode =
     window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   const isNewCase = caseId === 'new';
