@@ -70,6 +70,25 @@ export function navigate(path, params = {}, opts = { replace: false }) {
 }
 
 /**
+ * Navigate using a pre-built hash string (e.g., "#/route?x=1").
+ * Useful when you need to preserve unknown params exactly.
+ */
+export function navigateHash(rawHash, opts = { replace: false }) {
+  const next =
+    typeof rawHash === 'string' && rawHash.length
+      ? rawHash.startsWith('#')
+        ? rawHash
+        : '#' + rawHash
+      : '#/';
+  if (opts.replace) {
+    if (typeof history !== 'undefined') history.replaceState(null, '', next);
+    emitRouteChange();
+  } else if (typeof location !== 'undefined') {
+    location.hash = next; // will trigger hashchange -> emitRouteChange
+  }
+}
+
+/**
  * Subscribe to route changes.
  * Returns an unsubscribe function.
  */

@@ -1,0 +1,14 @@
+# Netlify configuration for static frontend (no build)
+[build]
+  base = "app"
+  publish = "app"
+  command = "echo 'No build step required'"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA fallback for client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -1,6 +1,6 @@
 // Home view - Rich Landing page for PT EMR Simulator
 import { route } from '../core/router.js';
-import { navigate as urlNavigate } from '../core/url.js';
+import { navigate as urlNavigate, navigateHash } from '../core/url.js';
 import { storage } from '../core/index.js';
 import { el } from '../ui/utils.js';
 import { listCases, listDrafts } from '../core/store.js';
@@ -126,7 +126,7 @@ route('#/', async (app) => {
     studentActions.push(
       el(
         'button',
-        { class: 'btn primary', onClick: () => (location.hash = resumeInfo.hash) },
+        { class: 'btn primary', onClick: () => navigateHash(resumeInfo.hash) },
         'Resume Case',
       ),
     );
@@ -158,7 +158,7 @@ route('#/', async (app) => {
     facultyActions.push(
       el(
         'button',
-        { class: 'btn primary', onClick: () => (location.hash = resumeInfo.hash) },
+        { class: 'btn primary', onClick: () => navigateHash(resumeInfo.hash) },
         'Resume Case',
       ),
     );
