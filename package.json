@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "Modernized Physical Therapy EMR Simulator - Pure Frontend Application (2025)",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "exit 0",
     "start": "exit 0",

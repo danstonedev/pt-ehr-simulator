@@ -2,18 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
     <!-- Microsoft Forms Feedback Embed -->
     <meta
       name="ms-forms-url"
       content="https://forms.office.com/Pages/ResponsePage.aspx?id=DQSIkWdsW0yxEjajBLZtrQAAAAAAAAAAAAGOOEaDTU0VTjQwuUNYNFAzSU5MUDNVTENWNjJFT1hOUC4u"
     />
-    <title>PT Sim-ER (MVP v2)</title>
+    <title>PT EMR Simulator</title>
+    <meta
+      name="description"
+      content="Modernized Physical Therapy EMR Simulator with SOAP notes, regional assessments, ICF framework, and billing—pure frontend, no backend."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta property="og:title" content="PT EMR Simulator" />
+    <meta
+      property="og:description"
+      content="Practice professional SOAP documentation and assessments in a modern, zero-backend PT EMR simulator."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
     <link
       rel="icon"
       type="image/svg+xml"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23007acc'/><text x='8' y='12' text-anchor='middle' fill='white' font-family='Arial' font-size='10' font-weight='bold'>E</text></svg>"
     />
+    <link rel="preload" as="image" href="img/und-logotype-fullw.svg" />
     <link rel="stylesheet" href="css/styles.css?v=20250821-001" />
     <link rel="stylesheet" href="css/sidebar.css?v=20250821-001" />
     <link rel="stylesheet" href="css/print.css" media="print" />
@@ -51,6 +67,29 @@
     </script>
   </head>
   <body>
+    <noscript>
+      <div
+        style="
+          background: #fff3cd;
+          color: #664d03;
+          padding: 12px 16px;
+          margin: 0;
+          text-align: center;
+          font:
+            14px/1.4 system-ui,
+            -apple-system,
+            Segoe UI,
+            Roboto,
+            Ubuntu,
+            Cantarell,
+            Noto Sans,
+            Arial,
+            sans-serif;
+        "
+      >
+        This application requires JavaScript to run. Please enable JavaScript in your browser.
+      </div>
+    </noscript>
     <!-- Skip to main content for keyboard and screen reader users -->
     <a class="skip-link" href="#app">Skip to main content</a>
     <header class="topbar no-print">
@@ -103,7 +142,10 @@
       </nav>
     </header>
 
-    <main id="app"></main>
+    <main id="app" role="main" tabindex="-1"></main>
+
+    <!-- Route change announcer for screen readers -->
+    <div id="route-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Educational ribbon at page bottom -->
     <div class="edu-ribbon no-print" role="note" aria-label="Educational Use Only">
@@ -230,6 +272,24 @@
     <script type="module">
       import { storage } from './js/core/index.js';
       // Theme toggle functionality (light baseline, dark via data-theme="dark")
+      function ensureThemeMeta() {
+        let el = document.querySelector('meta[name="theme-color"]');
+        if (!el) {
+          el = document.createElement('meta');
+          el.setAttribute('name', 'theme-color');
+          document.head.appendChild(el);
+        }
+        return el;
+      }
+      function updateThemeMeta() {
+        try {
+          const el = ensureThemeMeta();
+          const bg =
+            getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#ffffff';
+          el.setAttribute('content', bg);
+        } catch {}
+      }
+
       window.toggleTheme = function toggleTheme() {
         const root = document.documentElement;
         const toggle = document.getElementById('themeToggle');
@@ -251,6 +311,7 @@
           toggle.classList.add('is-dark');
           toggle.classList.remove('is-light');
         }
+        updateThemeMeta();
       };
 
       // Load saved theme on page load (coerce invalid to light baseline)
@@ -281,6 +342,9 @@
             toggle.classList.remove('is-dark');
           }
         }
+
+        // Sync theme-color to current CSS background
+        updateThemeMeta();
 
         // Last Update (GitHub) ribbon text
         (function setupLastUpdate() {
@@ -358,15 +422,13 @@
 
             const overlay = document.createElement('div');
             overlay.id = 'feedbackDialog';
-            overlay.style.cssText =
-              'position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:10000;';
+            overlay.className = 'modal-overlay';
             overlay.addEventListener('click', (e) => {
               if (e.target === overlay) document.body.removeChild(overlay);
             });
 
             const panel = document.createElement('div');
-            panel.style.cssText =
-              'background:var(--bg);padding:24px;border-radius:12px;width:92%;max-width:560px;box-shadow:0 20px 25px -5px rgba(0,0,0,.1);color:var(--text);';
+            panel.className = 'modal-panel';
             if (configuredUrl) {
               // Build an embeddable URL (ensure embed=true present)
               let formSrc = configuredUrl.trim();
@@ -374,25 +436,25 @@
                 formSrc += (formSrc.includes('?') ? '&' : '?') + 'embed=true';
               }
               panel.innerHTML = `
-              <h2 style="margin:0 0 8px 0;">Send Feedback</h2>
-              <p class="small" style="margin:0 0 12px 0;color:var(--text-secondary);">This form is embedded from Microsoft Forms.</p>
-              <div style="width:100%;height:560px;">
-                <iframe title="Feedback Form" src="${formSrc}" width="100%" height="100%" frameborder="0" marginwidth="0" marginheight="0" allowfullscreen webkitallowfullscreen mozallowfullscreen style="border:1px solid var(--input-border); border-radius:12px; background:var(--bg);"></iframe>
+              <h2 class="modal-title">Send Feedback</h2>
+              <p class="small modal-subtitle">This form is embedded from Microsoft Forms.</p>
+              <div class="modal-iframe-wrap">
+                <iframe class="modal-iframe" title="Feedback Form" src="${formSrc}" width="100%" height="100%" frameborder="0" marginwidth="0" marginheight="0" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>
               </div>
-              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
-                <button class="btn secondary" type="button" id="cancelFeedback">Close</button>
-                <a class="btn orange" id="openFormNewTab" href="${formSrc}" target="_blank" rel="noopener noreferrer">Open in new tab</a>
+              <div class="modal-actions">
+                <button class="btn secondary" type="button" data-action="cancel">Close</button>
+                <a class="btn orange" href="${formSrc}" target="_blank" rel="noopener noreferrer">Open in new tab</a>
               </div>
             `;
             } else {
               panel.innerHTML = `
-              <h2 style="margin:0 0 8px 0;">Send Feedback</h2>
-              <p class="small" style="margin:0 0 12px 0;color:var(--text-secondary);">Share any issues or ideas. Your comments help improve the simulator.</p>
-              <label for="feedbackText" class="form-label-standard" style="display:block;margin-bottom:6px;">Your feedback</label>
-              <textarea id="feedbackText" rows="6" style="width:100%;box-sizing:border-box;border:1px solid var(--input-border);border-radius:8px;padding:10px;font-family:inherit;font-size:14px;resize:vertical;"></textarea>
-              <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
-                <button class="btn secondary" type="button" id="cancelFeedback">Cancel</button>
-                <button class="btn orange" type="button" id="sendFeedback">Send Feedback</button>
+              <h2 class="modal-title">Send Feedback</h2>
+              <p class="small modal-subtitle">Share any issues or ideas. Your comments help improve the simulator.</p>
+              <label for="feedbackText" class="form-label-standard modal-label">Your feedback</label>
+              <textarea id="feedbackText" class="modal-textarea" rows="6"></textarea>
+              <div class="modal-actions">
+                <button class="btn secondary" type="button" data-action="cancel">Cancel</button>
+                <button class="btn orange" type="button" data-action="send">Send Feedback</button>
               </div>
             `;
             }
@@ -403,7 +465,7 @@
               document.getElementById('feedbackText').focus();
             }
 
-            panel.querySelector('#cancelFeedback').addEventListener('click', () => {
+            panel.querySelector('[data-action="cancel"]').addEventListener('click', () => {
               document.body.removeChild(overlay);
             });
             if (!configuredUrl) {
@@ -413,7 +475,7 @@
                   .map((k) => encodeURIComponent(k) + '=' + encodeURIComponent(data[k]))
                   .join('&');
 
-              panel.querySelector('#sendFeedback').addEventListener('click', async () => {
+              panel.querySelector('[data-action="send"]').addEventListener('click', async () => {
                 const text = (panel.querySelector('#feedbackText').value || '').trim();
                 if (!text) {
                   alert('Please enter your feedback before sending.');
@@ -430,6 +492,19 @@
           });
         }
       });
+    </script>
+    <script type="module">
+      import { urlCore } from './js/core/index.js';
+      const announcer = document.getElementById('route-announcer');
+      if (announcer && urlCore && typeof urlCore.onRouteChange === 'function') {
+        urlCore.onRouteChange((e) => {
+          try {
+            const { path } = (e && e.detail) ||
+              (urlCore.getRoute && urlCore.getRoute()) || { path: '/' };
+            announcer.textContent = `Navigated to ${path}`;
+          } catch {}
+        });
+      }
     </script>
     <script type="module">
       import * as store from './js/core/store.js';
