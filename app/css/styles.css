@@ -1648,7 +1648,7 @@ html[data-theme='dark'] .subsection-title {
 }
 .info-banner p {
   margin: 0;
-  color: var(--muted);
+  color: var(--text-subtle);
 }
 
 .drafts-list {
@@ -2247,6 +2247,10 @@ select:focus,
   outline: none;
   box-shadow: 0 0 0 2px var(--und-green-light);
 }
+.form-input-standard:focus-visible {
+  outline: 2px solid var(--und-green);
+  outline-offset: 2px;
+}
 
 .form-input-standard:disabled {
   opacity: 0.6;
@@ -2311,6 +2315,10 @@ select:focus,
   border-color: var(--und-green);
   outline: none;
   box-shadow: 0 0 0 2px var(--und-green-light);
+}
+.instructor-form-input:focus-visible {
+  outline: 2px solid var(--und-green);
+  outline-offset: 2px;
 }
 
 .instructor-form-input:disabled {
