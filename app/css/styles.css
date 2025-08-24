@@ -339,7 +339,7 @@
 }
 html,
 body {
-  height: 100%;
+  min-height: 100%;
 }
 
 /* Enhanced typography for accessibility */
@@ -368,9 +368,7 @@ body {
   font-weight: 400;
   background: var(--surface);
   color: var(--text);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  min-height: 100vh; /* allow page to grow naturally and scroll */
   /* Improve font rendering */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -822,10 +820,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   max-width: 1100px;
   width: 100%;
   margin: 0 auto;
-  flex: 1;
-  min-height: 0;
-  content-visibility: auto;
-  contain-intrinsic-size: 1200px; /* heuristic for initial paint */
+  /* Let the document body handle vertical scrolling; avoid constraining height here */
 }
 /* Expand app when sidebar is present */
 #app:has(.chart-navigation) {
@@ -964,7 +959,8 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 .main-content-with-sidebar {
   margin-left: var(--sidebar-w);
   width: calc(100% - var(--sidebar-w));
-  min-height: calc(100vh - var(--topbar-h));
+  /* Let content define height; ensure safe space for bottom ribbon via padding */
+  padding-bottom: calc(var(--edu-ribbon-h) + 16px);
   margin-top: 0;
   transition:
     margin-left 0.3s ease,
