@@ -1,5 +1,10 @@
 import { route } from '../../core/router.js';
-import { navigate as urlNavigate, buildLink as buildUrlLink } from '../../core/url.js';
+import {
+  navigate as urlNavigate,
+  buildLink as buildUrlLink,
+  getRoute as getUrlRoute,
+  setQueryParams as setUrlQuery,
+} from '../../core/url.js';
 import * as store from '../../core/store.js';
 import { generateCase } from '../../services/index.js';
 import { el } from '../../ui/utils.js';
@@ -1048,13 +1053,10 @@ route('#/instructor/cases', async (app) => {
 
     // If navigated with ?create=true, open the creation modal automatically
     try {
-      const hash = window.location.hash || '';
-      const [, query] = hash.split('?');
-      const params = new URLSearchParams(query || '');
-      if (params.get('create') === 'true') {
+      const { params } = getUrlRoute();
+      if (params.create === 'true') {
         // Remove the param from the URL to avoid reopening on refresh
-        const base = '#/instructor/cases';
-        history.replaceState(null, '', `${window.location.pathname}${base}`);
+        setUrlQuery({ create: undefined }, { replace: true });
         showCaseCreationModal();
       }
     } catch {

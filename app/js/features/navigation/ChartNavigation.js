@@ -1,6 +1,7 @@
 // ChartNavigation.js - Professional EMR-style navigation with progress tracking
 import { el } from '../../ui/utils.js';
 import { exportToWord } from '../../services/document-export.js';
+import { getRoute as getUrlRoute } from '../../core/url.js';
 
 /**
  * Creates SVG elements with proper namespace
@@ -1549,16 +1550,15 @@ export function createChartNavigation(config) {
               });
             }
             // Student-owned blank notes: allow editing in the sidebar
-            // Robust blank detection: prefer caseData.id, fallback to URL hash
+            // Robust blank detection: prefer caseData.id, fallback to URL param via url core
             let isStudentBlank = false;
             try {
               const idStr = String(config.caseData?.id || '');
               if (idStr.startsWith('blank')) isStudentBlank = true;
-              if (!isStudentBlank && typeof window !== 'undefined') {
-                const hash = window.location.hash || '';
-                const m = hash.match(/case=([^&]+)/);
-                const idFromHash = m ? decodeURIComponent(m[1]) : '';
-                if (idFromHash && idFromHash.startsWith('blank')) isStudentBlank = true;
+              if (!isStudentBlank) {
+                const { params } = getUrlRoute();
+                const idFromUrl = params.case || '';
+                if (idFromUrl && String(idFromUrl).startsWith('blank')) isStudentBlank = true;
               }
             } catch {}
             if (isStudentBlank) {
