@@ -406,11 +406,11 @@ h4 {
   font-size: clamp(1.125rem, 0.95rem + 0.7vw, 1.25rem);
 } /* 18→20 */
 h5 {
-  font-size: 1.125rem;
-} /* 18px */
+  font-size: clamp(1rem, 0.95rem + 0.4vw, 1.125rem);
+} /* 16→18 */
 h6 {
-  font-size: 1rem;
-} /* 16px */
+  font-size: clamp(0.9375rem, 0.9rem + 0.2vw, 1rem);
+} /* 15→16 */
 
 p {
   margin: 0 0 1rem 0;
