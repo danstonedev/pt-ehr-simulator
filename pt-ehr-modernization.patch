@@ -1,0 +1,170 @@
+*** Begin Patch
+*** Update File: app/index.html
+@@
+-  <head>
+-    <meta charset="utf-8" />
+-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+-    <title>PT Sim-ER</title>
+-    <link rel="stylesheet" href="css/styles.css">
+-  </head>
++  <head>
++    <meta charset="utf-8" />
++    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
++    <meta name="color-scheme" content="light dark" />
++    <meta name="theme-color" content="#0b0d10" media="(prefers-color-scheme: dark)">
++    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
++
++    <title>PT Sim-ER (MVP v2)</title>
++    <meta name="description" content="A lightweight PT EMR simulator for education and practice." />
++
++    <!-- Open Graph / Twitter -->
++    <meta property="og:title" content="PT Sim-ER (MVP v2)" />
++    <meta property="og:description" content="A lightweight PT EMR simulator for education and practice." />
++    <meta property="og:type" content="website" />
++    <meta property="og:url" content="https://danstonedev.github.io/pt-ehr-simulator/" />
++    <meta property="og:image" content="icons/og-image.png" />
++    <meta name="twitter:card" content="summary_large_image" />
++
++    <!-- Icons -->
++    <link rel="icon" href="icons/favicon.svg" type="image/svg+xml" />
++    <link rel="icon" href="icons/favicon-32.png" sizes="32x32" />
++    <link rel="icon" href="icons/favicon-192.png" sizes="192x192" />
++    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
++
++    <!-- Performance: fonts & CSS -->
++    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
++    <link rel="preconnect" href="https://fonts.googleapis.com">
++    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
++
++    <link rel="preload" as="style" href="css/styles.css" />
++    <link rel="stylesheet" href="css/styles.css">
++
++    <!-- Module preloads (adjust paths if different) -->
++    <link rel="modulepreload" href="js/core/router.js">
++    <link rel="modulepreload" href="js/views/home.js">
++    <link rel="modulepreload" href="js/views/case_editor.js">
++  </head>
+@@
+-  <body>
+-    <header>
++  <body>
++    <a class="skip-link" href="#app">Skip to main content</a>
++    <div id="route-announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
++
++    <header>
+       <!-- existing header -->
+     </header>
+-    <main id="app">
++    <main id="app" tabindex="-1" role="main">
+       <!-- SPA content -->
+     </main>
+     <footer>
+       <!-- existing footer -->
+     </footer>
+-    <!-- Existing inline scripts remain here -->
+-    <script type="module" src="js/main.js"></script>
++
++    <!-- External libs (keep deferred) -->
++    <script src="https://unpkg.com/docx@6.0.3/build/index.js" defer></script>
++    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js" defer></script>
++
++    <!-- Single bootstrap module (new) -->
++    <script type="module" src="js/bootstrap.js"></script>
+   </body>
+ </html>
+*** End Patch
+*** Begin Patch
+*** Update File: app/js/core/router.js
+@@
+ export function startRouter() {
+   // existing router start logic...
+ }
+ 
+@@
+ function renderRoute(hash) {
+   const path = normalizeHash(hash);
+   const renderer = routes[path] || routes['#/404'];
+   if (!renderer) return;
+ 
+   // existing DOM render call
+   renderer.mount(document.getElementById('app'));
+ 
+   updateNavigation(hash);
++
++  // === Accessibility & UX enhancements ===
++  try {
++    const titleBase = 'PT Sim-ER';
++    const pageTitle = (renderer.meta && renderer.meta.title) ? renderer.meta.title :
++      (path.replace('#/', '') || 'Home');
++    document.title = `${pageTitle} • ${titleBase}`;
++  } catch {}
++
++  try {
++    const main = document.getElementById('app');
++    if (main) main.focus({ preventScroll: false });
++  } catch {}
++
++  try {
++    const announcer = document.getElementById('route-announcer');
++    if (announcer) announcer.textContent = `Navigated to ${document.title}`;
++  } catch {}
+ }
+*** End Patch
+*** Begin Patch
+*** Update File: app/js/ui/utils.js
+@@
+ export function el(tag, attrs = {}, children = []) {
+   const e = document.createElement(tag);
+-  Object.entries(attrs).forEach(([k, v]) => {
+-    if (k === 'class') e.className = v;
+-    else if (k.startsWith('on') && typeof v === 'function') {
+-      const eventName = k.slice(2).toLowerCase();
+-      e.addEventListener(eventName, v);
+-    } else e.setAttribute(k, v);
+-  });
++  Object.entries(attrs).forEach(([k, v]) => {
++    if (k === 'class') {
++      e.className = v;
++    } else if (k === 'style' && typeof v === 'object') {
++      Object.assign(e.style, v);
++    } else if (k === 'dataset' && v && typeof v === 'object') {
++      Object.entries(v).forEach(([dk, dv]) => { e.dataset[dk] = dv; });
++    } else if (k.startsWith('on') && typeof v === 'function') {
++      e.addEventListener(k.slice(2).toLowerCase(), v);
++    } else if (typeof v === 'boolean') {
++      if (v) e.setAttribute(k, '');
++    } else if (k.startsWith('aria-') || k === 'role') {
++      e.setAttribute(k, String(v));
++    } else {
++      e.setAttribute(k, v);
++    }
++  });
+ 
+   (Array.isArray(children) ? children : [children])
+     .filter(Boolean)
+     .forEach(child => {
+       if (typeof child === 'string') e.appendChild(document.createTextNode(child));
+       else e.appendChild(child);
+     });
+   return e;
+ }
+*** End Patch
+*** Begin Patch
+*** Add File: app/js/bootstrap.js
++// Bootstrap module for SPA initialization
++import { startRouter } from './core/router.js';
++import * as store from './core/store.js';
++
++// Optional: expose store for debugging
++window.ptStore = store;
++
++// Optional: restore last route
++try {
++  const last = localStorage.getItem('pt_emr_last_route');
++  if (last) location.hash = last;
++} catch {}
++
++window.addEventListener('DOMContentLoaded', () => {
++  startRouter();
++});
+*** End Patch
