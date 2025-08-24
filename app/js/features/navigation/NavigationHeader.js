@@ -96,7 +96,9 @@ export function createStickyTopBar(config) {
     ],
   );
 
-  topBar.append(leftSection, rightSection);
+  // Constrain inner content width and keep semantics stable
+  const inner = el('div', { class: 'bar-inner' }, [leftSection, rightSection]);
+  topBar.append(inner);
   return topBar;
 }
 

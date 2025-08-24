@@ -873,6 +873,16 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Constrain sticky bar content to the same max width as #app on routes without sidebar */
+.sticky-top-bar > .bar-inner {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 /* Double gutters for the sticky top info bar on desktop */
 @media (min-width: 1024px) {
   .sticky-top-bar {
@@ -980,12 +990,15 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 }
 .section-content {
   padding: var(--space-5);
+  margin: 0 auto;
+  max-width: 1100px;
 }
-/* Increase horizontal breathing room in all case editor sections (desktop) */
+/* Desktop: responsive, tighter horizontal padding to avoid excessive gutters */
 @media (min-width: 1024px) {
   .section-content {
-    padding-left: calc(var(--space-5) * 4);
-    padding-right: calc(var(--space-5) * 4);
+    /* 16px → up to 48px based on viewport */
+    padding-left: clamp(16px, 3vw, 48px);
+    padding-right: clamp(16px, 3vw, 48px);
   }
 }
 
