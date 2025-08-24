@@ -1,16 +1,13 @@
 // Modern Case Editor with Conservative Imports
-import { route, navigate, getCase, createCase, updateCase } from '../core/index.js';
-import { el, textareaAutoResize, printPage } from '../ui/utils.js';
-import { renderTabs } from '../ui/components.js';
-import { inputField, textAreaField, selectField, sectionHeader } from '../ui/form-components.js';
-import { exportToWord } from '../services/document-export.js';
+import { route, createCase } from '../core/index.js';
+import { setQueryParams, onRouteChange, navigate as urlNavigate } from '../core/url.js';
+import { el, textareaAutoResize } from '../ui/utils.js';
 import {
   createSubjectiveSection,
   createObjectiveSection,
   createAssessmentSection,
   createPlanSection,
   createBillingSection,
-  createMultiRegionalAssessment,
 } from '../features/soap/index.js';
 import {
   initializeCase,
@@ -20,12 +17,10 @@ import {
 } from '../features/case-management/CaseInitialization.js';
 import {
   createChartNavigation,
-  createSectionAnchors,
   refreshChartNavigation,
   updateSaveStatus,
 } from '../features/navigation/ChartNavigation.js';
 import {
-  createSimpleTabs,
   createStickyTopBar,
   updateActiveSectionTitle,
   updateHeaderSaveStatus,
@@ -146,7 +141,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   // Redirect old "new" case routes to use the modal instead
   if (caseId === 'new') {
-    navigate('#/instructor/cases');
+    urlNavigate('/instructor/cases');
     return;
   }
 
@@ -172,11 +167,11 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   // No separate metadata form - everything is integrated
 
   // Configuration
-  const encReq = {}; // Encounter requirements configuration
+  // const encReq = {}; // Encounter requirements configuration (reserved for future use)
 
   // Initialize draft using modular function - pass faculty mode for proper data handling
   const draftManager = initializeDraft(caseId, encounter, isFacultyMode, c, isKeyMode);
-  let { draft, save: originalSave, resetDraft } = draftManager;
+  let { draft, save: originalSave } = draftManager;
 
   // Create chart navigation sidebar first
   const chartNav = createChartNavigation({
@@ -285,14 +280,16 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       // Determine nearest subsection anchor within current section using exact header offset
       const anchorId = getNearestVisibleAnchorId();
       const sp = getSectionScrollPercent();
-      const base = isFacultyMode ? '#/student/editor' : '#/student/editor';
-      const from = isFacultyMode ? '&from=faculty' : '';
-      const sectionQS = `&section=${encodeURIComponent(active)}`;
-      const anchorQS = anchorId ? `&anchor=${encodeURIComponent(anchorId)}` : '';
-      const spQS = `&sp=${sp.toFixed(4)}`;
-      navigate(
-        `${base}?case=${caseId}&v=${version}&encounter=${encounter}${from}${sectionQS}${anchorQS}${spQS}`,
-      );
+      const params = {
+        case: caseId,
+        v: version,
+        encounter,
+        section: active,
+        sp: sp.toFixed(4),
+      };
+      if (anchorId) params.anchor = anchorId;
+      if (isFacultyMode) params.from = 'faculty';
+      urlNavigate('/student/editor', params);
     },
     onExitPreview: () => {
       // Only meaningful in student preview mode; navigate back to faculty editor with original context when available
@@ -302,15 +299,12 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       if (!anchorId) {
         anchorId = getNearestVisibleAnchorId();
       }
-      const sectionQS = `&section=${encodeURIComponent(active)}`;
-      const anchorQS = anchorId ? `&anchor=${encodeURIComponent(anchorId)}` : '';
       const sp = Number.isFinite(initialScrollPercent)
         ? initialScrollPercent
         : getSectionScrollPercent();
-      const spQS = `&sp=${sp.toFixed(4)}`;
-      navigate(
-        `#/instructor/editor?case=${caseId}&v=${version}&encounter=${encounter}${sectionQS}${anchorQS}${spQS}`,
-      );
+      const params = { case: caseId, v: version, encounter, section: active, sp: sp.toFixed(4) };
+      if (anchorId) params.anchor = anchorId;
+      urlNavigate('/instructor/editor', params);
     },
   });
 
@@ -362,6 +356,17 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       },
     });
   }
+
+  // React to external URL changes (e.g., user edits hash or navigates)
+  try {
+    onRouteChange((e) => {
+      const { params } = e.detail || {};
+      const next = params && params.section ? String(params.section).toLowerCase() : '';
+      if (next && next !== active && isValidSection(next)) {
+        switchTo(next);
+      }
+    });
+  } catch {}
 
   // Make chart refresh available globally for components
   window.refreshChartProgress = refreshChartProgress;
@@ -439,6 +444,11 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   function switchTo(s) {
     active = s;
+
+    // Sync section to URL (replace by default to avoid history spam)
+    try {
+      setQueryParams({ section: s });
+    } catch {}
 
     // Update active section title in header
     updateActiveSectionTitle(stickyTopBar, active);
@@ -775,10 +785,11 @@ function createCaseMetadataPanel(caseObj, saveFunction) {
 
                     try {
                       const savedCase = await createCase(caseObj);
-
                       // Navigate to the saved case in faculty mode
-                      const newUrl = `#/instructor/editor?case=${savedCase.id}`;
-                      setTimeout(() => navigate(newUrl), 100);
+                      setTimeout(
+                        () => urlNavigate('/instructor/editor', { case: savedCase.id }),
+                        100,
+                      );
                     } catch (error) {
                       console.error('Failed to create case:', error);
                       alert('Failed to create case. Please try again.');

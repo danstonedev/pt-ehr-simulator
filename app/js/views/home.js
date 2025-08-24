@@ -1,5 +1,7 @@
 // Home view - Rich Landing page for PT EMR Simulator
-import { route, navigate } from '../core/router.js';
+import { route } from '../core/router.js';
+import { navigate as urlNavigate, navigateHash } from '../core/url.js';
+import { storage } from '../core/index.js';
 import { el } from '../ui/utils.js';
 import { listCases, listDrafts } from '../core/store.js';
 
@@ -21,20 +23,16 @@ function buildHelpPanel() {
       return;
     try {
       // Remove cases, counter, and drafts
-      localStorage.removeItem('pt_emr_cases');
-      localStorage.removeItem('pt_emr_case_counter');
+      storage.removeItem('pt_emr_cases');
+      storage.removeItem('pt_emr_case_counter');
       // Remove all drafts
-      const keys = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith('draft_')) keys.push(k);
-      }
-      keys.forEach((k) => localStorage.removeItem(k));
+      const keys = storage.keys().filter((k) => k && k.startsWith('draft_'));
+      keys.forEach((k) => storage.removeItem(k));
       // Keep last route so user can resume intentionally if desired, or clear it:
-      // localStorage.removeItem('pt_emr_last_route');
+      // storage.removeItem('pt_emr_last_route');
       alert('Data reset completed. Demo case restored.');
       // Soft refresh the home view
-      navigate('#/');
+      urlNavigate('/');
     } catch (e) {
       console.error('Reset failed:', e);
       alert('Reset failed. Please reload the page.');
@@ -69,7 +67,7 @@ route('#/', async (app) => {
   const [cases, drafts] = await Promise.all([listCases(), Promise.resolve(listDrafts())]);
   const draftsCount = countDrafts(drafts);
   const featured = cases.find((c) => c.id === 'demo_case_1') || cases[0];
-  const lastHash = localStorage.getItem('pt_emr_last_route');
+  const lastHash = storage.getItem('pt_emr_last_route');
   const resumeInfo = (() => {
     if (!lastHash || lastHash === '#/' || lastHash === '#/404') return null;
     const [path] = lastHash.split('?');
@@ -105,13 +103,14 @@ route('#/', async (app) => {
       : null;
     const picked = lastParams || fallback;
     if (!picked) {
-      navigate(kind === 'student' ? '#/student/cases' : '#/instructor/cases');
+      urlNavigate(kind === 'student' ? '/student/cases' : '/instructor/cases');
       return;
     }
-    const base = kind === 'student' ? '#/student/editor' : '#/instructor/editor';
-    navigate(
-      `${base}?case=${encodeURIComponent(picked.caseId)}&v=${picked.version}&encounter=${encodeURIComponent(encounter)}`,
-    );
+    if (kind === 'student') {
+      urlNavigate('/student/editor', { case: picked.caseId, v: picked.version, encounter });
+    } else {
+      urlNavigate('/instructor/editor', { case: picked.caseId, v: picked.version, encounter });
+    }
   }
 
   // Build main panels
@@ -119,7 +118,7 @@ route('#/', async (app) => {
   studentActions.push(
     el(
       'button',
-      { class: 'btn primary', onClick: () => navigate('#/student/cases') },
+      { class: 'btn primary', onClick: () => urlNavigate('/student/cases') },
       'Student Dashboard',
     ),
   );
@@ -127,7 +126,7 @@ route('#/', async (app) => {
     studentActions.push(
       el(
         'button',
-        { class: 'btn primary', onClick: () => navigate(resumeInfo.hash) },
+        { class: 'btn primary', onClick: () => navigateHash(resumeInfo.hash) },
         'Resume Case',
       ),
     );
@@ -151,7 +150,7 @@ route('#/', async (app) => {
   facultyActions.push(
     el(
       'button',
-      { class: 'btn primary', onClick: () => navigate('#/instructor/cases') },
+      { class: 'btn primary', onClick: () => urlNavigate('/instructor/cases') },
       'Faculty Dashboard',
     ),
   );
@@ -159,7 +158,7 @@ route('#/', async (app) => {
     facultyActions.push(
       el(
         'button',
-        { class: 'btn primary', onClick: () => navigate(resumeInfo.hash) },
+        { class: 'btn primary', onClick: () => navigateHash(resumeInfo.hash) },
         'Resume Case',
       ),
     );

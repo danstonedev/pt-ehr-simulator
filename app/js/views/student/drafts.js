@@ -1,5 +1,7 @@
-import { route, navigate } from '../../core/router.js';
+import { route } from '../../core/router.js';
+import { navigate as urlNavigate } from '../../core/url.js';
 import { listCases } from '../../core/store.js';
+import { storage } from '../../core/index.js';
 import { el } from '../../ui/utils.js';
 
 route('#/student/drafts', async (app, qs) => {
@@ -17,13 +19,14 @@ route('#/student/drafts', async (app, qs) => {
       casesMap[caseWrapper.id] = caseWrapper.title;
     });
 
-    // Scan localStorage for draft keys
+    // Scan storage for draft keys
     const drafts = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
+    const keys = storage.keys();
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
       if (key && key.startsWith('draft_')) {
         try {
-          const draftData = JSON.parse(localStorage.getItem(key));
+          const draftData = JSON.parse(storage.getItem(key));
           // More robust parsing: handle case IDs that contain underscores
           const parts = key.split('_');
           if (parts.length < 3) continue; // Invalid key format
@@ -91,7 +94,7 @@ route('#/student/drafts', async (app, qs) => {
         el('div', {}, [
           el(
             'button',
-            { class: 'btn', onClick: () => navigate('#/student/cases') },
+            { class: 'btn', onClick: () => urlNavigate('/student/cases') },
             '← Back to Cases',
           ),
           ' ',
@@ -111,7 +114,7 @@ route('#/student/drafts', async (app, qs) => {
           ),
           el(
             'button',
-            { class: 'btn', onClick: () => navigate('#/student/cases') },
+            { class: 'btn', onClick: () => urlNavigate('/student/cases') },
             'Browse Cases',
           ),
         ]),
@@ -143,9 +146,11 @@ route('#/student/drafts', async (app, qs) => {
               {
                 class: 'btn primary',
                 onClick: () => {
-                  navigate(
-                    `#/student/editor?case=${draft.caseId}&v=0&encounter=${draft.encounter}`,
-                  );
+                  urlNavigate('/student/editor', {
+                    case: draft.caseId,
+                    v: 0,
+                    encounter: draft.encounter,
+                  });
                 },
               },
               'Continue Working',
@@ -183,9 +188,9 @@ route('#/student/drafts', async (app, qs) => {
           `Are you sure you want to delete the draft for "${caseTitle}" (${encounter.toUpperCase()})? This cannot be undone.`,
         )
       ) {
-        localStorage.removeItem(key);
+        storage.removeItem(key);
         // Reload the page to reflect changes
-        navigate('#/student/drafts');
+        urlNavigate('/student/drafts');
       }
     }
 
@@ -193,16 +198,10 @@ route('#/student/drafts', async (app, qs) => {
     function clearAllDrafts() {
       if (confirm('Are you sure you want to delete ALL your draft notes? This cannot be undone.')) {
         // Remove all draft keys
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith('draft_')) {
-            keysToRemove.push(key);
-          }
-        }
-        keysToRemove.forEach((key) => localStorage.removeItem(key));
+        const keysToRemove = storage.keys().filter((k) => k && k.startsWith('draft_'));
+        keysToRemove.forEach((key) => storage.removeItem(key));
         // Reload the page to reflect changes
-        navigate('#/student/drafts');
+        urlNavigate('/student/drafts');
       }
     }
   } catch (error) {

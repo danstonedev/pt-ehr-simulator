@@ -1,4 +1,5 @@
-import { route, navigate } from '../../core/router.js';
+import { route } from '../../core/router.js';
+import { navigate as urlNavigate, buildLink as buildUrlLink } from '../../core/url.js';
 import * as store from '../../core/store.js';
 import { generateCase } from '../../services/index.js';
 import { el } from '../../ui/utils.js';
@@ -728,7 +729,7 @@ function createCaseFromGenerated(caseData, modal) {
     try {
       const newCase = await store.createCase(caseData);
       if (modal) document.body.removeChild(modal);
-      navigate(`#/instructor/editor?case=${newCase.id}`);
+      urlNavigate('/instructor/editor', { case: newCase.id });
     } catch (e) {
       console.error('Failed to create generated case:', e);
       alert('Could not create the case. See console for details.');
@@ -824,7 +825,7 @@ async function handleCaseCreationAsync(title, setting, age, gender, acuity, dob)
     }
 
     // Navigate to editor with proper case ID
-    navigate(`#/instructor/editor?case=${newCase.id}`);
+    urlNavigate('/instructor/editor', { case: newCase.id });
   } catch (error) {
     console.error('Error creating case:', error);
     alert('Error creating case. Please try again.');
@@ -1249,7 +1250,11 @@ route('#/instructor/cases', async (app) => {
         'tbody',
         {},
         cases.map((c) => {
-          const studentLink = `${window.location.origin}${window.location.pathname}#/student/editor?case=${c.id}&v=${c.latestVersion}&encounter=eval`;
+          const studentLink = buildUrlLink('/student/editor', {
+            case: c.id,
+            v: c.latestVersion || 0,
+            encounter: 'eval',
+          });
           const meta = c.caseObj?.meta || {};
           return el('tr', {}, [
             el('td', {}, c.title || meta.title || 'Untitled'),
@@ -1282,9 +1287,11 @@ route('#/instructor/cases', async (app) => {
                   class: 'btn small primary',
                   style: 'margin-right: 8px;',
                   onClick: () =>
-                    navigate(
-                      `#/instructor/editor?case=${c.id}&v=${c.latestVersion || 0}&encounter=eval`,
-                    ),
+                    urlNavigate('/instructor/editor', {
+                      case: c.id,
+                      v: c.latestVersion || 0,
+                      encounter: 'eval',
+                    }),
                 },
                 [spriteIcon('edit'), 'Edit'],
               ),
@@ -1294,7 +1301,11 @@ route('#/instructor/cases', async (app) => {
                   class: 'btn small primary',
                   style: 'margin-right: 8px;',
                   onClick: () =>
-                    navigate(`#/student/editor?case=${c.id}&v=${c.latestVersion}&encounter=eval`),
+                    urlNavigate('/student/editor', {
+                      case: c.id,
+                      v: c.latestVersion || 0,
+                      encounter: 'eval',
+                    }),
                 },
                 [spriteIcon('preview'), 'Student View'],
               ),
@@ -1304,9 +1315,12 @@ route('#/instructor/cases', async (app) => {
                   class: 'btn small primary',
                   style: 'margin-right: 8px;',
                   onClick: () =>
-                    navigate(
-                      `#/student/editor?case=${c.id}&v=${c.latestVersion}&encounter=eval&key=true`,
-                    ),
+                    urlNavigate('/student/editor', {
+                      case: c.id,
+                      v: c.latestVersion || 0,
+                      encounter: 'eval',
+                      key: 'true',
+                    }),
                 },
                 [spriteIcon('preview'), 'Answer Key'],
               ),
