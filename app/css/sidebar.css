@@ -274,9 +274,13 @@ html[data-theme='dark'] .chart-navigation .section-nav-item .nav-progress-text {
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
+.case-header input:focus-visible,
+.case-header select:focus-visible {
+  outline: 2px solid var(--und-green);
+  outline-offset: 2px;
+}
 .case-header input:focus,
 .case-header select:focus {
-  outline: none;
   border-color: var(--und-green);
   box-shadow: 0 0 0 2px var(--und-green-light);
 }

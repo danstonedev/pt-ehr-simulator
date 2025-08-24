@@ -89,6 +89,7 @@
   /* Single color background instead of gradient */
   background: var(--header-gradient-left);
   color: #fff;
+  border-bottom: 1px solid var(--border-strong);
 }
 .cases-table thead th.sortable:hover {
   background: var(--header-gradient-left); /* keep single color on hover */
@@ -152,7 +153,7 @@
   color: var(--text);
 }
 .regional-assessment .table tr:nth-child(even) td {
-  background: var(--table-stripe);
+  background: var(--surface-muted);
 }
 .regional-assessment .table input,
 .regional-assessment .table select {
@@ -338,6 +339,12 @@ html:not([data-theme='dark']) .editable-table__select optgroup {
   background-color: var(--neutral-50);
   color: var(--text);
 }
+
+/* Ensure visible keyboard focus on add-row button inside editable tables */
+.editable-table__add-btn:focus-visible {
+  outline: 2px solid var(--und-green);
+  outline-offset: 2px;
+}
 /* High-contrast state for the selected item in dark mode */
 html[data-theme='dark'] .editable-table__select option:checked {
   background-color: var(--neutral-700); /* subtle highlight */
@@ -376,6 +383,13 @@ html[data-theme='dark'] .editable-table__select option:checked {
   outline: none;
   border-color: var(--und-green);
   box-shadow: 0 0 0 2px var(--und-green-light);
+}
+/* Keyboard focus for editable table controls */
+.editable-table__input:focus-visible,
+.editable-table__select:focus-visible,
+.editable-table__textarea:focus-visible {
+  outline: 2px solid var(--und-green);
+  outline-offset: 2px;
 }
 .editable-table__cell--actions {
   text-align: center;
