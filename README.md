@@ -125,7 +125,6 @@ app/  ← single source of truth for the site
 │   │   │   └── billing/             # ICD-10 & CPT code management
 │   │   └── index.js                 # Features barrel export
 │   ├── modules/                     # Shared utility modules
-│   │   ├── GoalLinker.js            # Deprecated stub (safe no-op)
 │   ├── features/soap/objective/EditableTable.js  # Standardized editable table used across app
 │   ├── services/                    # External service integrations
 │   │   └── document-export.js       # Word document generation
@@ -142,7 +141,7 @@ app/  ← single source of truth for the site
 
 Repository root
 ├── start_servers_simple.ps1         # Delegates to app/start_servers_simple.ps1
-└── .github/workflows/static.yml     # GitHub Pages deployment (publishes app/)
+└── .github/workflows/               # GitHub Actions workflows (CI, deploy)
 ```
 
 ## 🏗️ Modern Architecture & Organization
