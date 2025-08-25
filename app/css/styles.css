@@ -2107,20 +2107,36 @@ select:focus,
    ======================================== */
 
 /* Tablet and desktop adjustments */
-@media (max-width: 1024px) {
-  .main-content-with-sidebar,
-  .sticky-top-bar {
-    margin-left: 0;
-    width: 100%;
+@media (max-width: 900px) {
+  #hamburgerBtn {
+    display: inline-flex;
+    order: 3;
+    margin-left: auto;
   }
-
-  /* Improved font sizes for tablet */
-  html {
-    font-size: 15px;
+  .brand-row {
+    order: 1;
   }
-
-  /* Enhanced touch targets handled in buttons.css */
+  #primaryNav {
+    order: 2;
+  }
+  #primaryNav.topnav a,
+  #primaryNav .feedback-btn,
+  #primaryNav .theme-toggle,
+  .brand-row .feedback-btn {
+    display: none !important;
+  }
+  .und-logo {
+    height: 28px;
+  }
+  .brand-label {
+    font-size: 14px;
+  }
+  .brand-label-suffix {
+    display: none;
+  }
 }
+
+/* Enhanced touch targets handled in buttons.css */
 
 /* Mobile-first responsive design */
 @media (max-width: 768px) {
