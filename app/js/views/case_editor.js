@@ -1,7 +1,7 @@
 // Modern Case Editor with Conservative Imports
-import { route, createCase } from '../core/index.js';
+import { route } from '../core/index.js';
 import { setQueryParams, onRouteChange, navigate as urlNavigate } from '../core/url.js';
-import { el, textareaAutoResize } from '../ui/utils.js';
+import { el } from '../ui/utils.js';
 import {
   createSubjectiveSection,
   createObjectiveSection,
@@ -32,6 +32,7 @@ route('#/instructor/editor', async (app, qs) => {
   return renderCaseEditor(app, qs, true); // true = faculty mode
 });
 
+/* eslint-disable-next-line complexity */
 async function renderCaseEditor(app, qs, isFacultyMode) {
   const caseId = qs.get('case');
   // Version param removed with header changes
@@ -225,12 +226,25 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   const save = async (...args) => {
     // Update sidebar save status only (sticky header removed)
     updateSaveStatus(chartNav, 'saving');
+    // Announce saving to screen readers
+    try {
+      const announcer = document.getElementById('route-announcer');
+      if (announcer) announcer.textContent = 'Saving…';
+    } catch {}
     try {
       await originalSave(...args);
       updateSaveStatus(chartNav, 'saved');
+      try {
+        const announcer = document.getElementById('route-announcer');
+        if (announcer) announcer.textContent = 'All changes saved';
+      } catch {}
       if (window.refreshChartProgress) window.refreshChartProgress();
     } catch (error) {
       updateSaveStatus(chartNav, 'error');
+      try {
+        const announcer = document.getElementById('route-announcer');
+        if (announcer) announcer.textContent = 'Save failed';
+      } catch {}
       console.error('Save failed:', error);
     }
   };
@@ -263,6 +277,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   // Sticky top bar removed; preview can be triggered from elsewhere if desired
 
   // Function to refresh chart navigation progress
+  /* eslint-disable-next-line complexity */
   function refreshChartProgress() {
     refreshChartNavigation(chartNav, {
       activeSection: active,
@@ -294,11 +309,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         c.snapshot.age = updatedInfo.age;
         c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
         c.snapshot.dob = updatedInfo.dob;
-        save();
-        refreshChartProgress();
-      },
-      onEditorSettingsChange: (nextSettings) => {
-        draft.editorSettings = nextSettings;
         save();
         refreshChartProgress();
       },
@@ -491,6 +501,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     }
   }
 
+  /* eslint-disable-next-line complexity */
   function switchTo(s) {
     active = s;
 
@@ -549,6 +560,15 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       const rect = header.getBoundingClientRect();
       const y = Math.max(0, window.scrollY + rect.top - offset);
       window.scrollTo({ top: y, behavior: 'smooth' });
+      // Announce section change and move focus for SR users
+      try {
+        header.setAttribute('tabindex', '-1');
+        header.focus({ preventScroll: true });
+      } catch {}
+      try {
+        const announcer = document.getElementById('route-announcer');
+        if (announcer) announcer.textContent = `Moved to ${s} section`;
+      } catch {}
       performInitialScrollIfNeeded(s);
     }
   }
@@ -581,6 +601,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   afterNextLayout(() => performInitialScrollIfNeeded(active));
 
   // Observe scroll to update active section and sidebar
+  /* eslint-disable-next-line complexity */
   function determineActiveByScroll() {
     const offset = getHeaderOffsetPx();
     const entries = Object.entries(sectionHeaders);
@@ -637,224 +658,4 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
  * @param {Function} saveFunction - Function to save changes
  * @returns {HTMLElement} Metadata panel element
  */
-function createCaseMetadataPanel(caseObj, saveFunction) {
-  // Track if this is a new case that needs saving
-  const isNewCase = !caseObj.meta.title || caseObj.meta.title.trim() === '';
-
-  return el(
-    'div',
-    {
-      class: 'case-metadata-panel',
-    },
-    [
-      el(
-        'h3',
-        {
-          class: 'case-metadata-title',
-        },
-        isNewCase ? '📝 New Case Setup' : '📋 Case Information',
-      ),
-
-      el(
-        'div',
-        {
-          class: 'case-metadata-grid',
-        },
-        [
-          // Left column
-          el('div', {}, [
-            el(
-              'label',
-              {
-                class: 'form-label-standard',
-              },
-              'Case Title *',
-            ),
-            el('input', {
-              type: 'text',
-              value: caseObj.meta.title || '',
-              placeholder: 'e.g., Low Back Pain - Acute Episode',
-              class: 'form-input-standard',
-              onInput: (e) => {
-                caseObj.meta.title = e.target.value;
-                caseObj.title = e.target.value; // Also set top-level title
-                saveFunction?.();
-              },
-            }),
-          ]),
-
-          // Right column
-          el('div', {}, [
-            el(
-              'label',
-              {
-                class: 'form-label-standard',
-              },
-              'Setting',
-            ),
-            el(
-              'select',
-              {
-                value: caseObj.meta.setting || 'Outpatient',
-                class: 'form-input-standard',
-                onChange: (e) => {
-                  caseObj.meta.setting = e.target.value;
-                  saveFunction?.();
-                },
-              },
-              [
-                el('option', { value: 'Outpatient' }, 'Outpatient'),
-                el('option', { value: 'Inpatient' }, 'Inpatient'),
-                el('option', { value: 'Home Health' }, 'Home Health'),
-                el('option', { value: 'Skilled Nursing' }, 'Skilled Nursing'),
-              ],
-            ),
-          ]),
-        ],
-      ),
-
-      el(
-        'div',
-        {
-          class: 'case-metadata-grid',
-          style: 'grid-template-columns: 1fr 1fr 1fr;',
-        },
-        [
-          el('div', {}, [
-            el(
-              'label',
-              {
-                class: 'form-label-standard',
-              },
-              'Patient Age',
-            ),
-            el('input', {
-              type: 'number',
-              value: caseObj.snapshot.age || '',
-              placeholder: 'e.g., 45',
-              class: 'form-input-standard',
-              onInput: (e) => {
-                caseObj.snapshot.age = e.target.value;
-                saveFunction?.();
-              },
-            }),
-          ]),
-
-          el('div', {}, [
-            el(
-              'label',
-              {
-                class: 'form-label-standard',
-              },
-              'Sex',
-            ),
-            el(
-              'select',
-              {
-                value: caseObj.snapshot.sex || 'unspecified',
-                class: 'form-input-standard',
-                onChange: (e) => {
-                  caseObj.snapshot.sex = e.target.value;
-                  saveFunction?.();
-                },
-              },
-              [
-                el('option', { value: 'unspecified' }, 'Not Specified'),
-                el('option', { value: 'male' }, 'Male'),
-                el('option', { value: 'female' }, 'Female'),
-              ],
-            ),
-          ]),
-
-          el('div', {}, [
-            el(
-              'label',
-              {
-                class: 'form-label-standard',
-              },
-              'Acuity',
-            ),
-            el(
-              'select',
-              {
-                value: caseObj.meta.acuity || 'acute',
-                class: 'form-input-standard',
-                onChange: (e) => {
-                  caseObj.meta.acuity = e.target.value;
-                  saveFunction?.();
-                },
-              },
-              [
-                el('option', { value: 'acute' }, 'Acute'),
-                el('option', { value: 'subacute' }, 'Subacute'),
-                el('option', { value: 'chronic' }, 'Chronic'),
-              ],
-            ),
-          ]),
-        ],
-      ),
-
-      el('div', {}, [
-        el(
-          'label',
-          {
-            class: 'form-label-standard',
-          },
-          'Case Description',
-        ),
-        (() => {
-          const t = el('textarea', {
-            value: caseObj.snapshot.teaser || '',
-            placeholder: 'Brief description of the case for student preview...',
-            class: 'form-input-standard',
-            rows: 2,
-            style: 'min-height: 60px;',
-            onInput: (e) => {
-              caseObj.snapshot.teaser = e.target.value;
-              saveFunction?.();
-            },
-          });
-          textareaAutoResize(t);
-          return t;
-        })(),
-      ]),
-
-      // Save button for new cases
-      isNewCase
-        ? el(
-            'div',
-            {
-              style: 'margin-top: 15px; text-align: right;',
-            },
-            [
-              el(
-                'button',
-                {
-                  class: 'btn primary',
-                  onClick: async () => {
-                    if (!caseObj.meta.title || caseObj.meta.title.trim() === '') {
-                      alert('Please enter a case title before saving.');
-                      return;
-                    }
-
-                    try {
-                      const savedCase = await createCase(caseObj);
-                      // Navigate to the saved case in faculty mode
-                      setTimeout(
-                        () => urlNavigate('/instructor/editor', { case: savedCase.id }),
-                        100,
-                      );
-                    } catch (error) {
-                      console.error('Failed to create case:', error);
-                      alert('Failed to create case. Please try again.');
-                    }
-                  },
-                },
-                '💾 Save Case',
-              ),
-            ],
-          )
-        : null,
-    ],
-  );
-}
+// removed unused createCaseMetadataPanel
