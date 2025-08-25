@@ -2747,7 +2747,7 @@ header.topbar {
 
 /* Header hamburger */
 .hamburger-btn {
-  display: inline-flex;
+  display: none; /* hidden on desktop; shown on mobile via media query */
   background: transparent;
   border: 0;
   color: #fff;
@@ -2787,6 +2787,12 @@ header.topbar {
 }
 .crumb-sep {
   opacity: 0.5;
+}
+
+/* TEMP: hide breadcrumbs to prevent overlap with sidebar */
+#breadcrumbs,
+.breadcrumbs {
+  display: none !important;
 }
 
 /* Brand + Feedback inline row */

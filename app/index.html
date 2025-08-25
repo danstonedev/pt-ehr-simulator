@@ -161,7 +161,8 @@
       </nav>
     </header>
 
-    <nav id="breadcrumbs" class="breadcrumbs no-print" aria-label="Breadcrumbs"></nav>
+    <!-- Breadcrumbs temporarily disabled to avoid obstructing sidebar -->
+    <!-- <nav id="breadcrumbs" class="breadcrumbs no-print" aria-label="Breadcrumbs"></nav> -->
 
     <main id="app" role="main" tabindex="-1"></main>
 
@@ -367,8 +368,8 @@
         // Sync theme-color to current CSS background
         updateThemeMeta();
 
-        // Breadcrumbs
-        (function setupBreadcrumbs() {
+        // Breadcrumbs (temporarily disabled)
+        /* (function setupBreadcrumbs() {
           const el = document.getElementById('breadcrumbs');
           if (!el) return;
           function toCrumb(text, href) {
@@ -406,7 +407,7 @@
           }
           window.addEventListener('hashchange', render);
           render();
-        })();
+  })(); */
 
         // Header hamburger toggles sidebar if present
         (function setupHamburger() {
