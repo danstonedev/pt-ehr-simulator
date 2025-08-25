@@ -29,7 +29,7 @@
     <link rel="preload" as="image" href="img/und-logotype-fullw.svg" />
     <link rel="stylesheet" href="css/styles.css?v=20250825-002" />
     <link rel="stylesheet" href="css/sidebar.css?v=20250825-002" />
-    <link rel="stylesheet" href="css/mobile-patch.css?v=20250825-001" />
+    <link rel="stylesheet" href="css/mobile-patch-v2.css?v=20250825-002" />
     <link rel="stylesheet" href="css/print.css" media="print" />
     <!-- Webfont: Oswald (Trade Gothic alternative) for brand label -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -410,30 +410,34 @@
 
         // Header hamburger toggles sidebar if present
         (function setupHamburger() {
-          const btn = document.getElementById('hamburgerBtn');
-          if (!btn) return;
-          function setExpanded(val) {
-            btn.setAttribute('aria-expanded', String(!!val));
-          }
-          btn.addEventListener('click', () => {
-            try {
-              if (typeof window.toggleMobileNav === 'function') {
-                const expanded = window.toggleMobileNav();
-                setExpanded(expanded);
-              } else {
-                // Fallback: toggle class if sidebar exists
-                const sidebar =
-                  document.getElementById('chartNavigation') ||
-                  document.querySelector('.chart-navigation');
-                const nowOpen = sidebar ? !sidebar.classList.contains('mobile-open') : false;
-                sidebar && sidebar.classList.toggle('mobile-open', nowOpen);
-                document.body.classList.toggle('mobile-nav-open', nowOpen);
-                const mc = document.querySelector('.main-content-with-sidebar');
-                mc && mc.classList.toggle('nav-collapsed', nowOpen);
-                setExpanded(nowOpen);
-              }
-            } catch {}
-          });
+          // Defer binding so v2 can set a flag first; prevents duplicate listeners
+          setTimeout(() => {
+            if (window.__MOBILE_DRAWER_V2) return;
+            const btn = document.getElementById('hamburgerBtn');
+            if (!btn) return;
+            function setExpanded(val) {
+              btn.setAttribute('aria-expanded', String(!!val));
+            }
+            btn.addEventListener('click', () => {
+              try {
+                if (typeof window.toggleMobileNav === 'function') {
+                  const expanded = window.toggleMobileNav();
+                  setExpanded(expanded);
+                } else {
+                  // Fallback: toggle class if sidebar exists
+                  const sidebar =
+                    document.getElementById('chartNavigation') ||
+                    document.querySelector('.chart-navigation');
+                  const nowOpen = sidebar ? !sidebar.classList.contains('mobile-open') : false;
+                  sidebar && sidebar.classList.toggle('mobile-open', nowOpen);
+                  document.body.classList.toggle('mobile-nav-open', nowOpen);
+                  const mc = document.querySelector('.main-content-with-sidebar');
+                  mc && mc.classList.toggle('nav-collapsed', nowOpen);
+                  setExpanded(nowOpen);
+                }
+              } catch {}
+            });
+          }, 0);
         })();
 
         // Last Update (GitHub) ribbon text
@@ -605,6 +609,6 @@
       );
     </script>
     <script type="module" src="js/core/router.js?v=20250820-004"></script>
-    <script src="js/mobile-drawer.js?v=20250825-001"></script>
+    <script src="js/mobile-drawer-v2.js?v=20250825-002"></script>
   </body>
 </html>
