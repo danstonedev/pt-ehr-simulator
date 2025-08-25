@@ -916,7 +916,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 /* In-content sticky section divider that gently pushes when next section arrives */
 .editor-section-divider {
   position: sticky; /* stick just under the top app bar */
-  top: var(--topbar-h);
+  top: calc(var(--topbar-h) + var(--patient-sticky-h, 0px));
   z-index: var(--z-sticky-header);
   height: var(--section-divider-h);
   display: flex;
@@ -1431,7 +1431,9 @@ html[data-theme='dark'] input[type='checkbox'] {
   --subsection-indent: 32px;
   padding-left: var(--subsection-indent);
   /* Ensure anchored scroll positions are visible below fixed headers */
-  scroll-margin-top: calc(var(--topbar-h) + var(--section-divider-h));
+  scroll-margin-top: calc(
+    var(--topbar-h) + var(--patient-sticky-h, 0px) + var(--section-divider-h)
+  );
   /* Performance optimization - only render visible sections */
   content-visibility: auto;
   contain-intrinsic-size: 200px; /* Estimated section height */
@@ -1963,6 +1965,59 @@ html[data-theme='dark'] .subsection-title {
   overflow-y: auto;
   padding: var(--space-5) var(--space-6);
   max-height: 50vh;
+}
+.case-details-modal {
+  max-width: 560px; /* tighter width for single column */
+}
+.case-details-body {
+  max-height: 60vh; /* allow a bit more scroll in details */
+}
+.case-details-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* single column */
+  row-gap: 14px;
+}
+.case-details-grid .case-info-row {
+  display: block; /* stack label and value */
+}
+.case-details-grid .case-info-row .label {
+  display: block;
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.case-details-grid .case-info-row .value {
+  display: block;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+/* Summary row and module cards in Case Details */
+.case-details-summary .label {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.case-details-summary .value {
+  font-size: 14px;
+}
+.module-card .label {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.module-card .value {
+  font-size: 14px;
+}
+.case-details-modal .goal-linker-header h3 {
+  font-size: 20px;
+  color: var(--und-green);
+}
+.case-details-modal .goal-linker-header {
+  background: var(--surface);
+}
+.case-details-modal .goal-linker-header + .goal-selection-list {
+  background: var(--surface);
 }
 .goal-section-title {
   margin: var(--space-4) 0 var(--space-2);

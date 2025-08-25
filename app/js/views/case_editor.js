@@ -51,7 +51,9 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       10,
     );
     const tb = isNaN(topbarH) ? 72 : topbarH;
-    return tb; // only app top bar now
+    const sticky = document.getElementById('patient-sticky-header');
+    const sh = sticky && sticky.offsetParent !== null ? sticky.offsetHeight : 0;
+    return tb + sh;
   }
 
   function getNearestVisibleAnchorId() {
@@ -178,7 +180,13 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     activeSection: 'subjective',
     onSectionChange: (sectionId) => switchTo(sectionId),
     isFacultyMode: isFacultyMode,
-    caseData: { ...c, ...draft, editorSettings: c.editorSettings || draft.editorSettings },
+    caseData: {
+      ...c,
+      ...draft,
+      // Prefer draft.modules when present; otherwise use case modules
+      modules: Array.isArray(draft.modules) ? draft.modules : c.modules,
+      editorSettings: c.editorSettings || draft.editorSettings,
+    },
     caseInfo: {
       // Prefer explicit fields, then canonical meta/snapshot fallbacks
       title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
@@ -187,6 +195,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
       acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
       dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
+      modules: Array.isArray(c.modules) ? c.modules : [],
     },
     onCaseInfoUpdate: (updatedInfo) => {
       // Update the case object with new information
@@ -197,6 +206,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       c.patientGender = updatedInfo.sex;
       c.acuity = updatedInfo.acuity;
       c.patientDOB = updatedInfo.dob;
+      c.modules = Array.isArray(updatedInfo.modules) ? updatedInfo.modules : c.modules || [];
       // Keep canonical containers in sync
       c.meta = c.meta || {};
       c.meta.title = updatedInfo.title;
@@ -207,6 +217,10 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       // Normalize sex for snapshot to lower-case if looks like a label
       c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
       c.snapshot.dob = updatedInfo.dob;
+      // Persist modules to draft/case
+      if (Array.isArray(updatedInfo.modules)) {
+        draft.modules = updatedInfo.modules;
+      }
 
       // Save the case
       save();
@@ -283,7 +297,12 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       activeSection: active,
       onSectionChange: (sectionId) => switchTo(sectionId),
       isFacultyMode: isFacultyMode,
-      caseData: { ...c, ...draft, editorSettings: c.editorSettings || draft.editorSettings },
+      caseData: {
+        ...c,
+        ...draft,
+        modules: Array.isArray(draft.modules) ? draft.modules : c.modules,
+        editorSettings: c.editorSettings || draft.editorSettings,
+      },
       caseInfo: {
         title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
         setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
@@ -291,6 +310,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
         acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
         dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
+        modules: Array.isArray(c.modules) ? c.modules : [],
       },
       onCaseInfoUpdate: (updatedInfo) => {
         c.caseTitle = updatedInfo.title;
@@ -300,6 +320,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         c.patientGender = updatedInfo.sex;
         c.acuity = updatedInfo.acuity;
         c.patientDOB = updatedInfo.dob;
+        c.modules = Array.isArray(updatedInfo.modules) ? updatedInfo.modules : c.modules || [];
         // Keep canonical containers in sync
         c.meta = c.meta || {};
         c.meta.title = updatedInfo.title;
@@ -309,6 +330,9 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         c.snapshot.age = updatedInfo.age;
         c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
         c.snapshot.dob = updatedInfo.dob;
+        if (Array.isArray(updatedInfo.modules)) {
+          draft.modules = updatedInfo.modules;
+        }
         save();
         refreshChartProgress();
       },
@@ -335,9 +359,84 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   // Make chart refresh available globally for components
   window.refreshChartProgress = refreshChartProgress;
 
-  // Create main content container with sidebar offset
+  // Sticky patient header (two-line stacked)
+  function computeAgeFromDobLocal(dobStr) {
+    if (!dobStr) return '';
+    const dob = new Date(dobStr);
+    if (isNaN(dob.getTime())) return '';
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    return age >= 0 && age < 200 ? String(age) : '';
+  }
+
+  const patientHeaderNameEl = el(
+    'div',
+    { style: 'font-weight:700; font-size:18px; line-height:1.2;' },
+    '',
+  );
+  const patientHeaderDemoEl = el(
+    'div',
+    { style: 'font-size:12px; color: var(--text-secondary); line-height:1.2; margin-top:2px;' },
+    '',
+  );
+  const patientHeader = el(
+    'div',
+    {
+      id: 'patient-sticky-header',
+      style: [
+        'position: sticky',
+        'top: var(--topbar-h, 72px)',
+        // Ensure patient banner stays above sticky section dividers
+        'z-index: var(--z-case-header)',
+        'background: var(--bg)',
+        'border-bottom: 1px solid var(--border)',
+        'padding: 10px 12px',
+      ].join('; '),
+    },
+    [patientHeaderNameEl, patientHeaderDemoEl],
+  );
+
+  /* eslint-disable-next-line complexity */
+  function updatePatientHeader() {
+    try {
+      const displayName =
+        c.patientName ||
+        c.name ||
+        (c.meta && c.meta.patientName) ||
+        c.caseTitle ||
+        c.title ||
+        'Untitled Case';
+      const dob = c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '';
+      const age = computeAgeFromDobLocal(dob) || c.patientAge || c.age || '';
+      const sex = c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || '';
+      patientHeaderNameEl.textContent = displayName;
+      const parts = [];
+      parts.push(`DOB: ${dob || 'N/A'}${age ? ` (${age}y)` : ''}`);
+      parts.push(`Sex: ${sex || 'N/A'}`);
+      patientHeaderDemoEl.textContent = parts.join('   •   ');
+      // Expose measured height to CSS as a variable so sticky offsets and anchors account for it
+      const h = patientHeader.offsetHeight || 0;
+      document.documentElement.style.setProperty('--patient-sticky-h', `${h}px`);
+    } catch {}
+  }
+  // Recompute on resize in case wrapping changes height
+  window.addEventListener(
+    'resize',
+    () => {
+      const h = patientHeader.offsetHeight || 0;
+      document.documentElement.style.setProperty('--patient-sticky-h', `${h}px`);
+    },
+    { passive: true },
+  );
+
+  // Create main content container with sidebar offset + header
   const contentRoot = el('div', { id: 'section', class: 'section-content' });
-  const mainContainer = el('div', { class: 'main-content-with-sidebar' }, [contentRoot]);
+  const mainContainer = el('div', { class: 'main-content-with-sidebar' }, [
+    patientHeader,
+    contentRoot,
+  ]);
 
   // Render all sections once to form a single scrolling page
   const sectionRoots = {};
@@ -525,6 +624,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
         acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
         dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
+        modules: Array.isArray(c.modules) ? c.modules : [],
       },
       onCaseInfoUpdate: (updatedInfo) => {
         c.caseTitle = updatedInfo.title;
@@ -534,6 +634,10 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         c.patientGender = updatedInfo.sex;
         c.acuity = updatedInfo.acuity;
         c.patientDOB = updatedInfo.dob;
+        if (Array.isArray(updatedInfo.modules)) {
+          c.modules = updatedInfo.modules;
+          draft.modules = updatedInfo.modules;
+        }
         // Keep canonical containers in sync
         c.meta = c.meta || {};
         c.meta.title = updatedInfo.title;
@@ -543,6 +647,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         c.snapshot.age = updatedInfo.age;
         c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
         c.snapshot.dob = updatedInfo.dob;
+        updatePatientHeader();
         debouncedSave();
       },
       onEditorSettingsChange: (nextSettings) => {
@@ -577,13 +682,20 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   // Initialize the editor with sidebar navigation only
   app.append(chartNav, mainContainer);
+  // Initialize header immediately so CSS var is ready before sections mount
+  updatePatientHeader();
   renderAllSections();
   // Initial nav state + optional deep link handling
   refreshChartNavigation(chartNav, {
     activeSection: active,
     onSectionChange: (sectionId) => switchTo(sectionId),
     isFacultyMode: isFacultyMode,
-    caseData: { ...c, ...draft, editorSettings: c.editorSettings || draft.editorSettings },
+    caseData: {
+      ...c,
+      ...draft,
+      modules: Array.isArray(draft.modules) ? draft.modules : c.modules,
+      editorSettings: c.editorSettings || draft.editorSettings,
+    },
     caseInfo: {
       title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
       setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
@@ -591,6 +703,31 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
       acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
       dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
+      modules: Array.isArray(c.modules) ? c.modules : [],
+    },
+    onCaseInfoUpdate: (updatedInfo) => {
+      c.caseTitle = updatedInfo.title;
+      c.title = updatedInfo.title;
+      c.setting = updatedInfo.setting;
+      c.patientAge = updatedInfo.age;
+      c.patientGender = updatedInfo.sex;
+      c.acuity = updatedInfo.acuity;
+      c.patientDOB = updatedInfo.dob;
+      if (Array.isArray(updatedInfo.modules)) {
+        c.modules = updatedInfo.modules;
+        draft.modules = updatedInfo.modules;
+      }
+      // Keep canonical containers in sync
+      c.meta = c.meta || {};
+      c.meta.title = updatedInfo.title;
+      c.meta.setting = updatedInfo.setting;
+      c.meta.acuity = updatedInfo.acuity;
+      c.snapshot = c.snapshot || {};
+      c.snapshot.age = updatedInfo.age;
+      c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
+      c.snapshot.dob = updatedInfo.dob;
+      save();
+      if (window.refreshChartProgress) window.refreshChartProgress();
     },
     onEditorSettingsChange: (nextSettings) => {
       draft.editorSettings = nextSettings;
@@ -619,7 +756,12 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         activeSection: active,
         onSectionChange: (sectionId) => switchTo(sectionId),
         isFacultyMode: isFacultyMode,
-        caseData: { ...c, ...draft, editorSettings: c.editorSettings || draft.editorSettings },
+        caseData: {
+          ...c,
+          ...draft,
+          modules: Array.isArray(draft.modules) ? draft.modules : c.modules,
+          editorSettings: c.editorSettings || draft.editorSettings,
+        },
         caseInfo: {
           title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
           setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
@@ -627,6 +769,31 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
           sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
           acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
           dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
+          modules: Array.isArray(c.modules) ? c.modules : [],
+        },
+        onCaseInfoUpdate: (updatedInfo) => {
+          c.caseTitle = updatedInfo.title;
+          c.title = updatedInfo.title;
+          c.setting = updatedInfo.setting;
+          c.patientAge = updatedInfo.age;
+          c.patientGender = updatedInfo.sex;
+          c.acuity = updatedInfo.acuity;
+          c.patientDOB = updatedInfo.dob;
+          if (Array.isArray(updatedInfo.modules)) {
+            c.modules = updatedInfo.modules;
+            draft.modules = updatedInfo.modules;
+          }
+          // Keep canonical containers in sync
+          c.meta = c.meta || {};
+          c.meta.title = updatedInfo.title;
+          c.meta.setting = updatedInfo.setting;
+          c.meta.acuity = updatedInfo.acuity;
+          c.snapshot = c.snapshot || {};
+          c.snapshot.age = updatedInfo.age;
+          c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
+          c.snapshot.dob = updatedInfo.dob;
+          updatePatientHeader();
+          save();
         },
         onEditorSettingsChange: (nextSettings) => {
           draft.editorSettings = nextSettings;

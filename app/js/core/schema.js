@@ -27,6 +27,8 @@ export function makeBlankCase() {
       acuity: 'unspecified',
       diagnosis: 'Musculoskeletal',
     },
+    // Optional case-level modules attached by faculty (e.g., referrals, imaging, labs)
+    modules: [],
     snapshot: {
       name: '',
       age: '',
@@ -193,6 +195,9 @@ export function ensureDataIntegrity(caseData) {
   if (!caseData.findings && caseData.exam) {
     caseData.findings = { ...caseData.exam };
   }
+
+  // Ensure modules container exists
+  if (!Array.isArray(caseData.modules)) caseData.modules = [];
 
   // Ensure assessment has visibility structure for faculty mode
   if (caseData.assessment && !caseData.assessment.visibility) {

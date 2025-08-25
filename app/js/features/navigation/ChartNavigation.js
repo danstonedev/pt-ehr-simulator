@@ -635,7 +635,7 @@ function openCaseDetailsModal(caseInfo) {
     if (e.target === overlay) overlay.remove();
   });
 
-  const content = el('div', { class: 'goal-linker-content', style: 'max-width: 640px;' }, [
+  const content = el('div', { class: 'goal-linker-content case-details-modal' }, [
     el('div', { class: 'goal-linker-header' }, [
       el('h3', {}, 'Case Details'),
       el(
@@ -644,25 +644,39 @@ function openCaseDetailsModal(caseInfo) {
         '✕',
       ),
     ]),
-    el('div', { class: 'goal-selection-list', style: 'max-height: 60vh;' }, [
-      el('div', { class: 'case-info-grid', style: 'grid-template-columns: 160px 1fr;' }, [
-        // Order: Title, DOB, Age, Sex, Setting, Acuity
-        el('div', { class: 'case-info-row' }, [
-          el('span', { class: 'label' }, 'Title'),
-          el('span', { class: 'value' }, caseInfo.title || 'Untitled Case'),
-        ]),
-        el('div', { class: 'case-info-row' }, [
-          el('span', { class: 'label' }, 'DOB'),
-          el('span', { class: 'value' }, caseInfo.dob || 'N/A'),
-        ]),
-        el('div', { class: 'case-info-row' }, [
-          el('span', { class: 'label' }, 'Age'),
-          el('span', { class: 'value' }, computeAgeFromDob(caseInfo.dob) || caseInfo.age || 'N/A'),
-        ]),
-        el('div', { class: 'case-info-row' }, [
-          el('span', { class: 'label' }, 'Sex'),
-          el('span', { class: 'value' }, caseInfo.sex || 'N/A'),
-        ]),
+    el('div', { class: 'goal-selection-list case-details-body' }, [
+      // Top summary row: Title, DOB (with computed age), Sex
+      (() => {
+        const age = computeAgeFromDob(caseInfo.dob) || caseInfo.age || '';
+        return el(
+          'div',
+          {
+            class: 'case-details-summary',
+            style:
+              'display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; margin-bottom: 12px;',
+          },
+          [
+            el('div', { style: 'flex:1 1 280px; min-width:240px;' }, [
+              el('div', { class: 'label', style: 'margin-bottom:4px;' }, 'Title'),
+              el(
+                'div',
+                { class: 'value', style: 'font-weight:600;' },
+                caseInfo.title || 'Untitled Case',
+              ),
+            ]),
+            el('div', { style: 'flex:1 1 180px; min-width:180px;' }, [
+              el('div', { class: 'label', style: 'margin-bottom:4px;' }, 'DOB (years)'),
+              el('div', { class: 'value' }, `${caseInfo.dob || 'N/A'}${age ? ` (${age}y)` : ''}`),
+            ]),
+            el('div', { style: 'flex:1 1 140px; min-width:140px;' }, [
+              el('div', { class: 'label', style: 'margin-bottom:4px;' }, 'Sex'),
+              el('div', { class: 'value' }, caseInfo.sex || 'N/A'),
+            ]),
+          ],
+        );
+      })(),
+      el('div', { class: 'case-info-grid case-details-grid' }, [
+        // Secondary details: Setting, Acuity
         el('div', { class: 'case-info-row' }, [
           el('span', { class: 'label' }, 'Setting'),
           el('span', { class: 'value' }, caseInfo.setting || 'N/A'),
@@ -692,15 +706,218 @@ function openCaseDetailsModal(caseInfo) {
   }, 0);
 }
 
+// Read-only Artifact viewer modal (student and faculty view)
+function openViewArtifactModal(module) {
+  const overlay = el('div', { class: 'goal-linker-modal', role: 'dialog', 'aria-modal': 'true' });
+  const title =
+    module?.title ||
+    (module?.type ? module.type[0].toUpperCase() + module.type.slice(1) : 'Artifact');
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+  overlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') overlay.remove();
+  });
+  const content = el('div', { class: 'goal-linker-content case-details-modal' }, [
+    el('div', { class: 'goal-linker-header' }, [
+      el('h3', {}, title),
+      el(
+        'button',
+        { class: 'close-btn', onclick: () => overlay.remove(), 'aria-label': 'Close' },
+        '✕',
+      ),
+    ]),
+    el('div', { class: 'goal-selection-list case-details-body' }, [
+      (() => {
+        const t = (module?.type || '').toLowerCase();
+        if (t === 'referral') {
+          const d = module.data || {};
+          return el(
+            'div',
+            {
+              class: 'module-card',
+              style:
+                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
+            },
+            [
+              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Referral'),
+              el('div', { class: 'case-info-grid case-details-grid' }, [
+                el('div', { class: 'case-info-row' }, [
+                  el('span', { class: 'label' }, 'Date'),
+                  el('span', { class: 'value' }, d.date || 'N/A'),
+                ]),
+                el('div', { class: 'case-info-row' }, [
+                  el('span', { class: 'label' }, 'From'),
+                  el('span', { class: 'value' }, d.source || 'N/A'),
+                ]),
+                el('div', { class: 'case-info-row' }, [
+                  el('span', { class: 'label' }, 'Reason'),
+                  el('span', { class: 'value' }, d.reason || 'N/A'),
+                ]),
+                d.notes
+                  ? el('div', { class: 'case-info-row' }, [
+                      el('span', { class: 'label' }, 'Notes'),
+                      el('span', { class: 'value' }, d.notes || ''),
+                    ])
+                  : null,
+              ]),
+            ],
+          );
+        }
+        return el(
+          'pre',
+          { style: 'white-space:pre-wrap; font-size:12px;' },
+          JSON.stringify(module, null, 2),
+        );
+      })(),
+    ]),
+    el(
+      'div',
+      {
+        class: 'goal-linker-header',
+        style:
+          'justify-content: flex-end; background: var(--surface); border-top: 1px solid var(--border);',
+      },
+      [el('button', { class: 'btn secondary', onclick: () => overlay.remove() }, 'Close')],
+    ),
+  ]);
+  overlay.append(content);
+  document.body.append(overlay);
+  setTimeout(() => overlay.querySelector('.close-btn')?.focus(), 0);
+}
+
+// Add Artifact modal (faculty): collects title, type, and type-specific fields
+function openAddArtifactModal(onAdd) {
+  const overlay = el('div', { class: 'goal-linker-modal', role: 'dialog', 'aria-modal': 'true' });
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+  overlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') overlay.remove();
+  });
+  let currentType = 'referral';
+  const titleInput = el('input', {
+    type: 'text',
+    class: 'instructor-form-input',
+    placeholder: 'Artifact title (e.g., Referral to PT)',
+    value: '',
+  });
+
+  // Referral fields
+  const ref = { date: '', source: '', reason: '', notes: '' };
+  const refForm = el('div', { style: 'display:grid; gap:10px; margin-top: 8px;' }, [
+    el('div', {}, [
+      el('label', { class: 'instructor-form-label' }, 'Date'),
+      el('input', {
+        type: 'date',
+        class: 'instructor-form-input',
+        oninput: (e) => (ref.date = e.target.value),
+      }),
+    ]),
+    el('div', {}, [
+      el('label', { class: 'instructor-form-label' }, 'From (provider/department)'),
+      el('input', {
+        type: 'text',
+        class: 'instructor-form-input',
+        oninput: (e) => (ref.source = e.target.value),
+      }),
+    ]),
+    el('div', {}, [
+      el('label', { class: 'instructor-form-label' }, 'Reason'),
+      el('input', {
+        type: 'text',
+        class: 'instructor-form-input',
+        oninput: (e) => (ref.reason = e.target.value),
+      }),
+    ]),
+    el('div', {}, [
+      el('label', { class: 'instructor-form-label' }, 'Notes'),
+      el('textarea', {
+        class: 'instructor-form-input',
+        style: 'min-height:68px;',
+        oninput: (e) => (ref.notes = e.target.value),
+      }),
+    ]),
+  ]);
+
+  const content = el('div', { class: 'goal-linker-content case-details-modal' }, [
+    el('div', { class: 'goal-linker-header' }, [
+      el('h3', {}, 'Add Case Artifact'),
+      el(
+        'button',
+        { class: 'close-btn', onclick: () => overlay.remove(), 'aria-label': 'Close' },
+        '✕',
+      ),
+    ]),
+    el('div', { class: 'goal-selection-list case-details-body' }, [
+      el('div', { class: 'instructor-form-field' }, [
+        el('label', { class: 'instructor-form-label' }, 'Title *'),
+        titleInput,
+      ]),
+      el('div', { class: 'instructor-form-field' }, [
+        el('label', { class: 'instructor-form-label' }, 'Type *'),
+        el(
+          'select',
+          { class: 'instructor-form-input', onchange: (e) => (currentType = e.target.value) },
+          [
+            el('option', { value: 'referral', selected: '' }, 'Referral'),
+            // Future: imaging, labs, meds, vitals, prior-notes
+          ],
+        ),
+      ]),
+      refForm,
+    ]),
+    el(
+      'div',
+      {
+        class: 'goal-linker-header',
+        style:
+          'justify-content: flex-end; background: var(--surface); border-top: 1px solid var(--border);',
+      },
+      [
+        el('button', { class: 'btn secondary', onclick: () => overlay.remove() }, 'Cancel'),
+        el(
+          'button',
+          {
+            class: 'btn primary',
+            onclick: () => {
+              const title = (titleInput.value || '').trim();
+              if (!title) {
+                alert('Please enter a title for this artifact.');
+                titleInput.focus();
+                return;
+              }
+              const id = `${currentType}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+              const mod = { id, type: currentType, title, data: {} };
+              if (currentType === 'referral') mod.data = { ...ref };
+              onAdd?.(mod);
+              overlay.remove();
+            },
+          },
+          'Add Artifact',
+        ),
+      ],
+    ),
+  ]);
+  overlay.append(content);
+  document.body.append(overlay);
+  setTimeout(() => titleInput?.focus(), 0);
+}
+
 // Edit Case Details Modal (faculty): mirrors Create New Case layout
 /* eslint-disable-next-line complexity */
 function openEditCaseModal(caseInfo, onSave) {
+  // Clone modules array for local editing
+  const modulesLocal = Array.isArray(caseInfo.modules)
+    ? JSON.parse(JSON.stringify(caseInfo.modules))
+    : [];
   const modal = el(
     'div',
     {
       style: `
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-      display: flex; align-items: center; justify-content: center; z-index: 1000;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; align-items: flex-start; justify-content: center; z-index: 1000;
+  overflow-y: auto; padding: 24px 12px;
     `,
       onclick: (e) => {
         if (e.target === modal) document.body.removeChild(modal);
@@ -711,8 +928,8 @@ function openEditCaseModal(caseInfo, onSave) {
         'div',
         {
           style: `
-        background: var(--bg); color: var(--text); padding: 32px; border-radius: 12px; max-width: 520px; width: 90%;
-        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+  background: var(--bg); color: var(--text); padding: 32px; border-radius: 12px; max-width: 560px; width: 95%;
+  max-height: calc(100vh - 48px); overflow: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
       `,
           onclick: (e) => e.stopPropagation(),
         },
@@ -937,28 +1154,36 @@ function openEditCaseModal(caseInfo, onSave) {
                 ],
               ),
             ]),
-            // Buttons
-            el('div', { style: 'display: flex; gap: 12px; justify-content: flex-end;' }, [
-              el(
-                'button',
-                {
-                  type: 'button',
-                  class: 'btn secondary',
-                  style: 'padding: 12px 24px; font-size: 14px;',
-                  onclick: () => document.body.removeChild(modal),
-                },
-                'Cancel',
-              ),
-              el(
-                'button',
-                {
-                  type: 'submit',
-                  class: 'btn primary',
-                  style: 'padding: 12px 24px; font-size: 14px;',
-                },
-                'Save Changes',
-              ),
-            ]),
+            // Case Artifacts moved to dedicated modal and sidebar block
+            // Buttons (sticky footer area so actions remain visible)
+            el(
+              'div',
+              {
+                style:
+                  'position: sticky; bottom: 0; background: var(--bg); padding-top: 12px; margin-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end;',
+              },
+              [
+                el(
+                  'button',
+                  {
+                    type: 'button',
+                    class: 'btn secondary',
+                    style: 'padding: 12px 24px; font-size: 14px;',
+                    onclick: () => document.body.removeChild(modal),
+                  },
+                  'Cancel',
+                ),
+                el(
+                  'button',
+                  {
+                    type: 'submit',
+                    class: 'btn primary',
+                    style: 'padding: 12px 24px; font-size: 14px;',
+                  },
+                  'Save Changes',
+                ),
+              ],
+            ),
           ]),
         ],
       ),
@@ -974,6 +1199,7 @@ function openEditCaseModal(caseInfo, onSave) {
       sex: document.getElementById('edit-gender').value,
       dob: document.getElementById('edit-dob').value,
       acuity: document.getElementById('edit-acuity').value,
+      modules: modulesLocal,
     };
     // If age empty but DOB present, compute
     if ((!updated.age || updated.age === '') && updated.dob) {
@@ -1398,6 +1624,11 @@ export function createChartNavigation(config) {
   } catch {}
 
   // Create the sidebar navigation
+  // Modules available on the case object (draft-safe)
+  const currentModules = Array.isArray((config.caseData || {}).modules)
+    ? config.caseData.modules
+    : [];
+
   const sidebar = el(
     'div',
     {
@@ -1421,6 +1652,8 @@ export function createChartNavigation(config) {
           (() => {
             if (config.isFacultyMode) {
               // Faculty always gets editable header with an explicit Edit button
+              // Ensure modules are available for edit modal
+              computedCaseInfo.modules = currentModules;
               return createEditableCaseHeader(computedCaseInfo, config.onCaseInfoUpdate, {
                 forceShowEditButton: true,
                 showPencil: false,
@@ -1453,6 +1686,8 @@ export function createChartNavigation(config) {
                   if (d.meta.title) computedCaseInfo.title = d.meta.title;
                 }
               } catch {}
+              // Ensure modules are available for edit modal
+              computedCaseInfo.modules = currentModules;
               return createEditableCaseHeader(
                 computedCaseInfo,
                 (info) => {
@@ -1464,36 +1699,138 @@ export function createChartNavigation(config) {
             }
             return createReadOnlyCaseHeader(computedCaseInfo);
           })(),
-          // Actions: place Export button directly under case description
-          el(
-            'div',
-            { style: 'margin: 8px 0 12px 0; display:flex; gap:8px; justify-content: stretch;' },
-            [
-              (() => {
-                // Named handler so we can silence complexity locally without affecting other code
-                /* eslint-disable-next-line complexity */
-                function handleExportClick() {
-                  try {
-                    const cd = config.caseData || {};
-                    const draft = window && window.currentDraft ? window.currentDraft : cd || {};
-                    try {
-                      if (draft && typeof cd === 'object') {
-                        if (draft.noteTitle) cd.title = draft.noteTitle;
-                        if (draft.snapshot) {
-                          cd.snapshot = { ...(cd.snapshot || {}), ...draft.snapshot };
-                        }
-                        if (draft.meta) {
-                          cd.meta = { ...(cd.meta || {}), ...draft.meta };
-                        }
-                      }
-                    } catch {}
-                    exportToWord(cd, draft);
-                  } catch (e) {
-                    console.error('Export to Word failed to start:', e);
-                    alert('Unable to start Word export.');
-                  }
-                }
+          // Case Artifacts: visible under case card
+          (() => {
+            const items = Array.isArray(currentModules) ? currentModules : [];
+            const header = el(
+              'h4',
+              { style: 'margin: 10px 0 6px 0; font-size: 13px;' },
+              'Artifacts',
+            );
+            if (config.isFacultyMode) {
+              // List artifacts with table-style remove buttons
+              const list = items.length
+                ? el(
+                    'div',
+                    { style: 'display:flex; flex-direction:column; gap:6px;' },
+                    items.map((m) => {
+                      const title =
+                        m.title ||
+                        (m.type ? m.type[0].toUpperCase() + m.type.slice(1) : 'Artifact');
+                      return el('div', { style: 'display:flex; gap:6px; align-items:center;' }, [
+                        el(
+                          'button',
+                          {
+                            class: 'btn secondary',
+                            style: 'flex:1; text-align:left; padding:6px 10px; font-size:12px;',
+                            onClick: () => openViewArtifactModal(m),
+                            title: 'View artifact',
+                          },
+                          title,
+                        ),
+                        el(
+                          'button',
+                          {
+                            type: 'button',
+                            class: 'remove-btn editable-table__delete-btn',
+                            title: 'Remove artifact',
+                            onClick: () => {
+                              const next = items.filter((x) => x.id !== m.id);
+                              const payload = { ...(config.caseInfo || {}), modules: next };
+                              config.onCaseInfoUpdate?.(payload);
+                            },
+                          },
+                          '×',
+                        ),
+                      ]);
+                    }),
+                  )
+                : el(
+                    'div',
+                    { style: 'font-size:12px; color: var(--text-secondary);' },
+                    'No artifacts yet.',
+                  );
+
+              // Add button styled like tables (compact circular +), placed below list
+              const addBtnFooter = el(
+                'div',
+                {
+                  class: 'editable-table__footer',
+                  style: 'display:flex; justify-content:center; margin: 6px 0 10px 0;',
+                },
+                el(
+                  'div',
+                  {
+                    class: 'compact-add-btn',
+                    title: 'Add artifact',
+                    onclick: () => {
+                      openAddArtifactModal((mod) => {
+                        const next = [...items, mod];
+                        const payload = { ...(config.caseInfo || {}), modules: next };
+                        config.onCaseInfoUpdate?.(payload);
+                      });
+                    },
+                  },
+                  '+',
+                ),
+              );
+
+              return el('div', { style: 'margin: 6px 0 10px 0;' }, [header, list, addBtnFooter]);
+            }
+            // Student view: buttons to open artifacts
+            if (!items.length) return el('div');
+            const list = el(
+              'div',
+              { style: 'display:flex; flex-direction:column; gap:6px;' },
+              items.map((m) => {
+                const title =
+                  m.title || (m.type ? m.type[0].toUpperCase() + m.type.slice(1) : 'Artifact');
                 return el(
+                  'button',
+                  {
+                    class: 'btn secondary',
+                    style: 'width:100%; text-align:left; padding:6px 10px; font-size:12px;',
+                    onClick: () => openViewArtifactModal(m),
+                  },
+                  title,
+                );
+              }),
+            );
+            return el('div', { style: 'margin: 6px 0 10px 0;' }, [header, list]);
+          })(),
+          // Extra padding before section trackers
+          el('div', { style: 'height: 20px;' }),
+          // Section cards + subsections
+          ...sections.map((section) =>
+            el('div', {}, [createSectionNav(section), createSubsectionTOC(section)]),
+          ),
+          // Footer actions: Export to Word at very bottom with extra separation from Billing
+          (() => {
+            /* eslint-disable-next-line complexity */
+            function handleExportClick() {
+              try {
+                const out = config.caseData || {};
+                const draft = window && window.currentDraft ? window.currentDraft : out || {};
+                try {
+                  if (draft.noteTitle) out.title = draft.noteTitle;
+                } catch {}
+                try {
+                  if (draft.snapshot) out.snapshot = { ...(out.snapshot || {}), ...draft.snapshot };
+                } catch {}
+                try {
+                  if (draft.meta) out.meta = { ...(out.meta || {}), ...draft.meta };
+                } catch {}
+                exportToWord(out, draft);
+              } catch (e) {
+                console.error('Export to Word failed to start:', e);
+                alert('Unable to start Word export.');
+              }
+            }
+            return el(
+              'div',
+              { style: 'margin: 24px 0 8px 0; display:flex; gap:8px; justify-content: stretch;' },
+              [
+                el(
                   'button',
                   {
                     class: 'btn primary',
@@ -1502,15 +1839,10 @@ export function createChartNavigation(config) {
                     onClick: handleExportClick,
                   },
                   'Export to Word',
-                );
-              })(),
-            ],
-          ),
-          // Section cards + subsections
-          ...sections.map((section) =>
-            el('div', {}, [createSectionNav(section), createSubsectionTOC(section)]),
-          ),
-          // No footer actions; Export button moved to the top under case header
+                ),
+              ],
+            );
+          })(),
         ],
       ),
     ],
@@ -1612,7 +1944,7 @@ export function createSectionAnchors(sectionId, subsections) {
     el('div', {
       id: sub.id,
       class: 'section-anchor',
-      style: 'scroll-margin-top: 80px;', // Account for sticky headers
+      // scroll-margin-top handled via CSS to account for patient header height dynamically
     }),
   );
 }
