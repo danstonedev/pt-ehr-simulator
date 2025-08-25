@@ -553,17 +553,19 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       },
     });
 
-    // Scroll to the section header (divider) for clear context
-    const header = getSectionHeader(s) || getSectionRoot(s);
-    if (header) {
+    // Scroll to the true top of the section (its wrapper), not just until the sticky header appears
+    const header = getSectionHeader(s);
+    const root = getSectionRoot(s) || header;
+    if (root) {
       const offset = getHeaderOffsetPx();
-      const rect = header.getBoundingClientRect();
+      const rect = root.getBoundingClientRect();
       const y = Math.max(0, window.scrollY + rect.top - offset);
       window.scrollTo({ top: y, behavior: 'smooth' });
       // Announce section change and move focus for SR users
       try {
-        header.setAttribute('tabindex', '-1');
-        header.focus({ preventScroll: true });
+        const focusTarget = header || root;
+        focusTarget.setAttribute('tabindex', '-1');
+        focusTarget.focus({ preventScroll: true });
       } catch {}
       try {
         const announcer = document.getElementById('route-announcer');

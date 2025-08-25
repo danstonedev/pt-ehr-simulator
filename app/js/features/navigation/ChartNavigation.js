@@ -1020,9 +1020,6 @@ export function createChartNavigation(config) {
     { id: 'assessment', label: 'Assessment', icon: '⬢' },
     { id: 'plan', label: 'Plan', icon: '▪' },
     { id: 'billing', label: 'Billing', icon: '⬟' },
-    { id: 'assessment', label: 'Assessment', icon: '⬢' },
-    { id: 'plan', label: 'Plan', icon: '▪' },
-    { id: 'billing', label: 'Billing', icon: '⬟' },
   ];
 
   // Map known subsection IDs to data accessors for accurate status
@@ -1246,11 +1243,47 @@ export function createChartNavigation(config) {
         'aria-current': isActive ? 'page' : undefined,
         role: 'link',
         tabIndex: 0,
-        onClick: () => onSectionChange(section.id),
+        onClick: () => {
+          // Call the editor's handler to change active section and perform aligned scroll
+          onSectionChange(section.id);
+          try {
+            // Defensive: if the editor didn’t scroll yet, force precise alignment to section wrapper top
+            const root =
+              document.getElementById(`wrap-${section.id}`) ||
+              document.getElementById(`section-${section.id}`);
+            if (root) {
+              const cs = getComputedStyle(document.documentElement);
+              const topbarH = parseInt(
+                (cs.getPropertyValue('--topbar-h') || '').replace('px', '').trim(),
+                10,
+              );
+              const offset = isNaN(topbarH) ? 72 : topbarH;
+              const r = root.getBoundingClientRect();
+              const y = Math.max(0, window.scrollY + r.top - offset);
+              window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+          } catch {}
+        },
         onKeyDown: (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             onSectionChange(section.id);
+            try {
+              const root =
+                document.getElementById(`wrap-${section.id}`) ||
+                document.getElementById(`section-${section.id}`);
+              if (root) {
+                const cs = getComputedStyle(document.documentElement);
+                const topbarH = parseInt(
+                  (cs.getPropertyValue('--topbar-h') || '').replace('px', '').trim(),
+                  10,
+                );
+                const offset = isNaN(topbarH) ? 72 : topbarH;
+                const r = root.getBoundingClientRect();
+                const y = Math.max(0, window.scrollY + r.top - offset);
+                window.scrollTo({ top: y, behavior: 'smooth' });
+              }
+            } catch {}
           }
         },
       },
