@@ -2158,7 +2158,7 @@ select:focus,
     line-height: 1.7; /* Better mobile readability */
   }
 
-  /* Mobile sidebar/nav-toggle rules moved to sidebar.css */
+  /* Mobile drawer behavior handled by mobile-patch-v2.css */
 
   /* Mobile typography improvements */
   h1 {
