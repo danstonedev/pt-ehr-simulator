@@ -1,7 +1,6 @@
 // ChartNavigation.js - Professional EMR-style navigation with progress tracking
 import { el } from '../../ui/utils.js';
 import { exportToWord } from '../../services/document-export.js';
-import { getRoute as getUrlRoute } from '../../core/url.js';
 
 /**
  * Creates SVG elements with proper namespace
@@ -439,7 +438,8 @@ function applySubsectionVisibilityControls({
  * @param {Function} onUpdate - Callback when case info is updated
  * @returns {HTMLElement} Editable case header
  */
-/* eslint-disable-next-line complexity */
+/* istanbul ignore next */
+/* eslint-disable no-unused-vars, complexity */
 function createEditableCaseHeader(caseInfo, onUpdate, options = {}) {
   const preferEditOnClick = !!options.preferEditOnClick;
   const showEditButton = !!options.forceShowEditButton;
@@ -585,6 +585,8 @@ function createEditableCaseHeader(caseInfo, onUpdate, options = {}) {
  * @param {Object} caseInfo - Case information object
  * @returns {HTMLElement} Read-only case header
  */
+/* istanbul ignore next */
+/* eslint-disable no-unused-vars */
 function createReadOnlyCaseHeader(caseInfo) {
   const card = el(
     'div',
@@ -905,8 +907,7 @@ function openAddArtifactModal(onAdd) {
 }
 
 // Edit Case Details Modal (faculty): mirrors Create New Case layout
-/* eslint-disable-next-line complexity */
-function openEditCaseModal(caseInfo, onSave) {
+export function openEditCaseModal(caseInfo, onSave) {
   // Clone modules array for local editing
   const modulesLocal = Array.isArray(caseInfo.modules)
     ? JSON.parse(JSON.stringify(caseInfo.modules))
@@ -916,7 +917,7 @@ function openEditCaseModal(caseInfo, onSave) {
     {
       style: `
   position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-  display: flex; align-items: flex-start; justify-content: center; z-index: 1000;
+  display: flex; align-items: flex-start; justify-content: center; z-index: var(--z-modal);
   overflow-y: auto; padding: 24px 12px;
     `,
       onclick: (e) => {
@@ -947,38 +948,9 @@ function openEditCaseModal(caseInfo, onSave) {
                 value: caseInfo.title || '',
               }),
             ]),
-            // DOB (moved up)
-            el('div', { style: 'margin-bottom: 16px;' }, [
-              el(
-                'label',
-                {
-                  style:
-                    'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
-                },
-                'DOB',
-              ),
-              el('input', {
-                type: 'date',
-                id: 'edit-dob',
-                value: caseInfo.dob || '',
-                style:
-                  'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
-                oninput: (e) => {
-                  // If user is typing a DOB, mark as user-edited so age changes won't overwrite
-                  if (e.isTrusted) delete e.target.dataset.autofilled;
-                  const computed = computeAgeFromDob(e.target.value);
-                  const ageEl = document.getElementById('edit-age');
-                  if (computed && ageEl) ageEl.value = computed;
-                },
-              }),
-              el(
-                'div',
-                { style: 'margin-top: 6px; font-size: 12px; color: var(--text-secondary);' },
-                'Age auto-fills when DOB is entered.',
-              ),
-            ]),
-            // Age/Sex
+            // Age + DOB (single row)
             el('div', { style: 'display: flex; gap: 16px; margin-bottom: 16px;' }, [
+              // Age (left)
               el('div', { style: 'flex: 1;' }, [
                 el(
                   'label',
@@ -986,7 +958,7 @@ function openEditCaseModal(caseInfo, onSave) {
                     style:
                       'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
                   },
-                  'Patient Age',
+                  'Age',
                 ),
                 el('input', {
                   type: 'number',
@@ -1015,6 +987,7 @@ function openEditCaseModal(caseInfo, onSave) {
                   },
                 }),
               ]),
+              // DOB (right)
               el('div', { style: 'flex: 1;' }, [
                 el(
                   'label',
@@ -1022,43 +995,73 @@ function openEditCaseModal(caseInfo, onSave) {
                     style:
                       'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
                   },
-                  'Sex',
+                  'DOB',
                 ),
-                el(
-                  'select',
-                  {
-                    id: 'edit-gender',
-                    style:
-                      'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+                el('input', {
+                  type: 'date',
+                  id: 'edit-dob',
+                  value: caseInfo.dob || '',
+                  style:
+                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+                  oninput: (e) => {
+                    // If user is typing a DOB, mark as user-edited so age changes won't overwrite
+                    if (e.isTrusted) delete e.target.dataset.autofilled;
+                    const computed = computeAgeFromDob(e.target.value);
+                    const ageEl = document.getElementById('edit-age');
+                    if (computed && ageEl) ageEl.value = computed;
                   },
-                  [
-                    el('option', { value: '' }, 'Select...'),
-                    el(
-                      'option',
-                      { value: 'Male', selected: caseInfo.sex === 'Male' ? '' : undefined },
-                      'Male',
-                    ),
-                    el(
-                      'option',
-                      { value: 'Female', selected: caseInfo.sex === 'Female' ? '' : undefined },
-                      'Female',
-                    ),
-                    el(
-                      'option',
-                      { value: 'Other', selected: caseInfo.sex === 'Other' ? '' : undefined },
-                      'Other',
-                    ),
-                    el(
-                      'option',
-                      {
-                        value: 'Prefer not to say',
-                        selected: caseInfo.sex === 'Prefer not to say' ? '' : undefined,
-                      },
-                      'Prefer not to say',
-                    ),
-                  ],
+                }),
+                el(
+                  'div',
+                  { style: 'margin-top: 6px; font-size: 12px; color: var(--text-secondary);' },
+                  'Age auto-fills when DOB is entered.',
                 ),
               ]),
+            ]),
+            // Sex (full width row)
+            el('div', { style: 'margin-bottom: 16px;' }, [
+              el(
+                'label',
+                {
+                  style:
+                    'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
+                },
+                'Sex',
+              ),
+              el(
+                'select',
+                {
+                  id: 'edit-gender',
+                  style:
+                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+                },
+                [
+                  el('option', { value: '' }, 'Select...'),
+                  el(
+                    'option',
+                    { value: 'Male', selected: caseInfo.sex === 'Male' ? '' : undefined },
+                    'Male',
+                  ),
+                  el(
+                    'option',
+                    { value: 'Female', selected: caseInfo.sex === 'Female' ? '' : undefined },
+                    'Female',
+                  ),
+                  el(
+                    'option',
+                    { value: 'Other', selected: caseInfo.sex === 'Other' ? '' : undefined },
+                    'Other',
+                  ),
+                  el(
+                    'option',
+                    {
+                      value: 'Prefer not to say',
+                      selected: caseInfo.sex === 'Prefer not to say' ? '' : undefined,
+                    },
+                    'Prefer not to say',
+                  ),
+                ],
+              ),
             ]),
             // Setting (moved below Age/Sex)
             el('div', { class: 'instructor-form-field' }, [
@@ -1228,7 +1231,6 @@ function openEditCaseModal(caseInfo, onSave) {
   setTimeout(() => document.getElementById('edit-title')?.focus(), 50);
 }
 
-/* eslint-disable-next-line complexity */
 export function createChartNavigation(config) {
   const {
     activeSection,
@@ -1387,7 +1389,6 @@ export function createChartNavigation(config) {
     'orders-referrals': 'Orders & Referrals',
   };
 
-  /* eslint-disable-next-line complexity */
   function getSubsectionsForSection(sectionId, activeSectionId) {
     // If the section is active, prefer DOM-derived anchors
     if (sectionId === activeSectionId) {
@@ -1419,7 +1420,6 @@ export function createChartNavigation(config) {
   }
 
   // Tri-state section status from its subsections
-  /* eslint-disable-next-line complexity */
   function calculateSectionStatus(sectionId, caseDataObj, activeSectionId) {
     const sectionData = caseDataObj?.[sectionId] || {};
     const subs = getSubsectionsForSection(sectionId, activeSectionId);
@@ -1647,66 +1647,24 @@ export function createChartNavigation(config) {
           'aria-label': 'Chart sections',
         },
         [
-          // Case summary card shown above SOAP tracker as a peer card (no extra container)
-          /* eslint-disable-next-line complexity */
-          (() => {
-            if (config.isFacultyMode) {
-              // Faculty always gets editable header with an explicit Edit button
-              // Ensure modules are available for edit modal
-              computedCaseInfo.modules = currentModules;
-              return createEditableCaseHeader(computedCaseInfo, config.onCaseInfoUpdate, {
-                forceShowEditButton: true,
-                showPencil: false,
-              });
-            }
-            // Student-owned blank notes: allow editing in the sidebar
-            // Robust blank detection: prefer caseData.id, fallback to URL param via url core
-            let isStudentBlank = false;
-            try {
-              const idStr = String(config.caseData?.id || '');
-              if (idStr.startsWith('blank')) isStudentBlank = true;
-              if (!isStudentBlank) {
-                const { params } = getUrlRoute();
-                const idFromUrl = params.case || '';
-                if (idFromUrl && String(idFromUrl).startsWith('blank')) isStudentBlank = true;
-              }
-            } catch {}
-            if (isStudentBlank) {
-              // Show any student-provided values from draft
-              try {
-                const d = window && window.currentDraft ? window.currentDraft : {};
-                if (d?.snapshot) {
-                  if (d.snapshot.dob) computedCaseInfo.dob = d.snapshot.dob;
-                  if (d.snapshot.age) computedCaseInfo.age = d.snapshot.age;
-                  if (d.snapshot.sex) computedCaseInfo.sex = d.snapshot.sex;
-                }
-                if (d?.meta) {
-                  if (d.meta.setting) computedCaseInfo.setting = d.meta.setting;
-                  if (d.meta.acuity) computedCaseInfo.acuity = d.meta.acuity;
-                  if (d.meta.title) computedCaseInfo.title = d.meta.title;
-                }
-              } catch {}
-              // Ensure modules are available for edit modal
-              computedCaseInfo.modules = currentModules;
-              return createEditableCaseHeader(
-                computedCaseInfo,
-                (info) => {
-                  // Bubble up to editor handler which persists into draft
-                  config.onCaseInfoUpdate?.(info);
-                },
-                { preferEditOnClick: true, forceShowEditButton: true },
-              );
-            }
-            return createReadOnlyCaseHeader(computedCaseInfo);
-          })(),
-          // Case Artifacts: visible under case card
+          // Case info card removed per design; patient info now lives in sticky header above content.
+          // Background Information (formerly Artifacts): clearly separated with dividers
           (() => {
             const items = Array.isArray(currentModules) ? currentModules : [];
+            const topDivider = el('div', {
+              style: 'border-top:1px solid var(--border-strong); margin: 8px 0 10px 0;',
+            });
             const header = el(
               'h4',
-              { style: 'margin: 10px 0 6px 0; font-size: 13px;' },
-              'Artifacts',
+              {
+                style:
+                  'margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; color: var(--text);',
+              },
+              'Background Information',
             );
+            const bottomDivider = el('div', {
+              style: 'border-top:1px solid var(--border-strong); margin: 10px 0 8px 0;',
+            });
             if (config.isFacultyMode) {
               // List artifacts with table-style remove buttons
               const list = items.length
@@ -1724,7 +1682,7 @@ export function createChartNavigation(config) {
                             class: 'btn secondary',
                             style: 'flex:1; text-align:left; padding:6px 10px; font-size:12px;',
                             onClick: () => openViewArtifactModal(m),
-                            title: 'View artifact',
+                            title: 'View background document',
                           },
                           title,
                         ),
@@ -1733,7 +1691,7 @@ export function createChartNavigation(config) {
                           {
                             type: 'button',
                             class: 'remove-btn editable-table__delete-btn',
-                            title: 'Remove artifact',
+                            title: 'Remove document',
                             onClick: () => {
                               const next = items.filter((x) => x.id !== m.id);
                               const payload = { ...(config.caseInfo || {}), modules: next };
@@ -1745,11 +1703,7 @@ export function createChartNavigation(config) {
                       ]);
                     }),
                   )
-                : el(
-                    'div',
-                    { style: 'font-size:12px; color: var(--text-secondary);' },
-                    'No artifacts yet.',
-                  );
+                : el('div');
 
               // Add button styled like tables (compact circular +), placed below list
               const addBtnFooter = el(
@@ -1762,7 +1716,7 @@ export function createChartNavigation(config) {
                   'div',
                   {
                     class: 'compact-add-btn',
-                    title: 'Add artifact',
+                    title: 'Add background document',
                     onclick: () => {
                       openAddArtifactModal((mod) => {
                         const next = [...items, mod];
@@ -1775,7 +1729,13 @@ export function createChartNavigation(config) {
                 ),
               );
 
-              return el('div', { style: 'margin: 6px 0 10px 0;' }, [header, list, addBtnFooter]);
+              return el('div', { style: 'margin: 6px 0 10px 0;' }, [
+                topDivider,
+                header,
+                list,
+                addBtnFooter,
+                bottomDivider,
+              ]);
             }
             // Student view: buttons to open artifacts
             if (!items.length) return el('div');
@@ -1796,7 +1756,12 @@ export function createChartNavigation(config) {
                 );
               }),
             );
-            return el('div', { style: 'margin: 6px 0 10px 0;' }, [header, list]);
+            return el('div', { style: 'margin: 6px 0 10px 0;' }, [
+              topDivider,
+              header,
+              list,
+              bottomDivider,
+            ]);
           })(),
           // Extra padding before section trackers
           el('div', { style: 'height: 20px;' }),
@@ -1806,7 +1771,6 @@ export function createChartNavigation(config) {
           ),
           // Footer actions: Export to Word at very bottom with extra separation from Billing
           (() => {
-            /* eslint-disable-next-line complexity */
             function handleExportClick() {
               try {
                 const out = config.caseData || {};

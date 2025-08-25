@@ -14,6 +14,7 @@ export {
   createChartNavigation,
   createSectionAnchors,
   refreshChartNavigation,
+  openEditCaseModal,
 } from './navigation/ChartNavigation.js';
 export { createSimpleTabs, createStickyTopBar } from './navigation/NavigationHeader.js';
 

@@ -19,6 +19,7 @@ import {
   createChartNavigation,
   refreshChartNavigation,
   updateSaveStatus,
+  openEditCaseModal,
 } from '../features/navigation/ChartNavigation.js';
 // Sticky green header removed per design update
 
@@ -101,6 +102,71 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     const scrollable = Math.max(0, sec.scrollHeight - (viewportH - offset));
     return scrollable > 0 ? Math.max(0, Math.min(1, rel / scrollable)) : 0;
   }
+  // Centralized handler to apply case info updates and keep UI/data in sync
+  function handleCaseInfoUpdate(updatedInfo) {
+    try {
+      c.caseTitle = updatedInfo.title;
+      c.title = updatedInfo.title;
+      c.setting = updatedInfo.setting;
+      c.patientAge = updatedInfo.age;
+      c.patientGender = updatedInfo.sex;
+      c.acuity = updatedInfo.acuity;
+      c.patientDOB = updatedInfo.dob;
+      if (Array.isArray(updatedInfo.modules)) {
+        c.modules = updatedInfo.modules;
+        draft.modules = updatedInfo.modules;
+      }
+      // Keep canonical containers in sync
+      c.meta = c.meta || {};
+      c.meta.title = updatedInfo.title;
+      c.meta.setting = updatedInfo.setting;
+      c.meta.acuity = updatedInfo.acuity;
+      c.snapshot = c.snapshot || {};
+      c.snapshot.age = updatedInfo.age;
+      c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
+      c.snapshot.dob = updatedInfo.dob;
+      updatePatientHeader();
+      renderPatientHeaderActions();
+      save();
+      if (window.refreshChartProgress) window.refreshChartProgress();
+    } catch (e) {
+      console.warn('handleCaseInfoUpdate error:', e);
+    }
+  }
+
+  // Render actions (Edit Case) in the patient header when allowed
+  /* eslint-disable-next-line complexity */
+  function getCaseInfoSnapshot() {
+    return {
+      title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
+      setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
+      age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
+      sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
+      acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
+      dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
+      modules: Array.isArray(c.modules) ? c.modules : [],
+    };
+  }
+  function renderPatientHeaderActions() {
+    const actions = document.getElementById('patient-header-actions');
+    if (!actions) return;
+    actions.innerHTML = '';
+    let canEdit = !!isFacultyMode;
+    // Allow students to edit if working on a blank note
+    try {
+      const idStr = String(caseId || '');
+      if (!canEdit && idStr.startsWith('blank')) canEdit = true;
+    } catch {}
+    if (!canEdit) return;
+    const openEdit = () => openEditCaseModal(getCaseInfoSnapshot(), handleCaseInfoUpdate);
+    actions.append(
+      el(
+        'button',
+        { class: 'btn secondary', style: 'padding:4px 8px; font-size:12px;', onclick: openEdit },
+        'Edit',
+      ),
+    );
+  }
 
   // Scroll to a percent within the section content
   function scrollToPercentExact(pct) {
@@ -112,6 +178,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     const viewportH = window.innerHeight;
     const scrollable = Math.max(0, sec.scrollHeight - (viewportH - offset));
     const clamped = Math.max(0, Math.min(1, pct ?? 0));
+
     const targetY = Math.max(0, sectionTopAbs - offset + scrollable * clamped);
     window.scrollTo({ top: targetY, behavior: 'auto' });
     return true;
@@ -393,9 +460,16 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         'background: var(--bg)',
         'border-bottom: 1px solid var(--border)',
         'padding: 10px 12px',
+        'display:flex',
+        'align-items:center',
+        'justify-content: space-between',
+        'gap: 12px',
       ].join('; '),
     },
-    [patientHeaderNameEl, patientHeaderDemoEl],
+    [
+      el('div', {}, [patientHeaderNameEl, patientHeaderDemoEl]),
+      el('div', { id: 'patient-header-actions' }, []),
+    ],
   );
 
   /* eslint-disable-next-line complexity */
@@ -684,6 +758,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   app.append(chartNav, mainContainer);
   // Initialize header immediately so CSS var is ready before sections mount
   updatePatientHeader();
+  renderPatientHeaderActions();
   renderAllSections();
   // Initial nav state + optional deep link handling
   refreshChartNavigation(chartNav, {
