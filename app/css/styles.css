@@ -2683,13 +2683,8 @@ select:focus,
 @media (prefers-reduced-motion: reduce) {
   .form-input-standard,
   .instructor-form-input,
-  .nav-toggle-icon,
   .btn {
     transition: none;
-  }
-
-  .nav-toggle-icon {
-    transform: none;
   }
 }
 

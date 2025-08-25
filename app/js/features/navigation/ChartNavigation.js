@@ -1383,33 +1383,6 @@ export function createChartNavigation(config) {
     );
   };
 
-  // Create mobile toggle button
-  const mobileToggle = el(
-    'button',
-    {
-      class: 'nav-toggle',
-      'aria-controls': 'chartNavigation',
-      'aria-expanded': 'false',
-      style: `
-      display: none;
-      position: fixed;
-      z-index: 1001;
-  background: var(--und-green);
-      color: #fff;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    `,
-      onClick: () => {
-        const nowOpen = window.toggleMobileNav ? window.toggleMobileNav() : false;
-        mobileToggle.setAttribute('aria-expanded', String(!!nowOpen));
-      },
-    },
-    [el('span', { style: 'font-size: 18px;' }, '☰')],
-  );
-
   // Allow student to rename blank notes: prefer draft.noteTitle when present
   const computedCaseInfo = { ...caseInfo };
   try {
@@ -1543,34 +1516,12 @@ export function createChartNavigation(config) {
     ],
   );
 
-  // Add mobile toggle to body
+  // Ensure content starts full width on small screens (nav closed)
   setTimeout(() => {
-    if (!document.querySelector('.nav-toggle')) {
-      document.body.appendChild(mobileToggle);
-    }
-    // If on a small screen, ensure content starts full width (nav closed)
     const mainContent = document.querySelector('.main-content-with-sidebar');
     if (mainContent) {
       mainContent.classList.remove('nav-collapsed');
     }
-
-    // Close on ESC and backdrop tap
-    function closeMobileNav() {
-      sidebar.classList.remove('mobile-open');
-      document.body.classList.remove('mobile-nav-open');
-      mobileToggle.setAttribute('aria-expanded', 'false');
-      const mc = document.querySelector('.main-content-with-sidebar');
-      mc && mc.classList.remove('nav-collapsed');
-    }
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeMobileNav();
-    });
-    document.addEventListener('click', (e) => {
-      if (!sidebar.classList.contains('mobile-open')) return;
-      const clickInSidebar = sidebar.contains(e.target);
-      const clickOnToggle = mobileToggle.contains(e.target);
-      if (!clickInSidebar && !clickOnToggle) closeMobileNav();
-    });
   }, 100);
 
   // Expose a reusable toggle for header hamburger and FAB
