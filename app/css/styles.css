@@ -114,7 +114,7 @@
   --z-topbar: 3000;
   --z-sidebar: 1000;
   --z-case-header: 1001;
-  --z-sticky-header: 2000; /* always on top */
+  --z-sticky-header: 1000; /* below footer ribbon to avoid overlap */
   --z-footer: 1100;
   --z-modal: 10000;
 
@@ -235,7 +235,7 @@
   --z-topbar: 3000;
   --z-sidebar: 1000;
   --z-case-header: 1001;
-  --z-sticky-header: 2000; /* Much higher to always stay on top */
+  --z-sticky-header: 1000; /* Below footer ribbon to avoid overlap */
   --z-footer: 1100;
   --z-modal: 10000;
 
@@ -1472,10 +1472,25 @@ html[data-theme='dark'] input[type='checkbox'] {
 
 /* Remove content indent for In-Clinic Treatment Plan, but keep header pulled left to align with others */
 #in-clinic-treatment-plan.section-anchor {
-  --subsection-indent: 32px; /* keep standard header pull distance */
-  padding-left: 0; /* no left indent for controls/content */
+  --subsection-indent: 32px; /* base indent token */
+  /* Increase left padding for the section contents so they are relatively indented */
+  padding-left: calc(var(--subsection-indent) + var(--space-6));
 }
-/* No explicit margin override needed: global rule uses var(--subsection-indent) */
+/* Header should stay inside the container (no clipping) and not add extra inner indent */
+
+/* Keep header position but remove extra inner left padding on the banner */
+#in-clinic-treatment-plan.section-anchor > .subsection-title {
+  padding-left: 0;
+}
+
+/* Keep the In-Clinic Treatment Plan sub-heading visually indented, but avoid clipping
+   from negative margins inside an overflow-hidden parent. */
+#in-clinic-treatment-plan.section-anchor > .subsection-title {
+  /* Align header like others: negate the full left padding applied to this section */
+  margin-left: calc(-1 * (var(--subsection-indent) + var(--space-6)));
+  /* Use default inner padding */
+  padding-left: var(--space-4);
+}
 
 .form-input-wrapper {
   flex: 1;
