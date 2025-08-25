@@ -610,5 +610,127 @@
     </script>
     <script type="module" src="js/core/router.js?v=20250820-004"></script>
     <script src="js/mobile-drawer-v2.js?v=20250825-002"></script>
+
+    <!-- Site Menu Drawer (mobile) -->
+    <nav id="siteMenu" class="site-menu" aria-label="Site menu" aria-hidden="true" tabindex="-1">
+      <div class="site-menu-panel">
+        <button class="btn small site-menu-close" type="button" aria-label="Close menu">
+          Close
+        </button>
+
+        <a class="site-menu-link" href="#/">Home</a>
+        <a class="site-menu-link" href="#/student/cases">Student</a>
+        <a class="site-menu-link" href="#/instructor/cases">Faculty</a>
+
+        <button id="siteMenuFeedback" class="btn orange block" type="button">
+          Submit Feedback
+        </button>
+
+        <button id="siteMenuThemeToggle" class="switch block" type="button" aria-pressed="false">
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+          <span class="switch-label">Theme</span>
+        </button>
+      </div>
+    </nav>
+
+    <script>
+      (function () {
+        function ensureOverlay() {
+          let ov = document.getElementById('siteMenuOverlay');
+          if (!ov) {
+            ov = document.createElement('div');
+            ov.id = 'siteMenuOverlay';
+            ov.className = 'site-menu-overlay';
+            document.body.appendChild(ov);
+          }
+          return ov;
+        }
+
+        function hook() {
+          const hamburger = document.getElementById('hamburgerBtn');
+          const menu = document.getElementById('siteMenu');
+          if (!hamburger || !menu) return false;
+
+          const overlay = ensureOverlay();
+          const closeBtn = menu.querySelector('.site-menu-close');
+
+          function openMenu() {
+            menu.classList.add('is-open');
+            overlay.classList.add('is-visible');
+            menu.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('mobile-drawer-open');
+            hamburger.setAttribute('aria-expanded', 'true');
+            setTimeout(() => menu.focus && menu.focus(), 0);
+          }
+          function closeMenu() {
+            menu.classList.remove('is-open');
+            overlay.classList.remove('is-visible');
+            menu.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('mobile-drawer-open');
+            hamburger.setAttribute('aria-expanded', 'false');
+          }
+
+          if (!hamburger._siteMenuBound) {
+            hamburger.addEventListener('click', (e) => {
+              try {
+                e.preventDefault();
+                menu.classList.contains('is-open') ? closeMenu() : openMenu();
+              } catch {}
+            });
+            hamburger._siteMenuBound = true;
+          }
+          if (!overlay._siteMenuBound) {
+            overlay.addEventListener('click', closeMenu);
+            overlay._siteMenuBound = true;
+          }
+          if (closeBtn && !closeBtn._siteMenuBound) {
+            closeBtn.addEventListener('click', closeMenu);
+            closeBtn._siteMenuBound = true;
+          }
+
+          // ESC closes
+          if (!document._siteMenuEscBound) {
+            document.addEventListener('keydown', function onEsc(ev) {
+              if (ev.key === 'Escape' && menu.classList.contains('is-open')) closeMenu();
+            });
+            document._siteMenuEscBound = true;
+          }
+
+          // Route change closes
+          if (!window._siteMenuHashBound) {
+            window.addEventListener('hashchange', closeMenu);
+            window._siteMenuHashBound = true;
+          }
+
+          // Wire theme + feedback buttons inside the menu
+          const themeBtn = document.getElementById('siteMenuThemeToggle');
+          const feedbackBtn = document.getElementById('siteMenuFeedback');
+          if (themeBtn && !themeBtn._siteMenuBound) {
+            themeBtn.addEventListener('click', () => {
+              const t = document.getElementById('themeToggle');
+              if (t) t.click();
+            });
+            themeBtn._siteMenuBound = true;
+          }
+          if (feedbackBtn && !feedbackBtn._siteMenuBound) {
+            feedbackBtn.addEventListener('click', () => {
+              const f = document.getElementById('feedbackBtn');
+              if (f) f.click();
+              closeMenu();
+            });
+            feedbackBtn._siteMenuBound = true;
+          }
+
+          return true;
+        }
+
+        if (!hook()) {
+          document.addEventListener('DOMContentLoaded', hook);
+          const mo = new MutationObserver(() => hook());
+          mo.observe(document.documentElement, { childList: true, subtree: true });
+          setTimeout(() => mo.disconnect(), 12000);
+        }
+      })();
+    </script>
   </body>
 </html>

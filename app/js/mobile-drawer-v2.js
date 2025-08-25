@@ -17,6 +17,10 @@
   }
 
   function hook() {
+    // If a dedicated site menu is present, do not hijack the hamburger for the chart drawer
+    if (document.getElementById('siteMenu')) {
+      return true; // nothing to bind here; site menu script will handle it
+    }
     const hamburger =
       document.getElementById('hamburgerBtn') ||
       document.querySelector('[data-mobile="hamburger"]');
