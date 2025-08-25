@@ -382,7 +382,8 @@ html[data-theme='dark'] .chart-navigation .nav-progress-text {
 }
 
 .section-anchor {
-  scroll-margin-top: calc(var(--sticky-header-h) + var(--space-5));
+  /* Account for fixed app topbar only */
+  scroll-margin-top: calc(var(--topbar-h) + var(--space-2));
 }
 
 /* Keep left border accent only in light theme */
@@ -479,8 +480,8 @@ html[data-theme='dark'] .sidebar-nav-panel .section-nav-item.active {
 @media (max-width: 768px) {
   .chart-navigation {
     transform: translateX(calc(-1 * var(--sidebar-w)));
-    top: var(--sticky-header-h);
-    height: calc(100dvh - var(--sticky-header-h));
+    top: var(--topbar-h);
+    height: calc(100dvh - var(--topbar-h));
   }
   .chart-navigation.mobile-open {
     transform: translateX(0);
@@ -490,7 +491,7 @@ html[data-theme='dark'] .sidebar-nav-panel .section-nav-item.active {
   .nav-toggle {
     display: block;
     position: fixed;
-    top: calc(var(--sticky-header-h) + 10px);
+    top: calc(var(--topbar-h) + 10px);
     left: var(--space-5);
     z-index: calc(var(--z-sidebar) + 1);
     background: var(--primary);

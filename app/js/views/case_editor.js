@@ -20,11 +20,7 @@ import {
   refreshChartNavigation,
   updateSaveStatus,
 } from '../features/navigation/ChartNavigation.js';
-import {
-  createStickyTopBar,
-  updateActiveSectionTitle,
-  updateHeaderSaveStatus,
-} from '../features/navigation/NavigationHeader.js?v=20250818-001';
+// Sticky green header removed per design update
 
 // Modern modular SOAP section components
 
@@ -38,29 +34,23 @@ route('#/instructor/editor', async (app, qs) => {
 
 async function renderCaseEditor(app, qs, isFacultyMode) {
   const caseId = qs.get('case');
-  const version = parseInt(qs.get('v') || '0', 10);
+  // Version param removed with header changes
   const encounter = qs.get('encounter') || 'eval';
   const isKeyMode = qs.get('key') === 'true';
-  const fromParam = qs.get('from') || '';
-  const isPreviewMode = !isFacultyMode && fromParam === 'faculty';
+  // const fromParam = qs.get('from') || '';
   const initialSectionParam = (qs.get('section') || '').toLowerCase();
   const initialAnchorParam = qs.get('anchor') || '';
   const spParamRaw = qs.get('sp');
   const initialScrollPercent = spParamRaw !== null ? parseFloat(spParamRaw) : NaN;
-  // Helper: compute combined fixed header offset for anchor calculations
+  // Helper: compute fixed header offset (green sticky header removed)
   function getHeaderOffsetPx() {
     const cs = getComputedStyle(document.documentElement);
     const topbarH = parseInt(
       (cs.getPropertyValue('--topbar-h') || '').replace('px', '').trim(),
       10,
     );
-    const stickyH = parseInt(
-      (cs.getPropertyValue('--sticky-header-h') || '').replace('px', '').trim(),
-      10,
-    );
     const tb = isNaN(topbarH) ? 72 : topbarH;
-    const sh = isNaN(stickyH) ? 64 : stickyH;
-    return tb + sh; // exact sum; CSS scroll-margin-top uses the same
+    return tb; // only app top bar now
   }
 
   function getNearestVisibleAnchorId() {
@@ -123,6 +113,15 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     window.scrollTo({ top: targetY, behavior: 'auto' });
     return true;
   }
+
+  // Expose helpers for troubleshooting from the console (non-breaking)
+  window.scrollHelpers = {
+    getHeaderOffsetPx,
+    getNearestVisibleAnchorId,
+    scrollToAnchorExact,
+    getSectionScrollPercent,
+    scrollToPercentExact,
+  };
 
   if (!caseId) {
     app.innerHTML = '';
@@ -224,23 +223,13 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   // Wrap save function to include progress refresh and status updates
   const save = async (...args) => {
-    // Update save status to saving (header + sidebar if present)
-    updateHeaderSaveStatus(stickyTopBar, 'saving');
+    // Update sidebar save status only (sticky header removed)
     updateSaveStatus(chartNav, 'saving');
-
     try {
       await originalSave(...args);
-      // Update save status to saved
-      updateHeaderSaveStatus(stickyTopBar, 'saved');
       updateSaveStatus(chartNav, 'saved');
-
-      // Trigger progress refresh after save
-      if (window.refreshChartProgress) {
-        window.refreshChartProgress();
-      }
+      if (window.refreshChartProgress) window.refreshChartProgress();
     } catch (error) {
-      // Update save status to error
-      updateHeaderSaveStatus(stickyTopBar, 'error');
       updateSaveStatus(chartNav, 'error');
       console.error('Save failed:', error);
     }
@@ -271,42 +260,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   let needsInitialAnchorScroll =
     !needsInitialPercentScroll && !!initialAnchorParam && isValidSection(active);
 
-  // Create sticky top bar (shows active section title)
-  const stickyTopBar = createStickyTopBar({
-    activeSection: active,
-    isFacultyMode,
-    isPreviewMode,
-    onPreview: () => {
-      // Determine nearest subsection anchor within current section using exact header offset
-      const anchorId = getNearestVisibleAnchorId();
-      const sp = getSectionScrollPercent();
-      const params = {
-        case: caseId,
-        v: version,
-        encounter,
-        section: active,
-        sp: sp.toFixed(4),
-      };
-      if (anchorId) params.anchor = anchorId;
-      if (isFacultyMode) params.from = 'faculty';
-      urlNavigate('/student/editor', params);
-    },
-    onExitPreview: () => {
-      // Only meaningful in student preview mode; navigate back to faculty editor with original context when available
-      // Prefer the original anchor used when entering preview (initialAnchorParam),
-      // because some anchors may be hidden in student mode due to faculty visibility.
-      let anchorId = initialAnchorParam || '';
-      if (!anchorId) {
-        anchorId = getNearestVisibleAnchorId();
-      }
-      const sp = Number.isFinite(initialScrollPercent)
-        ? initialScrollPercent
-        : getSectionScrollPercent();
-      const params = { case: caseId, v: version, encounter, section: active, sp: sp.toFixed(4) };
-      if (anchorId) params.anchor = anchorId;
-      urlNavigate('/instructor/editor', params);
-    },
-  });
+  // Sticky top bar removed; preview can be triggered from elsewhere if desired
 
   // Function to refresh chart navigation progress
   function refreshChartProgress() {
@@ -372,36 +326,120 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   window.refreshChartProgress = refreshChartProgress;
 
   // Create main content container with sidebar offset
-  const contentElements = [];
+  const contentRoot = el('div', { id: 'section', class: 'section-content' });
+  const mainContainer = el('div', { class: 'main-content-with-sidebar' }, [contentRoot]);
 
-  // Remove the case metadata panel - it's now integrated into the sidebar
+  // Render all sections once to form a single scrolling page
+  const sectionRoots = {};
+  function renderAllSections() {
+    contentRoot.innerHTML = '';
 
-  // Add section content area (no more tabs - just content)
-  contentElements.push(
-    el('div', {
-      id: 'section',
-      class: 'section-content',
-    }),
-  );
+    // Subjective
+    contentRoot.append(
+      el('div', { class: 'editor-section' }, [
+        el('div', { class: 'editor-section-divider' }, [el('h3', {}, 'Subjective')]),
+      ]),
+    );
+    const subj = createSubjectiveSection(draft.subjective, (data) => {
+      draft.subjective = data;
+      save();
+      if (window.refreshChartProgress) window.refreshChartProgress();
+    });
+    // Ensure expected class is present for sidebar extraction
+    subj.classList.add('subjective-section');
+    sectionRoots.subjective = subj;
+    contentRoot.append(subj);
 
-  const mainContainer = el(
-    'div',
-    {
-      class: 'main-content-with-sidebar',
-    },
-    contentElements,
-  );
+    // Objective
+    contentRoot.append(
+      el('div', { class: 'editor-section' }, [
+        el('div', { class: 'editor-section-divider' }, [el('h3', {}, 'Objective')]),
+      ]),
+    );
+    const obj = createObjectiveSection(draft.objective, (data) => {
+      draft.objective = data;
+      save();
+      if (window.refreshChartProgress) window.refreshChartProgress();
+    });
+    obj.classList.add('objective-section');
+    sectionRoots.objective = obj;
+    contentRoot.append(obj);
+
+    // Assessment
+    contentRoot.append(
+      el('div', { class: 'editor-section' }, [
+        el('div', { class: 'editor-section-divider' }, [el('h3', {}, 'Assessment')]),
+      ]),
+    );
+    const assess = createAssessmentSection(draft.assessment, (data) => {
+      draft.assessment = data;
+      save();
+      if (window.refreshChartProgress) window.refreshChartProgress();
+    });
+    assess.classList.add('assessment-section');
+    sectionRoots.assessment = assess;
+    contentRoot.append(assess);
+
+    // Plan
+    contentRoot.append(
+      el('div', { class: 'editor-section' }, [
+        el('div', { class: 'editor-section-divider' }, [el('h3', {}, 'Plan')]),
+      ]),
+    );
+    const plan = createPlanSection(draft.plan, (data) => {
+      draft.plan = data;
+      save();
+      if (window.refreshChartProgress) window.refreshChartProgress();
+    });
+    plan.classList.add('plan-section');
+    sectionRoots.plan = plan;
+    contentRoot.append(plan);
+
+    // Billing
+    contentRoot.append(
+      el('div', { class: 'editor-section' }, [
+        el('div', { class: 'editor-section-divider' }, [el('h3', {}, 'Billing')]),
+      ]),
+    );
+    const bill = createBillingSection(draft.billing, (data) => {
+      draft.billing = data;
+      save();
+      if (window.refreshChartProgress) window.refreshChartProgress();
+    });
+    bill.classList.add('billing-section');
+    sectionRoots.billing = bill;
+    contentRoot.append(bill);
+  }
 
   // Centralized initial scroll handler to apply percent-first, then anchor fallback
+  function getSectionRoot(id) {
+    return sectionRoots[id] || null;
+  }
+
+  // Percent scroll within the currently active top-level section
+  function scrollToPercentWithinActive(pct) {
+    const root = getSectionRoot(active);
+    if (!root) return false;
+    const offset = getHeaderOffsetPx();
+    const rect = root.getBoundingClientRect();
+    const sectionTopAbs = window.scrollY + rect.top;
+    const viewportH = window.innerHeight;
+    const scrollable = Math.max(0, root.scrollHeight - (viewportH - offset));
+    const clamped = Math.max(0, Math.min(1, pct ?? 0));
+    const targetY = Math.max(0, sectionTopAbs - offset + scrollable * clamped);
+    window.scrollTo({ top: targetY, behavior: 'auto' });
+    return true;
+  }
+
   function performInitialScrollIfNeeded(currentSectionId) {
     if (currentSectionId !== active) return;
     if (needsInitialPercentScroll && Number.isFinite(initialScrollPercent)) {
-      let okP = scrollToPercentExact(initialScrollPercent);
+      let okP = scrollToPercentWithinActive(initialScrollPercent);
       afterNextLayout(() => {
-        if (!okP) okP = scrollToPercentExact(initialScrollPercent);
+        if (!okP) okP = scrollToPercentWithinActive(initialScrollPercent);
       });
       setTimeout(() => {
-        if (!okP) okP = scrollToPercentExact(initialScrollPercent);
+        if (!okP) okP = scrollToPercentWithinActive(initialScrollPercent);
         if (!okP) {
           // fallback to anchor or nearest visible anchor
           if (initialAnchorParam) {
@@ -450,8 +488,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       setQueryParams({ section: s });
     } catch {}
 
-    // Update active section title in header
-    updateActiveSectionTitle(stickyTopBar, active);
+    // Sticky header removed; no title update needed
 
     // Update chart navigation with current data
     refreshChartNavigation(chartNav, {
@@ -484,7 +521,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         c.snapshot.age = updatedInfo.age;
         c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
         c.snapshot.dob = updatedInfo.dob;
-        debouncedSave(); // Use debounced save instead of immediate save
+        debouncedSave();
       },
       onEditorSettingsChange: (nextSettings) => {
         draft.editorSettings = nextSettings;
@@ -494,87 +531,94 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       },
     });
 
-    const sec = mainContainer.querySelector('#section');
-    sec.innerHTML = '';
-
-    // Section title is now displayed in the UND Green navigation header
-    // No need for redundant section headers in content
-
-    // Use modular section components with anchors
-    if (s === 'subjective') {
-      const subjectiveSection = createSubjectiveSection(draft.subjective, (data) => {
-        draft.subjective = data;
-        save();
-        if (window.refreshChartProgress) window.refreshChartProgress();
-      });
-      sec.append(subjectiveSection);
-      // Rebuild sidebar subsections from freshly rendered content
-      if (window.refreshChartProgress) window.refreshChartProgress();
-      performInitialScrollIfNeeded(s);
-    }
-    if (s === 'objective') {
-      const objectiveSection = createObjectiveSection(draft.objective, (data) => {
-        draft.objective = data;
-        save();
-        if (window.refreshChartProgress) window.refreshChartProgress();
-      });
-      sec.append(objectiveSection);
-      if (window.refreshChartProgress) window.refreshChartProgress();
-      performInitialScrollIfNeeded(s);
-    }
-    if (s === 'assessment') {
-      const assessmentSection = createAssessmentSection(draft.assessment, (data) => {
-        draft.assessment = data;
-        save();
-        if (window.refreshChartProgress) window.refreshChartProgress();
-      });
-      sec.append(assessmentSection);
-      if (window.refreshChartProgress) window.refreshChartProgress();
-      performInitialScrollIfNeeded(s);
-    }
-    if (s === 'plan') {
-      const planSection = createPlanSection(draft.plan, (data) => {
-        draft.plan = data;
-        save();
-        if (window.refreshChartProgress) window.refreshChartProgress();
-      });
-      sec.append(planSection);
-      if (window.refreshChartProgress) window.refreshChartProgress();
-      performInitialScrollIfNeeded(s);
-
-      // Make refresh function available globally for goal linking
-      window.refreshInterventionCard = (rowId) => {
-        // Trigger a refresh of the plan section
-        if (active === 'plan') {
-          // Re-render the plan section if it's currently active
-          const currentSec = mainContainer.querySelector('#section');
-          const planContent = currentSec.querySelector('.plan-section');
-          if (planContent) {
-            const refreshedPlanSection = createPlanSection(draft.plan, (data) => {
-              draft.plan = data;
-              save();
-              if (window.refreshChartProgress) window.refreshChartProgress();
-            });
-            planContent.replaceWith(refreshedPlanSection);
-          }
-        }
-      };
-    }
-    if (s === 'billing') {
-      const billingSection = createBillingSection(draft.billing, (data) => {
-        draft.billing = data;
-        save();
-        if (window.refreshChartProgress) window.refreshChartProgress();
-      });
-      sec.append(billingSection);
-      if (window.refreshChartProgress) window.refreshChartProgress();
+    // Scroll to the top of the requested section
+    const root = getSectionRoot(s);
+    if (root) {
+      const offset = getHeaderOffsetPx();
+      const rect = root.getBoundingClientRect();
+      const y = Math.max(0, window.scrollY + rect.top - offset);
+      window.scrollTo({ top: y, behavior: 'smooth' });
       performInitialScrollIfNeeded(s);
     }
   }
 
-  // Initialize the editor with both top bar and sidebar navigation
-  app.append(stickyTopBar, chartNav, mainContainer);
-  switchTo(active);
+  // Initialize the editor with sidebar navigation only
+  app.append(chartNav, mainContainer);
+  renderAllSections();
+  // Initial nav state + optional deep link handling
+  refreshChartNavigation(chartNav, {
+    activeSection: active,
+    onSectionChange: (sectionId) => switchTo(sectionId),
+    isFacultyMode: isFacultyMode,
+    caseData: { ...c, ...draft, editorSettings: c.editorSettings || draft.editorSettings },
+    caseInfo: {
+      title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
+      setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
+      age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
+      sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
+      acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
+      dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
+    },
+    onEditorSettingsChange: (nextSettings) => {
+      draft.editorSettings = nextSettings;
+      c.editorSettings = nextSettings;
+      save();
+      if (window.refreshChartProgress) window.refreshChartProgress();
+    },
+  });
+  // Perform initial anchor/percent scroll after content is laid out
+  afterNextLayout(() => performInitialScrollIfNeeded(active));
+
+  // Observe scroll to update active section and sidebar
+  function determineActiveByScroll() {
+    const offset = getHeaderOffsetPx();
+    const entries = Object.entries(sectionRoots);
+    let current = entries[0]?.[0] || 'subjective';
+    for (const [id, elRoot] of entries) {
+      const top = elRoot.getBoundingClientRect().top;
+      if (top - offset <= 8) current = id;
+      else break;
+    }
+    if (current !== active) {
+      active = current;
+      // Sticky header removed; no title update needed
+      refreshChartNavigation(chartNav, {
+        activeSection: active,
+        onSectionChange: (sectionId) => switchTo(sectionId),
+        isFacultyMode: isFacultyMode,
+        caseData: { ...c, ...draft, editorSettings: c.editorSettings || draft.editorSettings },
+        caseInfo: {
+          title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
+          setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
+          age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
+          sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
+          acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
+          dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
+        },
+        onEditorSettingsChange: (nextSettings) => {
+          draft.editorSettings = nextSettings;
+          c.editorSettings = nextSettings;
+          save();
+          if (window.refreshChartProgress) window.refreshChartProgress();
+        },
+      });
+    }
+  }
+
+  let scrollTicking = false;
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (!scrollTicking) {
+        scrollTicking = true;
+        requestAnimationFrame(() => {
+          determineActiveByScroll();
+          scrollTicking = false;
+        });
+      }
+    },
+    { passive: true },
+  );
 }
 
 /**

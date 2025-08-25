@@ -68,6 +68,7 @@
   --edu-ribbon-h: 28px; /* bottom ribbon height for readable text */
   --sticky-header-h: 64px; /* unified sticky header height */
   --sidebar-w: 280px; /* unify sidebar width */
+  --section-divider-h: 44px; /* sticky in-content section banner height */
 
   /* Z-index layers */
   --z-topbar: 3000;
@@ -868,6 +869,30 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* In-content sticky section divider that gently pushes when next section arrives */
+.editor-section-divider {
+  position: static; /* scrolls with the document */
+  height: var(--section-divider-h);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.editor-section-divider h3 {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* Section wrapper spacing so upcoming dividers are visible early */
+.editor-section {
+  padding-top: var(--space-4);
+  margin-top: var(--space-6);
+}
+
 /* Constrain sticky bar content to the same max width as #app on routes without sidebar */
 .sticky-top-bar > .bar-inner {
   width: 100%;
@@ -1353,7 +1378,7 @@ html[data-theme='dark'] input[type='checkbox'] {
   --subsection-indent: 32px;
   padding-left: var(--subsection-indent);
   /* Ensure anchored scroll positions are visible below fixed headers */
-  scroll-margin-top: calc(var(--topbar-h) + var(--sticky-header-h));
+  scroll-margin-top: var(--topbar-h);
   /* Performance optimization - only render visible sections */
   content-visibility: auto;
   contain-intrinsic-size: 200px; /* Estimated section height */

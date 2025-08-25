@@ -1482,8 +1482,6 @@ export function createChartNavigation(config) {
       style: `
       display: none;
       position: fixed;
-      top: 70px;
-      left: 20px;
       z-index: 1001;
   background: var(--und-green);
       color: #fff;
@@ -1496,15 +1494,12 @@ export function createChartNavigation(config) {
       onClick: () => {
         sidebar.classList.toggle('mobile-open');
         const mainContent = document.querySelector('.main-content-with-sidebar');
-        const stickyTopBar = document.querySelector('.sticky-top-bar');
 
         if (mainContent) {
           mainContent.classList.toggle('nav-collapsed');
         }
 
-        if (stickyTopBar) {
-          stickyTopBar.classList.toggle('nav-collapsed');
-        }
+        // Sticky header removed
       },
     },
     [el('span', { style: 'font-size: 18px;' }, '☰')],
