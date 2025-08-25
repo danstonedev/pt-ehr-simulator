@@ -1052,11 +1052,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 #app:has(.sticky-top-bar) .main-content-with-sidebar {
   padding-top: var(--sticky-header-h);
 }
-.main-content-with-sidebar.nav-collapsed,
-.sticky-top-bar.nav-collapsed {
-  margin-left: 0;
-  width: 100%;
-}
+/* Removed legacy .nav-collapsed adjustments */
 
 /* Section container */
 .main-container {
@@ -2132,11 +2128,7 @@ select:focus,
   .hamburger-btn {
     display: inline-flex;
   }
-  /* Prevent background scroll when mobile nav is open */
-  body.mobile-nav-open {
-    overflow: hidden;
-    touch-action: none;
-  }
+  /* Scroll lock handled by .mobile-drawer-open in mobile-patch-v2.css */
 
   /* Slightly smaller footer token for phones */
   :root {
@@ -2287,7 +2279,7 @@ select:focus,
     max-height: 90vh;
     margin: var(--space-2);
   }
-  /* On mobile, default to full width; when nav opens, .nav-collapsed adds left offset removal already */
+  /* On mobile, layout width managed by drawer offsets */
   .main-content-with-sidebar {
     margin-left: 0;
     width: 100%;

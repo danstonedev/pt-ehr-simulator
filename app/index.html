@@ -424,15 +424,15 @@
                   const expanded = window.toggleMobileNav();
                   setExpanded(expanded);
                 } else {
-                  // Fallback: toggle class if sidebar exists
+                  // Fallback: toggle class if sidebar exists (legacy)
                   const sidebar =
                     document.getElementById('chartNavigation') ||
                     document.querySelector('.chart-navigation');
                   const nowOpen = sidebar ? !sidebar.classList.contains('mobile-open') : false;
                   sidebar && sidebar.classList.toggle('mobile-open', nowOpen);
-                  document.body.classList.toggle('mobile-nav-open', nowOpen);
+                  document.body.classList.toggle('mobile-drawer-open', nowOpen);
                   const mc = document.querySelector('.main-content-with-sidebar');
-                  mc && mc.classList.toggle('nav-collapsed', nowOpen);
+                  // content layout now handled by drawer offsets; no nav-collapsed toggle
                   setExpanded(nowOpen);
                 }
               } catch {}

@@ -1518,10 +1518,7 @@ export function createChartNavigation(config) {
 
   // Ensure content starts full width on small screens (nav closed)
   setTimeout(() => {
-    const mainContent = document.querySelector('.main-content-with-sidebar');
-    if (mainContent) {
-      mainContent.classList.remove('nav-collapsed');
-    }
+    /* layout offsets handled by drawer CSS */
   }, 100);
 
   // Expose a reusable toggle for header hamburger and FAB
@@ -1530,9 +1527,7 @@ export function createChartNavigation(config) {
       const isOpen = sidebar.classList.contains('mobile-open');
       const nowOpen = !isOpen;
       sidebar.classList.toggle('mobile-open', nowOpen);
-      document.body.classList.toggle('mobile-nav-open', nowOpen);
-      const mc = document.querySelector('.main-content-with-sidebar');
-      mc && mc.classList.toggle('nav-collapsed', nowOpen);
+      document.body.classList.toggle('mobile-drawer-open', nowOpen);
       return nowOpen;
     } catch {
       return false;
