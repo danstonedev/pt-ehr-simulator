@@ -2128,6 +2128,10 @@ select:focus,
 
 /* Mobile-first responsive design */
 @media (max-width: 768px) {
+  /* Show header hamburger on mobile */
+  .hamburger-btn {
+    display: inline-flex;
+  }
   /* Prevent background scroll when mobile nav is open */
   body.mobile-nav-open {
     overflow: hidden;
@@ -2736,6 +2740,50 @@ header.topbar {
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* Header hamburger */
+.hamburger-btn {
+  display: inline-flex;
+  background: transparent;
+  border: 0;
+  color: #fff;
+  height: var(--topbar-h);
+  width: 48px;
+  align-items: center;
+  justify-content: center;
+}
+.hamburger-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Breadcrumbs (below header) */
+.breadcrumbs {
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: var(--z-topbar);
+  background: var(--editor-bg);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.breadcrumbs.is-empty {
+  display: none;
+}
+.breadcrumbs a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+}
+.breadcrumbs a:hover {
+  text-decoration: underline;
+}
+.crumb-sep {
+  opacity: 0.5;
 }
 
 /* Brand + Feedback inline row */

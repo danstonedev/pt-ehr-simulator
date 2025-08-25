@@ -1403,17 +1403,8 @@ export function createChartNavigation(config) {
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     `,
       onClick: () => {
-        const nowOpen = !sidebar.classList.contains('mobile-open');
-        sidebar.classList.toggle('mobile-open', nowOpen);
-        document.body.classList.toggle('mobile-nav-open', nowOpen);
-        mobileToggle.setAttribute('aria-expanded', String(nowOpen));
-        const mainContent = document.querySelector('.main-content-with-sidebar');
-
-        if (mainContent) {
-          mainContent.classList.toggle('nav-collapsed', nowOpen);
-        }
-
-        // Sticky header removed
+        const nowOpen = window.toggleMobileNav ? window.toggleMobileNav() : false;
+        mobileToggle.setAttribute('aria-expanded', String(!!nowOpen));
       },
     },
     [el('span', { style: 'font-size: 18px;' }, '☰')],
@@ -1581,6 +1572,21 @@ export function createChartNavigation(config) {
       if (!clickInSidebar && !clickOnToggle) closeMobileNav();
     });
   }, 100);
+
+  // Expose a reusable toggle for header hamburger and FAB
+  window.toggleMobileNav = function toggleMobileNav() {
+    try {
+      const isOpen = sidebar.classList.contains('mobile-open');
+      const nowOpen = !isOpen;
+      sidebar.classList.toggle('mobile-open', nowOpen);
+      document.body.classList.toggle('mobile-nav-open', nowOpen);
+      const mc = document.querySelector('.main-content-with-sidebar');
+      mc && mc.classList.toggle('nav-collapsed', nowOpen);
+      return nowOpen;
+    } catch {
+      return false;
+    }
+  };
 
   // Enhance current section content with banner toggles + visibility rules
   setTimeout(() => {
