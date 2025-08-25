@@ -552,6 +552,10 @@ html {
   font-size: 11px;
 }
 @media (max-width: 480px) {
+  .edu-ribbon {
+    height: 24px;
+    font-size: 11px;
+  }
   .edu-ribbon .edu-right {
     font-size: 10px;
   }
@@ -2124,6 +2128,31 @@ select:focus,
 
 /* Mobile-first responsive design */
 @media (max-width: 768px) {
+  /* Prevent background scroll when mobile nav is open */
+  body.mobile-nav-open {
+    overflow: hidden;
+    touch-action: none;
+  }
+
+  /* Slightly smaller footer token for phones */
+  :root {
+    --edu-ribbon-h: 24px;
+  }
+  /* Compact topbar and scalable tokens on mobile */
+  :root {
+    --topbar-h: 60px; /* reduce header height to free vertical space */
+  }
+
+  header.topbar {
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  /* Logo scales down slightly */
+  .und-logo {
+    height: 24px;
+  }
+
   /* Larger font size for mobile readability */
   html {
     font-size: 16px;
@@ -2179,15 +2208,23 @@ select:focus,
 
   /* Mobile button enhancements handled in buttons.css */
 
-  /* Mobile navigation improvements */
+  /* Mobile navigation improvements: horizontal scroll of primary nav */
   .topnav {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: var(--space-1);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    max-width: 60vw; /* prevent pushing brand off-screen */
   }
-
+  .topnav::-webkit-scrollbar {
+    display: none;
+  }
   .topnav a {
-    min-height: 48px;
-    padding: var(--space-3);
+    min-height: 40px; /* comfortable but compact */
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    white-space: nowrap;
   }
 
   .tabs {
@@ -2245,6 +2282,11 @@ select:focus,
     width: 95%;
     max-height: 90vh;
     margin: var(--space-2);
+  }
+  /* On mobile, default to full width; when nav opens, .nav-collapsed adds left offset removal already */
+  .main-content-with-sidebar {
+    margin-left: 0;
+    width: 100%;
   }
 }
 

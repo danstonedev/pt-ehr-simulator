@@ -1388,6 +1388,8 @@ export function createChartNavigation(config) {
     'button',
     {
       class: 'nav-toggle',
+      'aria-controls': 'chartNavigation',
+      'aria-expanded': 'false',
       style: `
       display: none;
       position: fixed;
@@ -1401,11 +1403,14 @@ export function createChartNavigation(config) {
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     `,
       onClick: () => {
-        sidebar.classList.toggle('mobile-open');
+        const nowOpen = !sidebar.classList.contains('mobile-open');
+        sidebar.classList.toggle('mobile-open', nowOpen);
+        document.body.classList.toggle('mobile-nav-open', nowOpen);
+        mobileToggle.setAttribute('aria-expanded', String(nowOpen));
         const mainContent = document.querySelector('.main-content-with-sidebar');
 
         if (mainContent) {
-          mainContent.classList.toggle('nav-collapsed');
+          mainContent.classList.toggle('nav-collapsed', nowOpen);
         }
 
         // Sticky header removed
@@ -1435,6 +1440,7 @@ export function createChartNavigation(config) {
       class: 'chart-navigation',
       role: 'complementary',
       'aria-label': 'Chart navigation',
+      id: 'chartNavigation',
     },
     [
       // Navigation panel (white card stack)
@@ -1551,6 +1557,29 @@ export function createChartNavigation(config) {
     if (!document.querySelector('.nav-toggle')) {
       document.body.appendChild(mobileToggle);
     }
+    // If on a small screen, ensure content starts full width (nav closed)
+    const mainContent = document.querySelector('.main-content-with-sidebar');
+    if (mainContent) {
+      mainContent.classList.remove('nav-collapsed');
+    }
+
+    // Close on ESC and backdrop tap
+    function closeMobileNav() {
+      sidebar.classList.remove('mobile-open');
+      document.body.classList.remove('mobile-nav-open');
+      mobileToggle.setAttribute('aria-expanded', 'false');
+      const mc = document.querySelector('.main-content-with-sidebar');
+      mc && mc.classList.remove('nav-collapsed');
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMobileNav();
+    });
+    document.addEventListener('click', (e) => {
+      if (!sidebar.classList.contains('mobile-open')) return;
+      const clickInSidebar = sidebar.contains(e.target);
+      const clickOnToggle = mobileToggle.contains(e.target);
+      if (!clickInSidebar && !clickOnToggle) closeMobileNav();
+    });
   }, 100);
 
   // Enhance current section content with banner toggles + visibility rules

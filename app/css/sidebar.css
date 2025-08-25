@@ -487,6 +487,15 @@ html[data-theme='dark'] .sidebar-nav-panel .section-nav-item.active {
     transform: translateX(0);
   }
 
+  /* Dimmed backdrop when mobile nav is open */
+  body.mobile-nav-open::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: calc(var(--z-sidebar) - 1);
+  }
+
   /* Accessible mobile navigation toggle */
   .nav-toggle {
     display: block;
