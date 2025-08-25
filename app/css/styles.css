@@ -68,7 +68,7 @@
   --edu-ribbon-h: 28px; /* bottom ribbon height for readable text */
   --sticky-header-h: 64px; /* unified sticky header height */
   --sidebar-w: 280px; /* unify sidebar width */
-  --section-divider-h: 44px; /* sticky in-content section banner height */
+  --section-divider-h: 56px; /* sticky in-content section banner height (taller for prominence) */
 
   /* Z-index layers */
   --z-topbar: 3000;
@@ -871,26 +871,37 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 
 /* In-content sticky section divider that gently pushes when next section arrives */
 .editor-section-divider {
-  position: static; /* scrolls with the document */
+  position: sticky; /* stick just under the top app bar */
+  top: var(--topbar-h);
+  z-index: var(--z-sticky-header);
   height: var(--section-divider-h);
   display: flex;
   align-items: center;
-  padding: 0 16px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
+  /* full-bleed green banner that visually extends into the gutters */
+  background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
+  color: #fff;
+  border-bottom: 1px solid var(--und-green-dark);
+  box-shadow: var(--shadow-1);
+  /* Full bleed within the content container (respects sidebar); cancel horizontal gutters */
+  margin-left: calc(-1 * var(--pad-x));
+  margin-right: calc(-1 * var(--pad-x));
+  padding-left: var(--pad-x);
+  padding-right: var(--pad-x);
 }
 .editor-section-divider h3 {
   margin: 0;
-  font-size: 14px;
-  letter-spacing: 0.02em;
+  font-size: 20px;
+  letter-spacing: 0.4px;
   text-transform: uppercase;
-  color: var(--text-secondary);
+  color: #fff;
+  font-weight: 800;
+  line-height: 1;
 }
 
 /* Section wrapper spacing so upcoming dividers are visible early */
 .editor-section {
-  padding-top: var(--space-4);
-  margin-top: var(--space-6);
+  padding-top: var(--space-2);
+  margin-top: var(--space-3);
 }
 
 /* Constrain sticky bar content to the same max width as #app on routes without sidebar */
@@ -1010,16 +1021,18 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   overflow: visible;
 }
 .section-content {
-  padding: var(--space-5);
+  /* horizontal padding token used to align inner content and allow headers to be full-bleed */
+  --pad-x: clamp(16px, 3vw, 48px);
+  padding: var(--space-5) var(--pad-x);
   margin: 0 auto;
   max-width: 1100px;
 }
 /* Desktop: responsive, tighter horizontal padding to avoid excessive gutters */
 @media (min-width: 1024px) {
   .section-content {
-    /* 16px → up to 48px based on viewport */
-    padding-left: clamp(16px, 3vw, 48px);
-    padding-right: clamp(16px, 3vw, 48px);
+    /* maintain the same pad var to keep alignment consistent */
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
   }
 }
 
@@ -1378,7 +1391,7 @@ html[data-theme='dark'] input[type='checkbox'] {
   --subsection-indent: 32px;
   padding-left: var(--subsection-indent);
   /* Ensure anchored scroll positions are visible below fixed headers */
-  scroll-margin-top: var(--topbar-h);
+  scroll-margin-top: calc(var(--topbar-h) + var(--section-divider-h));
   /* Performance optimization - only render visible sections */
   content-visibility: auto;
   contain-intrinsic-size: 200px; /* Estimated section height */
@@ -1434,16 +1447,14 @@ html[data-theme='dark'] .section-content .section-anchor > .form-field {
   background: transparent; /* blend into parent */
   border: 0;
   border-radius: 0;
-  padding: var(--space-3) 0; /* keep vertical rhythm */
-  margin: var(--space-2) 0;
+  /* Keep spacing consistent with base theme; do not override padding/margins here */
 }
 /* Grid rows: let them inherit the parent background for a flat look */
 html[data-theme='dark'] .section-content .form-row {
   background: transparent;
   border: 0;
   border-radius: 0;
-  padding: var(--space-3) 0;
-  margin: var(--space-2) 0;
+  /* Keep spacing consistent with base theme; do not override padding/margins here */
 }
 .form-input--small {
   padding: var(--space-1) var(--space-2);

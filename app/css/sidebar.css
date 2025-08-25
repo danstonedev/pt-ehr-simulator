@@ -382,8 +382,8 @@ html[data-theme='dark'] .chart-navigation .nav-progress-text {
 }
 
 .section-anchor {
-  /* Account for fixed app topbar only */
-  scroll-margin-top: calc(var(--topbar-h) + var(--space-2));
+  /* Account for fixed app topbar + sticky section header */
+  scroll-margin-top: calc(var(--topbar-h) + var(--section-divider-h) + var(--space-2));
 }
 
 /* Keep left border accent only in light theme */

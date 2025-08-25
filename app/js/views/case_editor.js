@@ -331,15 +331,16 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   // Render all sections once to form a single scrolling page
   const sectionRoots = {};
+  const sectionHeaders = {}; // anchored dividers used for section scroll/active detection
   function renderAllSections() {
     contentRoot.innerHTML = '';
 
     // Subjective
-    contentRoot.append(
-      el('div', { class: 'editor-section' }, [
-        el('div', { class: 'editor-section-divider' }, [el('h3', {}, 'Subjective')]),
-      ]),
-    );
+    const subjHeader = el('div', { id: 'section-subjective', class: 'editor-section-divider' }, [
+      el('h3', { class: 'section-title' }, 'Subjective'),
+    ]);
+    sectionHeaders.subjective = subjHeader;
+    const subjWrap = el('div', { class: 'editor-section', id: 'wrap-subjective' }, [subjHeader]);
     const subj = createSubjectiveSection(draft.subjective, (data) => {
       draft.subjective = data;
       save();
@@ -347,73 +348,83 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     });
     // Ensure expected class is present for sidebar extraction
     subj.classList.add('subjective-section');
-    sectionRoots.subjective = subj;
-    contentRoot.append(subj);
+    subjWrap.append(subj);
+    sectionRoots.subjective = subjWrap;
+    contentRoot.append(subjWrap);
 
     // Objective
-    contentRoot.append(
-      el('div', { class: 'editor-section' }, [
-        el('div', { class: 'editor-section-divider' }, [el('h3', {}, 'Objective')]),
-      ]),
-    );
+    const objHeader = el('div', { id: 'section-objective', class: 'editor-section-divider' }, [
+      el('h3', { class: 'section-title' }, 'Objective'),
+    ]);
+    sectionHeaders.objective = objHeader;
+    const objWrap = el('div', { class: 'editor-section', id: 'wrap-objective' }, [objHeader]);
     const obj = createObjectiveSection(draft.objective, (data) => {
       draft.objective = data;
       save();
       if (window.refreshChartProgress) window.refreshChartProgress();
     });
     obj.classList.add('objective-section');
-    sectionRoots.objective = obj;
-    contentRoot.append(obj);
+    objWrap.append(obj);
+    sectionRoots.objective = objWrap;
+    contentRoot.append(objWrap);
 
     // Assessment
-    contentRoot.append(
-      el('div', { class: 'editor-section' }, [
-        el('div', { class: 'editor-section-divider' }, [el('h3', {}, 'Assessment')]),
-      ]),
-    );
+    const assessHeader = el('div', { id: 'section-assessment', class: 'editor-section-divider' }, [
+      el('h3', { class: 'section-title' }, 'Assessment'),
+    ]);
+    sectionHeaders.assessment = assessHeader;
+    const assessWrap = el('div', { class: 'editor-section', id: 'wrap-assessment' }, [
+      assessHeader,
+    ]);
     const assess = createAssessmentSection(draft.assessment, (data) => {
       draft.assessment = data;
       save();
       if (window.refreshChartProgress) window.refreshChartProgress();
     });
     assess.classList.add('assessment-section');
-    sectionRoots.assessment = assess;
-    contentRoot.append(assess);
+    assessWrap.append(assess);
+    sectionRoots.assessment = assessWrap;
+    contentRoot.append(assessWrap);
 
     // Plan
-    contentRoot.append(
-      el('div', { class: 'editor-section' }, [
-        el('div', { class: 'editor-section-divider' }, [el('h3', {}, 'Plan')]),
-      ]),
-    );
+    const planHeader = el('div', { id: 'section-plan', class: 'editor-section-divider' }, [
+      el('h3', { class: 'section-title' }, 'Plan'),
+    ]);
+    sectionHeaders.plan = planHeader;
+    const planWrap = el('div', { class: 'editor-section', id: 'wrap-plan' }, [planHeader]);
     const plan = createPlanSection(draft.plan, (data) => {
       draft.plan = data;
       save();
       if (window.refreshChartProgress) window.refreshChartProgress();
     });
     plan.classList.add('plan-section');
-    sectionRoots.plan = plan;
-    contentRoot.append(plan);
+    planWrap.append(plan);
+    sectionRoots.plan = planWrap;
+    contentRoot.append(planWrap);
 
     // Billing
-    contentRoot.append(
-      el('div', { class: 'editor-section' }, [
-        el('div', { class: 'editor-section-divider' }, [el('h3', {}, 'Billing')]),
-      ]),
-    );
+    const billHeader = el('div', { id: 'section-billing', class: 'editor-section-divider' }, [
+      el('h3', { class: 'section-title' }, 'Billing'),
+    ]);
+    sectionHeaders.billing = billHeader;
+    const billWrap = el('div', { class: 'editor-section', id: 'wrap-billing' }, [billHeader]);
     const bill = createBillingSection(draft.billing, (data) => {
       draft.billing = data;
       save();
       if (window.refreshChartProgress) window.refreshChartProgress();
     });
     bill.classList.add('billing-section');
-    sectionRoots.billing = bill;
-    contentRoot.append(bill);
+    billWrap.append(bill);
+    sectionRoots.billing = billWrap;
+    contentRoot.append(billWrap);
   }
 
   // Centralized initial scroll handler to apply percent-first, then anchor fallback
   function getSectionRoot(id) {
     return sectionRoots[id] || null;
+  }
+  function getSectionHeader(id) {
+    return sectionHeaders[id] || null;
   }
 
   // Percent scroll within the currently active top-level section
@@ -531,11 +542,11 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       },
     });
 
-    // Scroll to the top of the requested section
-    const root = getSectionRoot(s);
-    if (root) {
+    // Scroll to the section header (divider) for clear context
+    const header = getSectionHeader(s) || getSectionRoot(s);
+    if (header) {
       const offset = getHeaderOffsetPx();
-      const rect = root.getBoundingClientRect();
+      const rect = header.getBoundingClientRect();
       const y = Math.max(0, window.scrollY + rect.top - offset);
       window.scrollTo({ top: y, behavior: 'smooth' });
       performInitialScrollIfNeeded(s);
@@ -572,16 +583,15 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   // Observe scroll to update active section and sidebar
   function determineActiveByScroll() {
     const offset = getHeaderOffsetPx();
-    const entries = Object.entries(sectionRoots);
+    const entries = Object.entries(sectionHeaders);
     let current = entries[0]?.[0] || 'subjective';
-    for (const [id, elRoot] of entries) {
-      const top = elRoot.getBoundingClientRect().top;
+    for (const [id, elHeader] of entries) {
+      const top = elHeader.getBoundingClientRect().top;
       if (top - offset <= 8) current = id;
       else break;
     }
     if (current !== active) {
       active = current;
-      // Sticky header removed; no title update needed
       refreshChartNavigation(chartNav, {
         activeSection: active,
         onSectionChange: (sectionId) => switchTo(sectionId),
