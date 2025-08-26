@@ -2120,10 +2120,38 @@ export function createChartNavigation(config) {
             class: 'subsection-item',
             style: `display:flex; align-items:center; padding:4px 8px; font-size:12px; cursor:pointer; transition:all 0.2s ease; border-radius:4px;`,
             onClick: () => {
-              const anchor = document.getElementById(sub.id);
-              if (anchor && anchor.scrollIntoView) {
-                anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }
+              // Robust, exact-offset scroll to the anchor heading to avoid landing on inputs
+              const tryExact = (id) => {
+                const el = document.getElementById(id);
+                if (!el || el.offsetParent === null) return false;
+                const cs = getComputedStyle(document.documentElement);
+                const topbarH = parseInt(
+                  (cs.getPropertyValue('--topbar-h') || '').replace('px', '').trim(),
+                  10,
+                );
+                const dividerH = parseInt(
+                  (cs.getPropertyValue('--section-divider-h') || '').replace('px', '').trim(),
+                  10,
+                );
+                const tb = isNaN(topbarH) ? 72 : topbarH;
+                const sd = isNaN(dividerH) ? 0 : dividerH;
+                const sticky = document.getElementById('patient-sticky-header');
+                const sh = sticky && sticky.offsetParent !== null ? sticky.offsetHeight : 0;
+                const rect = el.getBoundingClientRect();
+                const targetY = Math.max(0, window.scrollY + rect.top - (tb + sh + sd));
+                window.scrollTo({ top: targetY, behavior: 'smooth' });
+                return true;
+              };
+              let ok = tryExact(sub.id);
+              // Retry after layout in case content-visibility or lazy render shifts layout
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  if (!ok) ok = tryExact(sub.id);
+                });
+              });
+              setTimeout(() => {
+                if (!ok) tryExact(sub.id);
+              }, 140);
             },
           },
           [createSubsectionIndicator(subsectionStatus), el('span', {}, sub.label)],

@@ -54,7 +54,13 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     const tb = isNaN(topbarH) ? 72 : topbarH;
     const sticky = document.getElementById('patient-sticky-header');
     const sh = sticky && sticky.offsetParent !== null ? sticky.offsetHeight : 0;
-    return tb + sh;
+    // Include the in-content sticky section divider height so anchors land fully below it
+    const dividerH = parseInt(
+      (cs.getPropertyValue('--section-divider-h') || '').replace('px', '').trim(),
+      10,
+    );
+    const sd = isNaN(dividerH) ? 0 : dividerH;
+    return tb + sh + sd;
   }
 
   function getNearestVisibleAnchorId() {
@@ -75,14 +81,14 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   }
 
   // Robust scrolling to an anchor accounting for fixed headers and layout shifts
-  function scrollToAnchorExact(anchorId) {
+  function scrollToAnchorExact(anchorId, behavior = 'auto') {
     if (!anchorId) return false;
     const el = document.getElementById(anchorId);
     if (!el || el.offsetParent === null) return false; // not present or display:none
     const offset = getHeaderOffsetPx();
     const rect = el.getBoundingClientRect();
     const targetY = Math.max(0, window.scrollY + rect.top - offset);
-    window.scrollTo({ top: targetY, behavior: 'auto' });
+    window.scrollTo({ top: targetY, behavior });
     return true;
   }
 
@@ -792,22 +798,51 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       },
     });
 
-    // Prefer landing on the first visible subsection heading (.section-anchor) for consistent alignment under sticky headers
+    // Prefer landing on the designated subsection heading for each section
     const header = getSectionHeader(s);
     const root = getSectionRoot(s) || header;
     if (root) {
+      const preferredAnchorBySection = {
+        subjective: 'hpi',
+        objective: 'general-observations',
+        assessment: 'primary-impairments',
+        plan: 'goal-setting',
+        billing: 'diagnosis-codes',
+      };
+      const targetId = preferredAnchorBySection[s];
+      let scrolled = false;
+      const trySmoothExact = (id) => {
+        if (!id) return false;
+        const ok = scrollToAnchorExact(id, 'smooth');
+        return ok;
+      };
       try {
-        const firstAnchor = Array.from(root.querySelectorAll('.section-anchor')).find(
-          (a) => a.offsetParent !== null,
-        );
-        if (firstAnchor && firstAnchor.scrollIntoView) {
-          firstAnchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else {
-          const offset = getHeaderOffsetPx();
-          const rect = root.getBoundingClientRect();
-          const y = Math.max(0, window.scrollY + rect.top - offset);
-          window.scrollTo({ top: y, behavior: 'smooth' });
-        }
+        // Attempt smooth exact-offset scroll to preferred anchor with layout-aware retries
+        scrolled = trySmoothExact(targetId);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (!scrolled) scrolled = trySmoothExact(targetId);
+          });
+        });
+        setTimeout(() => {
+          if (!scrolled) scrolled = trySmoothExact(targetId);
+          if (!scrolled) {
+            // Fallback: first visible anchor in the section
+            const firstAnchor = Array.from(root.querySelectorAll('.section-anchor')).find(
+              (a) => a.offsetParent !== null,
+            );
+            if (firstAnchor) {
+              scrollToAnchorExact(firstAnchor.id, 'smooth');
+              scrolled = true;
+            }
+          }
+          if (!scrolled) {
+            const offset = getHeaderOffsetPx();
+            const rect = root.getBoundingClientRect();
+            const y = Math.max(0, window.scrollY + rect.top - offset);
+            window.scrollTo({ top: y, behavior: 'smooth' });
+          }
+        }, 140);
       } catch {
         const offset = getHeaderOffsetPx();
         const rect = root.getBoundingClientRect();

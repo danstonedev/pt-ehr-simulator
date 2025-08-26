@@ -478,12 +478,7 @@ html[data-theme='dark'] .chart-navigation .nav-progress-text {
   color: rgba(255, 255, 255, 0.85);
 }
 
-.section-anchor {
-  /* Account for fixed app topbar + sticky section header */
-  scroll-margin-top: calc(
-    var(--topbar-h) + var(--patient-sticky-h, 0px) + var(--section-divider-h) + var(--space-2)
-  );
-}
+/* .section-anchor scroll offsets are defined in styles.css to keep a single source of truth */
 
 /* Keep left border accent only in light theme */
 html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item:not(.active) {
