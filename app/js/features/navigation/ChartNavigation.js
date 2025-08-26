@@ -2315,9 +2315,7 @@ export function createChartNavigation(config) {
           el(
             'h4',
             {
-              class: 'nav-section-title',
-              style:
-                'margin: 0 0 12px 0; padding: 8px 12px; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #ffffff; background: var(--und-green); border-bottom: 2px solid #ffffff; border-radius: 4px;',
+              class: 'note-progress-header',
             },
             'Note Progress',
           ),
