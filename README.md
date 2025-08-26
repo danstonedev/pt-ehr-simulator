@@ -3,8 +3,8 @@
 > **Professional-grade Physical Therapy documentation simulator with comprehensive SOAP workflow, advanced regional assessments, and embedded clinical cases. Built as a modern pure frontend application with contemporary theming system.**
 
 [![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-GitHub_Pages-blue?style=for-the-badge)](https://danstonedev.github.io/pt-ehr-simulator/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
-[![Built with TypeScript](https://img.shields.io/badge/Built%20with-Vanilla%20JS%20ES6+-yellow?style=for-the-badge)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg?style=for-the-badge)](package.json)
+[![Built with Vanilla JS ES6+](https://img.shields.io/badge/Built%20with-Vanilla%20JS%20ES6+-yellow?style=for-the-badge)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
 ## ✨ Features & Capabilities
 
@@ -105,6 +105,7 @@ This clears the storage adapter cache (browser storage) and reloads cases from t
 ```text
 app/  ← single source of truth for the site
 ├── index.html                       # Main application entry
+├── 404.html                         # SPA fallback for GitHub Pages deep-link reloads
 ├── start_servers_simple.ps1         # Simple startup script
 ├── .nojekyll                        # Ensure GH Pages serves as static app
 ├── css/                             # Stylesheets & print styles
@@ -260,8 +261,8 @@ Note: Legacy Azure Functions sample code has been removed. If you need a server-
 
 ## 📦 Deployment (GitHub Pages)
 
-- Changes pushed to the main branch are automatically deployed via GitHub Actions.
-- The workflow uploads only the `app/` directory artifact to Pages.
-- A `.nojekyll` file in `app/` ensures assets are served without Jekyll processing.
+- Pushing to the `main` branch automatically deploys via GitHub Actions (`.github/workflows/deploy-pages.yml`).
+- Only the `app/` directory is uploaded and served.
+- `.nojekyll` disables Jekyll processing; `404.html` provides SPA fallback so deep links reload correctly.
 
-If your Pages URL hasn’t updated yet, check the Actions tab for the latest “Deploy static content to Pages” run.
+If your Pages URL hasn’t updated yet, check Actions for the latest “Deploy to GitHub Pages” run.
