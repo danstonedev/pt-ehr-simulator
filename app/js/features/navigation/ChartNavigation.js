@@ -2217,9 +2217,7 @@ export function createChartNavigation(config) {
           // Case File (formerly Background Information/Artifacts): list and controls
           (() => {
             const items = Array.isArray(currentModules) ? currentModules : [];
-            const bottomDivider = el('div', {
-              style: 'border-top:1px solid var(--border-strong); margin: 10px 0 8px 0;',
-            });
+            // Removed subtle divider to keep the area clean and compact
             if (config.isFacultyMode) {
               // List artifacts with table-style remove buttons
               const list = items.length
@@ -2262,8 +2260,7 @@ export function createChartNavigation(config) {
               const addBtnFooter = el(
                 'div',
                 {
-                  class: 'editable-table__footer',
-                  style: 'display:flex; justify-content:center; margin: 6px 0 10px 0;',
+                  class: 'editable-table__footer artifact-add-footer',
                 },
                 el(
                   'div',
@@ -2282,11 +2279,7 @@ export function createChartNavigation(config) {
                 ),
               );
 
-              return el('div', { style: 'margin: 6px 0 10px 0;' }, [
-                list,
-                addBtnFooter,
-                bottomDivider,
-              ]);
+              return el('div', { class: 'artifact-block' }, [list, addBtnFooter]);
             }
             // Student view: buttons to open artifacts
             if (!items.length) return el('div');
@@ -2306,7 +2299,7 @@ export function createChartNavigation(config) {
                 );
               }),
             );
-            return el('div', { style: 'margin: 6px 0 10px 0;' }, [list, bottomDivider]);
+            return el('div', { class: 'artifact-block' }, [list]);
           })(),
           // Extra padding before section trackers
           el('div', { style: 'height: 20px;' }),
