@@ -98,17 +98,19 @@ html:not([data-theme='dark']) .chart-navigation .note-progress-header {
 .chart-navigation .artifact-pill {
   width: 100%;
   text-align: left;
-  padding: 8px 10px;
-  font-size: 12px;
+  padding: 10px 12px; /* slightly larger tap target */
+  font-size: 14px; /* larger text */
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px; /* more room between icon and text */
   justify-content: flex-start !important;
 }
 
 .chart-navigation .artifact-pill svg {
   flex-shrink: 0;
   opacity: 0.8;
+  width: 18px;
+  height: 18px; /* scale icon up to match font */
 }
 
 /* White panel for navigation list inside gray sidebar */
