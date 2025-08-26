@@ -273,6 +273,8 @@
   --input-radius: var(--radius-md);
   /* Editor content background (used behind SOAP sections) */
   --editor-bg: var(--neutral-900);
+  /* Sticky patient header background (darker in dark theme) */
+  --case-header-bg: var(--neutral-950);
 }
 
 /* Icon utility for sprite-based SVGs */
@@ -385,6 +387,8 @@
 
   /* Editor content background for light theme (slightly tinted to lift from bg) */
   --editor-bg: color-mix(in srgb, var(--neutral-200) 80%, white);
+  /* Sticky patient header background (darker than page bg in light theme) */
+  --case-header-bg: var(--neutral-200);
 }
 
 /* Modules imported at top; keep this comment as a marker */

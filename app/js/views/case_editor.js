@@ -438,16 +438,43 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     return age >= 0 && age < 200 ? String(age) : '';
   }
 
-  const patientHeaderNameEl = el(
-    'div',
-    { style: 'font-weight:700; font-size:18px; line-height:1.2;' },
-    '',
-  );
+  const patientHeaderNameEl = el('div', { style: 'font-size:20px; line-height:1.25;' }, '');
   const patientHeaderDemoEl = el(
     'div',
-    { style: 'font-size:12px; color: var(--text-secondary); line-height:1.2; margin-top:2px;' },
+    {
+      style:
+        'font-size:16px; color: var(--text-secondary); line-height:1.3; margin-top:4px; margin-left: var(--space-4);',
+    },
     '',
   );
+  // Simple inline avatar (silhouette)
+  const avatarEl = el(
+    'div',
+    {
+      style:
+        'width:40px; height:40px; border-radius:50%; background: var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color: var(--text); flex:0 0 auto;',
+      'aria-hidden': 'true',
+    },
+    [
+      el(
+        'svg',
+        {
+          width: '24',
+          height: '24',
+          viewBox: '0 0 64 64',
+          'aria-hidden': 'true',
+          focusable: 'false',
+          style: 'display:block;',
+        },
+        [
+          el('circle', { cx: '32', cy: '22', r: '12', fill: 'currentColor' }),
+          // Shoulders/torso as a filled ellipse for clear visibility
+          el('ellipse', { cx: '32', cy: '50', rx: '20', ry: '10', fill: 'currentColor' }),
+        ],
+      ),
+    ],
+  );
+
   const patientHeader = el(
     'div',
     {
@@ -457,7 +484,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         'top: var(--topbar-h, 72px)',
         // Ensure patient banner stays above sticky section dividers
         'z-index: var(--z-case-header)',
-        'background: var(--bg)',
+        'background: var(--case-header-bg, var(--bg))',
         'border-bottom: 1px solid var(--border)',
         'padding: 10px 12px',
         'display:flex',
@@ -467,7 +494,12 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       ].join('; '),
     },
     [
-      el('div', {}, [patientHeaderNameEl, patientHeaderDemoEl]),
+      // Left: avatar + name lines
+      el('div', { style: 'display:flex; align-items:center; gap:12px;' }, [
+        avatarEl,
+        el('div', {}, [patientHeaderNameEl, patientHeaderDemoEl]),
+      ]),
+      // Right: actions
       el('div', { id: 'patient-header-actions' }, []),
     ],
   );
@@ -485,11 +517,41 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       const dob = c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '';
       const age = computeAgeFromDobLocal(dob) || c.patientAge || c.age || '';
       const sex = c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || '';
-      patientHeaderNameEl.textContent = displayName;
-      const parts = [];
-      parts.push(`DOB: ${dob || 'N/A'}${age ? ` (${age}y)` : ''}`);
-      parts.push(`Sex: ${sex || 'N/A'}`);
-      patientHeaderDemoEl.textContent = parts.join('   •   ');
+      // Format MM-DD-YYYY
+      let dobFmt = '';
+      if (dob) {
+        const d = new Date(dob);
+        if (!isNaN(d.getTime())) {
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          const yyyy = d.getFullYear();
+          dobFmt = `${mm}-${dd}-${yyyy}`;
+        }
+      }
+      // Line 1: Title (Sex) where Sex is non-bold
+      const sexDisplay = sex
+        ? String(sex).slice(0, 1).toUpperCase() + String(sex).slice(1).toLowerCase()
+        : '';
+      patientHeaderNameEl.innerHTML = '';
+      patientHeaderNameEl.append(
+        el('span', { style: 'font-weight:700' }, displayName),
+        ...(sexDisplay
+          ? [
+              el(
+                'span',
+                { style: 'font-weight:400; color: var(--text-secondary); margin-left:6px;' },
+                `(${sexDisplay})`,
+              ),
+            ]
+          : []),
+      );
+      // Line 2: MM-DD-YYYY (xx years old) with date bold
+      const dateText = dobFmt || dob || 'N/A';
+      patientHeaderDemoEl.innerHTML = '';
+      patientHeaderDemoEl.append(
+        el('span', { style: 'font-weight:700; color: var(--text);' }, dateText),
+        ...(age ? [el('span', { style: 'font-weight:400' }, ` (${age} years old)`)] : []),
+      );
       // Expose measured height to CSS as a variable so sticky offsets and anchors account for it
       const h = patientHeader.offsetHeight || 0;
       document.documentElement.style.setProperty('--patient-sticky-h', `${h}px`);
