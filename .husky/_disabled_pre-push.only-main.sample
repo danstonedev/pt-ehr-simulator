@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+# Sample pre-push hook to restrict pushes to main only.
+# To enable: copy to .husky/pre-push and make executable.
+
+branch=$(git rev-parse --abbrev-ref HEAD)
+if [ "$branch" != "main" ]; then
+  echo "[pre-push] Push blocked: use main only (current: $branch)."
+  echo "To override, push with --no-verify or remove this hook."
+  exit 1
+fi
+exit 0
