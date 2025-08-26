@@ -92,25 +92,27 @@ html:not([data-theme='dark']) .chart-navigation .note-progress-header {
 .chart-navigation .artifact-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px; /* tighter stack for table-like density */
 }
 
 .chart-navigation .artifact-pill {
   width: 100%;
   text-align: left;
-  padding: 10px 12px; /* slightly larger tap target */
-  font-size: 14px; /* larger text */
+  padding: 6px 10px; /* more condensed vertically */
+  font-size: 16px; /* larger text while staying compact */
   display: flex;
   align-items: center;
-  gap: 10px; /* more room between icon and text */
+  gap: 8px; /* keep spacing tight */
   justify-content: flex-start !important;
+  min-height: 32px; /* override base .btn height for compact rows */
+  line-height: 1.25;
 }
 
 .chart-navigation .artifact-pill svg {
   flex-shrink: 0;
   opacity: 0.8;
-  width: 18px;
-  height: 18px; /* scale icon up to match font */
+  width: 20px;
+  height: 20px; /* scale icon up to match larger font */
 }
 
 /* White panel for navigation list inside gray sidebar */
