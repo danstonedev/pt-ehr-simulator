@@ -7,49 +7,18 @@ import { el } from '../ui/utils.js';
 
 // (draft summary removed to simplify hero layout)
 
-function buildHelpPanel() {
-  const onReset = async () => {
-    if (
-      !confirm(
-        'Reset local data and restore the demo case? This will delete your local cases and drafts.',
-      )
-    )
-      return;
-    try {
-      // Remove cases, counter, and drafts
-      storage.removeItem('pt_emr_cases');
-      storage.removeItem('pt_emr_case_counter');
-      // Remove all drafts
-      const keys = storage.keys().filter((k) => k && k.startsWith('draft_'));
-      keys.forEach((k) => storage.removeItem(k));
-      // Keep last route so user can resume intentionally if desired, or clear it:
-      // storage.removeItem('pt_emr_last_route');
-      alert('Data reset completed. Demo case restored.');
-      // Soft refresh the home view
-      urlNavigate('/');
-    } catch (e) {
-      console.error('Reset failed:', e);
-      alert('Reset failed. Please reload the page.');
-    }
-  };
-  return el('div', { class: 'panel' }, [
-    el('h3', {}, 'Help & Tools'),
-    el('ul', { style: 'margin: 6px 0 10px 18px;' }, [
-      el('li', {}, 'Runs locally; data stored in your browser; works offline'),
-      el('li', {}, 'Export documentation to Word from the editor'),
-    ]),
-    el('button', { class: 'btn danger', onClick: onReset }, 'Reset sample data'),
-  ]);
-}
-
 function buildWhatsNewPanel() {
   return el('div', { class: 'panel' }, [
-    el('h3', {}, "What's new"),
+    el('h3', {}, 'Program Executive Overview'),
     el('ul', { style: 'margin: 6px 0 0 18px;' }, [
-      el('li', {}, 'Faculty visibility toggles per subsection with sidebar filtering'),
-      el('li', {}, 'True Student Preview with seamless back-to-faculty'),
-      el('li', {}, 'Precise deep-link scrolling under sticky headers'),
-      el('li', {}, 'Relative scroll preservation when switching modes'),
+      el('li', {}, 'Static, browser-only EMR simulator (no backend; GitHub Pages deployable)'),
+      el('li', {}, 'Centralized routing with deep links & shareable states'),
+      el('li', {}, 'Data store: case/draft separation, schema validation/migration'),
+      el('li', {}, 'Feature modules: SOAP, Goals, Billing, Export (modular files)'),
+      el('li', {}, 'Views: tailored student and faculty flows'),
+      el('li', {}, 'Accessibility & UX: skip links, ARIA, Safari mobile patch, sticky headers'),
+      el('li', {}, 'Exports: professional Word format matching app layout'),
+      el('li', {}, 'Feedback: MS Forms integration for quick updates'),
     ]),
   ]);
 }
@@ -93,11 +62,19 @@ route('#/', async (app) => {
 
   const studentPanel = el('div', { class: 'panel' }, [
     el('h2', {}, 'Student'),
-    el(
-      'p',
-      { class: 'muted', style: 'margin:6px 0 12px 0;' },
-      'Work on assigned cases and manage your drafts.',
-    ),
+    el('div', { style: 'margin:6px 0 12px 0;' }, [
+      el(
+        'div',
+        { class: 'muted', style: 'font-weight:600; margin-bottom:6px;' },
+        'Student Experience Summary',
+      ),
+      el('ul', { style: 'margin:0 0 0 18px;' }, [
+        el('li', {}, 'Access: #/student/cases → assigned/available cases'),
+        el('li', {}, 'Documentation: guided tabs for SOAP, Goals, Billing'),
+        el('li', {}, 'Persistence: auto-save drafts in localStorage'),
+        el('li', {}, 'Export: Word report with structured tables'),
+      ]),
+    ]),
     el(
       'div',
       { class: 'home-actions', style: 'display:flex; gap:8px; flex-wrap:wrap;' },
@@ -125,11 +102,19 @@ route('#/', async (app) => {
 
   const facultyPanel = el('div', { class: 'panel' }, [
     el('h2', {}, 'Faculty'),
-    el(
-      'p',
-      { class: 'muted', style: 'margin:6px 0 12px 0;' },
-      'Create and edit cases; preview as a student.',
-    ),
+    el('div', { style: 'margin:6px 0 12px 0;' }, [
+      el(
+        'div',
+        { class: 'muted', style: 'font-weight:600; margin-bottom:6px;' },
+        'Faculty Experience Summary',
+      ),
+      el('ul', { style: 'margin:0 0 0 18px;' }, [
+        el('li', {}, 'Access: #/instructor/cases for case management'),
+        el('li', {}, 'Authoring: demographics, DOB age calculator, schema integrity'),
+        el('li', {}, 'Distribution: share deep links with students'),
+        el('li', {}, 'Review: student exports mirror app structure for grading'),
+      ]),
+    ]),
     el(
       'div',
       { class: 'home-actions', style: 'display:flex; gap:8px; flex-wrap:wrap;' },
@@ -139,7 +124,6 @@ route('#/', async (app) => {
 
   // Side panels
   const whatsNew = buildWhatsNewPanel();
-  const help = buildHelpPanel();
 
   // Row 2: Student + Faculty (full-width row with 2-up on desktop)
   const studentFacultyRow = el(
@@ -152,10 +136,7 @@ route('#/', async (app) => {
   );
 
   // Row 3: Two-column grid for side info and optional resume card
-  const leftCol = el('div', { class: 'col-side', style: 'display:grid; gap:12px;' }, [
-    whatsNew,
-    help,
-  ]);
+  const leftCol = el('div', { class: 'col-side', style: 'display:grid; gap:12px;' }, [whatsNew]);
   // right column intentionally omitted
 
   const grid = el(
