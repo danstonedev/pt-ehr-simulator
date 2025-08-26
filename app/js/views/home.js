@@ -3,15 +3,9 @@ import { route } from '../core/router.js';
 import { navigate as urlNavigate, navigateHash } from '../core/url.js';
 import { storage } from '../core/index.js';
 import { el } from '../ui/utils.js';
-import { listCases, listDrafts } from '../core/store.js';
+// no case fetch needed on home view
 
-function countDrafts(draftsMap) {
-  let count = 0;
-  Object.values(draftsMap || {}).forEach((encMap) => {
-    count += Object.keys(encMap || {}).length;
-  });
-  return count;
-}
+// (draft summary removed to simplify hero layout)
 
 function buildHelpPanel() {
   const onReset = async () => {
@@ -63,10 +57,6 @@ function buildWhatsNewPanel() {
 route('#/', async (app) => {
   app.innerHTML = '';
 
-  // Load data for counts and featured card
-  const [cases, drafts] = await Promise.all([listCases(), Promise.resolve(listDrafts())]);
-  const draftsCount = countDrafts(drafts);
-  const featured = cases.find((c) => c.id === 'demo_case_1') || cases[0];
   const lastHash = storage.getItem('pt_emr_last_route');
   const resumeInfo = (() => {
     if (!lastHash || lastHash === '#/' || lastHash === '#/404') return null;
@@ -75,43 +65,12 @@ route('#/', async (app) => {
     return { audience: isFaculty ? 'Faculty' : 'Student', hash: lastHash };
   })();
 
-  // Hero panel (full-width)
-  const hero = el('div', { class: 'panel' }, [
-    el('h1', {}, 'Physical Therapy EMR Simulator'),
-    el('p', {}, 'Practice professional SOAP documentation and billing.'),
+  // Hero banner (UND green gradient parallelogram)
+  const hero = el('div', { class: 'home-hero' }, [
+    el('h1', { class: 'home-hero__title' }, 'UND Physical Therapy EMR Simulator'),
   ]);
 
-  // Editor navigation helpers
-  function parseQuery(qs) {
-    const p = new URLSearchParams(qs || '');
-    return Object.fromEntries(p.entries());
-  }
-  function getLastEditorParams(kind) {
-    if (!lastHash) return null;
-    const [p, q] = lastHash.split('?');
-    const targetPath = kind === 'student' ? '#/student/editor' : '#/instructor/editor';
-    if (p !== targetPath) return null;
-    const params = parseQuery(q);
-    const caseId = params.case;
-    const version = params.v ? parseInt(params.v, 10) : 0;
-    return caseId ? { caseId, version: Number.isFinite(version) ? version : 0 } : null;
-  }
-  function goEditor(kind, encounter) {
-    const lastParams = getLastEditorParams(kind);
-    const fallback = featured
-      ? { caseId: featured.id, version: featured.latestVersion || 0 }
-      : null;
-    const picked = lastParams || fallback;
-    if (!picked) {
-      urlNavigate(kind === 'student' ? '/student/cases' : '/instructor/cases');
-      return;
-    }
-    if (kind === 'student') {
-      urlNavigate('/student/editor', { case: picked.caseId, v: picked.version, encounter });
-    } else {
-      urlNavigate('/instructor/editor', { case: picked.caseId, v: picked.version, encounter });
-    }
-  }
+  // (editor navigation helpers not needed on simplified home)
 
   // Build main panels
   const studentActions = [];
@@ -197,7 +156,7 @@ route('#/', async (app) => {
     whatsNew,
     help,
   ]);
-  const hasRight = false; // no right column content when resume card is removed
+  // right column intentionally omitted
 
   const grid = el(
     'div',

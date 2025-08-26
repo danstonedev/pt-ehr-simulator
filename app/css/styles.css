@@ -1018,6 +1018,42 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 
 /* Three brand slashes at the right edge */
 /* Stripes disabled: show a clean green parallelogram only */
+
+/* Home hero: UND green gradient parallelogram banner */
+.home-hero {
+  position: relative;
+  min-height: 92px; /* narrower banner */
+  display: flex;
+  align-items: center;
+  justify-content: center; /* center the title */
+  padding: var(--space-4) calc(1.5 * var(--pad-x)); /* slightly less vertical padding; overshoot horizontally */
+  color: #fff;
+  margin-left: calc(-2.5 * var(--pad-x)); /* bleed further left */
+  margin-right: calc(-2.5 * var(--pad-x)); /* bleed further right */
+  isolation: isolate;
+  overflow: hidden;
+}
+.home-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
+  clip-path: polygon(
+    var(--section-parallelogram-slant) 0,
+    100% 0,
+    calc(100% - var(--section-parallelogram-slant)) 100%,
+    0 100%
+  );
+  z-index: -1;
+}
+.home-hero__title {
+  font-size: clamp(22px, 4vw, 32px);
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin: 0;
+  color: #fff; /* ensure white text regardless of global h1 color */
+  text-align: center;
+}
 .editor-section-divider::after {
   content: none !important;
 }
