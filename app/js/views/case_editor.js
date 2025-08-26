@@ -485,8 +485,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         // Ensure patient banner stays above sticky section dividers
         'z-index: var(--z-case-header)',
         'background: var(--case-header-bg, var(--bg))',
-        // UND green border around the sticky patient header for visual emphasis
-        'border: 2px solid var(--und-green)',
         'padding: 10px 12px',
         'display:flex',
         'align-items:center',

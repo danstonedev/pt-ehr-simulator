@@ -264,6 +264,35 @@ html[data-theme='dark'] .chart-navigation .section-nav-item .nav-progress-text {
   margin: 0;
 }
 
+/* Patient sticky header border (applied to #patient-sticky-header) */
+#patient-sticky-header {
+  border: 2px solid var(--und-green);
+  border-left: none; /* keep flush against content edge */
+  border-right: none;
+}
+
+/* Sidebar "Case File" header styles */
+.case-file-header {
+  margin: 6px 0 8px 0;
+  display: flex; /* robust centering */
+  justify-content: center; /* center horizontally */
+}
+.case-file-badge {
+  display: inline-block;
+  margin: 0 auto; /* center within non-flex parents as a fallback */
+  min-width: 260px; /* extend left/right */
+  text-align: center;
+  padding: 8px 18px;
+  background: var(--und-green);
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 900;
+  font-size: 18px;
+  border-radius: 4px; /* subtle modern rounding */
+}
+
 /* Case editing form in sidebar */
 .case-header input,
 .case-header select {

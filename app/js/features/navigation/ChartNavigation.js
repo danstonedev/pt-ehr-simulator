@@ -2213,10 +2213,9 @@ export function createChartNavigation(config) {
             const header = el(
               'h4',
               {
-                style:
-                  'margin: 6px 0 8px 0; font-size: 18px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 900; color: #ffffff; text-align:center;',
+                class: 'case-file-header',
               },
-              'Case File',
+              [el('span', { class: 'case-file-badge' }, 'Case File')],
             );
             const bottomDivider = el('div', {
               style: 'border-top:1px solid var(--border-strong); margin: 10px 0 8px 0;',
