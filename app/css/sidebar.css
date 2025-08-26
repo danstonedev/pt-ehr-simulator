@@ -265,32 +265,38 @@ html[data-theme='dark'] .chart-navigation .section-nav-item .nav-progress-text {
 }
 
 /* Patient sticky header border (applied to #patient-sticky-header) */
-#patient-sticky-header {
-  border: 2px solid var(--und-green);
-  border-left: none; /* keep flush against content edge */
-  border-right: none;
-}
+/* Patient sticky header border handled in styles.css for unified geometry */
 
 /* Sidebar "Case File" header styles */
 .case-file-header {
-  margin: 6px 0 8px 0;
+  position: sticky;
+  top: 0; /* sticks to top within the fixed sidebar scroll area */
+  z-index: var(--z-case-header);
+  height: var(--header-h);
+  padding: 0; /* no top padding above the tab */
+  margin: 0; /* avoid collapsing margins/gaps */
   display: flex; /* robust centering */
+  align-items: center; /* vertical centering */
   justify-content: center; /* center horizontally */
 }
 .case-file-badge {
-  display: inline-block;
-  margin: 0 auto; /* center within non-flex parents as a fallback */
-  min-width: 260px; /* extend left/right */
+  display: flex; /* fill and center content */
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%; /* fill the header height */
+  margin: 0; /* flush to sidebar edges */
   text-align: center;
-  padding: 8px 18px;
+  padding: 0 16px; /* only horizontal padding; vertical is from height */
   background: var(--und-green);
   color: #ffffff;
-  border: 2px solid #ffffff;
+  border: var(--header-b) solid transparent;
+  border-bottom-color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-weight: 900;
   font-size: 18px;
-  border-radius: 4px; /* subtle modern rounding */
+  border-radius: 0; /* align as a continuous row with the patient header */
 }
 
 /* Case editing form in sidebar */
