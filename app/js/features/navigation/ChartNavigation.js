@@ -2186,6 +2186,11 @@ export function createChartNavigation(config) {
     ? config.caseData.modules
     : [];
 
+  // Standalone CASE FILE header (full-width in sidebar)
+  const caseFileHeader = el('h4', { class: 'case-file-header' }, [
+    el('span', { class: 'case-file-badge' }, 'Case File'),
+  ]);
+
   const sidebar = el(
     'div',
     {
@@ -2195,6 +2200,9 @@ export function createChartNavigation(config) {
       id: 'chartNavigation',
     },
     [
+      // CASE FILE header row aligned with patient header
+      caseFileHeader,
+
       // Navigation panel (white card stack)
       el(
         'div',
@@ -2205,18 +2213,9 @@ export function createChartNavigation(config) {
         },
         [
           // Case info card removed per design; patient info now lives in sticky header above content.
-          // Case File (formerly Background Information/Artifacts): clearly separated with dividers
+          // Case File (formerly Background Information/Artifacts): list and controls
           (() => {
             const items = Array.isArray(currentModules) ? currentModules : [];
-            // Removed top divider per request
-            const topDivider = null;
-            const header = el(
-              'h4',
-              {
-                class: 'case-file-header',
-              },
-              [el('span', { class: 'case-file-badge' }, 'Case File')],
-            );
             const bottomDivider = el('div', {
               style: 'border-top:1px solid var(--border-strong); margin: 10px 0 8px 0;',
             });
@@ -2257,7 +2256,7 @@ export function createChartNavigation(config) {
                       );
                     }),
                   )
-                : el('div');
+                : el('div'); // Empty div when no artifacts
 
               // Add button styled like tables (compact circular +), placed below list
               const addBtnFooter = el(
@@ -2284,7 +2283,6 @@ export function createChartNavigation(config) {
               );
 
               return el('div', { style: 'margin: 6px 0 10px 0;' }, [
-                header,
                 list,
                 addBtnFooter,
                 bottomDivider,
@@ -2309,10 +2307,20 @@ export function createChartNavigation(config) {
                 );
               }),
             );
-            return el('div', { style: 'margin: 6px 0 10px 0;' }, [header, list, bottomDivider]);
+            return el('div', { style: 'margin: 6px 0 10px 0;' }, [list, bottomDivider]);
           })(),
           // Extra padding before section trackers
           el('div', { style: 'height: 20px;' }),
+          // Note Progress header
+          el(
+            'h4',
+            {
+              class: 'nav-section-title',
+              style:
+                'margin: 0 0 12px 0; padding: 8px 12px; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #ffffff; background: var(--und-green); border-bottom: 2px solid #ffffff; border-radius: 4px;',
+            },
+            'Note Progress',
+          ),
           // Section cards + subsections
           ...sections.map((section) =>
             el('div', {}, [createSectionNav(section), createSubsectionTOC(section)]),
