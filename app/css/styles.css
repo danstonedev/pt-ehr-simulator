@@ -387,8 +387,8 @@
 
   /* Editor content background for light theme (slightly tinted to lift from bg) */
   --editor-bg: color-mix(in srgb, var(--neutral-200) 80%, white);
-  /* Sticky patient header background (darker than page bg in light theme) */
-  --case-header-bg: var(--neutral-200);
+  /* Sticky patient header background: solid light UND green to avoid overlap */
+  --case-header-bg: color-mix(in srgb, var(--und-green) 14%, white);
 }
 
 /* Modules imported at top; keep this comment as a marker */
