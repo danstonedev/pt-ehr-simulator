@@ -107,6 +107,9 @@
   --topbar-h: 72px; /* unify top bar height (taller per request) */
   --edu-ribbon-h: 28px; /* bottom ribbon height for readable text */
   --sticky-header-h: 64px; /* unified sticky header height */
+  /* Shared header geometry (alias for clarity across left/right headers) */
+  --header-h: var(--sticky-header-h);
+  --header-b: 2px; /* border thickness for header rows */
   /* Section divider brand stripes */
   --section-stripe-angle: 56deg; /* brand angle */
   --section-stripe-gap-frac: 0.65; /* gap portion per period (65%) */
@@ -649,6 +652,20 @@ body[data-route='instructor-editor'] #app {
   background: var(--editor-bg);
 }
 
+/* Patient info sticky header: unify geometry with sidebar CASE FILE tab */
+#patient-sticky-header {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px; /* match sticky-top-bar horizontal padding */
+  line-height: 1; /* kill extra line-height growth */
+  box-sizing: border-box;
+  border: var(--header-b) solid transparent; /* equal total box */
+  border-bottom-color: var(--und-green); /* only show bottom visually */
+  transform: translateZ(0); /* sub-pixel snapping */
+}
+
 /* Darker panel containers on Home, Student, Faculty dashboards */
 /* Light theme: increase UND Gray mix with white for deeper panels */
 html:not([data-theme='dark']) body[data-route='home'],
@@ -924,13 +941,16 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   /* Subtle left→right gradient: darker green to UND green */
   background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
   color: #fff;
-  height: var(--sticky-header-h); /* Fixed height via variable */
+  height: var(--header-h); /* Fixed height via shared variable */
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px; /* Consistent padding */
   box-sizing: border-box; /* Critical for height calculation */
-  border-bottom: 2px solid var(--und-green-dark); /* Subtle border */
+  line-height: 1; /* avoid extra inline height */
+  /* Unify total box height with sidebar tab: transparent full border + bottom color */
+  border: var(--header-b) solid transparent;
+  border-bottom-color: var(--und-green);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
