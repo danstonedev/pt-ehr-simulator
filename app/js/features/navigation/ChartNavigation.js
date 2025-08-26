@@ -1,6 +1,7 @@
 // ChartNavigation.js - Professional EMR-style navigation with progress tracking
 import { el } from '../../ui/utils.js';
 import { exportToWord } from '../../services/document-export.js';
+import { attachments as Att } from '../../services/index.js';
 
 /**
  * Creates SVG elements with proper namespace
@@ -709,8 +710,11 @@ function openCaseDetailsModal(caseInfo) {
 }
 
 // Read-only Artifact viewer modal (student and faculty view)
-function openViewArtifactModal(module) {
+function openViewArtifactModal(module, options = {}) {
+  const { isFacultyMode = false, onEdit, onRemove } = options || {};
   const overlay = el('div', { class: 'goal-linker-modal', role: 'dialog', 'aria-modal': 'true' });
+  // Track object URLs created for thumbnails so we can revoke on close
+  const urlsToRevoke = [];
   const title =
     module?.title ||
     (module?.type ? module.type[0].toUpperCase() + module.type.slice(1) : 'Artifact');
@@ -772,20 +776,315 @@ function openViewArtifactModal(module) {
           JSON.stringify(module, null, 2),
         );
       })(),
+      (() => {
+        const atts = Array.isArray(module?.data?.attachments) ? module.data.attachments : [];
+        if (!atts.length) return null;
+        return el('div', { style: 'margin-top:12px;' }, [
+          el('div', { class: 'goal-section-title' }, 'Attachments'),
+          el(
+            'div',
+            { style: 'display:flex; flex-direction:column; gap:8px;' },
+            atts.map((m) => {
+              const row = el('div', { style: 'display:flex; align-items:center; gap:8px;' }, []);
+              const thumbWrap = el('div', {
+                style:
+                  'width:40px; height:40px; display:flex; align-items:center; justify-content:center;',
+              });
+              // Create a placeholder; fill with image if mimetype is image/*
+              const isImg = (m.mime || '').startsWith('image/');
+              if (isImg) {
+                const img = el('img', {
+                  style:
+                    'width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid var(--border); background: var(--bg-secondary);',
+                  alt: m.name || 'attachment',
+                });
+                thumbWrap.appendChild(img);
+                // Async load object URL and set src, then track for revocation
+                (async () => {
+                  try {
+                    const o = await Att.createObjectURL(m.id);
+                    if (o?.url) {
+                      img.src = o.url;
+                      urlsToRevoke.push(o.url);
+                    }
+                  } catch {}
+                })();
+              } else {
+                thumbWrap.appendChild(el('span', { style: 'font-size:18px;' }, '📄'));
+              }
+              const nameSpan = el(
+                'span',
+                {
+                  style:
+                    'flex:1; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;',
+                },
+                `${m.name} (${Math.ceil((m.size || 0) / 1024)} KB)`,
+              );
+              row.appendChild(thumbWrap);
+              row.appendChild(nameSpan);
+              // Open button
+              row.appendChild(
+                el(
+                  'button',
+                  {
+                    class: 'btn secondary',
+                    style: 'font-size:12px; padding:6px 10px;',
+                    onclick: async () => {
+                      // In-page preview overlay
+                      const overlay = document.createElement('div');
+                      overlay.style.cssText =
+                        'position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:10000;';
+                      const panel = document.createElement('div');
+                      panel.style.cssText =
+                        'background:var(--surface); color:var(--text); max-width:90vw; max-height:90vh; width:min(1000px, 92vw); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.35); display:flex; flex-direction:column;';
+                      const header = document.createElement('div');
+                      header.style.cssText =
+                        'display:flex; align-items:center; gap:8px; padding:12px 14px; border-bottom:1px solid var(--border);';
+                      const title = document.createElement('div');
+                      title.style.cssText =
+                        'flex:1; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+                      title.textContent = m.name || 'Attachment';
+                      const closeBtn = document.createElement('button');
+                      closeBtn.className = 'btn secondary';
+                      closeBtn.textContent = 'Close';
+                      closeBtn.style.cssText = 'padding:6px 10px;';
+                      header.appendChild(title);
+                      header.appendChild(closeBtn);
+                      const content = document.createElement('div');
+                      content.style.cssText =
+                        'padding:10px 14px; overflow:auto; display:flex; align-items:center; justify-content:center; background:var(--bg-secondary);';
+                      const footer = document.createElement('div');
+                      footer.style.cssText =
+                        'display:flex; gap:8px; justify-content:flex-end; padding:10px 14px; border-top:1px solid var(--border);';
+                      const openTabBtn = document.createElement('button');
+                      openTabBtn.className = 'btn secondary';
+                      openTabBtn.textContent = 'Open in new tab';
+                      openTabBtn.style.cssText = 'padding:6px 10px;';
+                      const downloadBtn = document.createElement('button');
+                      downloadBtn.className = 'btn secondary';
+                      downloadBtn.textContent = 'Download';
+                      downloadBtn.style.cssText = 'padding:6px 10px;';
+                      footer.appendChild(openTabBtn);
+                      footer.appendChild(downloadBtn);
+                      panel.appendChild(header);
+                      panel.appendChild(content);
+                      panel.appendChild(footer);
+                      overlay.appendChild(panel);
+                      document.body.appendChild(overlay);
+
+                      let objectUrl = null;
+                      const cleanup = () => {
+                        try {
+                          if (objectUrl) URL.revokeObjectURL(objectUrl);
+                        } catch {}
+                        try {
+                          overlay.remove();
+                        } catch {}
+                      };
+                      closeBtn.onclick = cleanup;
+                      overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) cleanup();
+                      });
+
+                      try {
+                        const o = await Att.createObjectURL(m.id);
+                        if (!o?.url) throw new Error('No URL');
+                        objectUrl = o.url;
+                        const isImg = (m.mime || '').startsWith('image/');
+                        const isPdf =
+                          (m.mime || '').includes('pdf') || /\.pdf$/i.test(m.name || '');
+                        if (isImg) {
+                          const img = document.createElement('img');
+                          img.src = objectUrl;
+                          img.alt = m.name || 'image';
+                          img.style.cssText =
+                            'max-width:100%; max-height:78vh; object-fit:contain; border-radius:8px; background:#fff;';
+                          content.innerHTML = '';
+                          content.appendChild(img);
+                        } else if (isPdf) {
+                          const iframe = document.createElement('iframe');
+                          iframe.src = objectUrl;
+                          iframe.style.cssText =
+                            'width:86vw; max-width:calc(1000px - 28px); height:78vh; border:0; background:#fff;';
+                          content.innerHTML = '';
+                          content.appendChild(iframe);
+                        } else {
+                          // Generic fallback: attempt iframe, else message
+                          const info = document.createElement('div');
+                          info.style.cssText =
+                            'display:flex; flex-direction:column; align-items:center; gap:8px; padding:20px; color:var(--text-secondary);';
+                          info.innerHTML =
+                            '<div style="font-size:42px;">📄</div><div style="font-size:14px;">Preview is not available for this file type. Use Open in new tab or Download.</div>';
+                          content.innerHTML = '';
+                          content.appendChild(info);
+                        }
+
+                        openTabBtn.onclick = () => {
+                          const win2 = window.open(objectUrl, '_blank');
+                          if (!win2) alert('Pop-up blocked. Please allow pop-ups.');
+                        };
+                        downloadBtn.onclick = () => {
+                          const a = document.createElement('a');
+                          a.href = objectUrl;
+                          a.download = m.name || 'attachment';
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                        };
+                      } catch (e) {
+                        console.warn('Preview failed:', e);
+                        content.textContent = 'Unable to preview this file.';
+                      }
+                    },
+                  },
+                  'Open',
+                ),
+              );
+              // Download button
+              row.appendChild(
+                el(
+                  'button',
+                  {
+                    class: 'btn secondary',
+                    style: 'font-size:12px; padding:6px 10px;',
+                    onclick: async () => {
+                      try {
+                        const o = await Att.createObjectURL(m.id);
+                        if (o?.url) {
+                          const a = document.createElement('a');
+                          a.href = o.url;
+                          a.download = m.name || 'attachment';
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                          // Revoke shortly after download
+                          setTimeout(() => {
+                            try {
+                              URL.revokeObjectURL(o.url);
+                            } catch {}
+                          }, 5000);
+                        }
+                      } catch (e) {
+                        console.warn('Download attachment failed:', e);
+                      }
+                    },
+                  },
+                  'Download',
+                ),
+              );
+              // Faculty-only: delete file from storage and remove reference
+              if (isFacultyMode) {
+                row.appendChild(
+                  el(
+                    'button',
+                    {
+                      class: 'btn secondary',
+                      style:
+                        'font-size:12px; padding:6px 10px; color:#e53e3e; border-color:#e53e3e;',
+                      title: 'Delete file from storage and remove from this document',
+                      onclick: async () => {
+                        if (
+                          !confirm(
+                            'Delete this file from storage and remove it from this document?',
+                          )
+                        )
+                          return;
+                        try {
+                          await Att.delete(m.id);
+                        } catch (e) {
+                          console.warn('Delete file failed:', e);
+                        }
+                        try {
+                          const nextAtts = (
+                            Array.isArray(module?.data?.attachments) ? module.data.attachments : []
+                          ).filter((x) => x.id !== m.id);
+                          const updated = {
+                            ...module,
+                            data: { ...(module.data || {}), attachments: nextAtts },
+                          };
+                          onEdit?.(updated);
+                          // Remove row from UI
+                          row.remove();
+                        } catch {}
+                      },
+                    },
+                    'Delete File',
+                  ),
+                );
+              }
+              return row;
+            }),
+          ),
+        ]);
+      })(),
     ]),
     el(
       'div',
       {
         class: 'goal-linker-header',
         style:
-          'justify-content: flex-end; background: var(--surface); border-top: 1px solid var(--border);',
+          'justify-content: flex-end; background: var(--surface); border-top: 1px solid var(--border); display:flex; gap:8px;',
       },
-      [el('button', { class: 'btn secondary', onclick: () => overlay.remove() }, 'Close')],
+      [
+        ...(isFacultyMode
+          ? [
+              el(
+                'button',
+                {
+                  class: 'btn secondary',
+                  style: 'border-color:#e53e3e; color:#e53e3e;',
+                  onclick: () => {
+                    if (confirm('Remove this background document?')) {
+                      try {
+                        onRemove?.(module.id);
+                      } catch {}
+                      overlay.remove();
+                    }
+                  },
+                },
+                'Remove',
+              ),
+              el(
+                'button',
+                {
+                  class: 'btn primary',
+                  onclick: () => {
+                    openEditArtifactModal(module, (updated) => {
+                      try {
+                        onEdit?.(updated);
+                      } catch {}
+                      overlay.remove();
+                    });
+                  },
+                },
+                'Edit',
+              ),
+            ]
+          : []),
+        el('button', { class: 'btn secondary', onclick: () => overlay.remove() }, 'Close'),
+      ],
     ),
   ]);
   overlay.append(content);
   document.body.append(overlay);
-  setTimeout(() => overlay.querySelector('.close-btn')?.focus(), 0);
+  const cleanup = () => {
+    try {
+      urlsToRevoke.forEach((u) => {
+        try {
+          URL.revokeObjectURL(u);
+        } catch {}
+      });
+    } catch {}
+  };
+  const close = () => {
+    cleanup();
+    overlay.remove();
+  };
+  // Patch close handlers to cleanup
+  const xBtn = content.querySelector('.close-btn');
+  if (xBtn) xBtn.onclick = close;
+  overlay.addEventListener('remove', cleanup);
+  setTimeout(() => xBtn?.focus(), 0);
 }
 
 // Add Artifact modal (faculty): collects title, type, and type-specific fields
@@ -806,7 +1105,59 @@ function openAddArtifactModal(onAdd) {
   });
 
   // Referral fields
-  const ref = { date: '', source: '', reason: '', notes: '' };
+  const ref = { date: '', source: '', reason: '', notes: '', attachments: [] };
+  // File input and selected attachment list (metadata only)
+  const fileInput = el('input', {
+    type: 'file',
+    multiple: true,
+    accept: '*/*',
+    class: 'instructor-form-input',
+    onchange: async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      if (!Att?.isSupported()) {
+        alert('Attachments not supported in this browser (IndexedDB unavailable).');
+        return;
+      }
+      for (const f of files) {
+        try {
+          const meta = await Att.save(f, f.name, f.type);
+          ref.attachments.push(meta);
+        } catch (err) {
+          console.warn('Failed to save attachment:', err);
+        }
+      }
+      renderAttachmentList();
+    },
+  });
+  const attList = el('div', { style: 'display:flex; flex-direction:column; gap:6px;' });
+  function renderAttachmentList() {
+    attList.innerHTML = '';
+    if (!ref.attachments || !ref.attachments.length) return;
+    ref.attachments.forEach((m, idx) => {
+      const row = el('div', { style: 'display:flex; align-items:center; gap:8px;' }, [
+        el(
+          'span',
+          { style: 'flex:1; font-size:12px;' },
+          `${m.name} (${Math.ceil((m.size || 0) / 1024)} KB)`,
+        ),
+        el(
+          'button',
+          {
+            class: 'btn secondary',
+            style: 'font-size:11px; padding:4px 8px;',
+            title: 'Remove attachment (does not delete the stored file)',
+            onclick: () => {
+              ref.attachments.splice(idx, 1);
+              renderAttachmentList();
+            },
+          },
+          'Remove',
+        ),
+      ]);
+      attList.appendChild(row);
+    });
+  }
   const refForm = el('div', { style: 'display:grid; gap:10px; margin-top: 8px;' }, [
     el('div', {}, [
       el('label', { class: 'instructor-form-label' }, 'Date'),
@@ -868,6 +1219,12 @@ function openAddArtifactModal(onAdd) {
         ),
       ]),
       refForm,
+      el('div', { class: 'instructor-form-field' }, [
+        el('label', { class: 'instructor-form-label' }, 'Attachments (optional)'),
+        fileInput,
+        el('div', { class: 'hint' }, 'Images or documents are stored locally in your browser.'),
+        attList,
+      ]),
     ]),
     el(
       'div',
@@ -904,6 +1261,206 @@ function openAddArtifactModal(onAdd) {
   overlay.append(content);
   document.body.append(overlay);
   setTimeout(() => titleInput?.focus(), 0);
+}
+
+// Edit Artifact modal (faculty): similar to Add but pre-populated and updates existing module
+function openEditArtifactModal(module, onSave) {
+  const overlay = el('div', { class: 'goal-linker-modal', role: 'dialog', 'aria-modal': 'true' });
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+  overlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') overlay.remove();
+  });
+
+  let currentType = module?.type || 'referral';
+  const titleInput = el('input', {
+    type: 'text',
+    class: 'instructor-form-input',
+    placeholder: 'Artifact title',
+    value: module?.title || '',
+  });
+
+  // Referral fields
+  const ref = {
+    date: module?.data?.date || '',
+    source: module?.data?.source || '',
+    reason: module?.data?.reason || '',
+    notes: module?.data?.notes || '',
+    attachments: Array.isArray(module?.data?.attachments) ? [...module.data.attachments] : [],
+  };
+  const fileInput = el('input', {
+    type: 'file',
+    multiple: true,
+    accept: '*/*',
+    class: 'instructor-form-input',
+    onchange: async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      if (!Att?.isSupported()) {
+        alert('Attachments not supported in this browser (IndexedDB unavailable).');
+        return;
+      }
+      for (const f of files) {
+        try {
+          const meta = await Att.save(f, f.name, f.type);
+          ref.attachments.push(meta);
+        } catch (err) {
+          console.warn('Failed to save attachment:', err);
+        }
+      }
+      renderAttachmentList();
+    },
+  });
+  const attList = el('div', { style: 'display:flex; flex-direction:column; gap:6px;' });
+  function renderAttachmentList() {
+    attList.innerHTML = '';
+    if (!ref.attachments || !ref.attachments.length) return;
+    ref.attachments.forEach((m, idx) => {
+      const row = el('div', { style: 'display:flex; align-items:center; gap:8px;' }, [
+        el(
+          'span',
+          { style: 'flex:1; font-size:12px;' },
+          `${m.name} (${Math.ceil((m.size || 0) / 1024)} KB)`,
+        ),
+        el(
+          'button',
+          {
+            class: 'btn secondary',
+            style: 'font-size:11px; padding:4px 8px;',
+            title: 'Remove attachment from this document',
+            onclick: () => {
+              ref.attachments.splice(idx, 1);
+              renderAttachmentList();
+            },
+          },
+          'Remove',
+        ),
+      ]);
+      attList.appendChild(row);
+    });
+  }
+  const refForm = el('div', { style: 'display:grid; gap:10px; margin-top: 8px;' }, [
+    el('div', {}, [
+      el('label', { class: 'instructor-form-label' }, 'Date'),
+      el('input', {
+        type: 'date',
+        class: 'instructor-form-input',
+        value: ref.date,
+        oninput: (e) => (ref.date = e.target.value),
+      }),
+    ]),
+    el('div', {}, [
+      el('label', { class: 'instructor-form-label' }, 'From (provider/department)'),
+      el('input', {
+        type: 'text',
+        class: 'instructor-form-input',
+        value: ref.source,
+        oninput: (e) => (ref.source = e.target.value),
+      }),
+    ]),
+    el('div', {}, [
+      el('label', { class: 'instructor-form-label' }, 'Reason'),
+      el('input', {
+        type: 'text',
+        class: 'instructor-form-input',
+        value: ref.reason,
+        oninput: (e) => (ref.reason = e.target.value),
+      }),
+    ]),
+    el('div', {}, [
+      el('label', { class: 'instructor-form-label' }, 'Notes'),
+      el(
+        'textarea',
+        {
+          class: 'instructor-form-input',
+          style: 'min-height:68px;',
+          oninput: (e) => (ref.notes = e.target.value),
+        },
+        ref.notes,
+      ),
+    ]),
+  ]);
+
+  const content = el('div', { class: 'goal-linker-content case-details-modal' }, [
+    el('div', { class: 'goal-linker-header' }, [
+      el('h3', {}, 'Edit Background Document'),
+      el(
+        'button',
+        { class: 'close-btn', onclick: () => overlay.remove(), 'aria-label': 'Close' },
+        '✕',
+      ),
+    ]),
+    el('div', { class: 'goal-selection-list case-details-body' }, [
+      el('div', { class: 'instructor-form-field' }, [
+        el('label', { class: 'instructor-form-label' }, 'Title *'),
+        titleInput,
+      ]),
+      el('div', { class: 'instructor-form-field' }, [
+        el('label', { class: 'instructor-form-label' }, 'Type *'),
+        el(
+          'select',
+          {
+            class: 'instructor-form-input',
+            onchange: (e) => (currentType = e.target.value),
+          },
+          [
+            el(
+              'option',
+              { value: 'referral', selected: currentType === 'referral' ? '' : undefined },
+              'Referral',
+            ),
+          ],
+        ),
+      ]),
+      refForm,
+      el('div', { class: 'instructor-form-field' }, [
+        el('label', { class: 'instructor-form-label' }, 'Attachments'),
+        fileInput,
+        el('div', { class: 'hint' }, 'Add images or documents (stored locally in your browser).'),
+        attList,
+      ]),
+    ]),
+    el(
+      'div',
+      {
+        class: 'goal-linker-header',
+        style:
+          'justify-content: flex-end; background: var(--surface); border-top: 1px solid var(--border); display:flex; gap:8px;',
+      },
+      [
+        el('button', { class: 'btn secondary', onclick: () => overlay.remove() }, 'Cancel'),
+        el(
+          'button',
+          {
+            class: 'btn primary',
+            onclick: () => {
+              const title = (titleInput.value || '').trim();
+              if (!title) {
+                alert('Please enter a title.');
+                titleInput.focus();
+                return;
+              }
+              const updated = {
+                id: module.id,
+                type: currentType,
+                title,
+                data: {},
+              };
+              if (currentType === 'referral') updated.data = { ...ref };
+              onSave?.(updated);
+              overlay.remove();
+            },
+          },
+          'Save Changes',
+        ),
+      ],
+    ),
+  ]);
+  overlay.append(content);
+  document.body.append(overlay);
+  setTimeout(() => titleInput?.focus(), 0);
+  renderAttachmentList();
 }
 
 // Edit Case Details Modal (faculty): mirrors Create New Case layout
@@ -1648,19 +2205,18 @@ export function createChartNavigation(config) {
         },
         [
           // Case info card removed per design; patient info now lives in sticky header above content.
-          // Background Information (formerly Artifacts): clearly separated with dividers
+          // Case File (formerly Background Information/Artifacts): clearly separated with dividers
           (() => {
             const items = Array.isArray(currentModules) ? currentModules : [];
-            const topDivider = el('div', {
-              style: 'border-top:1px solid var(--border-strong); margin: 8px 0 10px 0;',
-            });
+            // Removed top divider per request
+            const topDivider = null;
             const header = el(
               'h4',
               {
                 style:
-                  'margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 700; color: var(--text);',
+                  'margin: 6px 0 8px 0; font-size: 18px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 900; color: #ffffff; text-align:center;',
               },
-              'Background Information',
+              'Case File',
             );
             const bottomDivider = el('div', {
               style: 'border-top:1px solid var(--border-strong); margin: 10px 0 8px 0;',
@@ -1675,32 +2231,31 @@ export function createChartNavigation(config) {
                       const title =
                         m.title ||
                         (m.type ? m.type[0].toUpperCase() + m.type.slice(1) : 'Artifact');
-                      return el('div', { style: 'display:flex; gap:6px; align-items:center;' }, [
-                        el(
-                          'button',
-                          {
-                            class: 'btn secondary',
-                            style: 'flex:1; text-align:left; padding:6px 10px; font-size:12px;',
-                            onClick: () => openViewArtifactModal(m),
-                            title: 'View background document',
-                          },
-                          title,
-                        ),
-                        el(
-                          'button',
-                          {
-                            type: 'button',
-                            class: 'remove-btn editable-table__delete-btn',
-                            title: 'Remove document',
-                            onClick: () => {
-                              const next = items.filter((x) => x.id !== m.id);
-                              const payload = { ...(config.caseInfo || {}), modules: next };
-                              config.onCaseInfoUpdate?.(payload);
-                            },
-                          },
-                          '×',
-                        ),
-                      ]);
+                      return el(
+                        'button',
+                        {
+                          class: 'btn secondary',
+                          style: 'text-align:left; padding:6px 10px; font-size:12px;',
+                          onClick: () =>
+                            openViewArtifactModal(m, {
+                              isFacultyMode: true,
+                              onEdit: (updated) => {
+                                const next = (items || []).map((x) =>
+                                  x.id === updated.id ? { ...x, ...updated } : x,
+                                );
+                                const payload = { ...(config.caseInfo || {}), modules: next };
+                                config.onCaseInfoUpdate?.(payload);
+                              },
+                              onRemove: (id) => {
+                                const next = (items || []).filter((x) => x.id !== id);
+                                const payload = { ...(config.caseInfo || {}), modules: next };
+                                config.onCaseInfoUpdate?.(payload);
+                              },
+                            }),
+                          title: 'View background document',
+                        },
+                        title,
+                      );
                     }),
                   )
                 : el('div');
@@ -1730,7 +2285,6 @@ export function createChartNavigation(config) {
               );
 
               return el('div', { style: 'margin: 6px 0 10px 0;' }, [
-                topDivider,
                 header,
                 list,
                 addBtnFooter,
@@ -1756,12 +2310,7 @@ export function createChartNavigation(config) {
                 );
               }),
             );
-            return el('div', { style: 'margin: 6px 0 10px 0;' }, [
-              topDivider,
-              header,
-              list,
-              bottomDivider,
-            ]);
+            return el('div', { style: 'margin: 6px 0 10px 0;' }, [header, list, bottomDivider]);
           })(),
           // Extra padding before section trackers
           el('div', { style: 'height: 20px;' }),

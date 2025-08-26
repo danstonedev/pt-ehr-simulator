@@ -3,3 +3,4 @@
 
 export { exportToWord } from './document-export.js';
 export { generateCase } from './case-generator.js';
+export { attachments } from './attachments.js';

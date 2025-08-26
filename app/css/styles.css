@@ -107,6 +107,15 @@
   --topbar-h: 72px; /* unify top bar height (taller per request) */
   --edu-ribbon-h: 28px; /* bottom ribbon height for readable text */
   --sticky-header-h: 64px; /* unified sticky header height */
+  /* Section divider brand stripes */
+  --section-stripe-angle: 56deg; /* brand angle */
+  --section-stripe-gap-frac: 0.65; /* gap portion per period (65%) */
+  --section-stripe-fill-frac: 0.35; /* white slash portion per period (35%) */
+  --section-stripe-period: 48px; /* width of one gap+slash tile (adjust to taste) */
+  --section-stripe-count: 3; /* number of visible slashes */
+  --section-stripe-color: #fff; /* slash color (white on UND green) */
+  /* Side-edge slant computed from height and brand angle so edges match 56° */
+  --section-parallelogram-slant: 38px; /* ≈ 56px / tan(56°) */
   --sidebar-w: 280px; /* unify sidebar width */
   --section-divider-h: 56px; /* sticky in-content section banner height (taller for prominence) */
 
@@ -133,6 +142,14 @@
   --shadow-2: 0 8px 18px rgba(0, 0, 0, 0.25);
   /* Input radius token (used across inputs/buttons) */
   --input-radius: var(--radius-md);
+}
+/* If trig functions are supported, compute slant from height & angle for exact ratio */
+@supports (width: calc(1px * tan(45deg))) {
+  :root {
+    --section-parallelogram-slant: calc(
+      var(--section-divider-h) / tan(var(--section-stripe-angle))
+    );
+  }
 }
 /* Dark theme tokens (apply when [data-theme="dark"]) */
 :root[data-theme='dark'] {
@@ -921,16 +938,42 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   height: var(--section-divider-h);
   display: flex;
   align-items: center;
-  /* full-bleed green banner that visually extends into the gutters */
-  background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
+  justify-content: center; /* center the section title */
+  /* Use editor canvas background so cutout triangles blend with page in light/dark */
+  background: var(--editor-bg);
   color: #fff;
-  border-bottom: 1px solid var(--und-green-dark);
-  box-shadow: var(--shadow-1);
+  box-shadow: none; /* avoid rectangular shadow peeking outside slants */
   /* Full bleed within the content container (respects sidebar); cancel horizontal gutters */
   margin-left: calc(-1 * var(--pad-x));
   margin-right: calc(-1 * var(--pad-x));
   padding-left: var(--pad-x);
   padding-right: var(--pad-x);
+  /* ensure the pseudo-element stacks behind content */
+  isolation: isolate;
+  overflow: hidden; /* ensure stripe/SVG crop aligns to parallelogram edges */
+}
+
+/* Parallelogram background (keeps text upright) */
+.editor-section-divider::before {
+  content: '';
+  position: absolute;
+  inset: 0; /* cover full element */
+  background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
+  border-bottom: none; /* avoid seam on light canvas */
+  z-index: -2; /* sit behind stripes and content */
+  /* create left and right slants; tweak the 16px to taste */
+  clip-path: polygon(
+    var(--section-parallelogram-slant) 0,
+    100% 0,
+    calc(100% - var(--section-parallelogram-slant)) 100%,
+    0 100%
+  );
+}
+
+/* Three brand slashes at the right edge */
+/* Stripes disabled: show a clean green parallelogram only */
+.editor-section-divider::after {
+  content: none !important;
 }
 .editor-section-divider h3 {
   margin: 0;
@@ -940,6 +983,8 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   color: #fff;
   font-weight: 800;
   line-height: 1;
+  width: 100%;
+  text-align: center; /* explicit text centering */
 }
 
 /* Section wrapper spacing so upcoming dividers are visible early */
