@@ -77,7 +77,7 @@ route('#/', async (app) => {
 
   // Hero panel (full-width)
   const hero = el('div', { class: 'panel' }, [
-    el('h1', {}, 'Physical Therapy EHR Simulator'),
+    el('h1', {}, 'Physical Therapy EMR Simulator'),
     el('p', {}, 'Practice professional SOAP documentation and billing.'),
   ]);
 

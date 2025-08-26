@@ -8,15 +8,15 @@
     />
     <!-- Microsoft Forms Feedback Embed -->
     <meta name="ms-forms-url" content="https://forms.cloud.microsoft/r/GBMT3dk72P" />
-    <title>UND-PT EHR-Sim</title>
-    <meta name="application-name" content="UND-PT EHR-Sim" />
-    <meta name="apple-mobile-web-app-title" content="UND-PT EHR-Sim" />
+    <title>UND-PT EMR-Sim</title>
+    <meta name="application-name" content="UND-PT EMR-Sim" />
+    <meta name="apple-mobile-web-app-title" content="UND-PT EMR-Sim" />
     <meta
       name="description"
       content="Modernized Physical Therapy EMR Simulator with SOAP notes, regional assessments, ICF framework, and billing—pure frontend, no backend."
     />
     <meta name="color-scheme" content="light dark" />
-    <meta property="og:title" content="UND-PT EHR-Sim" />
+    <meta property="og:title" content="UND-PT EMR-Sim" />
     <meta
       property="og:description"
       content="Practice professional SOAP documentation and assessments in a modern, zero-backend PT EMR simulator."
@@ -124,7 +124,7 @@
             decoding="async"
           />
           <span class="brand-label"
-            >Physical Therapy EHR Simulator
+            >Physical Therapy EMR Simulator
             <span class="brand-label-suffix">| Proof of Concept</span></span
           >
         </a>
@@ -578,10 +578,10 @@
                   alert('Please enter your feedback before sending.');
                   return;
                 }
-                const subjectTxt = 'PT EHR Simulator Feedback';
+                const subjectTxt = 'PT EMR Simulator Feedback';
                 // Send via mailto
                 const subject = encodeURIComponent(subjectTxt);
-                const body = encodeURIComponent(text + '\n\n— Sent from PT EHR Simulator');
+                const body = encodeURIComponent(text + '\n\n— Sent from PT EMR Simulator');
                 window.location.href = `mailto:daniel.j.stone@UND.edu?subject=${subject}&body=${body}`;
                 document.body.removeChild(overlay);
               });
