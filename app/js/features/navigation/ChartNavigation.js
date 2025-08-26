@@ -1,5 +1,6 @@
 // ChartNavigation.js - Professional EMR-style navigation with progress tracking
 import { el } from '../../ui/utils.js';
+import { createIcon } from '../../ui/Icons.js';
 import { exportToWord } from '../../services/document-export.js';
 import { attachments as Att } from '../../services/index.js';
 
@@ -2224,7 +2225,7 @@ export function createChartNavigation(config) {
               const list = items.length
                 ? el(
                     'div',
-                    { style: 'display:flex; flex-direction:column; gap:6px;' },
+                    { class: 'artifact-list' },
                     items.map((m) => {
                       const title =
                         m.title ||
@@ -2232,8 +2233,7 @@ export function createChartNavigation(config) {
                       return el(
                         'button',
                         {
-                          class: 'btn secondary',
-                          style: 'text-align:left; padding:6px 10px; font-size:12px;',
+                          class: 'btn secondary artifact-pill',
                           onClick: () =>
                             openViewArtifactModal(m, {
                               isFacultyMode: true,
@@ -2252,7 +2252,7 @@ export function createChartNavigation(config) {
                             }),
                           title: 'View background document',
                         },
-                        title,
+                        [createIcon('file'), el('span', {}, title)],
                       );
                     }),
                   )
@@ -2292,18 +2292,17 @@ export function createChartNavigation(config) {
             if (!items.length) return el('div');
             const list = el(
               'div',
-              { style: 'display:flex; flex-direction:column; gap:6px;' },
+              { class: 'artifact-list' },
               items.map((m) => {
                 const title =
                   m.title || (m.type ? m.type[0].toUpperCase() + m.type.slice(1) : 'Artifact');
                 return el(
                   'button',
                   {
-                    class: 'btn secondary',
-                    style: 'width:100%; text-align:left; padding:6px 10px; font-size:12px;',
+                    class: 'btn secondary artifact-pill',
                     onClick: () => openViewArtifactModal(m),
                   },
-                  title,
+                  [createIcon('file'), el('span', {}, title)],
                 );
               }),
             );

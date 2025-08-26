@@ -88,6 +88,29 @@ html:not([data-theme='dark']) .chart-navigation .note-progress-header {
   text-align: center;
 }
 
+/* Artifact pills styling */
+.chart-navigation .artifact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chart-navigation .artifact-pill {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start !important;
+}
+
+.chart-navigation .artifact-pill svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
 /* White panel for navigation list inside gray sidebar */
 .sidebar-nav-panel {
   /* Comfortable outer spacing so gradient shows around cards */
