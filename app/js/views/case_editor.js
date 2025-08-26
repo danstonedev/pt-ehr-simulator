@@ -792,14 +792,28 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       },
     });
 
-    // Scroll to the true top of the section (its wrapper), not just until the sticky header appears
+    // Prefer landing on the first visible subsection heading (.section-anchor) for consistent alignment under sticky headers
     const header = getSectionHeader(s);
     const root = getSectionRoot(s) || header;
     if (root) {
-      const offset = getHeaderOffsetPx();
-      const rect = root.getBoundingClientRect();
-      const y = Math.max(0, window.scrollY + rect.top - offset);
-      window.scrollTo({ top: y, behavior: 'smooth' });
+      try {
+        const firstAnchor = Array.from(root.querySelectorAll('.section-anchor')).find(
+          (a) => a.offsetParent !== null,
+        );
+        if (firstAnchor && firstAnchor.scrollIntoView) {
+          firstAnchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          const offset = getHeaderOffsetPx();
+          const rect = root.getBoundingClientRect();
+          const y = Math.max(0, window.scrollY + rect.top - offset);
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      } catch {
+        const offset = getHeaderOffsetPx();
+        const rect = root.getBoundingClientRect();
+        const y = Math.max(0, window.scrollY + rect.top - offset);
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
       // Announce section change and move focus for SR users
       try {
         const focusTarget = header || root;

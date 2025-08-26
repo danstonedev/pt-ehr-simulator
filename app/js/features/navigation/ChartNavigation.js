@@ -2031,18 +2031,26 @@ export function createChartNavigation(config) {
           // Call the editor's handler to change active section and perform aligned scroll
           onSectionChange(section.id);
           try {
-            // Defensive: if the editor didn’t scroll yet, force precise alignment to section wrapper top
-            const root =
+            // Defensive fallback: if editor didn’t scroll, snap to the first visible subsection heading
+            const sectionRoot =
+              document.querySelector(`.${section.id}-section`) ||
               document.getElementById(`wrap-${section.id}`) ||
               document.getElementById(`section-${section.id}`);
-            if (root) {
+            const firstAnchor =
+              sectionRoot &&
+              Array.from(sectionRoot.querySelectorAll('.section-anchor')).find(
+                (a) => a.offsetParent !== null,
+              );
+            if (firstAnchor && firstAnchor.scrollIntoView) {
+              firstAnchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (sectionRoot) {
               const cs = getComputedStyle(document.documentElement);
               const topbarH = parseInt(
                 (cs.getPropertyValue('--topbar-h') || '').replace('px', '').trim(),
                 10,
               );
               const offset = isNaN(topbarH) ? 72 : topbarH;
-              const r = root.getBoundingClientRect();
+              const r = sectionRoot.getBoundingClientRect();
               const y = Math.max(0, window.scrollY + r.top - offset);
               window.scrollTo({ top: y, behavior: 'smooth' });
             }
@@ -2053,17 +2061,25 @@ export function createChartNavigation(config) {
             e.preventDefault();
             onSectionChange(section.id);
             try {
-              const root =
+              const sectionRoot =
+                document.querySelector(`.${section.id}-section`) ||
                 document.getElementById(`wrap-${section.id}`) ||
                 document.getElementById(`section-${section.id}`);
-              if (root) {
+              const firstAnchor =
+                sectionRoot &&
+                Array.from(sectionRoot.querySelectorAll('.section-anchor')).find(
+                  (a) => a.offsetParent !== null,
+                );
+              if (firstAnchor && firstAnchor.scrollIntoView) {
+                firstAnchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              } else if (sectionRoot) {
                 const cs = getComputedStyle(document.documentElement);
                 const topbarH = parseInt(
                   (cs.getPropertyValue('--topbar-h') || '').replace('px', '').trim(),
                   10,
                 );
                 const offset = isNaN(topbarH) ? 72 : topbarH;
-                const r = root.getBoundingClientRect();
+                const r = sectionRoot.getBoundingClientRect();
                 const y = Math.max(0, window.scrollY + r.top - offset);
                 window.scrollTo({ top: y, behavior: 'smooth' });
               }
@@ -2154,7 +2170,9 @@ export function createChartNavigation(config) {
             style: `display:flex; align-items:center; padding:4px 8px; font-size:12px; cursor:pointer; transition:all 0.2s ease; border-radius:4px;`,
             onClick: () => {
               const anchor = document.getElementById(sub.id);
-              if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              if (anchor && anchor.scrollIntoView) {
+                anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
             },
           },
           [createSubsectionIndicator(subsectionStatus), el('span', {}, sub.label)],
