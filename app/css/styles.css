@@ -390,8 +390,12 @@
 
   /* Editor content background for light theme (slightly tinted to lift from bg) */
   --editor-bg: color-mix(in srgb, var(--neutral-200) 80%, white);
-  /* Sticky patient header background: solid light UND green to avoid overlap */
-  --case-header-bg: color-mix(in srgb, var(--und-green) 14%, white);
+  /* Sticky patient header background: match subsection header gray gradient */
+  --case-header-bg: linear-gradient(
+    90deg,
+    var(--header-gradient-left) 0%,
+    var(--header-gradient-right) 100%
+  );
 }
 
 /* Modules imported at top; keep this comment as a marker */
@@ -664,6 +668,24 @@ body[data-route='instructor-editor'] #app {
   border: var(--header-b) solid transparent; /* equal total box */
   border-bottom-color: var(--und-green); /* only show bottom visually */
   transform: translateZ(0); /* sub-pixel snapping */
+}
+
+/* Light theme: match subsection header gradient and ensure readable text on dark bg */
+html:not([data-theme='dark']) #patient-sticky-header {
+  /* Scope text tokens inside the header for correct contrast */
+  --text: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.9);
+  color: var(--text);
+}
+
+/* Ensure the white Edit button uses dark text inside the gradient header */
+html:not([data-theme='dark']) #patient-sticky-header .btn.secondary {
+  color: var(--neutral-900);
+  background: #ffffff; /* keep white button fill */
+  border-color: var(--und-green);
+}
+html:not([data-theme='dark']) #patient-sticky-header .btn.secondary:hover {
+  color: var(--und-green);
 }
 
 /* Darker panel containers on Home, Student, Faculty dashboards */
