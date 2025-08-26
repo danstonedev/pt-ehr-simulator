@@ -2028,62 +2028,13 @@ export function createChartNavigation(config) {
         role: 'link',
         tabIndex: 0,
         onClick: () => {
-          // Call the editor's handler to change active section and perform aligned scroll
+          // Delegate navigation; editor will handle aligned scrolling
           onSectionChange(section.id);
-          try {
-            // Defensive fallback: if editor didn’t scroll, snap to the first visible subsection heading
-            const sectionRoot =
-              document.querySelector(`.${section.id}-section`) ||
-              document.getElementById(`wrap-${section.id}`) ||
-              document.getElementById(`section-${section.id}`);
-            const firstAnchor =
-              sectionRoot &&
-              Array.from(sectionRoot.querySelectorAll('.section-anchor')).find(
-                (a) => a.offsetParent !== null,
-              );
-            if (firstAnchor && firstAnchor.scrollIntoView) {
-              firstAnchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else if (sectionRoot) {
-              const cs = getComputedStyle(document.documentElement);
-              const topbarH = parseInt(
-                (cs.getPropertyValue('--topbar-h') || '').replace('px', '').trim(),
-                10,
-              );
-              const offset = isNaN(topbarH) ? 72 : topbarH;
-              const r = sectionRoot.getBoundingClientRect();
-              const y = Math.max(0, window.scrollY + r.top - offset);
-              window.scrollTo({ top: y, behavior: 'smooth' });
-            }
-          } catch {}
         },
         onKeyDown: (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             onSectionChange(section.id);
-            try {
-              const sectionRoot =
-                document.querySelector(`.${section.id}-section`) ||
-                document.getElementById(`wrap-${section.id}`) ||
-                document.getElementById(`section-${section.id}`);
-              const firstAnchor =
-                sectionRoot &&
-                Array.from(sectionRoot.querySelectorAll('.section-anchor')).find(
-                  (a) => a.offsetParent !== null,
-                );
-              if (firstAnchor && firstAnchor.scrollIntoView) {
-                firstAnchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              } else if (sectionRoot) {
-                const cs = getComputedStyle(document.documentElement);
-                const topbarH = parseInt(
-                  (cs.getPropertyValue('--topbar-h') || '').replace('px', '').trim(),
-                  10,
-                );
-                const offset = isNaN(topbarH) ? 72 : topbarH;
-                const r = sectionRoot.getBoundingClientRect();
-                const y = Math.max(0, window.scrollY + r.top - offset);
-                window.scrollTo({ top: y, behavior: 'smooth' });
-              }
-            } catch {}
           }
         },
       },
