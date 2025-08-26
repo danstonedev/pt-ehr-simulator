@@ -72,20 +72,27 @@ html[data-theme='dark'] .chart-navigation .section-nav-item * {
   color: #ffffff;
 }
 
-/* Note Progress header styling */
-html[data-theme='dark'] .chart-navigation .note-progress-header,
-html:not([data-theme='dark']) .chart-navigation .note-progress-header {
+/* Note Progress header geometry */
+.chart-navigation .note-progress-header {
   margin: 0 0 12px 0;
   padding: 8px 12px;
   font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #ffffff;
-  background: var(--und-green);
-  border-bottom: 2px solid #ffffff;
   border-radius: 4px;
   text-align: center;
+}
+/* Theme-aware colors: subtle UND gray background, UND green text/border */
+html[data-theme='dark'] .chart-navigation .note-progress-header {
+  background: rgb(174 174 174 / 12%); /* transparent UND gray */
+  color: #ffffff; /* white text for readability in dark theme */
+  border-bottom: 2px solid var(--und-green);
+}
+html:not([data-theme='dark']) .chart-navigation .note-progress-header {
+  background: rgb(174 174 174 / 12%); /* transparent UND gray */
+  color: #ffffff; /* white text per request in light theme */
+  border-bottom: 2px solid var(--und-green);
 }
 
 /* Artifact pills styling */
@@ -93,6 +100,11 @@ html:not([data-theme='dark']) .chart-navigation .note-progress-header {
   display: flex;
   flex-direction: column;
   gap: 4px; /* tighter stack for table-like density */
+}
+
+/* Wrapper for artifacts area to control spacing above/below */
+.chart-navigation .artifact-block {
+  margin: 4px 0 6px 0; /* reduce space above first pill and below footer */
 }
 
 .chart-navigation .artifact-pill {
@@ -113,6 +125,13 @@ html:not([data-theme='dark']) .chart-navigation .note-progress-header {
   opacity: 0.8;
   width: 20px;
   height: 20px; /* scale icon up to match larger font */
+}
+
+/* Tighter footer area under list (Add Artifact button wrapper) */
+.chart-navigation .artifact-add-footer {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 4px 0; /* decrease space beneath add button */
 }
 
 /* White panel for navigation list inside gray sidebar */
