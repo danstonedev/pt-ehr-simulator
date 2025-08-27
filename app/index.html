@@ -488,16 +488,19 @@
               window.FEEDBACK_FORM_URL ||
               storage.getItem('feedbackFormUrl') ||
               '';
+            const previouslyFocused = document.activeElement || feedbackBtn;
 
             const overlay = document.createElement('div');
             overlay.id = 'feedbackDialog';
             overlay.className = 'modal-overlay';
             overlay.addEventListener('click', (e) => {
-              if (e.target === overlay) document.body.removeChild(overlay);
+              if (e.target === overlay) closeModal();
             });
 
             const panel = document.createElement('div');
             panel.className = 'modal-panel';
+            panel.setAttribute('role', 'dialog');
+            panel.setAttribute('aria-modal', 'true');
             if (configuredUrl) {
               // Build an embeddable URL (ensure embed=true present)
               let formSrc = configuredUrl.trim();
@@ -507,6 +510,8 @@
               const h2 = document.createElement('h2');
               h2.className = 'modal-title';
               h2.textContent = 'Send Feedback';
+              h2.id = 'feedbackDialogTitle';
+              panel.setAttribute('aria-labelledby', h2.id);
               const p = document.createElement('p');
               p.className = 'small modal-subtitle';
               p.textContent = 'This form is embedded from Microsoft Forms.';
@@ -544,6 +549,8 @@
               const h2 = document.createElement('h2');
               h2.className = 'modal-title';
               h2.textContent = 'Send Feedback';
+              h2.id = 'feedbackDialogTitle';
+              panel.setAttribute('aria-labelledby', h2.id);
               const p = document.createElement('p');
               p.className = 'small modal-subtitle';
               p.textContent =
@@ -574,13 +581,58 @@
 
             overlay.appendChild(panel);
             document.body.appendChild(overlay);
-            if (!configuredUrl) {
-              document.getElementById('feedbackText').focus();
+
+            const closeControl = panel.querySelector('[data-action="cancel"]');
+            function getFocusable() {
+              return Array.from(
+                panel.querySelectorAll(
+                  'a[href], area[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+                ),
+              ).filter((el) => el.offsetParent !== null || el === document.activeElement);
+            }
+            function focusFirst() {
+              if (!configuredUrl) {
+                const t = panel.querySelector('#feedbackText');
+                if (t) return t.focus();
+              }
+              if (closeControl) return closeControl.focus();
+              const f = getFocusable()[0];
+              if (f) f.focus();
+              else (panel.setAttribute('tabindex', '-1'), panel.focus());
+            }
+            function trapFocus(e) {
+              if (e.key !== 'Tab') return;
+              const focusables = getFocusable();
+              if (focusables.length === 0) return;
+              const first = focusables[0];
+              const last = focusables[focusables.length - 1];
+              if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+              } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+              }
+            }
+            function onKey(e) {
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                closeModal();
+              } else {
+                trapFocus(e);
+              }
+            }
+            function closeModal() {
+              overlay.removeEventListener('keydown', onKey, true);
+              if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+              const restore =
+                previouslyFocused && previouslyFocused.focus ? previouslyFocused : feedbackBtn;
+              try {
+                restore && restore.focus && restore.focus();
+              } catch {}
             }
 
-            panel.querySelector('[data-action="cancel"]').addEventListener('click', () => {
-              document.body.removeChild(overlay);
-            });
+            if (closeControl) closeControl.addEventListener('click', closeModal);
             if (!configuredUrl) {
               // Helper to URL-encode form data
               const encodeForm = (data) =>
@@ -599,9 +651,11 @@
                 const subject = encodeURIComponent(subjectTxt);
                 const body = encodeURIComponent(text + '\n\n— Sent from PT EMR Simulator');
                 window.location.href = `mailto:daniel.j.stone@UND.edu?subject=${subject}&body=${body}`;
-                document.body.removeChild(overlay);
+                closeModal();
               });
             }
+            overlay.addEventListener('keydown', onKey, true);
+            focusFirst();
           });
         }
       });
