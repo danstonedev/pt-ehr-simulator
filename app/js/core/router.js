@@ -76,7 +76,7 @@ export function startRouter() {
       document.body.setAttribute('data-route', routeKey);
     } catch {}
 
-    app.innerHTML = '';
+    app.replaceChildren();
     await renderer(app, new URLSearchParams(query || ''), params);
   }
   window.addEventListener('hashchange', render);

@@ -63,3 +63,17 @@ export function createLoadingSpinner(message = 'Loading...') {
     el('span', {}, message),
   ]);
 }
+
+/**
+ * Safely set HTML using a basic allowlist approach or fallback to text
+ * Current minimal version escapes the string and optionally allows a tiny subset later.
+ * @param {HTMLElement} element
+ * @param {string} html
+ */
+export function setSafeHtml(element, html) {
+  if (!element) return;
+  // Minimal escape to avoid unsafe injection
+  const escape = (s) =>
+    String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+  element.innerHTML = escape(html);
+}

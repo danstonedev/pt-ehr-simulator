@@ -882,7 +882,7 @@ function openViewArtifactModal(module, options = {}) {
                           overlay.remove();
                         } catch {}
                       };
-                      closeBtn.onclick = cleanup;
+                      closeBtn.addEventListener('click', cleanup);
                       overlay.addEventListener('click', (e) => {
                         if (e.target === overlay) cleanup();
                       });
@@ -900,38 +900,44 @@ function openViewArtifactModal(module, options = {}) {
                           img.alt = m.name || 'image';
                           img.style.cssText =
                             'max-width:100%; max-height:78vh; object-fit:contain; border-radius:8px; background:#fff;';
-                          content.innerHTML = '';
+                          content.replaceChildren();
                           content.appendChild(img);
                         } else if (isPdf) {
                           const iframe = document.createElement('iframe');
                           iframe.src = objectUrl;
                           iframe.style.cssText =
                             'width:86vw; max-width:calc(1000px - 28px); height:78vh; border:0; background:#fff;';
-                          content.innerHTML = '';
+                          content.replaceChildren();
                           content.appendChild(iframe);
                         } else {
                           // Generic fallback: attempt iframe, else message
                           const info = document.createElement('div');
                           info.style.cssText =
                             'display:flex; flex-direction:column; align-items:center; gap:8px; padding:20px; color:var(--text-secondary);';
-                          info.innerHTML =
-                            '<div style="font-size:42px;">📄</div><div style="font-size:14px;">Preview is not available for this file type. Use Open in new tab or Download.</div>';
-                          content.innerHTML = '';
+                          const icon = document.createElement('div');
+                          icon.style.cssText = 'font-size:42px;';
+                          icon.textContent = '📄';
+                          const msg = document.createElement('div');
+                          msg.style.cssText = 'font-size:14px;';
+                          msg.textContent =
+                            'Preview is not available for this file type. Use Open in new tab or Download.';
+                          info.replaceChildren(icon, msg);
+                          content.replaceChildren();
                           content.appendChild(info);
                         }
 
-                        openTabBtn.onclick = () => {
+                        openTabBtn.addEventListener('click', () => {
                           const win2 = window.open(objectUrl, '_blank');
                           if (!win2) alert('Pop-up blocked. Please allow pop-ups.');
-                        };
-                        downloadBtn.onclick = () => {
+                        });
+                        downloadBtn.addEventListener('click', () => {
                           const a = document.createElement('a');
                           a.href = objectUrl;
                           a.download = m.name || 'attachment';
                           document.body.appendChild(a);
                           a.click();
                           a.remove();
-                        };
+                        });
                       } catch (e) {
                         console.warn('Preview failed:', e);
                         content.textContent = 'Unable to preview this file.';
@@ -942,76 +948,69 @@ function openViewArtifactModal(module, options = {}) {
                 ),
               );
               // Download button
-              row.appendChild(
-                el(
+              {
+                const btn = el(
                   'button',
                   {
                     class: 'btn secondary',
                     style: 'font-size:12px; padding:6px 10px;',
-                    onclick: async () => {
-                      try {
-                        const o = await Att.createObjectURL(m.id);
-                        if (o?.url) {
-                          const a = document.createElement('a');
-                          a.href = o.url;
-                          a.download = m.name || 'attachment';
-                          document.body.appendChild(a);
-                          a.click();
-                          a.remove();
-                          // Revoke shortly after download
-                          setTimeout(() => {
-                            try {
-                              URL.revokeObjectURL(o.url);
-                            } catch {}
-                          }, 5000);
-                        }
-                      } catch (e) {
-                        console.warn('Download attachment failed:', e);
-                      }
-                    },
                   },
                   'Download',
-                ),
-              );
+                );
+                btn.addEventListener('click', async () => {
+                  try {
+                    const o = await Att.createObjectURL(m.id);
+                    if (o?.url) {
+                      const a = document.createElement('a');
+                      a.href = o.url;
+                      a.download = m.name || 'attachment';
+                      document.body.appendChild(a);
+                      a.click();
+                      a.remove();
+                      setTimeout(() => {
+                        try {
+                          URL.revokeObjectURL(o.url);
+                        } catch {}
+                      }, 5000);
+                    }
+                  } catch (e) {
+                    console.warn('Download attachment failed:', e);
+                  }
+                });
+                row.appendChild(btn);
+              }
               // Faculty-only: delete file from storage and remove reference
               if (isFacultyMode) {
-                row.appendChild(
-                  el(
-                    'button',
-                    {
-                      class: 'btn secondary',
-                      style:
-                        'font-size:12px; padding:6px 10px; color:#e53e3e; border-color:#e53e3e;',
-                      title: 'Delete file from storage and remove from this document',
-                      onclick: async () => {
-                        if (
-                          !confirm(
-                            'Delete this file from storage and remove it from this document?',
-                          )
-                        )
-                          return;
-                        try {
-                          await Att.delete(m.id);
-                        } catch (e) {
-                          console.warn('Delete file failed:', e);
-                        }
-                        try {
-                          const nextAtts = (
-                            Array.isArray(module?.data?.attachments) ? module.data.attachments : []
-                          ).filter((x) => x.id !== m.id);
-                          const updated = {
-                            ...module,
-                            data: { ...(module.data || {}), attachments: nextAtts },
-                          };
-                          onEdit?.(updated);
-                          // Remove row from UI
-                          row.remove();
-                        } catch {}
-                      },
-                    },
-                    'Delete File',
-                  ),
+                const delBtn = el(
+                  'button',
+                  {
+                    class: 'btn secondary',
+                    style: 'font-size:12px; padding:6px 10px; color:#e53e3e; border-color:#e53e3e;',
+                    title: 'Delete file from storage and remove from this document',
+                  },
+                  'Delete File',
                 );
+                delBtn.addEventListener('click', async () => {
+                  if (!confirm('Delete this file from storage and remove it from this document?'))
+                    return;
+                  try {
+                    await Att.delete(m.id);
+                  } catch (e) {
+                    console.warn('Delete file failed:', e);
+                  }
+                  try {
+                    const nextAtts = (
+                      Array.isArray(module?.data?.attachments) ? module.data.attachments : []
+                    ).filter((x) => x.id !== m.id);
+                    const updated = {
+                      ...module,
+                      data: { ...(module.data || {}), attachments: nextAtts },
+                    };
+                    onEdit?.(updated);
+                    row.remove();
+                  } catch {}
+                });
+                row.appendChild(delBtn);
               }
               return row;
             }),
@@ -1028,41 +1027,37 @@ function openViewArtifactModal(module, options = {}) {
       },
       [
         ...(isFacultyMode
-          ? [
-              el(
+          ? (() => {
+              const remBtn = el(
                 'button',
-                {
-                  class: 'btn secondary',
-                  style: 'border-color:#e53e3e; color:#e53e3e;',
-                  onclick: () => {
-                    if (confirm('Remove this background document?')) {
-                      try {
-                        onRemove?.(module.id);
-                      } catch {}
-                      overlay.remove();
-                    }
-                  },
-                },
+                { class: 'btn secondary', style: 'border-color:#e53e3e; color:#e53e3e;' },
                 'Remove',
-              ),
-              el(
-                'button',
-                {
-                  class: 'btn primary',
-                  onclick: () => {
-                    openEditArtifactModal(module, (updated) => {
-                      try {
-                        onEdit?.(updated);
-                      } catch {}
-                      overlay.remove();
-                    });
-                  },
-                },
-                'Edit',
-              ),
-            ]
+              );
+              remBtn.addEventListener('click', () => {
+                if (confirm('Remove this background document?')) {
+                  try {
+                    onRemove?.(module.id);
+                  } catch {}
+                  overlay.remove();
+                }
+              });
+              const editBtn = el('button', { class: 'btn primary' }, 'Edit');
+              editBtn.addEventListener('click', () => {
+                openEditArtifactModal(module, (updated) => {
+                  try {
+                    onEdit?.(updated);
+                  } catch {}
+                  overlay.remove();
+                });
+              });
+              return [remBtn, editBtn];
+            })()
           : []),
-        el('button', { class: 'btn secondary', onclick: () => overlay.remove() }, 'Close'),
+        (() => {
+          const c = el('button', { class: 'btn secondary' }, 'Close');
+          c.addEventListener('click', () => overlay.remove());
+          return c;
+        })(),
       ],
     ),
   ]);
@@ -1083,7 +1078,7 @@ function openViewArtifactModal(module, options = {}) {
   };
   // Patch close handlers to cleanup
   const xBtn = content.querySelector('.close-btn');
-  if (xBtn) xBtn.onclick = close;
+  if (xBtn) xBtn.addEventListener('click', close);
   overlay.addEventListener('remove', cleanup);
   setTimeout(() => xBtn?.focus(), 0);
 }
