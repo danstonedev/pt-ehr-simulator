@@ -43,7 +43,7 @@ export function setQueryParams(nextParams, opts = { replace: true }) {
   const merged = { ...params, ...nextParams };
   // Remove keys explicitly set to undefined, null, or empty string
   for (const k of Object.keys(merged)) {
-    if (merged[k] == null || merged[k] === '') delete merged[k];
+    if (merged[k] === null || merged[k] === undefined || merged[k] === '') delete merged[k];
   }
   const nextHash = buildHash(path, merged);
   if (opts.replace !== false) {

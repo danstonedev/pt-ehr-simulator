@@ -448,7 +448,7 @@ export function exportToWord(caseData, draft) {
 
     // Clinical value formatters
     const formatRom = (val) => {
-      if (val == null) return '';
+      if (val === null || val === undefined) return '';
       const s = String(val).trim();
       if (!s) return '';
       if (s.includes('°')) return s;
@@ -457,7 +457,7 @@ export function exportToWord(caseData, draft) {
       return s;
     };
     const formatMmt = (val) => {
-      if (val == null) return '';
+      if (val === null || val === undefined) return '';
       const s = String(val).trim();
       if (!s) return '';
       if (s.includes('/5')) return s;

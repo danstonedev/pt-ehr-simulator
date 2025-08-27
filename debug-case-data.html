@@ -1,17 +1,19 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Debug Case Data</title>
   </head>
   <body>
     <h1>Debug Case Data Structure</h1>
-  <button type="button" onclick="checkCaseData()">Check Shoulder Impingement Case</button>
+    <button type="button" id="checkCaseBtn">Check Shoulder Impingement Case</button>
     <div id="output"></div>
 
     <script type="module">
       import { store } from './app/js/core/store.js';
 
-      window.checkCaseData = function () {
+      function checkCaseData() {
         const cases = store.getAllCases();
         const shoulderCase = cases.find((c) => c.id === 'shoulder-impingement');
 
@@ -34,7 +36,10 @@
                 <h2>Objective data:</h2>
                 <pre>${JSON.stringify(shoulderCase.encounters?.eval?.objective, null, 2)}</pre>
             `;
-      };
+      }
+
+      // Wire up click without inline handler
+      document.getElementById('checkCaseBtn')?.addEventListener('click', checkCaseData);
     </script>
   </body>
 </html>
