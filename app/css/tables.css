@@ -301,8 +301,8 @@
   color: var(--input-text);
   border-radius: var(--input-radius);
   transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 /* Ensure selects visually match inputs, even in dark mode */
 .editable-table__select {

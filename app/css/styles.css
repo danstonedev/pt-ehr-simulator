@@ -790,7 +790,8 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   display: block;
 }
 
-.theme-toggle.switch:focus {
+.theme-toggle.switch:focus-visible {
+  /* use custom track ring */
   outline: none;
 }
 .theme-toggle.switch:focus-visible {
@@ -805,7 +806,8 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   filter: brightness(1.08);
 }
 
-.theme-toggle:focus {
+.theme-toggle:focus-visible {
+  /* use custom track ring */
   outline: none;
 }
 .theme-toggle:focus-visible {
@@ -1294,7 +1296,6 @@ select,
   color: var(--input-text);
   border: 1px solid var(--input-border);
   border-radius: var(--input-radius);
-  outline: none;
   transition: all 0.2s ease;
   font-size: 1rem; /* 16px to prevent zoom on mobile */
   line-height: 1.5;
@@ -1443,7 +1444,7 @@ html[data-theme='dark'] input[type='checkbox'] {
   background: var(--und-green-light);
 }
 
-.topnav a:focus {
+.topnav a:focus-visible {
   outline: 2px solid var(--und-green);
   outline-offset: 2px;
 }
@@ -1493,7 +1494,7 @@ html[data-theme='dark'] input[type='checkbox'] {
   background: var(--und-green-light);
 }
 
-.tab:focus {
+.tab:focus-visible {
   outline: 2px solid var(--und-green);
   outline-offset: 2px;
 }
@@ -3014,7 +3015,7 @@ header.topbar .topnav a:hover {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.08);
 }
-header.topbar .topnav a:focus {
+header.topbar .topnav a:focus-visible {
   outline-color: var(--und-green);
 }
 header.topbar .topnav a.active {
@@ -3094,21 +3095,7 @@ header.topbar a.button {
 
 /* Sidebar offsets are defined in the primary sidebar block; redundant override removed */
 
-/* Skip link accessibility */
-.skip-link {
-  position: absolute;
-  top: -1000px;
-  left: 16px;
-  background: var(--accent2);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  z-index: 6000;
-}
-.skip-link:focus {
-  top: 8px;
-  outline: 2px solid #fff;
-}
+/* Skip link accessibility (defined near top of file) */
 
 /* Old theme-toggle button styles removed in favor of switch variant */
 
