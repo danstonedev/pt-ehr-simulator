@@ -144,7 +144,7 @@
         <button
           id="themeToggle"
           class="theme-toggle switch is-light"
-          onclick="toggleTheme()"
+          data-onclick="toggleTheme"
           role="switch"
           aria-checked="false"
           aria-label="Switch to dark theme"
@@ -731,5 +731,6 @@
         }
       })();
     </script>
+    <script type="module" src="./js/features/inline-handlers/index.js"></script>
   </body>
 </html>
