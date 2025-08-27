@@ -97,6 +97,10 @@
         }
       };
 
+      // Capture pre-init state (before binder import)
+      const btnPre = document.getElementById('testSwitch');
+      const hadAttrInitially = btnPre?.hasAttribute('data-onclick');
+
       // Dynamically import the binder and then dispatch DOMContentLoaded to trigger initialization
       try {
         await import('../js/features/inline-handlers/index.js');
@@ -106,7 +110,6 @@
         const btn = document.getElementById('testSwitch');
 
         // 1) Attribute removed (bound once)
-        const hadAttrInitially = btn.hasAttribute('data-onclick');
         const afterInitHasAttr = btn.hasAttribute('data-onclick');
         log('data-onclick present before init', hadAttrInitially === true);
         log('data-onclick removed after init', afterInitHasAttr === false);
