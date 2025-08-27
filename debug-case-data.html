@@ -18,24 +18,39 @@
         const shoulderCase = cases.find((c) => c.id === 'shoulder-impingement');
 
         if (!shoulderCase) {
-          document.getElementById('output').innerHTML = '<pre>❌ Case not found!</pre>';
+          const out = document.getElementById('output');
+          const pre = document.createElement('pre');
+          pre.textContent = '❌ Case not found!';
+          out.replaceChildren(pre);
           return;
         }
 
         const output = document.getElementById('output');
-        output.innerHTML = `
-                <h2>Case Data Structure:</h2>
-                <pre>${JSON.stringify(shoulderCase, null, 2)}</pre>
-                
-                <h2>encounters.eval structure:</h2>
-                <pre>${JSON.stringify(shoulderCase.encounters?.eval, null, 2)}</pre>
-                
-                <h2>Subjective data:</h2>
-                <pre>${JSON.stringify(shoulderCase.encounters?.eval?.subjective, null, 2)}</pre>
-                
-                <h2>Objective data:</h2>
-                <pre>${JSON.stringify(shoulderCase.encounters?.eval?.objective, null, 2)}</pre>
-            `;
+        // Build content with safe text nodes
+        const frag = document.createDocumentFragment();
+
+        const h2a = document.createElement('h2');
+        h2a.textContent = 'Case Data Structure:';
+        const prea = document.createElement('pre');
+        prea.textContent = JSON.stringify(shoulderCase, null, 2);
+
+        const h2b = document.createElement('h2');
+        h2b.textContent = 'encounters.eval structure:';
+        const preb = document.createElement('pre');
+        preb.textContent = JSON.stringify(shoulderCase.encounters?.eval, null, 2);
+
+        const h2c = document.createElement('h2');
+        h2c.textContent = 'Subjective data:';
+        const prec = document.createElement('pre');
+        prec.textContent = JSON.stringify(shoulderCase.encounters?.eval?.subjective, null, 2);
+
+        const h2d = document.createElement('h2');
+        h2d.textContent = 'Objective data:';
+        const pred = document.createElement('pre');
+        pred.textContent = JSON.stringify(shoulderCase.encounters?.eval?.objective, null, 2);
+
+        frag.append(h2a, prea, h2b, preb, h2c, prec, h2d, pred);
+        output.replaceChildren(frag);
       }
 
       // Wire up click without inline handler
