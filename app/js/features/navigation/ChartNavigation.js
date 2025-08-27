@@ -2,6 +2,7 @@
 import { el } from '../../ui/utils.js';
 import { createIcon } from '../../ui/Icons.js';
 import { exportToWord } from '../../services/document-export.js';
+import { ensureExportLibsLoaded } from '../../services/export-loader.js';
 import { attachments as Att } from '../../services/index.js';
 
 /**
@@ -2308,7 +2309,7 @@ export function createChartNavigation(config) {
           ),
           // Footer actions: Export to Word at very bottom with extra separation from Billing
           (() => {
-            function handleExportClick() {
+            async function handleExportClick() {
               try {
                 const out = config.caseData || {};
                 const draft = window && window.currentDraft ? window.currentDraft : out || {};
@@ -2321,6 +2322,8 @@ export function createChartNavigation(config) {
                 try {
                   if (draft.meta) out.meta = { ...(out.meta || {}), ...draft.meta };
                 } catch {}
+                // Lazy-load libraries on first export
+                await ensureExportLibsLoaded();
                 exportToWord(out, draft);
               } catch (e) {
                 console.error('Export to Word failed to start:', e);

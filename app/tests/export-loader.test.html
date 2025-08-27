@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Export Loader Test</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+        padding: 16px;
+      }
+      .pass {
+        color: #0a7;
+      }
+      .fail {
+        color: #c00;
+      }
+      .test {
+        margin-bottom: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Export Loader Test</h1>
+    <div id="results"></div>
+
+    <script type="module">
+      import { ensureExportLibsLoaded } from '../js/services/export-loader.js';
+      const results = document.getElementById('results');
+      function log(name, ok, details = '') {
+        const div = document.createElement('div');
+        div.className = 'test ' + (ok ? 'pass' : 'fail');
+        div.innerHTML =
+          `<strong>${ok ? '✅' : '❌'} ${name}</strong>` + (details ? `<pre>${details}</pre>` : '');
+        results.appendChild(div);
+      }
+
+      // Provide tiny stubs to simulate the libraries without network
+      window.__DOCX_URL_OVERRIDE = URL.createObjectURL(
+        new Blob(
+          [
+            `window.docx = { Document: function(){}, Packer: { toBlob: () => Promise.resolve(new Blob(['ok'])) }, Paragraph: function(){}, TextRun: function(){}, Table: function(){}, TableRow: function(){}, TableCell: function(){}, HeadingLevel: {}, AlignmentType: {}, BorderStyle: {}, WidthType: {}, Footer: function(){}, PageNumber: function(){}, NumberOfTotalPages: function(){}, VerticalAlign: {}, TableLayoutType: {}, Header: function(){} };`,
+          ],
+          { type: 'text/javascript' },
+        ),
+      );
+      window.__FILESAVER_URL_OVERRIDE = URL.createObjectURL(
+        new Blob([`window.saveAs = function(b, n){ /* no-op stub */ };`], {
+          type: 'text/javascript',
+        }),
+      );
+
+      try {
+        const before = typeof window.docx;
+        await ensureExportLibsLoaded();
+        const after = typeof window.docx;
+        const fs = typeof window.saveAs;
+        log(
+          'Docx stub loads via ensureExportLibsLoaded',
+          after === 'object' || after === 'function',
+          `before=${before} after=${after}`,
+        );
+        log(
+          'FileSaver stub loads (non-fatal if missing)',
+          fs === 'function' || fs === 'undefined',
+          `saveAs=${fs}`,
+        );
+        const blob = await window.docx.Packer.toBlob({});
+        log('Packer.toBlob returns Blob', blob instanceof Blob);
+        const PASS = document.createElement('div');
+        PASS.textContent = 'PASS';
+        PASS.id = 'EXPORT_LOADER_PASS';
+        document.body.appendChild(PASS);
+      } catch (e) {
+        log('Unhandled error', false, String(e?.stack || e));
+      }
+    </script>
+  </body>
+</html>
