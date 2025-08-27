@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inline Handlers – Binding Test</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+        padding: 16px;
+      }
+      .pass {
+        color: #0a7;
+      }
+      .fail {
+        color: #c00;
+      }
+      .test {
+        margin-bottom: 12px;
+      }
+      pre {
+        background: #f6f8fa;
+        padding: 8px;
+        border-radius: 6px;
+        overflow: auto;
+      }
+      .row {
+        margin-block: 12px;
+      }
+      .switch {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Inline Handlers – Binding Test</h1>
+    <p>
+      This page verifies that data-onclick is converted into a proper event listener and that ARIA
+      state toggles correctly.
+    </p>
+
+    <div class="row">
+      <button
+        id="testSwitch"
+        class="switch"
+        data-onclick="toggleTheme"
+        role="switch"
+        aria-checked="false"
+        aria-label="Switch to dark theme"
+      >
+        Test Switch (starts as light)
+      </button>
+    </div>
+
+    <div id="results" aria-live="polite"></div>
+
+    <script type="module">
+      // Capture console errors to surface them in the results
+      const results = document.getElementById('results');
+      const log = (name, ok, details = '') => {
+        const div = document.createElement('div');
+        div.className = 'test ' + (ok ? 'pass' : 'fail');
+        div.innerHTML =
+          `<strong>${ok ? '✅' : '❌'} ${name}</strong>` + (details ? `<pre>${details}</pre>` : '');
+        results.appendChild(div);
+      };
+
+      const errors = [];
+      const origError = console.error;
+      console.error = (...args) => {
+        errors.push(args.map(String).join(' '));
+        origError.apply(console, args);
+      };
+
+      // Define the global handler before loading the binder module
+      window.toggleTheme = function toggleTheme() {
+        const el = document.getElementById('testSwitch');
+        const isDark = el.getAttribute('aria-checked') === 'true';
+        if (isDark) {
+          el.setAttribute('aria-checked', 'false');
+          el.setAttribute('aria-label', 'Switch to dark theme');
+          el.classList.remove('is-dark');
+          el.classList.add('is-light');
+        } else {
+          el.setAttribute('aria-checked', 'true');
+          el.setAttribute('aria-label', 'Switch to light theme');
+          el.classList.add('is-dark');
+          el.classList.remove('is-light');
+        }
+      };
+
+      // Dynamically import the binder and then dispatch DOMContentLoaded to trigger initialization
+      try {
+        await import('../js/features/inline-handlers/index.js');
+        // Manually dispatch a DOMContentLoaded event in case module attached after natural firing
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+
+        const btn = document.getElementById('testSwitch');
+
+        // 1) Attribute removed (bound once)
+        const hadAttrInitially = btn.hasAttribute('data-onclick');
+        const afterInitHasAttr = btn.hasAttribute('data-onclick');
+        log('data-onclick present before init', hadAttrInitially === true);
+        log('data-onclick removed after init', afterInitHasAttr === false);
+
+        // 2) Click toggles aria-checked to true
+        btn.click();
+        const firstToggle = btn.getAttribute('aria-checked') === 'true';
+        log('Click toggles switch to true', firstToggle);
+
+        // 3) Second click toggles back to false
+        btn.click();
+        const secondToggle = btn.getAttribute('aria-checked') === 'false';
+        log('Second click toggles switch back to false', secondToggle);
+
+        // 4) No console errors during run
+        log('No console errors', errors.length === 0, errors.join('\n'));
+      } catch (e) {
+        log('Binder module import/initialization', false, String(e?.stack || e));
+      }
+    </script>
+  </body>
+</html>
