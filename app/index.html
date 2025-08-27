@@ -42,28 +42,7 @@
     <!-- Add docx generation library -->
     <script src="https://unpkg.com/docx@6.0.3/build/index.js"></script>
     <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-    <script type="module">
-      // Debug mode and console silencer (uses storage seam)
-      // Use ?debug=1 to enable logs (persists in storage); ?debug=0 to disable again
-      import { storage } from './js/core/index.js';
-      try {
-        const url = new URL(window.location.href);
-        const debugParam = url.searchParams.get('debug');
-        if (debugParam === '1') storage.setItem('debug', '1');
-        if (debugParam === '0') storage.removeItem('debug');
-      } catch {}
-      const isDebug = storage.getItem('debug') === '1';
-      window.DEBUG = isDebug;
-      if (!isDebug) {
-        const noop = () => {};
-        try {
-          console.log = noop;
-        } catch {}
-        try {
-          console.debug = noop;
-        } catch {}
-      }
-    </script>
+    <script type="module" src="js/features/debug/index.js"></script>
   </head>
   <body>
     <noscript>
@@ -93,7 +72,6 @@
     <a class="skip-link" href="#app">Skip to main content</a>
     <header class="topbar no-print">
       <button
-        id="hamburgerBtn"
         class="hamburger-btn"
         type="button"
         aria-label="Open navigation"
@@ -415,7 +393,7 @@
           // Defer binding so v2 can set a flag first; prevents duplicate listeners
           setTimeout(() => {
             if (window.__MOBILE_DRAWER_V2) return;
-            const btn = document.getElementById('hamburgerBtn');
+            const btn = document.querySelector('.hamburger-btn');
             if (!btn) return;
             function setExpanded(val) {
               btn.setAttribute('aria-expanded', String(!!val));
@@ -427,9 +405,7 @@
                   setExpanded(expanded);
                 } else {
                   // Fallback: toggle class if sidebar exists (legacy)
-                  const sidebar =
-                    document.getElementById('chartNavigation') ||
-                    document.querySelector('.chart-navigation');
+                  const sidebar = document.querySelector('.chart-navigation');
                   const nowOpen = sidebar ? !sidebar.classList.contains('mobile-open') : false;
                   sidebar && sidebar.classList.toggle('mobile-open', nowOpen);
                   document.body.classList.toggle('mobile-drawer-open', nowOpen);
@@ -603,6 +579,29 @@
       }
     </script>
     <script type="module">
+      // ARIA polish: keep aria-current on current topnav link
+      const nav = document.getElementById('primaryNav');
+      function updateAriaCurrent() {
+        if (!nav) return;
+        const links = Array.from(nav.querySelectorAll('a[href^="#/"]'));
+        const hash = location.hash || '#/';
+        // simple match by prefix breadth
+        let best = null;
+        let bestLen = -1;
+        for (const a of links) {
+          const href = a.getAttribute('href') || '';
+          if (hash.startsWith(href) && href.length > bestLen) {
+            best = a;
+            bestLen = href.length;
+          }
+        }
+        for (const a of links) a.removeAttribute('aria-current');
+        if (best) best.setAttribute('aria-current', 'page');
+      }
+      window.addEventListener('hashchange', updateAriaCurrent);
+      updateAriaCurrent();
+    </script>
+    <script type="module">
       import * as store from './js/core/store.js';
       // Make store available for debugging
       window.ptStore = store;
@@ -612,6 +611,14 @@
     </script>
     <script type="module" src="js/core/router.js?v=20250820-004"></script>
     <script src="js/mobile-drawer-v2.js?v=20250825-002"></script>
+    <script type="module">
+      // Ensure theme toggle ARIA stays consistent even if markup gets refactored
+      const t = document.getElementById('themeToggle');
+      if (t) {
+        if (!t.hasAttribute('role')) t.setAttribute('role', 'switch');
+        if (!t.hasAttribute('aria-checked')) t.setAttribute('aria-checked', 'false');
+      }
+    </script>
 
     <!-- Site Menu Drawer (mobile) -->
     <nav id="siteMenu" class="site-menu" aria-label="Site menu" aria-hidden="true" tabindex="-1">
@@ -646,7 +653,7 @@
         }
 
         function hook() {
-          const hamburger = document.getElementById('hamburgerBtn');
+          const hamburger = document.querySelector('.hamburger-btn');
           const menu = document.getElementById('siteMenu');
           if (!hamburger || !menu) return false;
 

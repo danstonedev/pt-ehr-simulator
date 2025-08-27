@@ -1,0 +1,28 @@
+name: smoke
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install Playwright
+        run: |
+          npm i -D playwright@1.47.2
+          npx playwright install --with-deps chromium
+      - name: Serve static files from app/
+        run: |
+          cd app
+          python3 -m http.server 3000 &
+          sleep 2
+      - name: Smoke test drawer page
+        run: |
+          node -e "(async()=>{const {chromium}=require('playwright');const b=await chromium.launch();const p=await b.newPage();await p.goto('http://localhost:3000/tests/mobile-drawer.test.html',{waitUntil:'load'});const res=await p.textContent('#results');console.log('RESULT:',res);if(!res||!/PASS/i.test(res)) {process.exit(1)} await b.close();})()"

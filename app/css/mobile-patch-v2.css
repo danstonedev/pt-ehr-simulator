@@ -35,7 +35,8 @@
 /* Sidebar as off-canvas drawer */
 @media (max-width: 900px) {
   /* Outer container rendered by ChartNavigation.js */
-  #chartNavigation.chart-navigation {
+  /* Prefer class; keep ID for compatibility */
+  .chart-navigation {
     position: fixed;
     top: calc(var(--topbar-h, 56px) + env(safe-area-inset-top, 0px));
     right: 0;
@@ -53,20 +54,20 @@
     display: flex;
     flex-direction: column;
   }
-  #chartNavigation.chart-navigation.is-open,
-  #chartNavigation.chart-navigation.mobile-open {
+  .chart-navigation.is-open,
+  .chart-navigation.mobile-open {
     transform: translateX(0);
   }
 
   /* Panel inside drawer */
-  #chartNavigation .sidebar-nav-panel {
+  .chart-navigation .sidebar-nav-panel {
     height: 100%;
     overflow: auto;
     padding: 10px var(--mobile-safe-pad) 88px;
   }
 
   /* Visible close control (uses your .btn styles) */
-  #chartNavigation .mobile-close {
+  .chart-navigation .mobile-close {
     position: sticky;
     top: 0;
     display: block;
@@ -83,7 +84,7 @@
   }
 
   /* Hamburger visible on mobile */
-  #hamburgerBtn {
+  .hamburger-btn {
     display: inline-flex !important;
   }
 }

@@ -2195,7 +2195,6 @@ export function createChartNavigation(config) {
       class: 'chart-navigation',
       role: 'complementary',
       'aria-label': 'Chart navigation',
-      id: 'chartNavigation',
     },
     [
       // CASE FILE header row aligned with patient header

@@ -805,32 +805,32 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   filter: brightness(1.08);
 }
 
-#themeToggle:focus {
+.theme-toggle:focus {
   outline: none;
 }
-#themeToggle:focus-visible {
+.theme-toggle:focus-visible {
   /* Use the custom track ring instead of default outline */
   outline: none;
 }
 /* Provide a visible focus affordance on the track when focused */
-#themeToggle:focus-visible .switch-track {
+.theme-toggle:focus-visible .switch-track {
   box-shadow:
     0 0 0 3px color-mix(in srgb, var(--und-green) 30%, transparent),
     0 0 0 1px var(--und-green);
 }
-#themeToggle {
+.theme-toggle {
   -webkit-tap-highlight-color: transparent;
 }
 
 /* Accessible, subtle focus cue: soft ring around the track on keyboard focus */
-#themeToggle:focus-visible .switch-track {
+.theme-toggle:focus-visible .switch-track {
   box-shadow:
     0 0 0 2px rgba(255, 255, 255, 0.18),
     0 0 0 5px rgba(0, 154, 68, 0.45); /* UND green ring */
 }
 
 @media (prefers-contrast: more) {
-  #themeToggle:focus-visible .switch-track {
+  .theme-toggle:focus-visible .switch-track {
     box-shadow:
       0 0 0 2px rgba(255, 255, 255, 0.28),
       0 0 0 6px rgba(0, 154, 68, 0.75);
@@ -2288,7 +2288,7 @@ select:focus,
 
 /* Tablet and desktop adjustments */
 @media (max-width: 900px) {
-  #hamburgerBtn {
+  .hamburger-btn {
     display: inline-flex;
     order: 3;
     margin-left: auto;

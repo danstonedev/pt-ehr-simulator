@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mobile Drawer Test</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/mobile-patch-v2.css" />
+    <style>
+      body {
+        padding: 16px;
+        font:
+          14px/1.4 system-ui,
+          Segoe UI,
+          Roboto,
+          Arial,
+          sans-serif;
+      }
+      .result {
+        margin-top: 12px;
+        padding: 8px 10px;
+        border-radius: 8px;
+      }
+      .pass {
+        background: #e6ffed;
+        color: #046b1c;
+        border: 1px solid #a6f4c5;
+      }
+      .fail {
+        background: #ffeff0;
+        color: #8a041a;
+        border: 1px solid #ffd0d4;
+      }
+      .drawer-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: none;
+      }
+      .drawer-overlay.is-visible {
+        display: block;
+      }
+      .chart-navigation {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 300px;
+        height: 100vh;
+        background: #141821;
+        border-left: 1px solid #232a36;
+        translate: 100% 0;
+      }
+      .chart-navigation.is-open {
+        translate: 0 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Mobile Drawer Test</h1>
+    <p>
+      Ensures hamburger (.hamburger-btn) toggles drawer (.chart-navigation) and overlay visibility.
+    </p>
+
+    <button class="hamburger-btn" type="button" aria-expanded="false">Hamburger</button>
+    <div class="chart-navigation" tabindex="-1">
+      <button class="btn small mobile-close" type="button">Close</button>
+      <div class="sidebar-nav-panel">
+        <p>Drawer content</p>
+      </div>
+    </div>
+
+    <div id="results" class="result">Running…</div>
+
+    <script src="../js/mobile-drawer-v2.js"></script>
+    <script>
+      (function run() {
+        const res = document.getElementById('results');
+        const btn = document.querySelector('.hamburger-btn');
+        const drawer = document.querySelector('.chart-navigation');
+        const overlay = (function findOverlay() {
+          return (
+            document.getElementById('drawerOverlay') || document.querySelector('.drawer-overlay')
+          );
+        })();
+        const errors = [];
+        function assert(cond, msg) {
+          if (!cond) errors.push(msg);
+        }
+
+        // initial
+        assert(btn && drawer, 'Elements missing');
+        assert(!drawer.classList.contains('is-open'), 'Drawer should start closed');
+
+        // open
+        btn.click();
+        assert(
+          drawer.classList.contains('is-open') ||
+            document.body.classList.contains('mobile-drawer-open'),
+          'Open failed',
+        );
+        assert(
+          btn.getAttribute('aria-expanded') === 'true',
+          'aria-expanded should be true after open',
+        );
+        if (overlay)
+          assert(overlay.classList.contains('is-visible'), 'Overlay should be visible after open');
+
+        // close via close button
+        const closeBtn = drawer.querySelector('.mobile-close');
+        if (closeBtn) closeBtn.click();
+        assert(
+          !drawer.classList.contains('is-open') &&
+            !document.body.classList.contains('mobile-drawer-open'),
+          'Close failed',
+        );
+        assert(
+          btn.getAttribute('aria-expanded') === 'false',
+          'aria-expanded should be false after close',
+        );
+        if (overlay)
+          assert(!overlay.classList.contains('is-visible'), 'Overlay should be hidden after close');
+
+        res.textContent = errors.length ? 'FAIL: ' + errors.join('; ') : 'PASS';
+        res.className = 'result ' + (errors.length ? 'fail' : 'pass');
+        console.log('Mobile Drawer Test:', errors.length ? 'FAIL' : 'PASS', errors);
+      })();
+    </script>
+  </body>
+</html>

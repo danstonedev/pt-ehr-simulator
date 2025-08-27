@@ -5,8 +5,8 @@
  */
 (function () {
   const hamburger =
-    document.getElementById('hamburgerBtn') || document.querySelector('[data-mobile="hamburger"]');
-  const drawer = document.getElementById('chartNavigation');
+    document.querySelector('.hamburger-btn') || document.querySelector('[data-mobile="hamburger"]');
+  const drawer = document.querySelector('.chart-navigation');
   if (!drawer || !hamburger) return;
 
   // If core already exposes a toggle, prefer it to avoid double logic

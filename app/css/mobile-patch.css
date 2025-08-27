@@ -45,7 +45,8 @@
 
 /* 3) Main layout: make sidebar off‑canvas */
 @media (max-width: 900px) {
-  #chartNavigation {
+  /* Prefer class selector; keep ID for compatibility */
+  .chart-navigation {
     position: fixed;
     inset: 0 0 0 auto; /* right drawer */
     width: min(86vw, 360px);
@@ -59,10 +60,10 @@
     display: flex;
     flex-direction: column;
   }
-  #chartNavigation.is-open {
+  .chart-navigation.is-open {
     translate: 0 0;
   }
-  #chartNavigation .sidebar-nav-panel {
+  .chart-navigation .sidebar-nav-panel {
     height: 100%;
     overflow: auto;
     padding-bottom: 88px; /* space for close/export buttons */
@@ -81,7 +82,7 @@
     overflow: hidden;
   }
   /* Place a visible "Close" control at top of drawer (uses existing .btn styles) */
-  #chartNavigation .mobile-close {
+  .chart-navigation .mobile-close {
     position: sticky;
     top: 0;
     display: block;
@@ -91,7 +92,7 @@
     z-index: 1;
   }
   /* Make section Nav items larger for touch */
-  #chartNavigation .section-nav-item {
+  .chart-navigation .section-nav-item {
     padding: 10px var(--mobile-safe-pad);
     min-height: 44px;
   }
@@ -104,7 +105,7 @@
 
 /* 4) Put a hamburger button in header on small screens (if not already visible) */
 @media (max-width: 900px) {
-  #hamburgerBtn {
+  .hamburger-btn {
     display: inline-flex !important;
     align-items: center;
     justify-content: center;

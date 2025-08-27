@@ -16,15 +16,28 @@
     return overlay;
   }
 
+  function getHamburgerBtn() {
+    return (
+      document.querySelector('.hamburger-btn') ||
+      document.querySelector('[data-mobile="hamburger"]')
+    );
+  }
+
+  function getChartDrawer() {
+    return document.querySelector('.chart-navigation');
+  }
+
+  function hasDrawerAndHamburger() {
+    return !!(getChartDrawer() && getHamburgerBtn());
+  }
+
   function hook() {
     // If a dedicated site menu is present, do not hijack the hamburger for the chart drawer
     if (document.getElementById('siteMenu')) {
       return true; // nothing to bind here; site menu script will handle it
     }
-    const hamburger =
-      document.getElementById('hamburgerBtn') ||
-      document.querySelector('[data-mobile="hamburger"]');
-    const drawer = document.getElementById('chartNavigation');
+    const hamburger = getHamburgerBtn();
+    const drawer = getChartDrawer();
     if (!hamburger || !drawer) return false;
 
     const overlay = ensureOverlay();
@@ -116,7 +129,7 @@
     const mo = new MutationObserver(() => hook());
     mo.observe(document.documentElement, { childList: true, subtree: true });
     const stopOnReady = setInterval(() => {
-      if (document.getElementById('chartNavigation') && document.getElementById('hamburgerBtn')) {
+      if (hasDrawerAndHamburger()) {
         if (hook()) {
           mo.disconnect();
           clearInterval(stopOnReady);
