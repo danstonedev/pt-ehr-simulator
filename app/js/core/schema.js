@@ -213,6 +213,37 @@ export function ensureDataIntegrity(caseData) {
     };
   }
 
+  // Normalize enums for backward compatibility and UI variance
+  try {
+    // Acuity mapping
+    if (caseData.meta) {
+      const mapAcuity = (a) => {
+        if (!a) return undefined;
+        const v = String(a).toLowerCase();
+        if (ENUMS.acuity.includes(v)) return v;
+        if (v === 'routine') return 'unspecified';
+        if (v === 'complex') return 'chronic';
+        if (v === 'critical') return 'acute';
+        return 'unspecified';
+      };
+      const normA = mapAcuity(caseData.meta.acuity);
+      if (normA) caseData.meta.acuity = normA;
+    }
+    // Sex mapping
+    if (caseData.snapshot) {
+      const mapSex = (s) => {
+        if (!s) return undefined;
+        const v = String(s).toLowerCase();
+        if (ENUMS.sex.includes(v)) return v;
+        if (v === 'prefer not to say' || v === 'prefer-not-to-say' || v === 'n/a' || v === 'na')
+          return 'unspecified';
+        return 'unspecified';
+      };
+      const normS = mapSex(caseData.snapshot.sex);
+      if (normS) caseData.snapshot.sex = normS;
+    }
+  } catch {}
+
   return caseData;
 }
 

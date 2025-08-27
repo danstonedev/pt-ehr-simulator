@@ -148,7 +148,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
       age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
       sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-      acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
+      acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
       dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
       modules: Array.isArray(c.modules) ? c.modules : [],
     };
@@ -266,7 +266,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
       age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
       sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-      acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
+      acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
       dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
       modules: Array.isArray(c.modules) ? c.modules : [],
     },
@@ -381,7 +381,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
         age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
         sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-        acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
+        acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
         dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
         modules: Array.isArray(c.modules) ? c.modules : [],
       },
@@ -520,7 +520,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         'Untitled Case';
       const dob = c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '';
       const age = computeAgeFromDobLocal(dob) || c.patientAge || c.age || '';
-      const sex = c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || '';
+      let sex = c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || '';
       // Format MM-DD-YYYY
       let dobFmt = '';
       if (dob) {
@@ -533,6 +533,8 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         }
       }
       // Line 1: Title (Sex) where Sex is non-bold
+      // Prefer human-friendly label for unspecified
+      if (String(sex).toLowerCase() === 'unspecified') sex = 'Prefer not to say';
       const sexDisplay = sex
         ? String(sex).slice(0, 1).toUpperCase() + String(sex).slice(1).toLowerCase()
         : '';
@@ -762,7 +764,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
         age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
         sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-        acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
+        acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
         dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
         modules: Array.isArray(c.modules) ? c.modules : [],
       },
@@ -885,7 +887,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
       age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
       sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-      acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
+      acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
       dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
       modules: Array.isArray(c.modules) ? c.modules : [],
     },
@@ -951,7 +953,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
           setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
           age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
           sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-          acuity: c.acuity || (c.meta && c.meta.acuity) || 'Routine',
+          acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
           dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
           modules: Array.isArray(c.modules) ? c.modules : [],
         },

@@ -76,40 +76,60 @@ function getNextCaseId() {
   }
 }
 
-// Helper to fetch JSON safely
-async function fetchJson(url) {
+// Debug flag toggled by ?debug=1 (default off)
+const DEBUG = (() => {
   try {
-    console.log(`🌐 Fetching: ${url}`);
+    const usp = new URLSearchParams(window.location.search);
+    return usp.get('debug') === '1';
+  } catch {
+    return false;
+  }
+})();
+const debugWarn = (...args) => {
+  if (DEBUG) console.warn(...args);
+};
+
+// Helper: fetch JSON with minimal noise (no warn on 404 for fallbacks)
+async function fetchJson(url, { silent = false } = {}) {
+  try {
     const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) {
-      console.warn(`❌ Fetch failed for ${url}: ${res.status} ${res.statusText}`);
+      if (!silent) console.warn(`❌ Fetch failed for ${url}: ${res.status} ${res.statusText}`);
+      else debugWarn(`Fetch candidate failed: ${url} -> ${res.status}`);
       return null;
     }
-    const data = await res.json();
-    console.log(`✅ Successfully fetched: ${url}`);
-    return data;
+    return await res.json();
   } catch (error) {
-    console.error(`🚨 Error fetching ${url}:`, error);
+    if (!silent) console.error(`🚨 Error fetching ${url}:`, error);
+    else debugWarn(`Error on candidate ${url}:`, error);
     return null;
   }
 }
 
+// Try multiple URLs; only warn once if all fail
+async function tryFetchJson(urls) {
+  for (let i = 0; i < urls.length; i++) {
+    const u = urls[i];
+    const data = await fetchJson(u, { silent: i < urls.length - 1 });
+    if (data) return data;
+  }
+  console.warn(`❌ Fetch failed for all candidates. First: ${urls[0]}`);
+  return null;
+}
+
 // Load cases from manifest file-based layout: app/data/cases/manifest.json
 async function loadCasesFromManifest() {
-  console.log('🔍 Loading cases from manifest...');
+  debugWarn('🔍 Loading cases from manifest...');
 
-  // Try both possible paths for GitHub Pages compatibility
-  let manifest = await fetchJson('/data/cases/manifest.json');
-  if (!manifest) {
-    console.log('🔄 Trying alternative path...');
-    manifest = await fetchJson('./data/cases/manifest.json');
-  }
-  if (!manifest) {
-    console.log('� Trying relative path...');
-    manifest = await fetchJson('data/cases/manifest.json');
-  }
+  // Prefer relative paths first; include '/app/...' for repo-root servers
+  const manifest = await tryFetchJson([
+    'data/cases/manifest.json',
+    './data/cases/manifest.json',
+    '/data/cases/manifest.json',
+    '/app/data/cases/manifest.json',
+  ]);
 
-  console.log('�📄 Manifest loaded:', manifest);
+  debugWarn('📄 Manifest loaded:', manifest);
 
   if (!manifest || !Array.isArray(manifest.categories)) {
     console.warn('❌ No valid manifest or categories found');
@@ -118,30 +138,25 @@ async function loadCasesFromManifest() {
 
   const collected = {};
   for (const cat of manifest.categories) {
-    console.log(`📂 Processing category: ${cat.name}`);
+    debugWarn(`📂 Processing category: ${cat.name}`);
     if (!Array.isArray(cat.cases)) continue;
 
     for (const c of cat.cases) {
       if (!c?.file) continue;
-      console.log(`🔄 Loading case file: /data/${c.file}`);
-
-      // Try multiple path variations for case files too
-      let caseWrapper = await fetchJson(`/data/${c.file}`);
-      if (!caseWrapper) {
-        console.log(`🔄 Trying alternative case path: ./data/${c.file}`);
-        caseWrapper = await fetchJson(`./data/${c.file}`);
-      }
-      if (!caseWrapper) {
-        console.log(`🔄 Trying relative case path: data/${c.file}`);
-        caseWrapper = await fetchJson(`data/${c.file}`);
-      }
+      debugWarn(`🔄 Loading case file candidates for: ${c.file}`);
+      const caseWrapper = await tryFetchJson([
+        `data/${c.file}`,
+        `./data/${c.file}`,
+        `/data/${c.file}`,
+        `/app/data/${c.file}`,
+      ]);
 
       if (!caseWrapper || !caseWrapper.id || !caseWrapper.caseObj) {
         console.warn(`❌ Failed to load case: ${c.file}`);
         continue;
       }
 
-      console.log(`✅ Successfully loaded case: ${caseWrapper.id}`);
+      debugWarn(`✅ Successfully loaded case: ${caseWrapper.id}`);
       // Ensure integrity/migrations
       caseWrapper.caseObj = migrateOldCaseData(caseWrapper.caseObj);
       caseWrapper.caseObj = ensureDataIntegrity(caseWrapper.caseObj);
@@ -149,14 +164,14 @@ async function loadCasesFromManifest() {
     }
   }
 
-  console.log('📋 Total cases collected:', Object.keys(collected));
+  debugWarn('📋 Total cases collected:', Object.keys(collected));
   return collected;
 }
 
 // --- Initialize with data file (app/data/cases.json) if empty; fallback to sample ---
 async function ensureCasesInitialized() {
   const existing = loadCasesFromStorage();
-  console.log('Existing cases in storage:', Object.keys(existing));
+  debugWarn('Existing cases in storage:', Object.keys(existing));
   if (Object.keys(existing).length > 0) return existing;
 
   try {
@@ -182,9 +197,9 @@ async function ensureCasesInitialized() {
     }
 
     // Load cases from manifest (new file-based structure)
-    console.log('Loading cases from manifest...');
+    debugWarn('Loading cases from manifest...');
     const manifestMap = await loadCasesFromManifest();
-    console.log('Loaded cases from manifest:', Object.keys(manifestMap));
+    debugWarn('Loaded cases from manifest:', Object.keys(manifestMap));
     if (Object.keys(manifestMap).length > 0) {
       saveCasesToStorage(manifestMap);
       return manifestMap;
@@ -200,7 +215,7 @@ async function ensureCasesInitialized() {
 
 // Force reload cases from manifest (clears storage cache)
 export const forceReloadCases = async () => {
-  console.log('Force reloading cases...');
+  debugWarn('Force reloading cases...');
   storage.removeItem(CASES_KEY);
   return await ensureCasesInitialized();
 };
@@ -224,14 +239,12 @@ export const getCase = async (id) => {
 };
 
 export const createCase = async (caseData) => {
-  // Validate case data
-  const validationErrors = validateCase(caseData);
+  // Normalize first, then validate to avoid false warnings
+  const cleanedData = ensureDataIntegrity(caseData);
+  const validationErrors = validateCase(cleanedData);
   if (validationErrors.length > 0) {
     console.warn('Case validation warnings:', validationErrors);
   }
-
-  // Ensure data integrity
-  const cleanedData = ensureDataIntegrity(caseData);
 
   // Generate new case wrapper
   const newCase = {
@@ -252,14 +265,12 @@ export const createCase = async (caseData) => {
 };
 
 export const updateCase = async (id, caseData) => {
-  // Validate case data
-  const validationErrors = validateCase(caseData);
+  // Normalize first, then validate to avoid false warnings
+  const cleanedData = ensureDataIntegrity(caseData);
+  const validationErrors = validateCase(cleanedData);
   if (validationErrors.length > 0) {
     console.warn('Case validation warnings:', validationErrors);
   }
-
-  // Ensure data integrity
-  const cleanedData = ensureDataIntegrity(caseData);
 
   // Update existing case
   const cases = loadCasesFromStorage();

@@ -611,7 +611,7 @@ export async function initializeCase(caseId, isFacultyMode = false, isKeyMode = 
           title: 'Blank SOAP Note',
           setting: 'Outpatient',
           diagnosis: 'N/A',
-          acuity: 'routine',
+          acuity: 'unspecified',
         },
         snapshot: { age: '', sex: 'unspecified' },
         editorSettings: undefined,
@@ -801,8 +801,22 @@ export function initializeDraft(
           // Update the caseId for future saves (extract just the ID)
           currentCaseId = newCase.id;
 
-          // Update the URL to reflect the new case ID
-          window.history.replaceState({}, '', `#/instructor/${newCase.id}`);
+          // Migrate draft storage key to the new case id
+          try {
+            const prev = storage.getItem(localStorageKey);
+            const newKey = `draft_${currentCaseId}_${encounter}`;
+            if (prev) storage.setItem(newKey, prev);
+            if (prev) storage.removeItem(localStorageKey);
+          } catch {}
+
+          // Update the URL to reflect the new case ID in the editor route
+          try {
+            window.history.replaceState(
+              {},
+              '',
+              `#/instructor/editor?case=${newCase.id}&encounter=${encodeURIComponent(encounter)}`,
+            );
+          } catch {}
         } else {
           // For existing cases, update the existing case
           const { updateCase } = await import('../../core/store.js');

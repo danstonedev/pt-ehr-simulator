@@ -1462,6 +1462,27 @@ function openEditArtifactModal(module, onSave) {
 
 // Edit Case Details Modal (faculty): mirrors Create New Case layout
 export function openEditCaseModal(caseInfo, onSave) {
+  // Normalize incoming values to schema enums for correct default selection
+  const normalizeSex = (s) => {
+    if (!s) return 'unspecified';
+    const v = String(s).toLowerCase();
+    if (v === 'prefer not to say' || v === 'prefer-not-to-say' || v === 'n/a' || v === 'na')
+      return 'unspecified';
+    if (['male', 'female', 'other', 'unspecified'].includes(v)) return v;
+    return 'unspecified';
+  };
+  const normalizeAcuity = (a) => {
+    if (!a) return 'unspecified';
+    const v = String(a).toLowerCase();
+    if (['acute', 'subacute', 'chronic', 'unspecified'].includes(v)) return v;
+    // Map legacy/non-schema labels to closest enum or unspecified
+    if (v === 'routine') return 'unspecified';
+    if (v === 'complex') return 'chronic';
+    if (v === 'critical') return 'acute';
+    return 'unspecified';
+  };
+  const caseSex = normalizeSex(caseInfo?.sex);
+  const caseAcuity = normalizeAcuity(caseInfo?.acuity);
   // Clone modules array for local editing
   const modulesLocal = Array.isArray(caseInfo.modules)
     ? JSON.parse(JSON.stringify(caseInfo.modules))
@@ -1593,25 +1614,22 @@ export function openEditCaseModal(caseInfo, onSave) {
                   el('option', { value: '' }, 'Select...'),
                   el(
                     'option',
-                    { value: 'Male', selected: caseInfo.sex === 'Male' ? '' : undefined },
+                    { value: 'male', selected: caseSex === 'male' ? '' : undefined },
                     'Male',
                   ),
                   el(
                     'option',
-                    { value: 'Female', selected: caseInfo.sex === 'Female' ? '' : undefined },
+                    { value: 'female', selected: caseSex === 'female' ? '' : undefined },
                     'Female',
                   ),
                   el(
                     'option',
-                    { value: 'Other', selected: caseInfo.sex === 'Other' ? '' : undefined },
+                    { value: 'other', selected: caseSex === 'other' ? '' : undefined },
                     'Other',
                   ),
                   el(
                     'option',
-                    {
-                      value: 'Prefer not to say',
-                      selected: caseInfo.sex === 'Prefer not to say' ? '' : undefined,
-                    },
+                    { value: 'unspecified', selected: caseSex === 'unspecified' ? '' : undefined },
                     'Prefer not to say',
                   ),
                 ],
@@ -1666,7 +1684,7 @@ export function openEditCaseModal(caseInfo, onSave) {
                 ),
               ]),
             ]),
-            // Acuity
+            // Acuity (schema enums)
             el('div', { style: 'margin-bottom: 24px;' }, [
               el(
                 'label',
@@ -1687,26 +1705,26 @@ export function openEditCaseModal(caseInfo, onSave) {
                   el('option', { value: '' }, 'Select acuity...'),
                   el(
                     'option',
-                    { value: 'Routine', selected: caseInfo.acuity === 'Routine' ? '' : undefined },
-                    'Routine',
-                  ),
-                  el(
-                    'option',
-                    { value: 'Acute', selected: caseInfo.acuity === 'Acute' ? '' : undefined },
+                    { value: 'acute', selected: caseAcuity === 'acute' ? '' : undefined },
                     'Acute',
                   ),
                   el(
                     'option',
-                    { value: 'Complex', selected: caseInfo.acuity === 'Complex' ? '' : undefined },
-                    'Complex',
+                    { value: 'subacute', selected: caseAcuity === 'subacute' ? '' : undefined },
+                    'Subacute',
+                  ),
+                  el(
+                    'option',
+                    { value: 'chronic', selected: caseAcuity === 'chronic' ? '' : undefined },
+                    'Chronic',
                   ),
                   el(
                     'option',
                     {
-                      value: 'Critical',
-                      selected: caseInfo.acuity === 'Critical' ? '' : undefined,
+                      value: 'unspecified',
+                      selected: caseAcuity === 'unspecified' ? '' : undefined,
                     },
-                    'Critical',
+                    'Unspecified',
                   ),
                 ],
               ),
