@@ -1128,7 +1128,7 @@ function openAddArtifactModal(onAdd) {
   });
   const attList = el('div', { style: 'display:flex; flex-direction:column; gap:6px;' });
   function renderAttachmentList() {
-    attList.innerHTML = '';
+    attList.replaceChildren();
     if (!ref.attachments || !ref.attachments.length) return;
     ref.attachments.forEach((m, idx) => {
       const row = el('div', { style: 'display:flex; align-items:center; gap:8px;' }, [
@@ -1310,7 +1310,7 @@ function openEditArtifactModal(module, onSave) {
   });
   const attList = el('div', { style: 'display:flex; flex-direction:column; gap:6px;' });
   function renderAttachmentList() {
-    attList.innerHTML = '';
+    attList.replaceChildren();
     if (!ref.attachments || !ref.attachments.length) return;
     ref.attachments.forEach((m, idx) => {
       const row = el('div', { style: 'display:flex; align-items:center; gap:8px;' }, [
@@ -2417,10 +2417,7 @@ export function refreshChartNavigation(sidebar, config) {
   const newSidebar = createChartNavigation(config);
 
   // Replace the content while preserving the container
-  sidebar.innerHTML = '';
-  Array.from(newSidebar.children).forEach((child) => {
-    sidebar.appendChild(child);
-  });
+  sidebar.replaceChildren(...Array.from(newSidebar.children));
   // Re-apply visibility controls on current content after refresh
   setTimeout(() => {
     try {

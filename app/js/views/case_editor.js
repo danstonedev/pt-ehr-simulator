@@ -156,7 +156,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   function renderPatientHeaderActions() {
     const actions = document.getElementById('patient-header-actions');
     if (!actions) return;
-    actions.innerHTML = '';
+    actions.replaceChildren();
     let canEdit = !!isFacultyMode;
     // Allow students to edit if working on a blank note
     try {
@@ -220,7 +220,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     return;
   }
 
-  app.innerHTML = '';
+  app.replaceChildren();
   const loadingIndicator = createLoadingIndicator();
   app.append(loadingIndicator);
 
@@ -228,7 +228,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   const caseResult = await initializeCase(caseId, isFacultyMode, isKeyMode);
 
   if (caseResult.error) {
-    app.innerHTML = '';
+    app.replaceChildren();
     app.append(createErrorDisplay(caseResult.title, caseResult.message, caseResult.details));
     return;
   }
@@ -236,7 +236,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   const caseWrapper = caseResult;
   const c = caseWrapper.caseObj;
 
-  app.innerHTML = ''; // Clear loading indicator
+  app.replaceChildren(); // Clear loading indicator
 
   // For faculty mode with new cases, we'll show the integrated editor
   // No separate metadata form - everything is integrated
@@ -536,7 +536,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       const sexDisplay = sex
         ? String(sex).slice(0, 1).toUpperCase() + String(sex).slice(1).toLowerCase()
         : '';
-      patientHeaderNameEl.innerHTML = '';
+      patientHeaderNameEl.replaceChildren();
       patientHeaderNameEl.append(
         el('span', { style: 'font-weight:700' }, displayName),
         ...(sexDisplay
@@ -551,7 +551,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       );
       // Line 2: MM-DD-YYYY (xx years old) with date bold
       const dateText = dobFmt || dob || 'N/A';
-      patientHeaderDemoEl.innerHTML = '';
+      patientHeaderDemoEl.replaceChildren();
       patientHeaderDemoEl.append(
         el('span', { style: 'font-weight:700; color: var(--text);' }, dateText),
         ...(age ? [el('span', { style: 'font-weight:400' }, ` (${age} years old)`)] : []),
@@ -582,7 +582,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   const sectionRoots = {};
   const sectionHeaders = {}; // anchored dividers used for section scroll/active detection
   function renderAllSections() {
-    contentRoot.innerHTML = '';
+    contentRoot.replaceChildren();
 
     // Subjective
     const subjHeader = el('div', { id: 'section-subjective', class: 'editor-section-divider' }, [

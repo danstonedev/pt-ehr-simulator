@@ -4,8 +4,8 @@ import { listCases } from '../../core/store.js';
 import { storage } from '../../core/index.js';
 import { el } from '../../ui/utils.js';
 
-route('#/student/drafts', async (app, qs) => {
-  app.innerHTML = '';
+route('#/student/drafts', async (app) => {
+  app.replaceChildren();
 
   const loadingIndicator = el('div', { class: 'panel' }, 'Loading drafts...');
   app.append(loadingIndicator);
@@ -79,7 +79,7 @@ route('#/student/drafts', async (app, qs) => {
       return a.encounter.localeCompare(b.encounter);
     });
 
-    app.innerHTML = '';
+    app.replaceChildren();
 
     const panel = el('div', { class: 'panel' }, [
       el('div', { class: 'flex-between' }, [
@@ -206,7 +206,7 @@ route('#/student/drafts', async (app, qs) => {
     }
   } catch (error) {
     console.error('Failed to load drafts:', error);
-    app.innerHTML = '';
+    app.replaceChildren();
     app.append(
       el(
         'div',

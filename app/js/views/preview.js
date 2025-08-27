@@ -5,7 +5,7 @@ import { el, printPage } from '../ui/utils.js';
 route('#/preview', async (app, qs) => {
   const caseId = qs.get('case');
 
-  app.innerHTML = '';
+  app.replaceChildren();
   const loadingIndicator = el('div', { class: 'panel' }, 'Loading case preview...');
   app.append(loadingIndicator);
 
@@ -13,14 +13,14 @@ route('#/preview', async (app, qs) => {
   try {
     const caseWrapper = await getCase(caseId);
     if (!caseWrapper) {
-      app.innerHTML = '';
+      app.replaceChildren();
       app.append(el('div', { class: 'panel' }, [el('h2', {}, 'Case not found')]));
       return;
     }
     c = caseWrapper.caseObj;
   } catch (error) {
     console.error('Failed to load case for preview:', error);
-    app.innerHTML = '';
+    app.replaceChildren();
     app.append(
       el(
         'div',
@@ -31,7 +31,7 @@ route('#/preview', async (app, qs) => {
     return;
   }
 
-  app.innerHTML = ''; // Clear loading indicator
+  app.replaceChildren(); // Clear loading indicator
 
   const p = el('div', { class: 'panel' }, [
     el('div', { class: 'flex-between no-print' }, [

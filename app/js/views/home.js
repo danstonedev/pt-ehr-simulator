@@ -24,7 +24,7 @@ function buildWhatsNewPanel() {
 }
 
 route('#/', async (app) => {
-  app.innerHTML = '';
+  app.replaceChildren();
 
   const lastHash = storage.getItem('pt_emr_last_route');
   const resumeInfo = (() => {

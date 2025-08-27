@@ -24,20 +24,44 @@ function computeAgeFromDob(dobStr) {
 
 // Lightweight YouTube-style Share Popup
 function showSharePopup(url) {
-  let status;
   const overlay = el('div', {
     style: `position: fixed; inset: 0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1100;`,
     onclick: (e) => {
       if (e.target === overlay) document.body.removeChild(overlay);
     },
   });
+  const statusEl = el('div', {
+    class: 'small',
+    'aria-live': 'polite',
+    style: 'margin-top:8px; color:var(--text-secondary); min-height:1em;',
+  });
+
+  let inputRef;
+  const copyBtn = el(
+    'button',
+    {
+      class: 'btn primary',
+      style: 'padding:8px 12px; font-size:14px;',
+      onclick: async () => {
+        try {
+          await navigator.clipboard.writeText(url);
+          statusEl.textContent = 'Link copied to clipboard';
+        } catch {
+          statusEl.textContent = 'Copy failed. Select the input and copy manually.';
+        }
+        setTimeout(() => (statusEl.textContent = ''), 2500);
+      },
+    },
+    'Copy link',
+  );
+
   const card = el(
     'div',
     {
       role: 'dialog',
       'aria-modal': 'true',
       'aria-label': 'Share',
-      style: `background:var(--bg); color:var(--text); border-radius:12px; width:92%; max-width:520px; box-shadow:0 20px 45px rgba(0,0,0,0.2); padding:20px 20px 16px; position:relative;`,
+      style: `background:var(--bg); color:var(--text); border-radius:12px; width:92%; max-width:520px; box-shadow:0 20px 45px rgba(0,0,0,0.2); padding:20px; position:relative;`,
       onclick: (e) => e.stopPropagation(),
     },
     [
@@ -48,7 +72,7 @@ function showSharePopup(url) {
             'display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;',
         },
         [
-          el('h3', { style: 'margin:0; font-size:18px; font-weight:600;' }, 'Share'),
+          el('h3', { style: 'margin:0; font-size:18px; font-weight:600;' }, 'Share link'),
           el(
             'button',
             {
@@ -62,163 +86,78 @@ function showSharePopup(url) {
           ),
         ],
       ),
-      (() => {
-        const row = el('div', {
-          style: 'display:flex; gap:8px; align-items:center; margin:8px 0 4px;',
-        });
-        const input = el('input', {
+      el(
+        'p',
+        { class: 'small', style: 'margin:0 0 8px 0; color:var(--text-secondary);' },
+        'Share this URL with students.',
+      ),
+      el('div', { style: 'display:flex; gap:8px; align-items:center;' }, [
+        (inputRef = el('input', {
           type: 'text',
           value: url,
           readOnly: true,
           style:
             'flex:1; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
-        });
-        const copyBtn = el(
-          'button',
-          {
-            class: 'btn small primary',
-            style: 'white-space:nowrap;',
-            onclick: async () => {
-              try {
-                await navigator.clipboard.writeText(url);
-                status.textContent = 'Copied!';
-              } catch {
-                status.textContent = 'Copy failed. Select text to copy.';
-                input.select();
-                input.focus();
-              }
-              setTimeout(() => {
-                status.textContent = '';
-              }, 2000);
-            },
+          onclick: (e) => {
+            e.target.select();
           },
-          'Copy',
-        );
-        row.append(input, copyBtn);
-        return row;
-      })(),
-      (() => {
-        const s = el(
-          'div',
-          { style: 'min-height:18px; font-size:12px; color:var(--success); margin-top:2px;' },
-          '',
-        );
-        status = s;
-        return s;
-      })(),
-      el('div', { style: 'display:flex; justify-content:flex-end; gap:8px; margin-top:8px;' }, [
-        el(
-          'a',
-          {
-            href: url,
-            target: '_blank',
-            rel: 'noopener noreferrer',
-            class: 'btn small secondary',
-            style: 'text-decoration:none;',
-          },
-          'Open Link',
-        ),
+        })),
+        copyBtn,
       ]),
+      statusEl,
     ],
   );
-  // status declared above
   overlay.append(card);
   document.body.appendChild(overlay);
-  setTimeout(() => {
-    const input = card.querySelector('input');
-    input?.focus();
-    input?.select();
-  }, 0);
-  const onKey = (e) => {
-    if (e.key === 'Escape') {
-      document.body.removeChild(overlay);
-      window.removeEventListener('keydown', onKey);
-    }
-  };
-  window.addEventListener('keydown', onKey);
+  setTimeout(() => inputRef?.select(), 50);
 }
 
-// Case Creation Modal
+// Create Case Modal (reconstructed)
 function showCaseCreationModal() {
   const modal = el(
     'div',
     {
-      style: `
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    `,
+      style: `position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;`,
       onclick: (e) => {
-        if (e.target === modal) {
-          document.body.removeChild(modal);
-        }
+        if (e.target === modal) document.body.removeChild(modal);
       },
     },
     [
       el(
         'div',
         {
-          style: `
-        background: var(--bg);
-        color: var(--text);
-        padding: 32px;
-        border-radius: 12px;
-        max-width: 500px;
-        width: 90%;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-      `,
+          style: `background:var(--bg); padding:24px; border-radius:12px; max-width:720px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.15); color:var(--text);`,
           onclick: (e) => e.stopPropagation(),
         },
         [
-          el(
-            'h2',
-            {
-              class: 'instructor-title',
-            },
-            'Create New Case',
-          ),
-
-          // Form
+          el('h2', { style: 'margin:0 0 12px 0;' }, 'Create Case'),
           el(
             'form',
             {
-              id: 'case-creation-form',
-              onsubmit: handleCaseCreation,
+              onsubmit: (e) => handleCaseCreation(e),
             },
             [
               // Title
-              el(
-                'div',
-                {
-                  class: 'instructor-form-field',
-                },
-                [
-                  el(
-                    'label',
-                    {
-                      class: 'instructor-form-label',
-                    },
-                    'Case Title *',
-                  ),
-                  el('input', {
-                    type: 'text',
-                    id: 'case-title',
-                    required: true,
-                    class: 'instructor-form-input',
-                    placeholder: 'e.g., Post-surgical ACL reconstruction',
-                  }),
-                ],
-              ),
-
-              // DOB Row (moved up after Title)
               el('div', { style: 'margin-bottom: 16px;' }, [
+                el(
+                  'label',
+                  {
+                    style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);',
+                  },
+                  'Case Title *',
+                ),
+                el('input', {
+                  id: 'case-title',
+                  type: 'text',
+                  required: true,
+                  placeholder: 'e.g., Shoulder Impingement (R)',
+                  style:
+                    'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+                }),
+              ]),
+
+              // DOB
+              el('div', { style: 'margin-bottom: 12px;' }, [
                 el(
                   'label',
                   {
@@ -256,64 +195,25 @@ function showCaseCreationModal() {
               ]),
 
               // Age and Sex Row
-              el('div', { style: 'display: flex; gap: 16px; margin-bottom: 16px;' }, [
-                el('div', { style: 'flex: 1;' }, [
-                  el(
-                    'label',
-                    {
-                      style:
-                        'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
-                    },
-                    'Patient Age *',
-                  ),
-                  el('input', {
-                    type: 'number',
-                    id: 'case-age',
-                    required: true,
-                    min: 0,
-                    max: 120,
-                    style: `
-                width: 100%;
-                padding: 12px;
-                border: 1px solid var(--input-border);
-                border-radius: 6px;
-                font-size: 14px;
-                box-sizing: border-box;
-              `,
-                    placeholder: '25',
-                    oninput: (e) => {
-                      const dobEl = document.getElementById('case-dob');
-                      if (!dobEl) return;
-                      // Only set DOB if empty or previously auto-filled
-                      if (dobEl.value && dobEl.dataset.autofilled !== 'age') return;
-                      const v = parseInt(e.target.value, 10);
-                      if (isNaN(v) || v <= 0 || v > 120) return;
-                      const today = new Date();
-                      const y = today.getFullYear() - v;
-                      const m = today.getMonth();
-                      const lastDay = new Date(y, m + 1, 0).getDate();
-                      const d = Math.min(today.getDate(), lastDay);
-                      const mm = String(m + 1).padStart(2, '0');
-                      const dd = String(d).padStart(2, '0');
-                      dobEl.value = `${y}-${mm}-${dd}`;
-                      dobEl.dataset.autofilled = 'age';
-                    },
-                  }),
-                ]),
-                el('div', { style: 'flex: 1;' }, [
-                  el(
-                    'label',
-                    {
-                      style:
-                        'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
-                    },
-                    'Sex *',
-                  ),
-                  el(
-                    'select',
-                    {
-                      id: 'case-gender',
+              el(
+                'div',
+                { style: 'display: flex; gap: 16px; margin-bottom: 16px; flex-wrap:wrap;' },
+                [
+                  el('div', { style: 'flex: 1; min-width:220px;' }, [
+                    el(
+                      'label',
+                      {
+                        style:
+                          'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
+                      },
+                      'Patient Age *',
+                    ),
+                    el('input', {
+                      type: 'number',
+                      id: 'case-age',
                       required: true,
+                      min: 0,
+                      max: 120,
                       style: `
                 width: 100%;
                 padding: 12px;
@@ -322,59 +222,96 @@ function showCaseCreationModal() {
                 font-size: 14px;
                 box-sizing: border-box;
               `,
-                    },
-                    [
-                      el('option', { value: '' }, 'Select...'),
-                      el('option', { value: 'male' }, 'Male'),
-                      el('option', { value: 'female' }, 'Female'),
-                      el('option', { value: 'other' }, 'Other'),
-                      el('option', { value: 'prefer-not-to-say' }, 'Prefer not to say'),
-                    ],
-                  ),
-                ]),
-              ]),
-
-              // Setting (moved below Age/Sex)
-              el(
-                'div',
-                {
-                  class: 'instructor-form-field',
-                },
-                [
-                  el(
-                    'label',
-                    {
-                      class: 'instructor-form-label',
-                    },
-                    'Clinical Setting *',
-                  ),
-                  el(
-                    'select',
-                    {
-                      id: 'case-setting',
-                      required: true,
-                      class: 'instructor-form-input',
-                    },
-                    [
-                      el('option', { value: '' }, 'Select setting...'),
-                      el('option', { value: 'Outpatient' }, 'Outpatient'),
-                      el('option', { value: 'Inpatient' }, 'Inpatient'),
-                      el('option', { value: 'Home Health' }, 'Home Health'),
-                      el('option', { value: 'SNF' }, 'Skilled Nursing Facility (SNF)'),
-                      el('option', { value: 'Acute Rehab' }, 'Acute Rehabilitation'),
-                      el('option', { value: 'Other' }, 'Other'),
-                    ],
-                  ),
+                      placeholder: '25',
+                      oninput: (e) => {
+                        const dobEl = document.getElementById('case-dob');
+                        if (!dobEl) return;
+                        // Only set DOB if empty or previously auto-filled
+                        if (dobEl.value && dobEl.dataset.autofilled !== 'age') return;
+                        const v = parseInt(e.target.value, 10);
+                        if (isNaN(v) || v <= 0 || v > 120) return;
+                        const today = new Date();
+                        const y = today.getFullYear() - v;
+                        const m = today.getMonth();
+                        const lastDay = new Date(y, m + 1, 0).getDate();
+                        const d = Math.min(today.getDate(), lastDay);
+                        const mm = String(m + 1).padStart(2, '0');
+                        const dd = String(d).padStart(2, '0');
+                        dobEl.value = `${y}-${mm}-${dd}`;
+                        dobEl.dataset.autofilled = 'age';
+                      },
+                    }),
+                  ]),
+                  el('div', { style: 'flex: 1; min-width:220px;' }, [
+                    el(
+                      'label',
+                      {
+                        style:
+                          'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
+                      },
+                      'Sex *',
+                    ),
+                    el(
+                      'select',
+                      {
+                        id: 'case-gender',
+                        required: true,
+                        style: `
+                width: 100%;
+                padding: 12px;
+                border: 1px solid var(--input-border);
+                border-radius: 6px;
+                font-size: 14px;
+                box-sizing: border-box;
+              `,
+                      },
+                      [
+                        el('option', { value: '' }, 'Select...'),
+                        el('option', { value: 'male' }, 'Male'),
+                        el('option', { value: 'female' }, 'Female'),
+                        el('option', { value: 'other' }, 'Other'),
+                        el('option', { value: 'prefer-not-to-say' }, 'Prefer not to say'),
+                      ],
+                    ),
+                  ]),
                 ],
               ),
 
-              // Acuity
-              el('div', { style: 'margin-bottom: 24px;' }, [
+              // Setting
+              el('div', { style: 'margin-bottom: 16px;' }, [
                 el(
                   'label',
                   {
+                    style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);',
+                  },
+                  'Clinical Setting *',
+                ),
+                el(
+                  'select',
+                  {
+                    id: 'case-setting',
+                    required: true,
                     style:
-                      'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
+                      'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+                  },
+                  [
+                    el('option', { value: '' }, 'Select setting...'),
+                    el('option', { value: 'Outpatient' }, 'Outpatient'),
+                    el('option', { value: 'Inpatient' }, 'Inpatient'),
+                    el('option', { value: 'Home Health' }, 'Home Health'),
+                    el('option', { value: 'SNF' }, 'Skilled Nursing Facility (SNF)'),
+                    el('option', { value: 'Acute Rehab' }, 'Acute Rehabilitation'),
+                    el('option', { value: 'Other' }, 'Other'),
+                  ],
+                ),
+              ]),
+
+              // Acuity
+              el('div', { style: 'margin-bottom: 20px;' }, [
+                el(
+                  'label',
+                  {
+                    style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);',
                   },
                   'Case Acuity *',
                 ),
@@ -383,14 +320,8 @@ function showCaseCreationModal() {
                   {
                     id: 'case-acuity',
                     required: true,
-                    style: `
-              width: 100%;
-              padding: 12px;
-              border: 1px solid var(--input-border);
-              border-radius: 6px;
-              font-size: 14px;
-              box-sizing: border-box;
-            `,
+                    style:
+                      'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
                   },
                   [
                     el('option', { value: '' }, 'Select acuity...'),
@@ -403,7 +334,7 @@ function showCaseCreationModal() {
               ]),
 
               // Buttons
-              el('div', { style: 'display: flex; gap: 12px; justify-content: flex-end;' }, [
+              el('div', { style: 'display:flex; gap: 12px; justify-content:flex-end;' }, [
                 el(
                   'button',
                   {
@@ -432,11 +363,7 @@ function showCaseCreationModal() {
   );
 
   document.body.appendChild(modal);
-
-  // Focus the first input
-  setTimeout(() => {
-    document.getElementById('case-title')?.focus();
-  }, 100);
+  setTimeout(() => document.getElementById('case-title')?.focus(), 100);
 }
 
 // Prompt-driven Case Generation Modal
@@ -930,7 +857,7 @@ route('#/instructor/cases', async (app) => {
       }
 
       const table = renderCaseTable(filteredCases);
-      tableContainer.innerHTML = '';
+      tableContainer.replaceChildren();
       tableContainer.append(table);
     }
 
@@ -985,8 +912,7 @@ route('#/instructor/cases', async (app) => {
       if (tableContainer && tableContainer.parentElement) {
         const container = tableContainer.parentElement;
         const newContainer = renderSearchAndTable();
-        container.innerHTML = '';
-        container.append(...newContainer.children);
+        container.replaceChildren(...newContainer.children);
       }
     });
 
@@ -994,7 +920,7 @@ route('#/instructor/cases', async (app) => {
   }
 
   async function loadAndRender() {
-    app.innerHTML = ''; // Clear previous content
+    app.replaceChildren(); // Clear previous content
     const loadingIndicator = el('div', { class: 'panel' }, 'Loading cases...');
     app.append(loadingIndicator);
 
@@ -1002,7 +928,7 @@ route('#/instructor/cases', async (app) => {
       allCases = await store.listCases();
     } catch (error) {
       console.error('Failed to load cases:', error);
-      app.innerHTML = ''; // Clear loading indicator
+      app.replaceChildren(); // Clear loading indicator
       app.append(
         el(
           'div',
@@ -1013,7 +939,7 @@ route('#/instructor/cases', async (app) => {
       return;
     }
 
-    app.innerHTML = ''; // Clear loading indicator
+    app.replaceChildren(); // Clear loading indicator
     app.append(
       el('div', { class: 'panel' }, [
         el('div', { class: 'flex-between', style: 'margin-bottom: 20px;' }, [
@@ -1183,7 +1109,7 @@ route('#/instructor/cases', async (app) => {
   }
 
   function renderCases() {
-    casesContainer.innerHTML = '';
+    casesContainer.replaceChildren();
     let filteredCases = allCases.filter((c) => {
       const caseData = c.caseObj?.meta || {};
       const title = caseData.title || c.title || '';

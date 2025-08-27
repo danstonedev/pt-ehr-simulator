@@ -39,7 +39,7 @@ export const PTBilling = {
 
     // Function to render diagnosis codes
     function renderDiagnosisCodes() {
-      diagnosisContainer.innerHTML = '';
+      diagnosisContainer.replaceChildren();
       // No header here; the subsection title above already communicates context
 
       data.diagnosisCodes.forEach((codeEntry, index) => {
@@ -111,7 +111,7 @@ export const PTBilling = {
     section.append(ordersContainer);
 
     function renderOrdersReferrals() {
-      ordersContainer.innerHTML = '';
+      ordersContainer.replaceChildren();
 
       if (data.ordersReferrals.length > 0) {
         const header = el(
@@ -181,7 +181,7 @@ export function createBillingCodesWidget(data, updateField) {
   });
 
   function render() {
-    container.innerHTML = '';
+    container.replaceChildren();
 
     // Header when there are rows
     if (data.billingCodes.length > 0) {
@@ -509,7 +509,6 @@ function createBillingCodeRow(codeEntry, index, data, updateField, renderCallbac
   codeSelect.value = codeEntry.code || '';
 
   // Units input (for time-based codes)
-  const isTimeBased = isTimeBasedCode(codeEntry.code);
   const unitsInput = el('input', {
     type: 'number',
     value: codeEntry.units || 1,
@@ -725,26 +724,26 @@ function getPTCPTCodes() {
 /**
  * Determines if a CPT code is time-based (requires units)
  */
-function isTimeBasedCode(code) {
-  const timeBasedCodes = [
-    '97110',
-    '97112',
-    '97116',
-    '97140',
-    '97530',
-    '97535',
-    '97032',
-    '97033',
-    '97034',
-    '97035',
-    '97113',
-    '97124',
-    '97542',
-    '97750',
-    '97755',
-  ];
-  return timeBasedCodes.includes(code);
-}
+// function isTimeBasedCode(code) {
+//   const timeBasedCodes = [
+//     '97110',
+//     '97112',
+//     '97116',
+//     '97140',
+//     '97530',
+//     '97535',
+//     '97032',
+//     '97033',
+//     '97034',
+//     '97035',
+//     '97113',
+//     '97124',
+//     '97542',
+//     '97750',
+//     '97755',
+//   ];
+//   return timeBasedCodes.includes(code);
+// }
 
 /**
  * Top 25 ICD-10 diagnosis codes commonly used in Physical Therapy

@@ -4,7 +4,7 @@ import { listCases } from '../../core/store.js';
 import { storage } from '../../core/index.js';
 import { el } from '../../ui/utils.js';
 route('#/student/cases', async (app) => {
-  app.innerHTML = ''; // Clear previous content
+  app.replaceChildren(); // Clear previous content
 
   // No separate header container; everything lives in the main panel below
 

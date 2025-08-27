@@ -422,10 +422,15 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
     const isValid = regionalAssessments.hasOwnProperty(regionKey);
     if (!isValid && regionKey) {
       // Only warn in development when env is available; silently filter in browsers
-      const isDev =
-        typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production';
-      if (isDev) {
-        console.warn(`Regional assessment: Invalid region "${regionKey}" filtered out.`);
+      // In browser builds, process may be undefined; keep this as a soft dev-only warning
+      try {
+        const isDev =
+          typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production';
+        if (isDev) {
+          console.warn(`Regional assessment: Invalid region "${regionKey}" filtered out.`);
+        }
+      } catch {
+        // ignore
       }
     }
     return isValid;
@@ -611,7 +616,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
     });
 
     // Create/update PROM section
-    promContainer.innerHTML = '';
+    promContainer.replaceChildren();
     if (combinedPromData.length > 0) {
       // Group by base movement name (like bilateral table)
       const groups = {};
@@ -711,7 +716,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
     }
 
     // Create/update ROM section
-    romContainer.innerHTML = '';
+    romContainer.replaceChildren();
     if (combinedRomData.length > 0) {
       romSection = createRomSection(
         'multi-region',
@@ -737,7 +742,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
     }
 
     // Create/update MMT section
-    mmtContainer.innerHTML = '';
+    mmtContainer.replaceChildren();
     if (combinedMmtData.length > 0) {
       mmtSection = createMmtSection(
         'multi-region',
@@ -763,7 +768,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
     }
 
     // Create/update Special Tests section
-    specialTestsContainer.innerHTML = '';
+    specialTestsContainer.replaceChildren();
     if (combinedSpecialTestsData.length > 0) {
       specialTestsSection = createSpecialTestsSection(
         'multi-region',

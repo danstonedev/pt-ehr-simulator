@@ -1,7 +1,7 @@
 // PainAssessment.js - Comprehensive Pain Assessment Module
 // Systematic pain evaluation following evidence-based guidelines
 
-import { textAreaField, inputField, selectField } from '../../../ui/form-components.js';
+import { textAreaField, selectField } from '../../../ui/form-components.js';
 import { el } from '../../../ui/utils.js';
 
 /**
@@ -16,7 +16,11 @@ function painScaleWidget(value, onChange) {
       'button',
       {
         type: 'button',
-        class: `pain-scale-btn ${value !== null && value !== undefined && value !== '' && value == i ? 'active' : ''}`,
+        class: `pain-scale-btn ${
+          value !== null && value !== undefined && value !== '' && String(value) === String(i)
+            ? 'active'
+            : ''
+        }`,
         onclick: () => {
           // Update all buttons
           scaleContainer

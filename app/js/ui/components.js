@@ -5,7 +5,7 @@ import { el } from './utils.js';
 // activeTab: current active tab id
 // onChange: function(tabId) called when a tab is clicked
 export function renderTabs(container, tabs, activeTab, onChange) {
-  container.innerHTML = '';
+  container.replaceChildren();
   tabs.forEach((tab) => {
     const tabEl = el(
       'div',
