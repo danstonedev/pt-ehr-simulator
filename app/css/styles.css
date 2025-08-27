@@ -439,8 +439,6 @@ body {
   color: var(--text);
   min-height: 100vh; /* allow page to grow naturally and scroll */
   /* Improve font rendering */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   font-feature-settings:
     'liga' 1,
     'kern' 1;
@@ -2041,7 +2039,7 @@ html[data-theme='dark'] .subsection-title {
   align-items: center;
   justify-content: center;
   z-index: var(--z-modal);
-  -webkit-backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px); /* Safari/iOS */
   backdrop-filter: blur(4px);
 }
 .goal-linker-content {
@@ -2922,7 +2920,7 @@ header.topbar {
   /* Subtle left→right gradient: true black to dark gray (theme-agnostic chrome) */
   background: linear-gradient(90deg, var(--und-black) 0%, var(--chrome-topbar-right) 100%);
   border-bottom: 1px solid var(--border);
-  -webkit-backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px); /* Safari/iOS */
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }

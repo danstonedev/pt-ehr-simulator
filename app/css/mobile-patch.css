@@ -73,8 +73,8 @@
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.45);
+    -webkit-backdrop-filter: blur(1px); /* Safari/iOS */
     z-index: 1090;
-    -webkit-backdrop-filter: blur(1px);
     backdrop-filter: blur(1px);
   }
   body.mobile-drawer-open {

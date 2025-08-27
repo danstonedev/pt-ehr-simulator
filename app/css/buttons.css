@@ -23,7 +23,6 @@
   min-height: 44px;
   min-width: 44px;
   position: relative;
-  -webkit-appearance: none;
   appearance: none;
   line-height: 1.4;
 }
