@@ -1039,10 +1039,12 @@ route('#/instructor/cases', async (app) => {
                     try {
                       await navigator.clipboard.writeText(studentLink);
                     } catch {}
-                    const originalContent = e.target.innerHTML;
-                    e.target.innerHTML = '<span>✓ Copied!</span>';
+                    const btn = e.currentTarget || e.target;
+                    const originalNodes = Array.from(btn.childNodes);
+                    // Replace button content safely without parsing HTML
+                    btn.replaceChildren(document.createTextNode('✓ Copied!'));
                     setTimeout(() => {
-                      e.target.innerHTML = originalContent;
+                      btn.replaceChildren(...originalNodes);
                     }, 2000);
                   },
                 },

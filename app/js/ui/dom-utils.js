@@ -19,7 +19,8 @@ export function el(tag, attrs = {}, children = []) {
       const eventName = key.slice(2).toLowerCase();
       element.addEventListener(eventName, value);
     } else if (key === 'html') {
-      element.innerHTML = value;
+      // Sanitize: never assign unsanitized HTML
+      setSafeHtml(element, value);
     } else {
       element.setAttribute(key, value);
     }
@@ -72,8 +73,6 @@ export function createLoadingSpinner(message = 'Loading...') {
  */
 export function setSafeHtml(element, html) {
   if (!element) return;
-  // Minimal escape to avoid unsafe injection
-  const escape = (s) =>
-    String(s).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-  element.innerHTML = escape(html);
+  // Safest default: treat input as text; escape by assigning textContent
+  element.textContent = String(html ?? '');
 }

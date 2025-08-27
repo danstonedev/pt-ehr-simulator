@@ -1,168 +1,58 @@
-# Copilot Instructions – Modern Web Standards (HTML, CSS, Vanilla JS)
+# Copilot Instructions – PT EMR Simulator (Vanilla JS SPA)
 
-> **Purpose:** Constrain AI code suggestions to high‑quality, modern, accessible, and maintainable patterns for a **pure‑frontend** app (HTML5/CSS3/ES modules). No frameworks. No build step assumed. Works when served from `/app` via a static server.
+Purpose: Make AI agents productive in this repo. This is a pure‑frontend, hash‑routed SPA served from `app/` with ES modules and localStorage data. No backend required.
 
-**Use with:** See the companion checklist & snippets: `copilot-style-guide.md`. Every PR **must** include the checklist from that file in the description.
+Use with: `.github/workflows/copilot-style-guide.md` (checklist + snippets). Paste that checklist into every PR.
 
----
+1. Architecture (what lives where)
 
-## Golden Rules (TL;DR)
+- Entry: `app/index.html` loads modules; routes render into `<main id="app">`.
+- Router: `app/js/core/router.js` registers routes via `route('#/path', (app, qs, params)=>{})` and starts in `initializeApp()` after importing all view modules.
+- Data store: `app/js/core/store.js` uses `storageAdapter` (localStorage) with case wrappers keyed under `pt_emr_cases`; drafts under `draft_<caseId>_<encounter>`.
+- Schema helpers: `app/js/core/schema.js` provides `validateCase`, `ensureDataIntegrity`, `migrateOldCaseData`.
+- Views: `app/js/views/**` for pages (student, instructor, editor, preview).
+- Case data: manifest‑driven under `app/data/cases/manifest.json` → per‑case JSON files.
+- Exports: `app/js/services/document-export.js` requires global `docx` (Word export).
 
-- **Semantics first, accessibility always.**
-- **Mobile‑first, responsive layouts** with progressive enhancement.
-- **Vanilla ES Modules** only (`type="module"`). **No global script tags** that mutate `window`.
-- **Separation of concerns:** no inline styles or inline event handlers.
-- **Idempotent, testable functions**; avoid magic globals and side effects.
-- **Prefer composable utilities over deep CSS selectors or one‑off hacks.**
+2. Add a new page/feature (concrete pattern)
 
----
+- Create `app/js/views/feature/foo.js` and register the route:
+  `import { route } from '../../core/router.js';
+ import { el } from '../../ui/utils.js';
+ route('#/feature/foo', async (app)=>{ app.replaceChildren(el('h1',{},'Foo')); });`
+- Add a dynamic import to `initializeApp()` in `core/router.js` so it loads before `startRouter()`.
+- For navigation, link via `href="#/feature/foo"` or use `url.navigate('/feature/foo')`.
 
-## HTML (Required Practices)
+3. Work with cases and drafts (use store API, don’t hand‑roll keys)
 
-**Must:**
+- List/get: `const cases = await listCases(); const w = await getCase(id);`
+- Create/update/delete: `createCase(caseObj)`, `updateCase(id, caseObj)`, `deleteCase(id)`.
+- Drafts: `saveDraft(caseId, encounter, draft)`, `loadDraft(caseId, encounter)`, `listDrafts()`.
+- Always run `validateCase` and prefer `ensureDataIntegrity` before persisting.
 
-- Use semantic elements (`header`, `nav`, `main`, `section`, `article`, `aside`, `footer`, `form`, `fieldset`, `legend`, `label`).
-- Provide `<html lang="en">`, UTF‑8 charset, and viewport meta:
-  ```html
-  <meta charset="utf-8" /> <meta name="viewport" content="width=device-width, initial-scale=1" />
-  ```
-- Every interactive control is a **real control** (`button`, `a[href]`, `input`, `select`, etc.) with **visible label** and associated `aria-*` only as needed.
-- All images require `alt` (meaningful or `alt=""` if decorative). SVGs include `role="img"` + `<title>` where appropriate.
-- Forms: pair `label[for]` with inputs; include `required`, `min`, `max`, `step` as applicable; provide inline error messaging region with `aria-live="polite"`.
-- Only one `<h1>` per document; use a logical heading hierarchy.
+4. Case loading (manifest overlay)
 
-**Never:**
+- On first load, cases come from `app/data/cases/manifest.json` then cache to storage.
+- To refresh: clear `pt_emr_cases` (and `pt_emr_case_counter`) or call `forceReloadCases()` from `core/store.js`.
 
-- Inline event handlers (e.g., `onclick="..."`) or inline styles.
-- Misusing `<div>`/`<span>` for interactive elements.
-- Relying on color alone to convey meaning; provide text or icon + `aria-label`.
+5. Dev workflow
 
-**Prefer:**
+- Serve locally: run `./start_servers_simple.ps1` (or `app/start_servers_simple.ps1`) → http://localhost:3000.
+- Lint/format: `npm run lint`, `npm run format`, `npm run check`.
+- Browser tests: open files under `app/tests/*.test.html` while the server runs (e.g., `wiring.test.html`).
+- Debug logs: append `?debug=1` to the URL (use `?debug=0` to silence).
 
-- **Fragment navigation** and accessible skip links: `<a class="skip-link" href="#main">Skip to content</a>`.
-- Native `<dialog>` for modals with focus trapping and `aria-modal="true"`.
+6. Conventions that differ from “typical” apps
 
----
+- Hash routes only (e.g., `#/student/cases`); active link highlighting handled in `core/router.js`.
+- DOM building via `ui/utils.el()`; avoid unsanitized `innerHTML`.
+- Feature modules are ES modules; register routes in the module and import them in `initializeApp()`.
+- Storage is the “backend.” Never assume server APIs; optional local dev sync uses `publishToServer()` if enabled.
 
-## CSS (Required Practices)
+7. Accessibility and CSS quick rules
 
-**Must:**
+- Keep pages semantically structured; one `<h1>` per view; skip‑link in `index.html` is already provided.
+- Use BEM‑ish classes and CSS tokens defined in `app/css/*.css`; avoid deep selectors and IDs.
+- See `.github/workflows/copilot-style-guide.md` for detailed a11y/CSS/JS standards and snippets.
 
-- **Mobile‑first**: start with small screens; enhance with media queries.
-- Use logical properties (`margin-inline`, `padding-block`) where sensible.
-- Scale typography with `rem` and fluid sizes via `clamp()`.
-- Layout with **Flexbox/Grid**; avoid absolute positioning for primary layout.
-- Use **utility classes** and **BEM‑like naming** to avoid deep specificity:
-  - Utilities: `.sr-only`, `.text-xs`, `.flow`, `.stack`, `.grid-gap-2`, etc.
-  - Components: `.card`, `.card__header`, `.card__body`.
-- Respect user prefs:
-  ```css
-  @media (prefers-reduced-motion: reduce) {
-    * {
-      animation: none;
-      transition: none;
-    }
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      color-scheme: light dark;
-    }
-  }
-  ```
-
-**Never:**
-
-- `!important` (except in rare utility resets).
-- ID selectors or selector depth > 3.
-- Hard‑coded `px` for body copy.
-
-**Prefer:**
-
-- CSS custom properties for theme tokens (spacing, color, radius, z‑index).
-- `:focus-visible` styles with clear outlines; do not remove outlines.
-
----
-
-## JavaScript (Required Practices)
-
-**Module & Structure**
-
-- ES modules with `type="module"` and named exports. Prefer pure functions.
-- Namespace features by folder; use barrel files (`index.js`) only for public API.
-
-**DOM & Events**
-
-- No inline handlers. Use `addEventListener`. Delegate where possible.
-- Guard DOM access: run after `DOMContentLoaded` or place scripts at end of body.
-- Use `dataset` for configuration; avoid tight coupling to classes/ids.
-
-**Data & State**
-
-- Validate external inputs; sanitize any HTML before injection.
-- Prefer `textContent` for text; only use `innerHTML` with sanitized templates.
-- Persist only necessary state in `localStorage` with defensive parsing (`try/catch`).
-
-**Error Handling & Logging**
-
-- Fail gracefully. Show user-friendly messages in an `aria-live` region.
-- No `console.log` in production paths; wrap logs behind a debug flag.
-
-**Never:**
-
-- `var`; use `const` by default, `let` when reassigned.
-- `==`/`!=`; use strict equality `===`/`!==`.
-- Mutate imported bindings or global objects.
-
-**Prefer:**
-
-- Event‑driven modules with small public APIs.
-- Feature detection over UA sniffing.
-- `AbortController` for cancellable async ops and to avoid leaks.
-
----
-
-## Performance & Bundling (No Build Assumed)
-
-- `<link rel="preload">` for critical fonts/assets when justified.
-- Defer non‑critical scripts with `type="module"` or `defer`.
-- Optimize images (SVG preferred). Avoid oversized PNG/JPEG.
-- Keep third‑party dependencies out unless essential.
-
----
-
-## Security & Privacy
-
-- Treat all external data as untrusted. Sanitize before `innerHTML`.
-- Do not store sensitive info in `localStorage`.
-- Avoid leaking internal structure via error messages.
-
----
-
-## Testing & Linting
-
-- Provide minimal unit tests for pure functions where practical.
-- Run an accessibility pass (manual + automated) before merging.
-- Follow a consistent style: Prettier defaults; ESLint rules (`no-var`, `eqeqeq`, `no-implicit-globals`).
-
----
-
-## Required File Practices (This Repo)
-
-- New pages: single `<h1>`, `lang="en"`, viewport meta, skip‑link, landmark roles.
-- Buttons: explicit `type="button"` unless submit required.
-- Forms: client‑side validation + accessible errors (`aria-live="polite"`).
-- Components: BEM‑like class naming, **max selector depth 3**.
-- JS: ES modules, no `innerHTML` unless sanitized template function is used.
-- CSS: tokenized with custom properties; **no IDs** and **no `!important`**.
-
----
-
-## Snippets & PR Checklist
-
-For ready‑to‑use snippets (header menu, forms, dialog, templating utility, fetch with AbortController, storage wrapper, utilities) **and the required PR checklist**, see **`copilot-style-guide.md`** at the repository root. **Every PR must paste and check off that list.**
-
----
-
-## Troubleshooting
-
-If Copilot suggestions drift from these rules or create regressions, follow the **"Copilot Troubleshooting – Modernization Playbook"** in `.github/copilot-troubleshooting.md`. It includes prompt templates, common failure‑mode fixes, mechanical refactor playbooks, regression checklists, and lint/grep commands.
+Key files for reference: `core/router.js`, `core/store.js`, `core/schema.js`, `views/**`, `services/document-export.js`, `data/cases/manifest.json`, `tests/*.test.html`.

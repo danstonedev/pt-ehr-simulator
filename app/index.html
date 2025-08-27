@@ -504,28 +504,72 @@
               if (!/embed=true/i.test(formSrc)) {
                 formSrc += (formSrc.includes('?') ? '&' : '?') + 'embed=true';
               }
-              panel.innerHTML = `
-              <h2 class="modal-title">Send Feedback</h2>
-              <p class="small modal-subtitle">This form is embedded from Microsoft Forms.</p>
-              <div class="modal-iframe-wrap">
-                <iframe class="modal-iframe" title="Feedback Form" src="${formSrc}" width="100%" height="100%" frameborder="0" marginwidth="0" marginheight="0" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>
-              </div>
-              <div class="modal-actions">
-                <button class="btn secondary" type="button" data-action="cancel">Close</button>
-                <a class="btn orange" href="${formSrc}" target="_blank" rel="noopener noreferrer">Open in new tab</a>
-              </div>
-            `;
+              const h2 = document.createElement('h2');
+              h2.className = 'modal-title';
+              h2.textContent = 'Send Feedback';
+              const p = document.createElement('p');
+              p.className = 'small modal-subtitle';
+              p.textContent = 'This form is embedded from Microsoft Forms.';
+              const wrap = document.createElement('div');
+              wrap.className = 'modal-iframe-wrap';
+              const iframe = document.createElement('iframe');
+              iframe.className = 'modal-iframe';
+              iframe.title = 'Feedback Form';
+              iframe.src = formSrc;
+              iframe.width = '100%';
+              iframe.height = '100%';
+              iframe.setAttribute('frameborder', '0');
+              iframe.setAttribute('marginwidth', '0');
+              iframe.setAttribute('marginheight', '0');
+              iframe.setAttribute('allowfullscreen', '');
+              iframe.setAttribute('webkitallowfullscreen', '');
+              iframe.setAttribute('mozallowfullscreen', '');
+              wrap.appendChild(iframe);
+              const actions = document.createElement('div');
+              actions.className = 'modal-actions';
+              const closeBtn = document.createElement('button');
+              closeBtn.className = 'btn secondary';
+              closeBtn.type = 'button';
+              closeBtn.setAttribute('data-action', 'cancel');
+              closeBtn.textContent = 'Close';
+              const openLink = document.createElement('a');
+              openLink.className = 'btn orange';
+              openLink.href = formSrc;
+              openLink.target = '_blank';
+              openLink.rel = 'noopener noreferrer';
+              openLink.textContent = 'Open in new tab';
+              actions.append(closeBtn, openLink);
+              panel.replaceChildren(h2, p, wrap, actions);
             } else {
-              panel.innerHTML = `
-              <h2 class="modal-title">Send Feedback</h2>
-              <p class="small modal-subtitle">Share any issues or ideas. Your comments help improve the simulator.</p>
-              <label for="feedbackText" class="form-label-standard modal-label">Your feedback</label>
-              <textarea id="feedbackText" class="modal-textarea" rows="6"></textarea>
-              <div class="modal-actions">
-                <button class="btn secondary" type="button" data-action="cancel">Cancel</button>
-                <button class="btn orange" type="button" data-action="send">Send Feedback</button>
-              </div>
-            `;
+              const h2 = document.createElement('h2');
+              h2.className = 'modal-title';
+              h2.textContent = 'Send Feedback';
+              const p = document.createElement('p');
+              p.className = 'small modal-subtitle';
+              p.textContent =
+                'Share any issues or ideas. Your comments help improve the simulator.';
+              const label = document.createElement('label');
+              label.htmlFor = 'feedbackText';
+              label.className = 'form-label-standard modal-label';
+              label.textContent = 'Your feedback';
+              const textarea = document.createElement('textarea');
+              textarea.id = 'feedbackText';
+              textarea.className = 'modal-textarea';
+              textarea.setAttribute('rows', '6');
+              const actions = document.createElement('div');
+              actions.className = 'modal-actions';
+              const cancelBtn = document.createElement('button');
+              cancelBtn.className = 'btn secondary';
+              cancelBtn.type = 'button';
+              cancelBtn.setAttribute('data-action', 'cancel');
+              cancelBtn.textContent = 'Cancel';
+              const sendBtn = document.createElement('button');
+              sendBtn.className = 'btn orange';
+              sendBtn.type = 'button';
+              sendBtn.setAttribute('data-action', 'send');
+              sendBtn.textContent = 'Send Feedback';
+              actions.append(cancelBtn, sendBtn);
+              panel.replaceChildren(h2, p, label, textarea, actions);
             }
 
             overlay.appendChild(panel);
@@ -607,7 +651,7 @@
       );
     </script>
     <script type="module" src="js/core/router.js?v=20250820-004"></script>
-    <script src="js/mobile-drawer-v2.js?v=20250825-002"></script>
+    <script type="module" src="js/mobile-drawer-v2.js?v=20250825-002"></script>
     <script type="module">
       // Ensure theme toggle ARIA stays consistent even if markup gets refactored
       const t = document.getElementById('themeToggle');

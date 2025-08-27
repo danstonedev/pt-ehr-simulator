@@ -200,7 +200,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   };
 
   if (!caseId) {
-    app.innerHTML = '';
+    app.replaceChildren();
     app.append(
       el('div', { class: 'panel error' }, [
         el('h2', {}, 'Missing Case ID'),
