@@ -541,7 +541,7 @@ html {
   /* Dark gradient: true black → dark gray to mirror topbar */
   background: linear-gradient(90deg, var(--und-black) 0%, var(--chrome-topbar-right) 100%);
   color: #fff;
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 0 12px; /* side padding for layout */
@@ -577,15 +577,15 @@ html {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: none;
-  font-size: 11px;
+  font-size: 0.6875rem; /* 11px */
 }
 @media (max-width: 480px) {
   .edu-ribbon {
     height: 24px;
-    font-size: 11px;
+    font-size: 0.6875rem; /* 11px */
   }
   .edu-ribbon .edu-right {
-    font-size: 10px;
+    font-size: 0.625rem; /* 10px */
   }
 }
 

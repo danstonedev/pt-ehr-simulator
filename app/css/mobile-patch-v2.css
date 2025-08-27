@@ -211,7 +211,7 @@
 /* Minor text/spacing tune-ups */
 @media (max-width: 480px) {
   .brand-label {
-    font-size: 14px;
+    font-size: 0.875rem; /* 14px */
   }
   .brand-label-suffix {
     display: none;

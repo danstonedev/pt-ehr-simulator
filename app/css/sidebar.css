@@ -76,7 +76,7 @@ html[data-theme='dark'] .chart-navigation .section-nav-item * {
 .chart-navigation .note-progress-header {
   margin: 0 0 12px 0;
   padding: 8px 12px;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -111,7 +111,7 @@ html:not([data-theme='dark']) .chart-navigation .note-progress-header {
   width: 100%;
   text-align: left;
   padding: 6px 10px; /* more condensed vertically */
-  font-size: 16px; /* larger text while staying compact */
+  font-size: 1rem; /* 16px, larger text while staying compact */
   display: flex;
   align-items: center;
   gap: 8px; /* keep spacing tight */
@@ -201,11 +201,11 @@ html:not([data-theme='dark']) .sidebar-nav-panel {
 .case-info-row .label {
   color: var(--text-secondary);
   font-weight: 600;
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
 }
 .case-info-row .value {
   color: var(--text);
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
 }
 
 /* Ensure text uses dark-on-light inside white card */
@@ -357,7 +357,7 @@ html[data-theme='dark'] .chart-navigation .section-nav-item .nav-progress-text {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-weight: 900;
-  font-size: 18px;
+  font-size: 1.125rem; /* 18px */
   border-radius: 0; /* align as a continuous row with the patient header */
 }
 
@@ -428,7 +428,7 @@ html[data-theme='dark'] .case-header {
 }
 .subsection-item {
   padding: var(--space-1) var(--space-2);
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   transition:

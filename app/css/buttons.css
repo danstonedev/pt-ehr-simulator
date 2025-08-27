@@ -149,11 +149,11 @@
 
 /* Sizes */
 .btn.small {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   padding: var(--space-1) 10px;
 }
 .btn.large {
-  font-size: 16px;
+  font-size: 1rem; /* 16px */
   padding: var(--space-3) var(--space-5);
 }
 
@@ -202,7 +202,7 @@
   border: 1px solid var(--und-green);
   background: var(--und-green); /* match primary button fill */
   color: #fff; /* white plus icon/text */
-  font-size: 14px; /* scale + symbol */
+  font-size: 0.875rem; /* 14px, scale + symbol */
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
@@ -250,7 +250,7 @@
   border: 1px solid #f3e8e8;
   background: #fefefe;
   color: #dc2626;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   cursor: pointer;
   display: flex;
   align-items: center;
