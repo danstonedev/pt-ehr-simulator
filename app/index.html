@@ -639,104 +639,13 @@
       </div>
     </nav>
 
-    <script>
-      (function () {
-        function ensureOverlay() {
-          let ov = document.getElementById('siteMenuOverlay');
-          if (!ov) {
-            ov = document.createElement('div');
-            ov.id = 'siteMenuOverlay';
-            ov.className = 'site-menu-overlay';
-            document.body.appendChild(ov);
-          }
-          return ov;
-        }
-
-        function hook() {
-          const hamburger = document.querySelector('.hamburger-btn');
-          const menu = document.getElementById('siteMenu');
-          if (!hamburger || !menu) return false;
-
-          const overlay = ensureOverlay();
-          const closeBtn = menu.querySelector('.site-menu-close');
-
-          function openMenu() {
-            menu.classList.add('is-open');
-            overlay.classList.add('is-visible');
-            menu.setAttribute('aria-hidden', 'false');
-            document.body.classList.add('mobile-drawer-open');
-            hamburger.setAttribute('aria-expanded', 'true');
-            setTimeout(() => menu.focus && menu.focus(), 0);
-          }
-          function closeMenu() {
-            menu.classList.remove('is-open');
-            overlay.classList.remove('is-visible');
-            menu.setAttribute('aria-hidden', 'true');
-            document.body.classList.remove('mobile-drawer-open');
-            hamburger.setAttribute('aria-expanded', 'false');
-          }
-
-          if (!hamburger._siteMenuBound) {
-            hamburger.addEventListener('click', (e) => {
-              try {
-                e.preventDefault();
-                menu.classList.contains('is-open') ? closeMenu() : openMenu();
-              } catch {}
-            });
-            hamburger._siteMenuBound = true;
-          }
-          if (!overlay._siteMenuBound) {
-            overlay.addEventListener('click', closeMenu);
-            overlay._siteMenuBound = true;
-          }
-          if (closeBtn && !closeBtn._siteMenuBound) {
-            closeBtn.addEventListener('click', closeMenu);
-            closeBtn._siteMenuBound = true;
-          }
-
-          // ESC closes
-          if (!document._siteMenuEscBound) {
-            document.addEventListener('keydown', function onEsc(ev) {
-              if (ev.key === 'Escape' && menu.classList.contains('is-open')) closeMenu();
-            });
-            document._siteMenuEscBound = true;
-          }
-
-          // Route change closes
-          if (!window._siteMenuHashBound) {
-            window.addEventListener('hashchange', closeMenu);
-            window._siteMenuHashBound = true;
-          }
-
-          // Wire theme + feedback buttons inside the menu
-          const themeBtn = document.getElementById('siteMenuThemeToggle');
-          const feedbackBtn = document.getElementById('siteMenuFeedback');
-          if (themeBtn && !themeBtn._siteMenuBound) {
-            themeBtn.addEventListener('click', () => {
-              const t = document.getElementById('themeToggle');
-              if (t) t.click();
-            });
-            themeBtn._siteMenuBound = true;
-          }
-          if (feedbackBtn && !feedbackBtn._siteMenuBound) {
-            feedbackBtn.addEventListener('click', () => {
-              const f = document.getElementById('feedbackBtn');
-              if (f) f.click();
-              closeMenu();
-            });
-            feedbackBtn._siteMenuBound = true;
-          }
-
-          return true;
-        }
-
-        if (!hook()) {
-          document.addEventListener('DOMContentLoaded', hook);
-          const mo = new MutationObserver(() => hook());
-          mo.observe(document.documentElement, { childList: true, subtree: true });
-          setTimeout(() => mo.disconnect(), 12000);
-        }
-      })();
+    <script type="module">
+      import { initSiteMenu } from './js/features/navigation/siteMenu.js';
+      // Defer to ensure DOM present
+      const run = () => initSiteMenu();
+      if (!run()) {
+        document.addEventListener('DOMContentLoaded', run, { once: true });
+      }
     </script>
     <script type="module" src="./js/features/inline-handlers/index.js"></script>
   </body>

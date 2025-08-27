@@ -26,3 +26,6 @@ jobs:
       - name: Smoke test drawer page
         run: |
           node -e "(async()=>{const {chromium}=require('playwright');const b=await chromium.launch();const p=await b.newPage();await p.goto('http://localhost:3000/tests/mobile-drawer.test.html',{waitUntil:'load'});const res=await p.textContent('#results');console.log('RESULT:',res);if(!res||!/PASS/i.test(res)) {process.exit(1)} await b.close();})()"
+      - name: Smoke test site menu page
+        run: |
+          node -e "(async()=>{const {chromium}=require('playwright');const b=await chromium.launch();const p=await b.newPage();await p.goto('http://localhost:3000/tests/site-menu.test.html',{waitUntil:'load'});const res=await p.textContent('#results');console.log('RESULT:',res);if(!res||!/PASS/i.test(res)) {process.exit(1)} await b.close();})()"
