@@ -61,3 +61,4 @@ data/backups/
 
 # Prevent accidentally embedding a nested repository clone
 pt-ehr-simulator/
+hip-torque/
