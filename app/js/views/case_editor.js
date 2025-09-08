@@ -510,7 +510,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     let img = avatarEl.querySelector('img');
     if (!img) {
       img = document.createElement('img');
-      img.alt = '';
       img.decoding = 'async';
       img.width = 40;
       img.height = 40;
@@ -520,6 +519,13 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       img.style.borderRadius = '50%';
       avatarEl.replaceChildren(img);
     }
+    // Accessible alt text (describe visual symbol only once)
+    const altMap = {
+      male: 'Male patient avatar',
+      female: 'Female patient avatar',
+      neutral: 'Patient avatar',
+    };
+    img.alt = altMap[sex] || 'Patient avatar';
     img.src = src;
   }
 
