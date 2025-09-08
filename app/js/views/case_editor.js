@@ -470,25 +470,58 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     },
     '',
   );
-  // Simple inline avatar (silhouette)
-  const avatarEl = el('div', { class: 'patient-avatar', 'aria-hidden': 'true' }, [
-    el(
-      'svg',
-      {
-        width: '24',
-        height: '24',
-        viewBox: '0 0 24 24',
-        'aria-hidden': 'true',
-        focusable: 'false',
-        style: 'display:block;',
-      },
-      [
-        el('path', {
-          d: 'M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-4.418 0-8 2.239-8 5v2h16v-2c0-2.761-3.582-5-8-5z',
-        }),
-      ],
-    ),
-  ]);
+  // Avatar container (PNG swapped by sex + theme)
+  const avatarEl = el('div', { class: 'patient-avatar', 'aria-hidden': 'true' }, []);
+
+  // Asset mapping – user must place PNGs under app/img/avatars/
+  const AVATAR_MAP = {
+    male: {
+      light: 'img/icon_male_light.png',
+      dark: 'img/icon_male_dark.png',
+    },
+    female: {
+      light: 'img/icon_female_light.png',
+      dark: 'img/icon_female_dark.png',
+    },
+    neutral: {
+      light: 'img/icon_unknown_light.png',
+      dark: 'img/icon_unknown_dark.png',
+    },
+  };
+
+  function normalizeSex(val) {
+    if (!val) return 'neutral';
+    const s = String(val).toLowerCase();
+    if (s.startsWith('m')) return 'male';
+    if (s.startsWith('f')) return 'female';
+    return 'neutral';
+  }
+  function currentThemeMode() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  }
+  function updatePatientAvatar(rawSex) {
+    const sex = normalizeSex(rawSex);
+    const mode = currentThemeMode();
+    // Skip if already set
+    if (avatarEl.dataset.sex === sex && avatarEl.dataset.mode === mode) return;
+    avatarEl.dataset.sex = sex;
+    avatarEl.dataset.mode = mode;
+    const src = (AVATAR_MAP[sex] && AVATAR_MAP[sex][mode]) || AVATAR_MAP.neutral[mode];
+    let img = avatarEl.querySelector('img');
+    if (!img) {
+      img = document.createElement('img');
+      img.alt = '';
+      img.decoding = 'async';
+      img.width = 40;
+      img.height = 40;
+      img.style.display = 'block';
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.borderRadius = '50%';
+      avatarEl.replaceChildren(img);
+    }
+    img.src = src;
+  }
 
   const patientHeader = el(
     'div',
@@ -517,6 +550,20 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     ],
   );
 
+  // Initial neutral avatar
+  updatePatientAvatar();
+
+  // If theme toggling is added later, observe attribute changes on <html>
+  const themeObserver = new MutationObserver((mutList) => {
+    for (const m of mutList) {
+      if (m.type === 'attributes' && m.attributeName === 'data-theme') {
+        // Re-evaluate with last known sex (stored in dataset or fallback)
+        updatePatientAvatar(avatarEl.dataset.sex || 'neutral');
+      }
+    }
+  });
+  themeObserver.observe(document.documentElement, { attributes: true });
+
   /* eslint-disable-next-line complexity */
   function updatePatientHeader() {
     try {
@@ -536,6 +583,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       const dob = c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '';
       const age = computeAgeFromDobLocal(dob) || c.patientAge || c.age || '';
       let sex = c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || '';
+      updatePatientAvatar(sex);
       // Format MM-DD-YYYY
       let dobFmt = '';
       if (dob) {
