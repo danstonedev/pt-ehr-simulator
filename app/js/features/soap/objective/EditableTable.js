@@ -324,11 +324,11 @@ export function createBilateralTable(config) {
     valueType = 'text', // 'text', 'select', 'number'
     options = [],
     normalValues = true,
-    notesColumn = true,
+    // notesColumn removed (UI simplification)
     nameColumnLabel = 'Name',
     showTitle = true,
     embedNormalInName = false,
-    notesWidth,
+    // notesWidth no longer used
   } = config;
 
   // Group items by their base name (without side designation)
@@ -354,19 +354,28 @@ export function createBilateralTable(config) {
   });
 
   const columns = [
-    { field: 'name', label: nameColumnLabel, width: '35%' },
-    { field: 'left', label: 'Left', width: '15%', type: valueType, options },
-    { field: 'right', label: 'Right', width: '15%', type: valueType, options },
+    { field: 'name', label: nameColumnLabel },
+    { field: 'left', label: 'Left', type: valueType, options },
+    { field: 'right', label: 'Right', type: valueType, options },
   ];
 
   if (normalValues && !embedNormalInName) {
-    columns.push({ field: 'normal', label: 'Normal', width: '15%' });
+    columns.push({ field: 'normal', label: 'Normal' });
   }
 
-  if (notesColumn) {
-    const computedNotesWidth = notesWidth || (normalValues && embedNormalInName ? '35%' : '20%');
-    columns.push({ field: 'notes', label: 'Notes', width: computedNotesWidth });
+  // Apply standardized width distribution
+  if (columns.length === 3) {
+    columns[0].width = '50%';
+    columns[1].width = '25%';
+    columns[2].width = '25%';
+  } else if (columns.length === 4) {
+    columns[0].width = '40%';
+    columns[1].width = '20%';
+    columns[2].width = '20%';
+    columns[3].width = '20%';
   }
+
+  // Notes column removed
 
   // Convert grouped data to table format
   const tableData = {};
@@ -386,7 +395,7 @@ export function createBilateralTable(config) {
       right: data[group.right] || '',
     };
     if (!embedNormalInName && normalValues) rowBase.normal = group.normal || '';
-    if (notesColumn) rowBase.notes = data[`${rowId}-notes`] || '';
+    // notes removed
     tableData[rowId] = rowBase;
   });
 
@@ -403,7 +412,7 @@ export function createBilateralTable(config) {
 
         if (group.left !== null) updatedData[group.left] = row.left;
         if (group.right !== null) updatedData[group.right] = row.right;
-        if (notesColumn) updatedData[`${rowId}-notes`] = row.notes || '';
+        // notes removed
       });
       onChange(updatedData);
     },

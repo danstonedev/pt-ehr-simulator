@@ -646,7 +646,6 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
         const rowId = groupName.toLowerCase().replace(/\s+/g, '-');
         if (excludedSet.has(rowId)) return; // skip excluded rows
         const saved = allAssessmentData.prom[rowId] || {};
-        const savedNotes = (saved.notes || saved.endfeel || '').toString();
         const displayName = groups[groupName].normal
           ? `${groupName} (${groups[groupName].normal})`
           : groupName;
@@ -654,17 +653,15 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
           name: displayName,
           left: saved.left || '',
           right: saved.right || '',
-          notes: savedNotes,
         };
       });
 
       promTable = createEditableTable({
         // No title; move label into first column header
         columns: [
-          { field: 'name', label: 'Passive Range of Motion (PROM)', width: '35%' },
-          { field: 'left', label: 'Left', width: '15%' },
-          { field: 'right', label: 'Right', width: '15%' },
-          { field: 'notes', label: 'Notes', width: '35%' },
+          { field: 'name', label: 'Passive Range of Motion (PROM)', width: '50%' },
+          { field: 'left', label: 'Left', width: '25%' },
+          { field: 'right', label: 'Right', width: '25%' },
         ],
         data: tableData,
         onChange: (newData) => {
@@ -675,7 +672,6 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
             updated[rowId] = {
               left: row.left || '',
               right: row.right || '',
-              notes: row.notes || '',
             };
           });
 

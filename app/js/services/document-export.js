@@ -675,7 +675,10 @@ export function exportToWord(caseData, draft) {
       }),
     );
     // Regional Assessment - Enhanced table formatting
-    elements.push(createSectionHeader('Regional Assessment', 2));
+    // Indent header slightly to visually align with indented tables (match gutter, not full table width)
+    elements.push(
+      createSectionHeader('Regional Assessment', 2, { indentLeft: FORMAT.indent.quarter }),
+    );
     const ra = obj.regionalAssessments || {};
 
     // Helper to slugify a movement name for PROM row keys
@@ -690,92 +693,184 @@ export function exportToWord(caseData, draft) {
     // Use consistent column widths across Regional Assessment tables so L/R align between tables
     // Web-like proportions scaled to fit 9360 twips printable width: ~50% / ~14% / ~14% / ~22%
     // Derived from proposal (5200/1400/1400/2360) but scaled to 9360 total width
-    const RA_COL_WIDTHS = [3200, 1200, 1200, 3760];
+    // Adjusted widths: slightly narrower first content column to free space for Notes
+    const RA_COL_WIDTHS = [2600, 1200, 1200, 4360];
+    const RA_TOTAL_WIDTH = RA_COL_WIDTHS.reduce((a, b) => a + b, 0);
+    const computeWidthsNoNotes = () => {
+      const base = [RA_COL_WIDTHS[0], RA_COL_WIDTHS[1], RA_COL_WIDTHS[2]]; // description, left, right
+      const totalBase = base.reduce((a, b) => a + b, 0);
+      const scale = RA_TOTAL_WIDTH / totalBase; // scale up to occupy full printable width
+      let scaled = base.map((w) => Math.round(w * scale));
+      // Adjust rounding difference if any
+      const diff = RA_TOTAL_WIDTH - scaled.reduce((a, b) => a + b, 0);
+      if (diff !== 0) scaled[0] += diff; // put any leftover into description column
+      return scaled; // returns array of 3 widths summing to RA_TOTAL_WIDTH
+    };
 
     // Web-like table factory: soft borders, dark slate header, roomy padding, zebra rows
-    function createWebLikeTable(data, headers = [], columnWidths, alignments = []) {
+    function createWebLikeTable(data, headers = [], columnWidths, alignments = [], opts = {}) {
+      let effectiveHeaders = headers;
+      let effectiveData = data;
+      let effectiveWidths = columnWidths;
+      let effectiveAlignments = alignments;
+
+      // Simulated indent via leading empty gutter column (preferred when native indent not rendering)
+      if (opts && opts.indentLeft && opts.simulateIndent && Array.isArray(columnWidths)) {
+        const gutter = opts.simulateIndentWidth || Math.min(opts.indentLeft, 800); // cap gutter size
+        effectiveWidths = [...columnWidths];
+        if (effectiveWidths.length > 0) {
+          effectiveWidths[0] = Math.max(400, effectiveWidths[0] - gutter);
+        }
+        effectiveWidths.unshift(gutter);
+        effectiveHeaders = [''].concat(headers);
+        effectiveData = data.map((row) => [''].concat(row));
+        effectiveAlignments = ['left'].concat(alignments);
+      }
+
       const rows = [];
-      if (headers.length) {
-        const headerCells = headers.map(
-          (h, i) =>
-            new TableCell({
-              children: [
-                new Paragraph({
-                  children: [
-                    createTextRun(h, {
-                      bold: true,
-                      size: FORMAT.sizes.small,
-                      color: FORMAT.colors.white,
-                    }),
-                  ],
-                  spacing: { before: 0, after: 0 },
-                }),
-              ],
-              shading: { fill: FORMAT.colors.slateHeader },
-              margins: { top: 40, bottom: 40, left: 100, right: 100 },
-              verticalAlign:
-                typeof VerticalAlign !== 'undefined' ? VerticalAlign.CENTER : undefined,
-              width:
-                Array.isArray(columnWidths) && columnWidths[i]
-                  ? { size: columnWidths[i], type: WidthType.DXA }
-                  : undefined,
-            }),
-        );
+      if (effectiveHeaders.length) {
+        const headerCells = effectiveHeaders.map((h, i) => {
+          const isIndentCol = opts.simulateIndent && effectiveHeaders[0] === '' && i === 0;
+          const isFirstContentCol = opts.simulateIndent && effectiveHeaders[0] === '' && i === 1; // remove left border so gutter has no separating rule
+          // Build borders: skip all for gutter; suppress left rule for first content column; add top rule (except gutter) when simulating indent
+          let headerBorders;
+          if (isIndentCol) {
+            headerBorders = {
+              top: { style: BorderStyle.NONE, size: 0 },
+              left: { style: BorderStyle.NONE, size: 0 },
+              right: { style: BorderStyle.NONE, size: 0 },
+              bottom: { style: BorderStyle.NONE, size: 0 },
+            };
+          } else {
+            const b = {};
+            if (isFirstContentCol) b.left = { style: BorderStyle.NONE, size: 0 };
+            if (opts.simulateIndent)
+              b.top = { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid };
+            headerBorders = Object.keys(b).length ? b : undefined;
+          }
+          return new TableCell({
+            children: [
+              new Paragraph({
+                children: isIndentCol
+                  ? [createTextRun('')] // keep empty
+                  : [
+                      createTextRun(h, {
+                        bold: true,
+                        size: FORMAT.sizes.small,
+                        color: FORMAT.colors.white,
+                      }),
+                    ],
+                spacing: { before: 0, after: 0 },
+              }),
+            ],
+            shading: isIndentCol ? undefined : { fill: FORMAT.colors.slateHeader },
+            margins: isIndentCol
+              ? { top: 0, bottom: 0, left: 0, right: 0 }
+              : { top: 30, bottom: 30, left: 100, right: 100 },
+            verticalAlign: typeof VerticalAlign !== 'undefined' ? VerticalAlign.CENTER : undefined,
+            borders: headerBorders,
+            width:
+              Array.isArray(effectiveWidths) && effectiveWidths[i]
+                ? { size: effectiveWidths[i], type: WidthType.DXA }
+                : undefined,
+          });
+        });
         rows.push(new TableRow({ children: headerCells, tableHeader: true }));
       }
 
-      data.forEach((rowData, rIdx) => {
-        const cells = rowData.map(
-          (cell, cIdx) =>
-            new TableCell({
-              children: [
-                new Paragraph({
-                  children: [
-                    createTextRun((cell ?? '').toString(), {
-                      size: FORMAT.sizes.small,
-                      color: FORMAT.colors.black,
-                    }),
-                  ],
-                  spacing: { before: 0, after: 0 },
-                  alignment:
-                    alignments[cIdx] === 'right'
-                      ? AlignmentType.RIGHT
-                      : alignments[cIdx] === 'center'
-                        ? AlignmentType.CENTER
-                        : AlignmentType.LEFT,
-                }),
-              ],
-              margins: { top: 60, bottom: 60, left: 100, right: 100 },
-              verticalAlign:
-                typeof VerticalAlign !== 'undefined' ? VerticalAlign.CENTER : undefined,
-              shading: rIdx % 2 === 1 ? { fill: FORMAT.colors.zebra } : undefined,
-              width:
-                Array.isArray(columnWidths) && columnWidths[cIdx]
-                  ? { size: columnWidths[cIdx], type: WidthType.DXA }
-                  : undefined,
-            }),
-        );
+      effectiveData.forEach((rowData, rIdx) => {
+        const cells = rowData.map((cell, cIdx) => {
+          const isIndentCol = opts.simulateIndent && effectiveHeaders[0] === '' && cIdx === 0;
+          const isFirstContentCol = opts.simulateIndent && effectiveHeaders[0] === '' && cIdx === 1;
+          // Determine header label for this column (accounting for indent col if present)
+          const headerLabel = effectiveHeaders[cIdx] || '';
+          let displayVal = (cell ?? '').toString();
+          if (!displayVal && (headerLabel === 'Left' || headerLabel === 'Right')) {
+            displayVal = '—'; // em dash placeholder for clarity when no value
+          }
+          const isLastBodyRow = rIdx === effectiveData.length - 1;
+          return new TableCell({
+            children: [
+              new Paragraph({
+                children: isIndentCol
+                  ? [createTextRun('')]
+                  : [
+                      createTextRun(displayVal, {
+                        size: FORMAT.sizes.small,
+                        color: FORMAT.colors.black,
+                      }),
+                    ],
+                spacing: { before: 0, after: 0 },
+                alignment:
+                  effectiveAlignments[cIdx] === 'right'
+                    ? AlignmentType.RIGHT
+                    : effectiveAlignments[cIdx] === 'center'
+                      ? AlignmentType.CENTER
+                      : AlignmentType.LEFT,
+              }),
+            ],
+            margins: isIndentCol
+              ? { top: 0, bottom: 0, left: 0, right: 0 }
+              : { top: 60, bottom: 60, left: 100, right: 100 },
+            verticalAlign: typeof VerticalAlign !== 'undefined' ? VerticalAlign.CENTER : undefined,
+            shading: isIndentCol
+              ? undefined
+              : rIdx % 2 === 1
+                ? { fill: FORMAT.colors.zebra }
+                : undefined,
+            borders: (function () {
+              if (isIndentCol) {
+                return {
+                  top: { style: BorderStyle.NONE, size: 0 },
+                  left: { style: BorderStyle.NONE, size: 0 },
+                  right: { style: BorderStyle.NONE, size: 0 },
+                  bottom: { style: BorderStyle.NONE, size: 0 },
+                };
+              }
+              const base = {};
+              if (isFirstContentCol) base.left = { style: BorderStyle.NONE, size: 0 };
+              // Provide bottom rule on every row (acts as row separator & final bottom line)
+              base.bottom = { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid };
+              return base;
+            })(),
+            width:
+              Array.isArray(effectiveWidths) && effectiveWidths[cIdx]
+                ? { size: effectiveWidths[cIdx], type: WidthType.DXA }
+                : undefined,
+          });
+        });
         rows.push(new TableRow({ children: cells, cantSplit: true }));
       });
 
-      const table = new Table({
+      return new Table({
         rows,
         layout: typeof TableLayoutType !== 'undefined' ? TableLayoutType.FIXED : undefined,
         width:
-          Array.isArray(columnWidths) && columnWidths.length
-            ? { size: columnWidths.reduce((a, b) => a + b, 0), type: WidthType.DXA }
+          Array.isArray(effectiveWidths) && effectiveWidths.length
+            ? { size: effectiveWidths.reduce((a, b) => a + b, 0), type: WidthType.DXA }
             : { size: 100, type: WidthType.PERCENTAGE },
+        // If we simulate an indent with a gutter column, skip native indent to avoid doubling
+        indent:
+          opts && typeof opts.indentLeft !== 'undefined' && !opts.simulateIndent
+            ? { size: opts.indentLeft, type: WidthType.DXA }
+            : undefined,
         borders: {
-          top: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
-          bottom: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
-          left: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
+          top: opts.simulateIndent
+            ? { style: BorderStyle.NONE, size: 0, color: FORMAT.colors.grid }
+            : { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
+          bottom: opts.simulateIndent
+            ? { style: BorderStyle.NONE, size: 0, color: FORMAT.colors.grid }
+            : { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
+          left: opts.simulateIndent
+            ? { style: BorderStyle.NONE, size: 0, color: FORMAT.colors.grid }
+            : { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
           right: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
-          insideHorizontal: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
+          insideHorizontal: opts.simulateIndent
+            ? { style: BorderStyle.NONE, size: 0, color: FORMAT.colors.grid }
+            : { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
           insideVertical: { style: BorderStyle.SINGLE, size: 8, color: FORMAT.colors.grid },
         },
       });
-
-      return table;
     }
 
     // PROM (Passive ROM) export: rebuild rows from canonical definitions + saved values
@@ -801,23 +896,21 @@ export function exportToWord(caseData, draft) {
           const displayName = promGroups[name].normal
             ? `${name} (${promGroups[name].normal})`
             : name;
-          return [
-            displayName,
-            saved.left || '',
-            saved.right || '',
-            saved.notes || saved.endfeel || '',
-          ];
+          return [displayName, saved.left || '', saved.right || ''];
         })
         .filter(Boolean);
 
       if (promRows.length) {
+        let headers = ['Passive Range of Motion (PROM)', 'Left', 'Right'];
+        let alignments = ['left', 'right', 'right'];
+        let rowsData = promRows.map((r) => [r[0], formatRom(r[1]), formatRom(r[2])]);
+        let widths = computeWidthsNoNotes();
         elements.push(
-          createWebLikeTable(
-            promRows.map((r) => [r[0], formatRom(r[1]), formatRom(r[2]), r[3]]),
-            ['Passive Range of Motion (PROM)', 'Left', 'Right', 'Notes'],
-            RA_COL_WIDTHS,
-            ['left', 'right', 'right', 'left'],
-          ),
+          createWebLikeTable(rowsData, headers, widths, alignments, {
+            indentLeft: FORMAT.indent.level2,
+            simulateIndent: true,
+            simulateIndentWidth: 360,
+          }),
         );
         elements.push(createSpacer(0, 160));
       }
@@ -841,23 +934,24 @@ export function exportToWord(caseData, draft) {
       });
 
       const aromRows = Object.keys(romGroups).map((name) => {
-        const rowId = slug(name);
         const g = romGroups[name];
         const leftVal = g.left != null ? romSaved[g.left] || '' : '';
         const rightVal = g.right != null ? romSaved[g.right] || '' : '';
-        const notesVal = romSaved[`${rowId}-notes`] || '';
         const displayName = g.normal ? `${name} (${g.normal})` : name;
-        return [displayName, leftVal, rightVal, notesVal];
+        return [displayName, leftVal, rightVal];
       });
 
       if (aromRows.length) {
+        let headers = ['Active Range of Motion (AROM)', 'Left', 'Right'];
+        let alignments = ['left', 'right', 'right'];
+        let rowsData = aromRows.map((r) => [r[0], formatRom(r[1]), formatRom(r[2])]);
+        let widths = computeWidthsNoNotes();
         elements.push(
-          createWebLikeTable(
-            aromRows.map((r) => [r[0], formatRom(r[1]), formatRom(r[2]), r[3]]),
-            ['Active Range of Motion (AROM)', 'Left', 'Right', 'Notes'],
-            RA_COL_WIDTHS,
-            ['left', 'right', 'right', 'left'],
-          ),
+          createWebLikeTable(rowsData, headers, widths, alignments, {
+            indentLeft: FORMAT.indent.level2,
+            simulateIndent: true,
+            simulateIndentWidth: 360,
+          }),
         );
         elements.push(createSpacer(0, 160));
       }
@@ -880,22 +974,23 @@ export function exportToWord(caseData, draft) {
       });
 
       const mmtRows = Object.keys(mmtGroups).map((name) => {
-        const rowId = slug(name);
         const g = mmtGroups[name];
         const leftVal = g.left != null ? mmtSaved[g.left] || '' : '';
         const rightVal = g.right != null ? mmtSaved[g.right] || '' : '';
-        const notesVal = mmtSaved[`${rowId}-notes`] || '';
-        return [name, leftVal, rightVal, notesVal];
+        return [name, leftVal, rightVal];
       });
 
       if (mmtRows.length) {
+        let headers = ['Manual Muscle Testing', 'Left', 'Right'];
+        let alignments = ['left', 'right', 'right'];
+        let rowsData = mmtRows.map((r) => [r[0], formatMmt(r[1]), formatMmt(r[2])]);
+        let widths = computeWidthsNoNotes();
         elements.push(
-          createWebLikeTable(
-            mmtRows.map((r) => [r[0], formatMmt(r[1]), formatMmt(r[2]), r[3]]),
-            ['Manual Muscle Testing', 'Left', 'Right', 'Notes'],
-            RA_COL_WIDTHS,
-            ['left', 'right', 'right', 'left'],
-          ),
+          createWebLikeTable(rowsData, headers, widths, alignments, {
+            indentLeft: FORMAT.indent.level2,
+            simulateIndent: true,
+            simulateIndentWidth: 360,
+          }),
         );
         elements.push(createSpacer(0, 160));
       }
@@ -925,22 +1020,20 @@ export function exportToWord(caseData, draft) {
       const testsRows = combinedTests.map((test, idx) => {
         const id = `test-${idx}`;
         const saved = testsSaved[id] || {};
-        return [
-          test.name || '',
-          labelizeTest(saved.left),
-          labelizeTest(saved.right),
-          saved.notes || '',
-        ];
+        return [test.name || '', labelizeTest(saved.left), labelizeTest(saved.right)];
       });
 
       if (testsRows.length) {
+        let headers = ['Special Tests', 'Left', 'Right'];
+        let alignments = ['left', 'right', 'right'];
+        let rowsData = testsRows.map((r) => r.slice(0, 3));
+        let widths = computeWidthsNoNotes();
         elements.push(
-          createWebLikeTable(
-            testsRows,
-            ['Special Tests', 'Left', 'Right', 'Notes'],
-            RA_COL_WIDTHS,
-            ['left', 'right', 'right', 'left'],
-          ),
+          createWebLikeTable(rowsData, headers, widths, alignments, {
+            indentLeft: FORMAT.indent.level2,
+            simulateIndent: true,
+            simulateIndentWidth: 360,
+          }),
         );
         elements.push(createSpacer(0, 160));
       }
@@ -956,13 +1049,7 @@ export function exportToWord(caseData, draft) {
       );
     }
 
-    // Add selected regions information if available
-    const selectedRegions = selected || [];
-    if (selectedRegions.length > 0) {
-      elements.push(createSectionHeader('Regions Assessed', 3));
-      const names = selectedRegions.map((k) => regionalAssessments[k]?.name || k);
-      elements.push(createBodyParagraph(names.join(', '), { indentLeft: FORMAT.indent.level1 }));
-    }
+    // (Removed 'Regions Assessed' section per request)
 
     // Neuro/Functional
     elements.push(createSectionHeader('Neurological Screening', 2));
@@ -1128,11 +1215,16 @@ export function exportToWord(caseData, draft) {
     const goalRows =
       plan.goalsTable && typeof plan.goalsTable === 'object' ? Object.values(plan.goalsTable) : [];
     if (goalRows && goalRows.length) {
-      const goalsData = goalRows.map((row, i) => [
-        String(i + 1),
-        (row.goalText || row.goal || '').toString(),
-      ]);
-      elements.push(createWebLikeTable(goalsData, ['#', 'Goal'], undefined, ['right', 'left']));
+      goalRows.forEach((row) => {
+        const text = (row.goalText || row.goal || '').toString();
+        if (!text) return;
+        elements.push(
+          createLabelValueLine('', text, {
+            indentLeft: FORMAT.indent.level1,
+            bullet: true,
+          }),
+        );
+      });
     } else {
       const hadAny = !!(plan.shortTermGoals || plan.longTermGoals);
       if (hadAny) {
@@ -1156,7 +1248,6 @@ export function exportToWord(caseData, draft) {
     }
     // Plan of Care next
     elements.push(createSectionHeader('Plan of Care', 2));
-    const pocLines = [];
     if (plan.treatmentPlan)
       elements.push(
         createLabelValueLine('Treatment Plan & Interventions', plan.treatmentPlan, {
@@ -1212,16 +1303,16 @@ export function exportToWord(caseData, draft) {
         ? Object.values(plan.exerciseTable)
         : [];
     if (exerciseRows && exerciseRows.length) {
-      const exerciseData = exerciseRows.map((row, i) => [
-        String(i + 1),
-        (row.exerciseText || row.exercise || '').toString(),
-      ]);
-      elements.push(
-        createWebLikeTable(exerciseData, ['#', 'In-Clinic Exercises / Interventions'], undefined, [
-          'right',
-          'left',
-        ]),
-      );
+      exerciseRows.forEach((row) => {
+        const text = (row.exerciseText || row.exercise || '').toString();
+        if (!text) return;
+        elements.push(
+          createLabelValueLine('', text, {
+            indentLeft: FORMAT.indent.level1,
+            bullet: true,
+          }),
+        );
+      });
     } else {
       elements.push(
         createBodyParagraph('No in-clinic exercises documented', {
@@ -1242,7 +1333,7 @@ export function exportToWord(caseData, draft) {
         ? billing.icdCodes
         : [];
     if (icdRows.length) {
-      icdRows.forEach((row, index) => {
+      icdRows.forEach((row) => {
         const primaryIndicator = row.isPrimary ? ' (Primary)' : '';
         // Use label if available, otherwise try to reconstruct it from code, finally fall back to description
         let displayText = row.label;
@@ -1296,7 +1387,7 @@ export function exportToWord(caseData, draft) {
         ? billing.cptCodes
         : [];
     if (cptRows.length) {
-      cptRows.forEach((row, index) => {
+      cptRows.forEach((row) => {
         // Use label if available, otherwise try to reconstruct it from code, finally fall back to description
         let displayText = row.label;
         if (!displayText && row.code) {
@@ -1350,7 +1441,7 @@ export function exportToWord(caseData, draft) {
     elements.push(createSectionHeader('Orders & Referrals', 2));
     const ordRows = Array.isArray(billing.ordersReferrals) ? billing.ordersReferrals : [];
     if (ordRows.length) {
-      ordRows.forEach((row, index) => {
+      ordRows.forEach((row) => {
         const orderText = `${row.type || 'No type'}: ${row.details || 'No details'}`;
         elements.push(
           createLabelValueLine('', orderText, { indentLeft: FORMAT.indent.level1, bullet: true }),

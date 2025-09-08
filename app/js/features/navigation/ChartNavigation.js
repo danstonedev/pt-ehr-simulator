@@ -1228,10 +1228,18 @@ function openAddArtifactModal(onAdd) {
       {
         class: 'goal-linker-header',
         style:
-          'justify-content: flex-end; background: var(--surface); border-top: 1px solid var(--border);',
+          'justify-content: flex-end; background: var(--surface); border-top: 1px solid var(--border); gap:16px;',
       },
       [
-        el('button', { class: 'btn secondary', onclick: () => overlay.remove() }, 'Cancel'),
+        el(
+          'button',
+          {
+            class: 'btn secondary',
+            style: 'margin-right:4px;' /* minor separate before gap spacing */,
+            onclick: () => overlay.remove(),
+          },
+          'Cancel',
+        ),
         el(
           'button',
           {

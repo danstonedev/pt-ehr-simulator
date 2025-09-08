@@ -989,7 +989,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   background: var(--editor-bg);
   color: #fff;
   box-shadow: none; /* avoid rectangular shadow peeking outside slants */
-  /* Full bleed within the content container (respects sidebar); cancel horizontal gutters */
+  /* Full bleed: cancel parent .section-content horizontal padding so width matches patient header */
   margin-left: calc(-1 * var(--pad-x));
   margin-right: calc(-1 * var(--pad-x));
   padding-left: var(--pad-x);
@@ -1007,13 +1007,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
   border-bottom: none; /* avoid seam on light canvas */
   z-index: -2; /* sit behind stripes and content */
-  /* create left and right slants; tweak the 16px to taste */
-  clip-path: polygon(
-    var(--section-parallelogram-slant) 0,
-    100% 0,
-    calc(100% - var(--section-parallelogram-slant)) 100%,
-    0 100%
-  );
+  /* Previously used clip-path parallelogram removed (Option C) to show simple rectangle */
 }
 
 /* Three brand slashes at the right edge */
@@ -1038,12 +1032,6 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   position: absolute;
   inset: 0;
   background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
-  clip-path: polygon(
-    var(--section-parallelogram-slant) 0,
-    100% 0,
-    calc(100% - var(--section-parallelogram-slant)) 100%,
-    0 100%
-  );
   z-index: -1;
 }
 .home-hero__title {
@@ -1193,6 +1181,11 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   padding: var(--space-5) var(--pad-x);
   margin: 0 auto;
   max-width: 1100px;
+}
+/* Reduce initial top padding on editor pages so first section header sits closer to patient header */
+body[data-route='student-editor'] .section-content,
+body[data-route='instructor-editor'] .section-content {
+  padding-top: 0; /* tightened further per request */
 }
 /* Desktop: responsive, tighter horizontal padding to avoid excessive gutters */
 @media (min-width: 1024px) {

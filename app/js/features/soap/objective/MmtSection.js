@@ -37,10 +37,11 @@ export function createMmtSection(regionKey, region, mmtData, onChange) {
     valueType: 'select',
     options: mmtGrades,
     normalValues: false, // remove Normal column entirely
-    notesColumn: true,
+    // Notes column removed per latest requirements
+    notesColumn: false,
     nameColumnLabel: 'Manual Muscle Testing', // use green title as first column header
     showTitle: false, // hide green band title
-    notesWidth: '35%',
+    // notesWidth no longer needed
   });
 
   container.appendChild(table.element);

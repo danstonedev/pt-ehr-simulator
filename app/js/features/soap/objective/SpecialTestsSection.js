@@ -35,7 +35,6 @@ export function createSpecialTestsSection(regionKey, region, testData, onChange)
         name: test.name,
         left: '',
         right: '',
-        notes: '',
       };
     });
   }
@@ -43,10 +42,9 @@ export function createSpecialTestsSection(regionKey, region, testData, onChange)
   const table = createEditableTable({
     title: '', // hide green band title
     columns: [
-      { field: 'name', label: 'Special Tests', width: '35%' }, // first column label uses green title text
-      { field: 'left', label: 'Left', width: '15%', type: 'select', options: testResults },
-      { field: 'right', label: 'Right', width: '15%', type: 'select', options: testResults },
-      { field: 'notes', label: 'Notes', width: '35%' },
+      { field: 'name', label: 'Special Tests', width: '50%' }, // widen first column now that Notes removed
+      { field: 'left', label: 'Left', width: '25%', type: 'select', options: testResults },
+      { field: 'right', label: 'Right', width: '25%', type: 'select', options: testResults },
     ],
     data: tableData,
     onChange: (newData) => {
@@ -57,7 +55,6 @@ export function createSpecialTestsSection(regionKey, region, testData, onChange)
           name: newData[testId].name,
           left: newData[testId].left,
           right: newData[testId].right,
-          notes: newData[testId].notes,
         };
       });
       onChange(updatedData);

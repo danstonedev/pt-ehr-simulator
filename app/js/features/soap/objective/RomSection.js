@@ -26,7 +26,8 @@ export function createRomSection(regionKey, region, romData, onChange) {
     valueType: 'text',
     normalValues: true,
     embedNormalInName: true,
-    notesColumn: true,
+    // Notes column removed per latest requirements (export + UI simplification)
+    notesColumn: false,
     nameColumnLabel: 'Active Range of Motion (AROM)',
     showTitle: false,
   });
