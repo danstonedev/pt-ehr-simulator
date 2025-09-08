@@ -4,6 +4,20 @@ import { listCases } from '../../core/store.js';
 import { storage } from '../../core/index.js';
 import { el } from '../../ui/utils.js';
 route('#/student/cases', async (app) => {
+  // Local helper (mirrors instructor view) for inline SVG icons from sprite
+  function spriteIcon(name, { className = 'icon', size } = {}) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('class', className);
+    if (size) {
+      svg.style.width = size;
+      svg.style.height = size;
+    }
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttribute('href', `#icon-${name}`);
+    svg.appendChild(use);
+    return svg;
+  }
   app.replaceChildren(); // Clear previous content
 
   // No separate header container; everything lives in the main panel below
@@ -123,10 +137,18 @@ route('#/student/cases', async (app) => {
         [
           el('div', {}, [
             el('h2', {}, 'Student Dashboard'),
+            // Subtitle removed per request (previous instructional helper text)
+          ]),
+          el('div', { style: 'display:flex; gap:10px;' }, [
             el(
-              'p',
-              { class: 'small' },
-              'Select a case to begin or continue working on your documentation.',
+              'button',
+              {
+                class: 'btn primary',
+                style: 'display:flex; align-items:center; gap:8px;',
+                title: 'Create a blank SOAP note not attached to a case',
+                onClick: () => openCreateNoteModal(),
+              },
+              [spriteIcon('plus'), 'Create SOAP Note'],
             ),
           ]),
         ],
@@ -216,6 +238,50 @@ route('#/student/cases', async (app) => {
       setTimeout(() => content.querySelector('#student-note-title-input')?.focus(), 0);
     }
 
+    // Sorting state (match faculty behavior)
+    let sortColumn = 'title';
+    let sortDirection = 'asc';
+
+    function createSortableHeader(text, column) {
+      const isActive = sortColumn === column;
+      const isDesc = isActive && sortDirection === 'desc';
+
+      const header = document.createElement('th');
+      header.className = 'sortable';
+      if (isActive) header.setAttribute('aria-sort', isDesc ? 'descending' : 'ascending');
+      header.style.cssText =
+        'cursor:pointer; user-select:none; -webkit-user-select:none; position:relative; padding:12px 8px;';
+
+      const container = document.createElement('div');
+      container.style.cssText =
+        'display:flex; align-items:center; justify-content:space-between; gap:8px;';
+
+      const textSpan = document.createElement('span');
+      textSpan.style.fontWeight = '600';
+      textSpan.textContent = text;
+
+      const icon = spriteIcon(isActive ? (isDesc ? 'sortDesc' : 'sortAsc') : 'sort', {
+        className: 'icon sort-icon',
+      });
+      icon.style.opacity = isActive ? '0.9' : '0.5';
+
+      container.appendChild(textSpan);
+      container.appendChild(icon);
+      header.appendChild(container);
+
+      header.addEventListener('click', () => {
+        if (sortColumn === column) {
+          sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortColumn = column;
+          sortDirection = 'asc';
+        }
+        renderTable();
+      });
+
+      return header;
+    }
+
     function renderTable() {
       const filtered = cases.filter((c) => {
         const title = c.title || c.caseObj?.meta?.title || '';
@@ -225,15 +291,49 @@ route('#/student/cases', async (app) => {
         return `${title} ${setting} ${diagnosis} ${acuity}`.toLowerCase().includes(searchTerm);
       });
 
+      // Apply sorting similar to faculty dashboard
+      if (sortColumn) {
+        filtered.sort((a, b) => {
+          function val(caseObj) {
+            switch (sortColumn) {
+              case 'title':
+                return (caseObj.title || caseObj.caseObj?.meta?.title || '').toLowerCase();
+              case 'setting':
+                return (caseObj.caseObj?.meta?.setting || '').toLowerCase();
+              case 'diagnosis':
+                return (caseObj.caseObj?.meta?.diagnosis || '').toLowerCase();
+              case 'status': {
+                // Map statuses to order: Not Started < In-Progress < Complete
+                const draftInfo = drafts[caseObj.id];
+                const evalDraft = draftInfo?.eval;
+                let statusKey = 'notstarted';
+                if (evalDraft && evalDraft.hasContent) {
+                  statusKey = evalDraft.completionPercent === 100 ? 'complete' : 'inprogress';
+                }
+                const order = { notstarted: 0, inprogress: 1, complete: 2 };
+                return String(order[statusKey] ?? 0);
+              }
+              default:
+                return '';
+            }
+          }
+          let aVal = val(a);
+          let bVal = val(b);
+          if (aVal > bVal) return sortDirection === 'desc' ? -1 : 1;
+          if (aVal < bVal) return sortDirection === 'desc' ? 1 : -1;
+          return 0;
+        });
+      }
+
       const table = el('table', { class: 'table cases-table' }, [
         el(
           'thead',
           {},
           el('tr', {}, [
-            el('th', {}, 'Case Title'),
-            el('th', {}, 'Setting'),
-            el('th', {}, 'Diagnosis'),
-            el('th', {}, 'Draft Status'),
+            createSortableHeader('Case Title', 'title'),
+            createSortableHeader('Setting', 'setting'),
+            createSortableHeader('Diagnosis', 'diagnosis'),
+            createSortableHeader('Draft Status', 'status'),
             el('th', {}, ''),
           ]),
         ),
@@ -700,24 +800,9 @@ route('#/student/cases', async (app) => {
       // Sort newest first
       blankItems.sort((a, b) => b.ts - a.ts || a.title.localeCompare(b.title));
 
-      const headerRow = el(
-        'div',
-        { class: 'flex-between', style: 'align-items:center; gap:12px; margin-bottom: 8px;' },
-        [
-          el('h3', { style: 'margin: 0;' }, 'My Blank Notes'),
-          el('div', {}, [
-            el(
-              'button',
-              {
-                class: 'btn primary',
-                title: 'Create a blank SOAP note not attached to a case',
-                onClick: () => openCreateNoteModal(),
-              },
-              'Create SOAP Note',
-            ),
-          ]),
-        ],
-      );
+      const headerRow = el('div', { style: 'margin-bottom: 8px;' }, [
+        el('h3', { style: 'margin: 0;' }, 'My Blank Notes'),
+      ]);
 
       const panelChildren = [
         headerRow,

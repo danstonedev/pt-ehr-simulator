@@ -2128,12 +2128,24 @@ html[data-theme='dark'] .subsection-title {
 .module-card .value {
   font-size: 14px;
 }
+.case-details-modal .goal-linker-header {
+  /* UND green gradient header applied in both themes */
+  background: linear-gradient(135deg, var(--und-green) 0%, var(--und-green-dark) 85%);
+  color: #fff;
+  position: relative;
+}
 .case-details-modal .goal-linker-header h3 {
   font-size: 20px;
-  color: var(--und-green);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
-.case-details-modal .goal-linker-header {
-  background: var(--surface);
+.case-details-modal .goal-linker-header .close-btn {
+  color: #fff;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+.case-details-modal .goal-linker-header .close-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 .case-details-modal .goal-linker-header + .goal-selection-list {
   background: var(--surface);

@@ -73,7 +73,7 @@ html[data-theme='dark'] .chart-navigation .section-nav-item * {
 }
 
 /* Note Progress header geometry */
-.chart-navigation .note-progress-header {
+.chart-navigation .current-encounter-header {
   margin: 0 0 12px 0;
   padding: 8px 12px;
   font-size: 0.875rem; /* 14px */
@@ -84,12 +84,12 @@ html[data-theme='dark'] .chart-navigation .section-nav-item * {
   text-align: center;
 }
 /* Theme-aware colors: subtle UND gray background, UND green text/border */
-html[data-theme='dark'] .chart-navigation .note-progress-header {
+html[data-theme='dark'] .chart-navigation .current-encounter-header {
   background: rgb(174 174 174 / 12%); /* transparent UND gray */
   color: #ffffff; /* white text for readability in dark theme */
   border-bottom: 2px solid var(--und-green);
 }
-html:not([data-theme='dark']) .chart-navigation .note-progress-header {
+html:not([data-theme='dark']) .chart-navigation .current-encounter-header {
   background: rgb(174 174 174 / 12%); /* transparent UND gray */
   color: #ffffff; /* white text per request in light theme */
   border-bottom: 2px solid var(--und-green);
@@ -101,6 +101,127 @@ html:not([data-theme='dark']) .chart-navigation .note-progress-header {
   flex-direction: column;
   gap: 4px; /* tighter stack for table-like density */
 }
+/* Artifact entries mimic subsection items */
+.chart-navigation .artifact-list .artifact-entry {
+  padding: 6px 10px;
+  background: #ffffff;
+  border: 1px solid var(--surface-light-border);
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+html[data-theme='dark'] .chart-navigation .artifact-list .artifact-entry {
+  background: var(--panel);
+  border-color: var(--border);
+  color: rgba(255, 255, 255, 0.9);
+}
+.chart-navigation .artifact-list .artifact-entry:hover {
+  background: var(--surface-light-hover);
+}
+html[data-theme='dark'] .chart-navigation .artifact-list .artifact-entry:hover {
+  background: var(--bg-hover);
+}
+.chart-navigation .artifact-list .artifact-entry:focus-visible {
+  outline: 3px solid var(--und-orange);
+  outline-offset: 2px;
+}
+.chart-navigation .artifact-list .artifact-entry svg {
+  width: 18px;
+  height: 18px;
+  opacity: 0.85;
+}
+.chart-navigation .artifact-list .artifact-entry-title {
+  flex: 1;
+}
+
+/* Grouped artifact categories (collapsible folders) */
+.chart-navigation .grouped-artifacts {
+  margin: 4px 0 8px 0;
+}
+.chart-navigation .artifact-category {
+  margin: 0 0 6px 0;
+}
+.chart-navigation .artifact-cat-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-light);
+  border: 1px solid var(--surface-light-border);
+  border-radius: 6px;
+  padding: 4px 8px 4px 6px;
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 600;
+  letter-spacing: 0.25px;
+  text-align: left;
+  cursor: pointer;
+  line-height: 1.3;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+/* Explicit light theme overrides (text was washing out on white) */
+html:not([data-theme='dark']) .chart-navigation .artifact-cat-header {
+  background: #ffffff; /* crisp white chip */
+  border-color: var(--surface-light-border);
+  color: var(--text-on-light, var(--text));
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+html:not([data-theme='dark']) .chart-navigation .artifact-cat-header:hover {
+  background: var(--surface-light-hover, #f5f5f5);
+  border-color: var(--surface-light-border);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+html:not([data-theme='dark']) .chart-navigation .artifact-cat-header .twisty {
+  color: var(--text-secondary);
+}
+html[data-theme='dark'] .chart-navigation .artifact-cat-header {
+  background: var(--panel);
+  border-color: var(--border);
+  color: rgba(255, 255, 255, 0.9);
+}
+.chart-navigation .artifact-cat-header:hover {
+  background: var(--surface-light-hover);
+  border-color: var(--surface-light-border);
+}
+html[data-theme='dark'] .chart-navigation .artifact-cat-header:hover {
+  background: var(--bg-hover);
+  border-color: var(--border);
+}
+.chart-navigation .artifact-cat-header:focus-visible {
+  outline: 3px solid var(--und-orange);
+  outline-offset: 2px;
+}
+.chart-navigation .artifact-cat-header .twisty {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  transform: translateY(-1px); /* optical alignment */
+}
+.chart-navigation .artifact-category[data-empty='true'] .artifact-cat-header {
+  opacity: 0.55;
+}
+html:not([data-theme='dark'])
+  .chart-navigation
+  .artifact-category[data-empty='true']
+  .artifact-cat-header {
+  opacity: 0.6;
+}
+.chart-navigation .artifact-category .artifact-list {
+  margin-left: 2px;
+}
+/* Subtle divider when expanded */
+/* Removed decorative divider between folder header and first artifact for tighter grouping */
 
 /* Wrapper for artifacts area to control spacing above/below */
 .chart-navigation .artifact-block {
@@ -132,6 +253,38 @@ html:not([data-theme='dark']) .chart-navigation .note-progress-header {
   display: flex;
   justify-content: center;
   margin: 4px 0 4px 0; /* decrease space beneath add button */
+}
+.chart-navigation .artifact-add-footer .compact-add-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--und-green);
+  color: #fff;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+.chart-navigation .artifact-add-footer .compact-add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  background: var(--und-green-dark, #006e2e);
+}
+.chart-navigation .artifact-add-footer .compact-add-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.chart-navigation .artifact-add-footer .compact-add-btn:focus-visible {
+  outline: 3px solid var(--und-orange);
+  outline-offset: 2px;
 }
 
 /* White panel for navigation list inside gray sidebar */
@@ -226,7 +379,7 @@ html[data-theme='dark'] .sidebar-nav-panel .case-info-card:hover {
 /* Flat list items in white panel */
 .sidebar-nav-panel .section-nav-item {
   background: var(--surface-light);
-  border: 1px solid var(--surface-light-border); /* use light surface border */
+  border: 2px solid var(--surface-light-border); /* constant thickness to avoid reflow */
   box-shadow: none; /* keep flat card look */
   border-radius: 10px;
 }
@@ -241,13 +394,12 @@ html[data-theme='dark'] .sidebar-nav-panel .case-info-card:hover {
 .sidebar-nav-panel .section-nav-item.active {
   background: var(--und-green-light);
   border-color: var(--und-green);
-  border-width: 2px;
   box-shadow: none;
 }
 /* Dark theme: tracker pills should be dark with lighter text */
 html[data-theme='dark'] .sidebar-nav-panel .section-nav-item {
   background: var(--panel);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
 }
 html[data-theme='dark'] .sidebar-nav-panel .section-nav-item:hover {
   background-color: var(--bg-hover);
@@ -264,8 +416,7 @@ html[data-theme='dark'] .sidebar-nav-panel .section-nav-item:hover {
 }
 
 .sidebar-nav-panel .section-nav-item .nav-progress-text {
-  color: var(--text-secondary-on-light);
-  opacity: 0.9;
+  display: none;
 }
 
 .sidebar-nav-panel .section-nav-item .nav-label {
@@ -292,7 +443,7 @@ html[data-theme='dark'] .sidebar-nav-panel .section-nav-item .nav-progress-text 
 }
 
 .chart-navigation .section-nav-item .nav-progress-text {
-  color: var(--text-secondary-on-light);
+  display: none;
 }
 
 /* Dark theme chart navigation */
@@ -395,7 +546,7 @@ html[data-theme='dark'] .case-header {
 .section-nav-item {
   display: flex;
   align-items: center;
-  padding: var(--space-3) var(--space-4);
+  padding: 6px 10px; /* compact pills */
   margin: var(--space-1) 0;
   border-radius: var(--radius-md);
   cursor: pointer;

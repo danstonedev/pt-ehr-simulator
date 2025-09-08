@@ -1508,6 +1508,41 @@ export function exportToWord(caseData, draft) {
       });
     }
 
+    // Append signature block if present (meta.signature)
+    try {
+      const sig =
+        (caseData && caseData.meta && caseData.meta.signature) ||
+        (draft && draft.meta && draft.meta.signature);
+      if (sig && sig.name) {
+        elements.push(createSectionDivider());
+        elements.push(createSectionHeader('Electronic Signature', 2, { indentLeft: 0 }));
+        const line = `${sig.name}${sig.title ? ', ' + sig.title : ''}`;
+        const ts = (() => {
+          try {
+            return new Date(sig.signedAt).toLocaleString(undefined, {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            });
+          } catch {
+            return sig.signedAt;
+          }
+        })();
+        elements.push(
+          new Paragraph({
+            spacing: { after: FORMAT.spacing.small },
+            children: [
+              createTextRun('Signed by: ', { bold: true }),
+              createTextRun(line + '\n', {}),
+              createTextRun('Date/Time: ', { bold: true }),
+              createTextRun(ts, {}),
+            ],
+          }),
+        );
+      }
+    } catch (e) {
+      console.warn('Failed to append signature block', e);
+    }
+
     const sectionDef = {
       properties: {
         page: {

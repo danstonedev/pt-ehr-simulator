@@ -361,6 +361,12 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   let needsInitialAnchorScroll =
     !needsInitialPercentScroll && !!initialAnchorParam && isValidSection(active);
 
+  // During a programmatic section change we temporarily suppress scroll-driven
+  // active section recalculation to avoid rapid re-renders (jitter) while the
+  // browser animates smooth scrolling. We store a timestamp instead of a boolean
+  // so overlapping programmatic navigations extend the window naturally.
+  let programmaticScrollBlockUntil = 0;
+
   // Sticky top bar removed; preview can be triggered from elsewhere if desired
 
   // Function to refresh chart navigation progress
@@ -813,63 +819,69 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   /* eslint-disable-next-line complexity */
   function switchTo(s) {
+    if (!isValidSection(s)) return;
+
+    const changingSection = s !== active;
     active = s;
+
+    // Prevent scroll-driven active recalculation for the duration of the smooth scroll
+    programmaticScrollBlockUntil = Date.now() + 700; // ~0.7s window
 
     // Sync section to URL (replace by default to avoid history spam)
     try {
       setQueryParams({ section: s });
     } catch {}
 
-    // Sticky header removed; no title update needed
+    if (changingSection) {
+      // Update chart navigation only if the logical active section changed.
+      refreshChartNavigation(chartNav, {
+        activeSection: active,
+        onSectionChange: (sectionId) => switchTo(sectionId),
+        isFacultyMode: isFacultyMode,
+        caseData: { ...c, ...draft, editorSettings: c.editorSettings || draft.editorSettings },
+        caseInfo: {
+          title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
+          setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
+          age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
+          sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
+          acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
+          dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
+          modules: Array.isArray(c.modules) ? c.modules : [],
+        },
+        onCaseInfoUpdate: (updatedInfo) => {
+          c.caseTitle = updatedInfo.title;
+          c.title = updatedInfo.title;
+          c.setting = updatedInfo.setting;
+          c.patientAge = updatedInfo.age;
+          c.patientGender = updatedInfo.sex;
+          c.acuity = updatedInfo.acuity;
+          c.patientDOB = updatedInfo.dob;
+          if (Array.isArray(updatedInfo.modules)) {
+            c.modules = updatedInfo.modules;
+            draft.modules = updatedInfo.modules;
+          }
+          // Keep canonical containers in sync
+          c.meta = c.meta || {};
+          c.meta.title = updatedInfo.title;
+          c.meta.setting = updatedInfo.setting;
+          c.meta.acuity = updatedInfo.acuity;
+          c.snapshot = c.snapshot || {};
+          c.snapshot.age = updatedInfo.age;
+          c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
+          c.snapshot.dob = updatedInfo.dob;
+          updatePatientHeader();
+          debouncedSave();
+        },
+        onEditorSettingsChange: (nextSettings) => {
+          draft.editorSettings = nextSettings;
+          c.editorSettings = nextSettings;
+          save();
+          if (window.refreshChartProgress) window.refreshChartProgress();
+        },
+      });
+    }
 
-    // Update chart navigation with current data
-    refreshChartNavigation(chartNav, {
-      activeSection: active,
-      onSectionChange: (sectionId) => switchTo(sectionId),
-      isFacultyMode: isFacultyMode,
-      caseData: { ...c, ...draft, editorSettings: c.editorSettings || draft.editorSettings },
-      caseInfo: {
-        title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
-        setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
-        age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
-        sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-        acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
-        dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
-        modules: Array.isArray(c.modules) ? c.modules : [],
-      },
-      onCaseInfoUpdate: (updatedInfo) => {
-        c.caseTitle = updatedInfo.title;
-        c.title = updatedInfo.title;
-        c.setting = updatedInfo.setting;
-        c.patientAge = updatedInfo.age;
-        c.patientGender = updatedInfo.sex;
-        c.acuity = updatedInfo.acuity;
-        c.patientDOB = updatedInfo.dob;
-        if (Array.isArray(updatedInfo.modules)) {
-          c.modules = updatedInfo.modules;
-          draft.modules = updatedInfo.modules;
-        }
-        // Keep canonical containers in sync
-        c.meta = c.meta || {};
-        c.meta.title = updatedInfo.title;
-        c.meta.setting = updatedInfo.setting;
-        c.meta.acuity = updatedInfo.acuity;
-        c.snapshot = c.snapshot || {};
-        c.snapshot.age = updatedInfo.age;
-        c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
-        c.snapshot.dob = updatedInfo.dob;
-        updatePatientHeader();
-        debouncedSave();
-      },
-      onEditorSettingsChange: (nextSettings) => {
-        draft.editorSettings = nextSettings;
-        c.editorSettings = nextSettings;
-        save();
-        if (window.refreshChartProgress) window.refreshChartProgress();
-      },
-    });
-
-    // Prefer landing on the designated subsection heading for each section
+    // Scroll logic (single attempt + minimal fallback) kept intentionally lean
     const header = getSectionHeader(s);
     const root = getSectionRoot(s) || header;
     if (root) {
@@ -881,46 +893,20 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         billing: 'diagnosis-codes',
       };
       const targetId = preferredAnchorBySection[s];
-      let scrolled = false;
-      const trySmoothExact = (id) => {
-        if (!id) return false;
-        const ok = scrollToAnchorExact(id, 'smooth');
-        return ok;
-      };
-      try {
-        // Attempt smooth exact-offset scroll to preferred anchor with layout-aware retries
-        scrolled = trySmoothExact(targetId);
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            if (!scrolled) scrolled = trySmoothExact(targetId);
-          });
-        });
-        setTimeout(() => {
-          if (!scrolled) scrolled = trySmoothExact(targetId);
-          if (!scrolled) {
-            // Fallback: first visible anchor in the section
-            const firstAnchor = Array.from(root.querySelectorAll('.section-anchor')).find(
-              (a) => a.offsetParent !== null,
-            );
-            if (firstAnchor) {
-              scrollToAnchorExact(firstAnchor.id, 'smooth');
-              scrolled = true;
-            }
-          }
-          if (!scrolled) {
-            const offset = getHeaderOffsetPx();
-            const rect = root.getBoundingClientRect();
-            const y = Math.max(0, window.scrollY + rect.top - offset);
-            window.scrollTo({ top: y, behavior: 'smooth' });
-          }
-        }, 140);
-      } catch {
+      let success = false;
+      if (targetId) success = scrollToAnchorExact(targetId, 'smooth');
+      if (!success) {
+        // Fallback: first visible anchor or section top
+        const firstAnchor = root.querySelector('.section-anchor');
+        if (firstAnchor) success = scrollToAnchorExact(firstAnchor.id, 'smooth');
+      }
+      if (!success) {
         const offset = getHeaderOffsetPx();
         const rect = root.getBoundingClientRect();
         const y = Math.max(0, window.scrollY + rect.top - offset);
         window.scrollTo({ top: y, behavior: 'smooth' });
       }
-      // Announce section change and move focus for SR users
+      // Accessibility focus + live region
       try {
         const focusTarget = header || root;
         focusTarget.setAttribute('tabindex', '-1');
@@ -997,6 +983,8 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   // Observe scroll to update active section and sidebar
   /* eslint-disable-next-line complexity */
   function determineActiveByScroll() {
+    // Suppress scroll-based recalculation while a programmatic smooth scroll is in progress
+    if (Date.now() < programmaticScrollBlockUntil) return;
     const offset = getHeaderOffsetPx();
     const entries = Object.entries(sectionHeaders);
     let current = entries[0]?.[0] || 'subjective';

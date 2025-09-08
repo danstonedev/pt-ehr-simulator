@@ -3,7 +3,38 @@ import { el } from '../../ui/utils.js';
 import { createIcon } from '../../ui/Icons.js';
 import { exportToWord } from '../../services/document-export.js';
 import { ensureExportLibsLoaded } from '../../services/export-loader.js';
+import { openSignatureDialog, getPersistedSignatureMeta } from '../signature/SignatureModal.js';
 import { attachments as Att } from '../../services/index.js';
+
+// Artifact category metadata & persistence helpers
+const ARTIFACT_CATEGORY_META = {
+  referral: { label: 'Referrals', order: 1 },
+  pmh: { label: 'Past Medical History', order: 2 },
+  imaging: { label: 'Imaging', order: 3 },
+  labs: { label: 'Labs', order: 4 },
+  meds: { label: 'Medications', order: 5 },
+  vitals: { label: 'Vitals', order: 6 },
+  'prior-notes': { label: 'Prior Notes', order: 7 },
+  other: { label: 'Other', order: 99 },
+};
+const ARTIFACT_COLLAPSE_KEY = 'artifactCategoryCollapse_v1';
+function loadArtifactCollapseState() {
+  try {
+    return JSON.parse(localStorage.getItem(ARTIFACT_COLLAPSE_KEY) || '{}') || {};
+  } catch {
+    return {};
+  }
+}
+function saveArtifactCollapseState(state) {
+  try {
+    localStorage.setItem(ARTIFACT_COLLAPSE_KEY, JSON.stringify(state || {}));
+  } catch {}
+}
+let artifactCollapseState = loadArtifactCollapseState();
+function getCategoryForArtifact(mod) {
+  const t = (mod && mod.type) || 'other';
+  return ARTIFACT_CATEGORY_META[t] ? t : 'other';
+}
 
 /**
  * Creates SVG elements with proper namespace
@@ -565,64 +596,6 @@ function createEditableCaseHeader(caseInfo, onUpdate, options = {}) {
     },
     [titleDisplay, basicInfo],
   );
-  const openTarget = preferEditOnClick
-    ? () =>
-        openEditCaseModal(caseInfo, (updated) => {
-          Object.assign(caseInfo, updated);
-          updateBasicInfo();
-          onUpdate?.(caseInfo);
-        })
-    : () => openCaseDetailsModal(caseInfo);
-  card.addEventListener('click', openTarget);
-  card.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openTarget();
-    }
-  });
-  return card;
-}
-
-/**
- * Creates a read-only case header for student mode
- * @param {Object} caseInfo - Case information object
- * @returns {HTMLElement} Read-only case header
- */
-/* istanbul ignore next */
-/* eslint-disable no-unused-vars */
-function createReadOnlyCaseHeader(caseInfo) {
-  const card = el(
-    'div',
-    { class: 'case-info-card', role: 'button', tabIndex: 0, title: 'View full case details' },
-    [
-      el('div', { class: 'case-title' }, [
-        el('h3', { class: 'case-title-text' }, caseInfo.title || 'Untitled Case'),
-      ]),
-      el('div', { class: 'case-info-grid' }, [
-        // Order: DOB, Age, Sex, Setting, Acuity
-        el('div', { class: 'case-info-row' }, [
-          el('span', { class: 'label' }, 'DOB:'),
-          el('span', { class: 'value' }, caseInfo.dob || 'N/A'),
-        ]),
-        el('div', { class: 'case-info-row' }, [
-          el('span', { class: 'label' }, 'Age:'),
-          el('span', { class: 'value' }, computeAgeFromDob(caseInfo.dob) || caseInfo.age || 'N/A'),
-        ]),
-        el('div', { class: 'case-info-row' }, [
-          el('span', { class: 'label' }, 'Sex:'),
-          el('span', { class: 'value' }, caseInfo.sex || 'N/A'),
-        ]),
-        el('div', { class: 'case-info-row' }, [
-          el('span', { class: 'label' }, 'Setting:'),
-          el('span', { class: 'value' }, caseInfo.setting || 'N/A'),
-        ]),
-        el('div', { class: 'case-info-row' }, [
-          el('span', { class: 'label' }, 'Acuity:'),
-          el('span', { class: 'value' }, caseInfo.acuity || 'N/A'),
-        ]),
-      ]),
-    ],
-  );
   card.addEventListener('click', () => openCaseDetailsModal(caseInfo));
   card.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -1103,29 +1076,87 @@ function openAddArtifactModal(onAdd) {
 
   // Referral fields
   const ref = { date: '', source: '', reason: '', notes: '', attachments: [] };
-  // File input and selected attachment list (metadata only)
+  // Attachment picker (input + drag & drop zone)
   const fileInput = el('input', {
     type: 'file',
     multiple: true,
     accept: '*/*',
-    class: 'instructor-form-input',
-    onchange: async (e) => {
-      const files = Array.from(e.target.files || []);
-      if (!files.length) return;
-      if (!Att?.isSupported()) {
-        alert('Attachments not supported in this browser (IndexedDB unavailable).');
-        return;
-      }
-      for (const f of files) {
-        try {
-          const meta = await Att.save(f, f.name, f.type);
-          ref.attachments.push(meta);
-        } catch (err) {
-          console.warn('Failed to save attachment:', err);
+    style: 'display:none;',
+    onchange: async (e) => handleFiles(Array.from(e.target.files || [])),
+  });
+  const dropZone = el(
+    'div',
+    {
+      class: 'attachment-drop-zone',
+      style:
+        'margin-top:4px; padding:12px; border:2px dashed var(--border); border-radius:6px; text-align:center; font-size:12px; color: var(--text-secondary); cursor:pointer; transition:background .15s, border-color .15s;',
+      onclick: () => fileInput.click(),
+      onkeydown: (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          fileInput.click();
         }
-      }
-      renderAttachmentList();
+      },
+      tabindex: '0',
+      role: 'button',
+      'aria-label': 'Add attachments. Click or drag and drop files here',
     },
+    [el('div', {}, 'Click or drag & drop files here')],
+  );
+  async function handleFiles(files) {
+    if (!files.length) return;
+    if (!Att?.isSupported()) {
+      alert('Attachments not supported in this browser (IndexedDB unavailable).');
+      return;
+    }
+    for (const f of files) {
+      try {
+        const meta = await Att.save(f, f.name, f.type);
+        // Also embed as data URL for portability when case shared
+        const fr = new FileReader();
+        const dataUrl = await new Promise((res, rej) => {
+          fr.onerror = () => rej(fr.error);
+          fr.onload = () => res(fr.result);
+          fr.readAsDataURL(f);
+        }).catch(() => null);
+        if (dataUrl) {
+          meta.dataUrl = dataUrl;
+          meta.embedStatus = 'embedded';
+        }
+        ref.attachments.push(meta);
+      } catch (err) {
+        console.warn('Failed to save attachment:', err);
+      }
+    }
+    renderAttachmentList();
+  }
+  const dzHighlightOn = () => {
+    dropZone.style.background = 'var(--surface-alt, var(--surface-muted))';
+    dropZone.style.borderColor = 'var(--accent, var(--primary))';
+  };
+  const dzHighlightOff = () => {
+    dropZone.style.background = '';
+    dropZone.style.borderColor = 'var(--border)';
+  };
+  ['dragenter', 'dragover'].forEach((evt) =>
+    dropZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dzHighlightOn();
+    }),
+  );
+  ['dragleave', 'dragend'].forEach((evt) =>
+    dropZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dzHighlightOff();
+    }),
+  );
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dzHighlightOff();
+    handleFiles(Array.from(e.dataTransfer?.files || []));
   });
   const attList = el('div', { style: 'display:flex; flex-direction:column; gap:6px;' });
   function renderAttachmentList() {
@@ -1211,7 +1242,13 @@ function openAddArtifactModal(onAdd) {
           { class: 'instructor-form-input', onchange: (e) => (currentType = e.target.value) },
           [
             el('option', { value: 'referral', selected: '' }, 'Referral'),
-            // Future: imaging, labs, meds, vitals, prior-notes
+            el('option', { value: 'pmh' }, 'Past Medical History'),
+            el('option', { value: 'imaging' }, 'Imaging'),
+            el('option', { value: 'labs' }, 'Labs'),
+            el('option', { value: 'meds' }, 'Medications'),
+            el('option', { value: 'vitals' }, 'Vitals'),
+            el('option', { value: 'prior-notes' }, 'Prior Notes'),
+            el('option', { value: 'other' }, 'Other'),
           ],
         ),
       ]),
@@ -1219,6 +1256,7 @@ function openAddArtifactModal(onAdd) {
       el('div', { class: 'instructor-form-field' }, [
         el('label', { class: 'instructor-form-label' }, 'Attachments (optional)'),
         fileInput,
+        dropZone,
         el('div', { class: 'hint' }, 'Images or documents are stored locally in your browser.'),
         attList,
       ]),
@@ -1298,24 +1336,81 @@ function openEditArtifactModal(module, onSave) {
     type: 'file',
     multiple: true,
     accept: '*/*',
-    class: 'instructor-form-input',
-    onchange: async (e) => {
-      const files = Array.from(e.target.files || []);
-      if (!files.length) return;
-      if (!Att?.isSupported()) {
-        alert('Attachments not supported in this browser (IndexedDB unavailable).');
-        return;
-      }
-      for (const f of files) {
-        try {
-          const meta = await Att.save(f, f.name, f.type);
-          ref.attachments.push(meta);
-        } catch (err) {
-          console.warn('Failed to save attachment:', err);
+    style: 'display:none;',
+    onchange: async (e) => handleFilesEdit(Array.from(e.target.files || [])),
+  });
+  const dropZone = el(
+    'div',
+    {
+      class: 'attachment-drop-zone',
+      style:
+        'margin-top:4px; padding:12px; border:2px dashed var(--border); border-radius:6px; text-align:center; font-size:12px; color: var(--text-secondary); cursor:pointer; transition:background .15s, border-color .15s;',
+      onclick: () => fileInput.click(),
+      onkeydown: (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          fileInput.click();
         }
-      }
-      renderAttachmentList();
+      },
+      tabindex: '0',
+      role: 'button',
+      'aria-label': 'Add attachments. Click or drag and drop files here',
     },
+    [el('div', {}, 'Click or drag & drop files here')],
+  );
+  async function handleFilesEdit(files) {
+    if (!files.length) return;
+    if (!Att?.isSupported()) {
+      alert('Attachments not supported in this browser (IndexedDB unavailable).');
+      return;
+    }
+    for (const f of files) {
+      try {
+        const meta = await Att.save(f, f.name, f.type);
+        const fr = new FileReader();
+        const dataUrl = await new Promise((res, rej) => {
+          fr.onerror = () => rej(fr.error);
+          fr.onload = () => res(fr.result);
+          fr.readAsDataURL(f);
+        }).catch(() => null);
+        if (dataUrl) {
+          meta.dataUrl = dataUrl;
+          meta.embedStatus = 'embedded';
+        }
+        ref.attachments.push(meta);
+      } catch (err) {
+        console.warn('Failed to save attachment:', err);
+      }
+    }
+    renderAttachmentList();
+  }
+  const dzHighlightOn = () => {
+    dropZone.style.background = 'var(--surface-alt, var(--surface-muted))';
+    dropZone.style.borderColor = 'var(--accent, var(--primary))';
+  };
+  const dzHighlightOff = () => {
+    dropZone.style.background = '';
+    dropZone.style.borderColor = 'var(--border)';
+  };
+  ['dragenter', 'dragover'].forEach((evt) =>
+    dropZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dzHighlightOn();
+    }),
+  );
+  ['dragleave', 'dragend'].forEach((evt) =>
+    dropZone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dzHighlightOff();
+    }),
+  );
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dzHighlightOff();
+    handleFilesEdit(Array.from(e.dataTransfer?.files || []));
   });
   const attList = el('div', { style: 'display:flex; flex-direction:column; gap:6px;' });
   function renderAttachmentList() {
@@ -1415,6 +1510,41 @@ function openEditArtifactModal(module, onSave) {
               { value: 'referral', selected: currentType === 'referral' ? '' : undefined },
               'Referral',
             ),
+            el(
+              'option',
+              { value: 'pmh', selected: currentType === 'pmh' ? '' : undefined },
+              'Past Medical History',
+            ),
+            el(
+              'option',
+              { value: 'imaging', selected: currentType === 'imaging' ? '' : undefined },
+              'Imaging',
+            ),
+            el(
+              'option',
+              { value: 'labs', selected: currentType === 'labs' ? '' : undefined },
+              'Labs',
+            ),
+            el(
+              'option',
+              { value: 'meds', selected: currentType === 'meds' ? '' : undefined },
+              'Medications',
+            ),
+            el(
+              'option',
+              { value: 'vitals', selected: currentType === 'vitals' ? '' : undefined },
+              'Vitals',
+            ),
+            el(
+              'option',
+              { value: 'prior-notes', selected: currentType === 'prior-notes' ? '' : undefined },
+              'Prior Notes',
+            ),
+            el(
+              'option',
+              { value: 'other', selected: currentType === 'other' ? '' : undefined },
+              'Other',
+            ),
           ],
         ),
       ]),
@@ -1422,6 +1552,7 @@ function openEditArtifactModal(module, onSave) {
       el('div', { class: 'instructor-form-field' }, [
         el('label', { class: 'instructor-form-label' }, 'Attachments'),
         fileInput,
+        dropZone,
         el('div', { class: 'hint' }, 'Add images or documents (stored locally in your browser).'),
         attList,
       ]),
@@ -2077,25 +2208,11 @@ export function createChartNavigation(config) {
                 class: 'nav-label',
                 style: `
             font-weight: ${isActive ? '600' : '500'};
-            font-size: 14px;
+              font-size: 13px;
             color: inherit;
           `,
               },
               section.label,
-            ),
-
-            // Tri-state progress text
-            el(
-              'div',
-              {
-                class: 'nav-progress-text',
-                style: 'font-size: 12px; margin-top: 2px;',
-              },
-              progressInfo.status === 'complete'
-                ? 'Complete'
-                : progressInfo.status === 'partial'
-                  ? 'In Progress'
-                  : 'Not Started',
             ),
           ],
         ),
@@ -2142,10 +2259,9 @@ export function createChartNavigation(config) {
             class: 'subsection-item',
             style: `display:flex; align-items:center; padding:4px 8px; font-size:12px; cursor:pointer; transition:all 0.2s ease; border-radius:4px;`,
             onClick: () => {
-              // Robust, exact-offset scroll to the anchor heading to avoid landing on inputs
-              const tryExact = (id) => {
-                const el = document.getElementById(id);
-                if (!el || el.offsetParent === null) return false;
+              requestAnimationFrame(() => {
+                const elTarget = document.getElementById(sub.id);
+                if (!elTarget || elTarget.offsetParent === null) return;
                 const cs = getComputedStyle(document.documentElement);
                 const topbarH = parseInt(
                   (cs.getPropertyValue('--topbar-h') || '').replace('px', '').trim(),
@@ -2159,21 +2275,10 @@ export function createChartNavigation(config) {
                 const sd = isNaN(dividerH) ? 0 : dividerH;
                 const sticky = document.getElementById('patient-sticky-header');
                 const sh = sticky && sticky.offsetParent !== null ? sticky.offsetHeight : 0;
-                const rect = el.getBoundingClientRect();
+                const rect = elTarget.getBoundingClientRect();
                 const targetY = Math.max(0, window.scrollY + rect.top - (tb + sh + sd));
                 window.scrollTo({ top: targetY, behavior: 'smooth' });
-                return true;
-              };
-              let ok = tryExact(sub.id);
-              // Retry after layout in case content-visibility or lazy render shifts layout
-              requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                  if (!ok) ok = tryExact(sub.id);
-                });
               });
-              setTimeout(() => {
-                if (!ok) tryExact(sub.id);
-              }, 140);
             },
           },
           [createSubsectionIndicator(subsectionStatus), el('span', {}, sub.label)],
@@ -2235,143 +2340,214 @@ export function createChartNavigation(config) {
           // Case File (formerly Background Information/Artifacts): list and controls
           (() => {
             const items = Array.isArray(currentModules) ? currentModules : [];
-            // Removed subtle divider to keep the area clean and compact
-            if (config.isFacultyMode) {
-              // List artifacts with table-style remove buttons
-              const list = items.length
-                ? el(
-                    'div',
-                    { class: 'artifact-list' },
-                    items.map((m) => {
-                      const title =
-                        m.title ||
-                        (m.type ? m.type[0].toUpperCase() + m.type.slice(1) : 'Artifact');
-                      return el(
-                        'button',
-                        {
-                          class: 'btn secondary artifact-pill',
-                          onClick: () =>
-                            openViewArtifactModal(m, {
-                              isFacultyMode: true,
-                              onEdit: (updated) => {
-                                const next = (items || []).map((x) =>
-                                  x.id === updated.id ? { ...x, ...updated } : x,
-                                );
-                                const payload = { ...(config.caseInfo || {}), modules: next };
-                                config.onCaseInfoUpdate?.(payload);
-                              },
-                              onRemove: (id) => {
-                                const next = (items || []).filter((x) => x.id !== id);
-                                const payload = { ...(config.caseInfo || {}), modules: next };
-                                config.onCaseInfoUpdate?.(payload);
-                              },
-                            }),
-                          title: 'View background document',
-                        },
-                        [createIcon('file'), el('span', {}, title)],
-                      );
-                    }),
-                  )
-                : el('div'); // Empty div when no artifacts
+            // Group items by category
+            const grouped = {};
+            items.forEach((m) => {
+              const cat = getCategoryForArtifact(m);
+              (grouped[cat] = grouped[cat] || []).push(m);
+            });
+            const categories = Object.keys(grouped)
+              .sort(
+                (a, b) =>
+                  (ARTIFACT_CATEGORY_META[a]?.order || 999) -
+                  (ARTIFACT_CATEGORY_META[b]?.order || 999),
+              )
+              .map((k) => ({ key: k, meta: ARTIFACT_CATEGORY_META[k], items: grouped[k] }))
+              .filter((c) => c.items && c.items.length);
 
-              // Add button styled like tables (compact circular +), placed below list
-              const addBtnFooter = el(
-                'div',
+            if (!categories.length && !config.isFacultyMode) return el('div');
+
+            function renderCategory(cat) {
+              const isCollapsed = !!artifactCollapseState[cat.key];
+              const header = el(
+                'button',
                 {
-                  class: 'editable-table__footer artifact-add-footer',
-                },
-                el(
-                  'div',
-                  {
-                    class: 'compact-add-btn',
-                    title: 'Add background document',
-                    onclick: () => {
-                      openAddArtifactModal((mod) => {
-                        const next = [...items, mod];
-                        const payload = { ...(config.caseInfo || {}), modules: next };
-                        config.onCaseInfoUpdate?.(payload);
-                      });
-                    },
+                  class: 'artifact-cat-header',
+                  'aria-expanded': String(!isCollapsed),
+                  onclick: () => {
+                    artifactCollapseState[cat.key] = !artifactCollapseState[cat.key];
+                    saveArtifactCollapseState(artifactCollapseState);
+                    container.replaceChildren(...build());
                   },
-                  '+',
-                ),
+                },
+                [
+                  el(
+                    'span',
+                    { class: 'twisty', style: 'display:inline-block; width:12px;' },
+                    isCollapsed ? '▶' : '▼',
+                  ),
+                  el(
+                    'span',
+                    { style: 'flex:1; text-align:left;' },
+                    `${cat.meta?.label || cat.key} (${cat.items.length})`,
+                  ),
+                ],
               );
 
-              return el('div', { class: 'artifact-block' }, [list, addBtnFooter]);
-            }
-            // Student view: buttons to open artifacts
-            if (!items.length) return el('div');
-            const list = el(
-              'div',
-              { class: 'artifact-list' },
-              items.map((m) => {
+              const itemButtons = cat.items.map((m) => {
                 const title =
                   m.title || (m.type ? m.type[0].toUpperCase() + m.type.slice(1) : 'Artifact');
-                return el(
+                const btn = el(
                   'button',
                   {
-                    class: 'btn secondary artifact-pill',
-                    onClick: () => openViewArtifactModal(m),
+                    class: 'artifact-entry subsection-item',
+                    style:
+                      'display:flex; align-items:center; gap:6px; width:100%; background:none; border:none;',
+                    onClick: () =>
+                      openViewArtifactModal(m, {
+                        isFacultyMode: !!config.isFacultyMode,
+                        onEdit: (updated) => {
+                          const next = (items || []).map((x) =>
+                            x.id === updated.id ? { ...x, ...updated } : x,
+                          );
+                          const payload = { ...(config.caseInfo || {}), modules: next };
+                          config.onCaseInfoUpdate?.(payload);
+                        },
+                        onRemove: (id) => {
+                          const next = (items || []).filter((x) => x.id !== id);
+                          const payload = { ...(config.caseInfo || {}), modules: next };
+                          config.onCaseInfoUpdate?.(payload);
+                        },
+                      }),
+                    title: 'View artifact',
                   },
-                  [createIcon('file'), el('span', {}, title)],
+                  [createIcon('file'), el('span', { class: 'artifact-entry-title' }, title)],
                 );
-              }),
-            );
-            return el('div', { class: 'artifact-block' }, [list]);
+                return btn;
+              });
+
+              return el('div', { class: 'artifact-category' }, [
+                header,
+                isCollapsed
+                  ? el('div')
+                  : el('div', { class: 'artifact-list', style: 'margin-top:4px;' }, itemButtons),
+              ]);
+            }
+
+            function build() {
+              const nodes = categories.map(renderCategory);
+              if (config.isFacultyMode) {
+                // Add global add button at end
+                nodes.push(
+                  el(
+                    'div',
+                    {
+                      class: 'editable-table__footer artifact-add-footer',
+                      style: 'margin-top:6px;',
+                    },
+                    el(
+                      'div',
+                      {
+                        class: 'compact-add-btn',
+                        title: 'Add background document',
+                        onclick: () => {
+                          openAddArtifactModal((mod) => {
+                            const next = [...items, mod];
+                            const payload = { ...(config.caseInfo || {}), modules: next };
+                            config.onCaseInfoUpdate?.(payload);
+                          });
+                        },
+                      },
+                      '+',
+                    ),
+                  ),
+                );
+              }
+              if (!nodes.length && config.isFacultyMode) {
+                nodes.push(
+                  el(
+                    'div',
+                    { style: 'font-size:12px; margin:4px 0; color: var(--text-secondary);' },
+                    'No artifacts yet.',
+                  ),
+                  el(
+                    'div',
+                    {
+                      class: 'editable-table__footer artifact-add-footer',
+                      style: 'margin-top:6px;',
+                    },
+                    el(
+                      'div',
+                      {
+                        class: 'compact-add-btn',
+                        title: 'Add background document',
+                        onclick: () => {
+                          openAddArtifactModal((mod) => {
+                            const next = [...items, mod];
+                            const payload = { ...(config.caseInfo || {}), modules: next };
+                            config.onCaseInfoUpdate?.(payload);
+                          });
+                        },
+                      },
+                      '+',
+                    ),
+                  ),
+                );
+              }
+              return nodes;
+            }
+            const container = el('div', { class: 'artifact-block grouped-artifacts' });
+            container.replaceChildren(...build());
+            return container;
           })(),
           // Extra padding before section trackers
           el('div', { style: 'height: 20px;' }),
-          // Note Progress header
+          // Current Encounter header (renamed from Note Progress)
           el(
             'h4',
             {
-              class: 'note-progress-header',
+              class: 'current-encounter-header',
+              'aria-label': 'Current Encounter Progress',
             },
-            'Note Progress',
+            'Current Encounter',
           ),
           // Section cards + subsections
           ...sections.map((section) =>
             el('div', {}, [createSectionNav(section), createSubsectionTOC(section)]),
           ),
-          // Footer actions: Export to Word at very bottom with extra separation from Billing
+          // Footer actions: Sign & Export (Word)
           (() => {
             async function handleExportClick() {
+              const out = config.caseData || {};
+              const draft = window && window.currentDraft ? window.currentDraft : out || {};
+              // Merge draft overlays first (title, snapshot, meta) before capturing signature
               try {
-                const out = config.caseData || {};
-                const draft = window && window.currentDraft ? window.currentDraft : out || {};
-                try {
-                  if (draft.noteTitle) out.title = draft.noteTitle;
-                } catch {}
-                try {
-                  if (draft.snapshot) out.snapshot = { ...(out.snapshot || {}), ...draft.snapshot };
-                } catch {}
-                try {
-                  if (draft.meta) out.meta = { ...(out.meta || {}), ...draft.meta };
-                } catch {}
-                // Lazy-load libraries on first export
-                await ensureExportLibsLoaded();
-                exportToWord(out, draft);
-              } catch (e) {
-                console.error('Export to Word failed to start:', e);
-                alert('Unable to start Word export.');
-              }
+                if (draft.noteTitle) out.title = draft.noteTitle;
+              } catch {}
+              try {
+                if (draft.snapshot) out.snapshot = { ...(out.snapshot || {}), ...draft.snapshot };
+              } catch {}
+              try {
+                if (draft.meta) out.meta = { ...(out.meta || {}), ...draft.meta };
+              } catch {}
+
+              // Open signature dialog; continue only after signing
+              openSignatureDialog({
+                existingSignature: (out.meta && out.meta.signature) || getPersistedSignatureMeta(),
+                onSigned: async (signature) => {
+                  out.meta = { ...(out.meta || {}), signature };
+                  try {
+                    await ensureExportLibsLoaded();
+                    exportToWord(out, draft);
+                  } catch (e) {
+                    console.error('Export to Word failed after signing:', e);
+                    alert('Unable to complete export.');
+                  }
+                },
+              });
             }
-            return el(
-              'div',
-              { style: 'margin: 24px 0 8px 0; display:flex; gap:8px; justify-content: stretch;' },
-              [
-                el(
-                  'button',
-                  {
-                    class: 'btn primary',
-                    style: 'flex:1;',
-                    title: 'Export this chart to a Word document',
-                    onClick: handleExportClick,
-                  },
-                  'Export to Word',
-                ),
-              ],
-            );
+            return el('div', { style: 'margin: 24px 0 8px 0; display:flex; gap:8px;' }, [
+              el(
+                'button',
+                {
+                  class: 'btn primary',
+                  style: 'flex:1;',
+                  title: 'Sign the evaluation then export to a Word document',
+                  onClick: handleExportClick,
+                },
+                'Sign & Export',
+              ),
+            ]);
           })(),
         ],
       ),

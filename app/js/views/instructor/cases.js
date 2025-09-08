@@ -117,6 +117,7 @@ function showCaseCreationModal() {
   const modal = el(
     'div',
     {
+      'data-modal': 'create-case',
       style: `position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;`,
       onclick: (e) => {
         if (e.target === modal) document.body.removeChild(modal);
@@ -671,6 +672,17 @@ function createCaseFromGenerated(caseData, modal) {
 
 function handleCaseCreation(e) {
   e.preventDefault();
+  // Prevent duplicate submissions
+  if (handleCaseCreation.submitting) return;
+  handleCaseCreation.submitting = true;
+
+  // Provide immediate UI feedback (disable submit button if present)
+  const form = e.target;
+  const submitBtn = form.querySelector('button[type="submit"], .create-case-submit');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating...';
+  }
 
   const title = document.getElementById('case-title').value.trim();
   const setting = document.getElementById('case-setting').value;
@@ -700,7 +712,17 @@ function handleCaseCreation(e) {
     return;
   }
 
-  handleCaseCreationAsync(title, setting, age, gender, acuity, dobFinal);
+  handleCaseCreationAsync(title, setting, age, gender, acuity, dobFinal)
+    .catch(() => {
+      // On error, re-enable submit so user can retry
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Case';
+      }
+    })
+    .finally(() => {
+      handleCaseCreation.submitting = false;
+    });
 }
 
 async function handleCaseCreationAsync(title, setting, age, gender, acuity, dob) {
@@ -750,11 +772,9 @@ async function handleCaseCreationAsync(title, setting, age, gender, acuity, dob)
 
     const newCase = await store.createCase(caseData);
 
-    // Close modal
-    const modal = document.querySelector('[style*="z-index: 1000"]');
-    if (modal) {
-      document.body.removeChild(modal);
-    }
+    // Close modal (data attribute specific)
+    const modal = document.querySelector('[data-modal="create-case"]');
+    if (modal && modal.parentElement) modal.parentElement.removeChild(modal);
 
     // Navigate to editor with proper case ID
     urlNavigate('/instructor/editor', { case: newCase.id });
@@ -958,19 +978,26 @@ route('#/instructor/cases', async (app) => {
               },
               [spriteIcon('plus'), 'Create New Case'],
             ),
-            el(
-              'button',
-              {
-                class: 'btn secondary',
-                style: 'display: flex; align-items: center; gap: 8px;',
-                onclick: (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  showPromptGenerationModal();
+            // Feature flag: Prompt-based generation hidden until feature is production-ready.
+            // To re-enable, set enablePromptGeneration=true (or remove condition) below.
+            (() => {
+              const enablePromptGeneration = false; // toggle here for future rollout
+              if (!enablePromptGeneration) return null;
+              return el(
+                'button',
+                {
+                  class: 'btn secondary',
+                  style: 'display: flex; align-items: center; gap: 8px;',
+                  title: 'Generate a draft case from an AI prompt',
+                  onclick: (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showPromptGenerationModal();
+                  },
                 },
-              },
-              [spriteIcon('edit'), 'Generate from Prompt'],
-            ),
+                [spriteIcon('edit'), 'Generate from Prompt'],
+              );
+            })(),
           ]),
         ]),
         renderSearchAndTable(),
