@@ -15,6 +15,10 @@ function createStyleOnce() {
   style.textContent = `
   .signature-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(2px); display:flex; align-items:center; justify-content:center; z-index:var(--z-modal,10000); padding:16px; }
   .signature-modal { background: var(--panel, var(--surface, #fff)); color: var(--text,#111); width: min(520px, 100%); border-radius: var(--radius-lg, 12px); padding: 24px 28px 28px; box-shadow: var(--shadow-2, 0 8px 24px rgba(0,0,0,.35)); display:flex; flex-direction:column; gap:18px; max-height:calc(100vh - 64px); overflow:auto; border:1px solid var(--border,#ccc); }
+  /* Fade transitions */
+  .signature-overlay, .signature-modal { opacity: 0; transform: scale(.985); transition: opacity 280ms ease, transform 260ms ease; }
+  .signature-overlay.is-open, .signature-modal.is-open { opacity: 1; transform: scale(1); }
+  @media (prefers-reduced-motion: reduce) { .signature-overlay, .signature-modal { transition:none !important; transform:none !important; } }
   .signature-modal h2 { margin:0 0 2px; font-size:1.35rem; font-weight:600; letter-spacing:.5px; color: var(--text,#111); }
   .signature-modal form { display:flex; flex-direction:column; gap:14px; }
   .signature-field { display:flex; flex-direction:column; gap:4px; }
@@ -96,9 +100,26 @@ export function openSignatureDialog({ onSigned, existingSignature } = {}) {
   });
 
   function close() {
-    overlay.remove();
-    detachTrap();
-    priorFocus && priorFocus.focus && priorFocus.focus();
+    // Animate out, then remove
+    overlay.classList.remove('is-open');
+    dialog.classList.remove('is-open');
+    const removeNow = () => {
+      try {
+        overlay.remove();
+      } catch {}
+      detachTrap();
+      priorFocus && priorFocus.focus && priorFocus.focus();
+    };
+    // If reduced motion or no transitions, remove immediately
+    const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduce) return removeNow();
+    let done = 0;
+    const handleEnd = () => {
+      if (++done >= 1) removeNow();
+    };
+    overlay.addEventListener('transitionend', handleEnd, { once: true });
+    // Fallback safety
+    setTimeout(removeNow, 400);
   }
 
   function cancel() {
@@ -166,6 +187,11 @@ export function openSignatureDialog({ onSigned, existingSignature } = {}) {
   );
   overlay.append(dialog);
   document.body.appendChild(overlay);
+  // Next frame -> add open classes
+  requestAnimationFrame(() => {
+    overlay.classList.add('is-open');
+    dialog.classList.add('is-open');
+  });
 
   const detachTrap = trapFocus(dialog);
   dialog.__onCancel = cancel;

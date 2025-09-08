@@ -1,4 +1,55 @@
 import { storage } from './adapters/storageAdapter.js';
+
+// Basic route transition utility
+function applyRouteTransition(appEl, mode = 'fade') {
+  // Skip if user prefers reduced motion
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) return { before: (cb) => cb(), after: () => {} };
+
+  const enterClassBase = mode === 'slide' ? 'route-slide' : 'route-fade';
+  let currentContent = appEl.firstElementChild;
+  let exitEl = null;
+
+  const before = (prepareNew) => {
+    if (currentContent) {
+      exitEl = currentContent;
+      exitEl.classList.remove(`${enterClassBase}-enter`, `${enterClassBase}-enter-active`);
+      exitEl.classList.add(`${enterClassBase}-exit`);
+      // Force reflow to ensure transition start
+      // Force reflow to commit exit state before adding active class
+      void exitEl.offsetWidth;
+      exitEl.classList.add(`${enterClassBase}-exit-active`);
+      exitEl.addEventListener(
+        'transitionend',
+        () => {
+          if (exitEl && exitEl.parentElement === appEl) {
+            try {
+              appEl.removeChild(exitEl);
+            } catch {}
+          }
+        },
+        { once: true },
+      );
+    }
+    prepareNew();
+  };
+  const after = (newEl) => {
+    if (!newEl) return;
+    newEl.classList.add(`${enterClassBase}-enter`);
+    // next frame
+    requestAnimationFrame(() => {
+      newEl.classList.add(`${enterClassBase}-enter-active`);
+      newEl.addEventListener(
+        'transitionend',
+        () => {
+          newEl.classList.remove(`${enterClassBase}-enter`, `${enterClassBase}-enter-active`);
+        },
+        { once: true },
+      );
+    });
+  };
+  return { before, after };
+}
 // Router with proper initialization order and parameter handling
 
 const routes = {};
@@ -76,8 +127,19 @@ export function startRouter() {
       document.body.setAttribute('data-route', routeKey);
     } catch {}
 
-    app.replaceChildren();
-    await renderer(app, new URLSearchParams(query || ''), params);
+    // Uniform fade transition for all routes (removed upward motion)
+    const { before, after } = applyRouteTransition(app, 'fade');
+
+    let newWrapper = null;
+    before(() => {
+      // We create a wrapper so we can animate a single root element
+      app.replaceChildren();
+      newWrapper = document.createElement('div');
+      newWrapper.className = 'route-transition-container';
+      app.appendChild(newWrapper);
+    });
+    await renderer(newWrapper, new URLSearchParams(query || ''), params);
+    after(newWrapper);
   }
   window.addEventListener('hashchange', render);
   render();

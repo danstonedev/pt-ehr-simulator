@@ -50,6 +50,7 @@ export function generateCase(anchors = {}) {
       acuity,
       diagnosis: 'Musculoskeletal',
       regions: regionSlug ? [regionSlug] : [],
+      generated: true,
     },
 
     // Case snapshot for quick reference
@@ -85,6 +86,7 @@ export function generateCase(anchors = {}) {
           painScale: String(pain ?? ''),
           patientGoals: goal || template.defaultGoal,
         },
+        generated: true,
         objective: {
           regionalAssessments: {
             selectedRegions: [regionSlug],

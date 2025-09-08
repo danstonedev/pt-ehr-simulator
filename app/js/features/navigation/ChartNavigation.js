@@ -687,7 +687,11 @@ function openCaseDetailsModal(caseInfo) {
 // Read-only Artifact viewer modal (student and faculty view)
 function openViewArtifactModal(module, options = {}) {
   const { isFacultyMode = false, onEdit, onRemove } = options || {};
-  const overlay = el('div', { class: 'goal-linker-modal', role: 'dialog', 'aria-modal': 'true' });
+  const overlay = el('div', {
+    class: 'goal-linker-modal popup-overlay-base',
+    role: 'dialog',
+    'aria-modal': 'true',
+  });
   // Track object URLs created for thumbnails so we can revoke on close
   const urlsToRevoke = [];
   const title =
@@ -699,7 +703,7 @@ function openViewArtifactModal(module, options = {}) {
   overlay.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') overlay.remove();
   });
-  const content = el('div', { class: 'goal-linker-content case-details-modal' }, [
+  const content = el('div', { class: 'goal-linker-content case-details-modal popup-card-base' }, [
     el('div', { class: 'goal-linker-header' }, [
       el('h3', {}, title),
       el(
@@ -1037,6 +1041,18 @@ function openViewArtifactModal(module, options = {}) {
   ]);
   overlay.append(content);
   document.body.append(overlay);
+  requestAnimationFrame(() => {
+    overlay.classList.add('is-open');
+    content.classList.add('is-open');
+  });
+  // Fallback force-show if transitions sheet missing or class application fails
+  setTimeout(() => {
+    if (getComputedStyle(overlay).opacity === '0') {
+      overlay.style.opacity = '1';
+      content.style.opacity = '1';
+      content.style.transform = 'scale(1)';
+    }
+  }, 80);
   const cleanup = () => {
     try {
       urlsToRevoke.forEach((u) => {
@@ -1059,7 +1075,11 @@ function openViewArtifactModal(module, options = {}) {
 
 // Add Artifact modal (faculty): collects title, type, and type-specific fields
 function openAddArtifactModal(onAdd) {
-  const overlay = el('div', { class: 'goal-linker-modal', role: 'dialog', 'aria-modal': 'true' });
+  const overlay = el('div', {
+    class: 'goal-linker-modal popup-overlay-base',
+    role: 'dialog',
+    'aria-modal': 'true',
+  });
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.remove();
   });
@@ -1221,7 +1241,7 @@ function openAddArtifactModal(onAdd) {
     ]),
   ]);
 
-  const content = el('div', { class: 'goal-linker-content case-details-modal' }, [
+  const content = el('div', { class: 'goal-linker-content case-details-modal popup-card-base' }, [
     el('div', { class: 'goal-linker-header' }, [
       el('h3', {}, 'Add Case Artifact'),
       el(
@@ -1303,12 +1323,27 @@ function openAddArtifactModal(onAdd) {
   ]);
   overlay.append(content);
   document.body.append(overlay);
+  requestAnimationFrame(() => {
+    overlay.classList.add('is-open');
+    content.classList.add('is-open');
+  });
+  setTimeout(() => {
+    if (getComputedStyle(overlay).opacity === '0') {
+      overlay.style.opacity = '1';
+      content.style.opacity = '1';
+      content.style.transform = 'scale(1)';
+    }
+  }, 80);
   setTimeout(() => titleInput?.focus(), 0);
 }
 
 // Edit Artifact modal (faculty): similar to Add but pre-populated and updates existing module
 function openEditArtifactModal(module, onSave) {
-  const overlay = el('div', { class: 'goal-linker-modal', role: 'dialog', 'aria-modal': 'true' });
+  const overlay = el('div', {
+    class: 'goal-linker-modal popup-overlay-base',
+    role: 'dialog',
+    'aria-modal': 'true',
+  });
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.remove();
   });
@@ -1482,7 +1517,7 @@ function openEditArtifactModal(module, onSave) {
     ]),
   ]);
 
-  const content = el('div', { class: 'goal-linker-content case-details-modal' }, [
+  const content = el('div', { class: 'goal-linker-content case-details-modal popup-card-base' }, [
     el('div', { class: 'goal-linker-header' }, [
       el('h3', {}, 'Edit Background Document'),
       el(
@@ -1595,6 +1630,17 @@ function openEditArtifactModal(module, onSave) {
   ]);
   overlay.append(content);
   document.body.append(overlay);
+  requestAnimationFrame(() => {
+    overlay.classList.add('is-open');
+    content.classList.add('is-open');
+  });
+  setTimeout(() => {
+    if (getComputedStyle(overlay).opacity === '0') {
+      overlay.style.opacity = '1';
+      content.style.opacity = '1';
+      content.style.transform = 'scale(1)';
+    }
+  }, 80);
   setTimeout(() => titleInput?.focus(), 0);
   renderAttachmentList();
 }
@@ -1629,23 +1675,18 @@ export function openEditCaseModal(caseInfo, onSave) {
   const modal = el(
     'div',
     {
-      style: `
-  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-  display: flex; align-items: flex-start; justify-content: center; z-index: var(--z-modal);
-  overflow-y: auto; padding: 24px 12px;
-    `,
+      class: 'popup-overlay-base',
+      style: `position: fixed; inset:0; background: rgba(0,0,0,0.5); display:flex; align-items:flex-start; justify-content:center; z-index: var(--z-modal); overflow-y:auto; padding:24px 12px;`,
       onclick: (e) => {
-        if (e.target === modal) document.body.removeChild(modal);
+        if (e.target === modal) close();
       },
     },
     [
       el(
         'div',
         {
-          style: `
-  background: var(--bg); color: var(--text); padding: 32px; border-radius: 12px; max-width: 560px; width: 95%;
-  max-height: calc(100vh - 48px); overflow: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-      `,
+          class: 'popup-card-base',
+          style: `background: var(--bg); color: var(--text); padding:32px; border-radius:12px; max-width:560px; width:95%; max-height:calc(100vh - 48px); overflow:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);`,
           onclick: (e) => e.stopPropagation(),
         },
         [
@@ -1939,7 +1980,36 @@ export function openEditCaseModal(caseInfo, onSave) {
   }
 
   document.body.appendChild(modal);
-  setTimeout(() => document.getElementById('edit-title')?.focus(), 50);
+  requestAnimationFrame(() => {
+    modal.classList.add('is-open');
+    modal.querySelector('.popup-card-base').classList.add('is-open');
+    setTimeout(() => document.getElementById('edit-title')?.focus(), 90);
+  });
+  setTimeout(() => {
+    if (getComputedStyle(modal).opacity === '0') {
+      modal.style.opacity = '1';
+      const card = modal.querySelector('.popup-card-base');
+      if (card) {
+        card.style.opacity = '1';
+        card.style.transform = 'scale(1)';
+      }
+    }
+  }, 80);
+
+  function close() {
+    modal.classList.remove('is-open');
+    const card = modal.querySelector('.popup-card-base');
+    if (card) card.classList.remove('is-open');
+    const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const removeNow = () => {
+      try {
+        modal.remove();
+      } catch {}
+    };
+    if (prefersReduce) return removeNow();
+    modal.addEventListener('transitionend', removeNow, { once: true });
+    setTimeout(removeNow, 480);
+  }
 }
 
 export function createChartNavigation(config) {

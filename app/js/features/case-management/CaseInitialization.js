@@ -530,8 +530,16 @@ function populateDraftFromCaseData(draft, caseData) {
     if (title && !draft.noteTitle) {
       draft.noteTitle = title;
     }
-    // Optionally prefix HPI with demographic context if HPI is empty
-    if (!draft.subjective.historyOfPresentIllness && (age || sex) && title) {
+    // Optionally prefix HPI with demographic context ONLY for auto-generated cases.
+    // Previously this always seeded a demographic sentence, which unintentionally appeared
+    // for normally created manual cases. We now require an explicit meta.generated flag
+    // (set by generator utilities) before adding this helper text.
+    if (
+      !draft.subjective.historyOfPresentIllness &&
+      (age || sex) &&
+      title &&
+      (caseData?.meta?.generated === true || caseData?.generated === true)
+    ) {
       const sx = sex ? sex[0].toUpperCase() + sex.slice(1) : '';
       draft.subjective.historyOfPresentIllness = `${age ? age + '-year-old ' : ''}${sx ? sx + ' ' : ''}presenting with ${title.toLowerCase()}.`;
     }

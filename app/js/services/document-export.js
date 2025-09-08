@@ -1527,15 +1527,16 @@ export function exportToWord(caseData, draft) {
             return sig.signedAt;
           }
         })();
+        // Two-line signature display per request
+        elements.push(
+          new Paragraph({
+            children: [createTextRun('Signed by: ', { bold: true }), createTextRun(line, {})],
+          }),
+        );
         elements.push(
           new Paragraph({
             spacing: { after: FORMAT.spacing.small },
-            children: [
-              createTextRun('Signed by: ', { bold: true }),
-              createTextRun(line + '\n', {}),
-              createTextRun('Date/Time: ', { bold: true }),
-              createTextRun(ts, {}),
-            ],
+            children: [createTextRun('Date/Time: ', { bold: true }), createTextRun(ts, {})],
           }),
         );
       }

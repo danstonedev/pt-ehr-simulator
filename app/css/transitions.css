@@ -1,0 +1,88 @@
+/* Route/page transition animations */
+/* Accessible: respects prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .route-fade-enter,
+  .route-fade-exit,
+  .route-slide-enter,
+  .route-slide-exit {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.route-transition-container {
+  position: relative;
+}
+
+.route-fade-enter {
+  opacity: 0;
+}
+.route-fade-enter-active {
+  opacity: 1;
+  transition: opacity 420ms ease-out;
+}
+.route-fade-exit {
+  opacity: 1;
+}
+.route-fade-exit-active {
+  opacity: 0;
+  transition: opacity 320ms ease-in;
+}
+
+/* Subtle vertical slide used for heavier pages (editor, creation) */
+.route-slide-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.route-slide-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+.route-slide-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+.route-slide-exit-active {
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+/* Utility when we instantly want content visible (skip exit) */
+.no-exit-transition .route-fade-exit-active,
+.no-exit-transition .route-slide-exit-active {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Generic popup / modal transitions */
+.popup-overlay-base {
+  opacity: 0;
+  transition: opacity 380ms ease;
+}
+.popup-overlay-base.is-open {
+  opacity: 1;
+}
+.popup-card-base {
+  opacity: 0;
+  transform: scale(0.975);
+  transition:
+    opacity 340ms ease,
+    transform 320ms ease;
+}
+.popup-card-base.is-open {
+  opacity: 1;
+  transform: scale(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .popup-overlay-base,
+  .popup-card-base {
+    transition: none !important;
+    transform: none !important;
+  }
+}

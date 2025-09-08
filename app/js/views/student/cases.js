@@ -168,18 +168,24 @@ route('#/student/cases', async (app) => {
 
     function openCreateNoteModal() {
       const overlay = el('div', {
+        class: 'popup-overlay-base',
         style:
           'position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;',
         onclick: (e) => {
-          if (e.target === overlay) document.body.removeChild(overlay);
+          if (e.target === overlay) close();
         },
       });
       const defaultTitle = `Blank SOAP Note — ${new Date().toLocaleDateString()}`;
       const content = el(
         'div',
         {
+          class: 'popup-card-base',
+          role: 'dialog',
+          'aria-modal': 'true',
+          'aria-label': 'Create SOAP Note',
           style:
-            'background:var(--bg); color:var(--text); padding:24px; border-radius:12px; width:92%; max-width:520px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);',
+            'background:var(--bg); color:var(--text); padding:24px; border-radius:12px; width:92%; max-width:520px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.15);',
+          onclick: (e) => e.stopPropagation(),
         },
         [
           el('h3', { style: 'margin-top:0;' }, 'Create SOAP Note'),
@@ -201,11 +207,7 @@ route('#/student/cases', async (app) => {
             'div',
             { style: 'display:flex; gap:8px; justify-content:flex-end; margin-top:18px;' },
             [
-              el(
-                'button',
-                { class: 'btn secondary', onClick: () => document.body.removeChild(overlay) },
-                'Cancel',
-              ),
+              el('button', { class: 'btn secondary', onClick: () => close() }, 'Cancel'),
               el(
                 'button',
                 {
@@ -216,14 +218,13 @@ route('#/student/cases', async (app) => {
                       (input && input.value ? input.value : '').trim() || 'Blank SOAP Note';
                     const id = `blank-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
                     try {
-                      // Initialize minimal draft so it appears in the list with the chosen title
                       const draftKey = `draft_${id}_eval`;
                       const initialDraft = { noteTitle: title, __savedAt: Date.now() };
                       storage.setItem(draftKey, JSON.stringify(initialDraft));
                     } catch (e) {
                       console.warn('Could not pre-save blank note draft:', e);
                     }
-                    document.body.removeChild(overlay);
+                    close();
                     urlNavigate('/student/editor', { case: id, v: 0, encounter: 'eval' });
                   },
                 },
@@ -233,9 +234,26 @@ route('#/student/cases', async (app) => {
           ),
         ],
       );
+      function close() {
+        overlay.classList.remove('is-open');
+        content.classList.remove('is-open');
+        const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const removeNow = () => {
+          try {
+            overlay.remove();
+          } catch {}
+        };
+        if (prefersReduce) return removeNow();
+        overlay.addEventListener('transitionend', removeNow, { once: true });
+        setTimeout(removeNow, 480);
+      }
       overlay.append(content);
       document.body.append(overlay);
-      setTimeout(() => content.querySelector('#student-note-title-input')?.focus(), 0);
+      requestAnimationFrame(() => {
+        overlay.classList.add('is-open');
+        content.classList.add('is-open');
+        setTimeout(() => content.querySelector('#student-note-title-input')?.focus(), 80);
+      });
     }
 
     // Sorting state (match faculty behavior)

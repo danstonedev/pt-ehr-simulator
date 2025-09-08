@@ -25,9 +25,10 @@ function computeAgeFromDob(dobStr) {
 // Lightweight YouTube-style Share Popup
 function showSharePopup(url) {
   const overlay = el('div', {
+    class: 'popup-overlay-base',
     style: `position: fixed; inset: 0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1100;`,
     onclick: (e) => {
-      if (e.target === overlay) document.body.removeChild(overlay);
+      if (e.target === overlay) close();
     },
   });
   const statusEl = el('div', {
@@ -61,6 +62,7 @@ function showSharePopup(url) {
       role: 'dialog',
       'aria-modal': 'true',
       'aria-label': 'Share',
+      class: 'popup-card-base',
       style: `background:var(--bg); color:var(--text); border-radius:12px; width:92%; max-width:520px; box-shadow:0 20px 45px rgba(0,0,0,0.2); padding:20px; position:relative;`,
       onclick: (e) => e.stopPropagation(),
     },
@@ -80,7 +82,7 @@ function showSharePopup(url) {
               'aria-label': 'Close',
               style:
                 'border:none; background:transparent; font-size:18px; cursor:pointer; padding:4px;',
-              onclick: () => document.body.removeChild(overlay),
+              onclick: () => close(),
             },
             '✕',
           ),
@@ -109,262 +111,245 @@ function showSharePopup(url) {
   );
   overlay.append(card);
   document.body.appendChild(overlay);
-  setTimeout(() => inputRef?.select(), 50);
+  function close() {
+    overlay.classList.remove('is-open');
+    card.classList.remove('is-open');
+    const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const removeNow = () => {
+      try {
+        overlay.remove();
+      } catch {}
+    };
+    if (prefersReduce) return removeNow();
+    overlay.addEventListener('transitionend', removeNow, { once: true });
+    setTimeout(removeNow, 450);
+  }
+  requestAnimationFrame(() => {
+    overlay.classList.add('is-open');
+    card.classList.add('is-open');
+    setTimeout(() => inputRef?.select(), 90);
+  });
 }
 
-// Create Case Modal (reconstructed)
 function showCaseCreationModal() {
-  const modal = el(
+  const modal = el('div', {
+    'data-modal': 'create-case',
+    class: 'popup-overlay-base',
+    style:
+      'position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;',
+    onclick: (e) => {
+      if (e.target === modal) close();
+    },
+  });
+  const card = el(
     'div',
     {
-      'data-modal': 'create-case',
-      style: `position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;`,
-      onclick: (e) => {
-        if (e.target === modal) document.body.removeChild(modal);
-      },
+      class: 'popup-card-base',
+      style:
+        'background:var(--bg); padding:24px; border-radius:12px; max-width:720px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.15); color:var(--text);',
+      onclick: (e) => e.stopPropagation(),
     },
     [
-      el(
-        'div',
-        {
-          style: `background:var(--bg); padding:24px; border-radius:12px; max-width:720px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.15); color:var(--text);`,
-          onclick: (e) => e.stopPropagation(),
-        },
-        [
-          el('h2', { style: 'margin:0 0 12px 0;' }, 'Create Case'),
+      el('h2', { style: 'margin:0 0 12px 0;' }, 'Create Case'),
+      el('form', { onsubmit: (e) => handleCaseCreation(e) }, [
+        el('div', { style: 'margin-bottom:16px;' }, [
           el(
-            'form',
+            'label',
+            { style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' },
+            'Case Title *',
+          ),
+          el('input', {
+            id: 'case-title',
+            type: 'text',
+            required: true,
+            placeholder: 'e.g., Shoulder Impingement (R)',
+            style:
+              'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+          }),
+        ]),
+        el('div', { style: 'margin-bottom:12px;' }, [
+          el(
+            'label',
+            { style: 'display:block; margin-bottom:8px; font-weight:500; color:var(--text);' },
+            'DOB',
+          ),
+          el('input', {
+            type: 'date',
+            id: 'case-dob',
+            style:
+              'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+            oninput: (e) => {
+              if (e.isTrusted) delete e.target.dataset.autofilled;
+              const computed = computeAgeFromDob(e.target.value);
+              if (computed) {
+                const ageEl = document.getElementById('case-age');
+                if (ageEl) ageEl.value = computed;
+              }
+            },
+          }),
+          el(
+            'div',
+            { style: 'margin-top:6px; font-size:12px; color:var(--text-secondary);' },
+            'Age auto-fills when DOB is entered.',
+          ),
+        ]),
+        el('div', { style: 'display:flex; gap:16px; margin-bottom:16px; flex-wrap:wrap;' }, [
+          el('div', { style: 'flex:1; min-width:220px;' }, [
+            el(
+              'label',
+              { style: 'display:block; margin-bottom:8px; font-weight:500; color:var(--text);' },
+              'Patient Age *',
+            ),
+            el('input', {
+              type: 'number',
+              id: 'case-age',
+              required: true,
+              min: 0,
+              max: 120,
+              placeholder: '25',
+              style:
+                'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+              oninput: (e) => {
+                const dobEl = document.getElementById('case-dob');
+                if (!dobEl) return;
+                if (dobEl.value && dobEl.dataset.autofilled !== 'age') return;
+                const v = parseInt(e.target.value, 10);
+                if (isNaN(v) || v <= 0 || v > 120) return;
+                const today = new Date();
+                const y = today.getFullYear() - v;
+                const m = today.getMonth();
+                const lastDay = new Date(y, m + 1, 0).getDate();
+                const d = Math.min(today.getDate(), lastDay);
+                const mm = String(m + 1).padStart(2, '0');
+                const dd = String(d).padStart(2, '0');
+                dobEl.value = `${y}-${mm}-${dd}`;
+                dobEl.dataset.autofilled = 'age';
+              },
+            }),
+          ]),
+          el('div', { style: 'flex:1; min-width:220px;' }, [
+            el(
+              'label',
+              { style: 'display:block; margin-bottom:8px; font-weight:500; color:var(--text);' },
+              'Sex *',
+            ),
+            el(
+              'select',
+              {
+                id: 'case-gender',
+                required: true,
+                style:
+                  'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+              },
+              [
+                el('option', { value: '' }, 'Select...'),
+                el('option', { value: 'male' }, 'Male'),
+                el('option', { value: 'female' }, 'Female'),
+                el('option', { value: 'other' }, 'Other'),
+                el('option', { value: 'prefer-not-to-say' }, 'Prefer not to say'),
+              ],
+            ),
+          ]),
+        ]),
+        el('div', { style: 'margin-bottom:16px;' }, [
+          el(
+            'label',
+            { style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' },
+            'Clinical Setting *',
+          ),
+          el(
+            'select',
             {
-              onsubmit: (e) => handleCaseCreation(e),
+              id: 'case-setting',
+              required: true,
+              style:
+                'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
             },
             [
-              // Title
-              el('div', { style: 'margin-bottom: 16px;' }, [
-                el(
-                  'label',
-                  {
-                    style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);',
-                  },
-                  'Case Title *',
-                ),
-                el('input', {
-                  id: 'case-title',
-                  type: 'text',
-                  required: true,
-                  placeholder: 'e.g., Shoulder Impingement (R)',
-                  style:
-                    'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
-                }),
-              ]),
-
-              // DOB
-              el('div', { style: 'margin-bottom: 12px;' }, [
-                el(
-                  'label',
-                  {
-                    style:
-                      'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
-                  },
-                  'DOB',
-                ),
-                el('input', {
-                  type: 'date',
-                  id: 'case-dob',
-                  style: `
-              width: 100%;
-              padding: 12px;
-              border: 1px solid var(--input-border);
-              border-radius: 6px;
-              font-size: 14px;
-              box-sizing: border-box;
-            `,
-                  oninput: (e) => {
-                    // Mark as user-edited if they type a DOB
-                    if (e.isTrusted) delete e.target.dataset.autofilled;
-                    const computed = computeAgeFromDob(e.target.value);
-                    if (computed) {
-                      const ageEl = document.getElementById('case-age');
-                      if (ageEl) ageEl.value = computed;
-                    }
-                  },
-                }),
-                el(
-                  'div',
-                  { style: 'margin-top: 6px; font-size: 12px; color: var(--text-secondary);' },
-                  'Age auto-fills when DOB is entered.',
-                ),
-              ]),
-
-              // Age and Sex Row
-              el(
-                'div',
-                { style: 'display: flex; gap: 16px; margin-bottom: 16px; flex-wrap:wrap;' },
-                [
-                  el('div', { style: 'flex: 1; min-width:220px;' }, [
-                    el(
-                      'label',
-                      {
-                        style:
-                          'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
-                      },
-                      'Patient Age *',
-                    ),
-                    el('input', {
-                      type: 'number',
-                      id: 'case-age',
-                      required: true,
-                      min: 0,
-                      max: 120,
-                      style: `
-                width: 100%;
-                padding: 12px;
-                border: 1px solid var(--input-border);
-                border-radius: 6px;
-                font-size: 14px;
-                box-sizing: border-box;
-              `,
-                      placeholder: '25',
-                      oninput: (e) => {
-                        const dobEl = document.getElementById('case-dob');
-                        if (!dobEl) return;
-                        // Only set DOB if empty or previously auto-filled
-                        if (dobEl.value && dobEl.dataset.autofilled !== 'age') return;
-                        const v = parseInt(e.target.value, 10);
-                        if (isNaN(v) || v <= 0 || v > 120) return;
-                        const today = new Date();
-                        const y = today.getFullYear() - v;
-                        const m = today.getMonth();
-                        const lastDay = new Date(y, m + 1, 0).getDate();
-                        const d = Math.min(today.getDate(), lastDay);
-                        const mm = String(m + 1).padStart(2, '0');
-                        const dd = String(d).padStart(2, '0');
-                        dobEl.value = `${y}-${mm}-${dd}`;
-                        dobEl.dataset.autofilled = 'age';
-                      },
-                    }),
-                  ]),
-                  el('div', { style: 'flex: 1; min-width:220px;' }, [
-                    el(
-                      'label',
-                      {
-                        style:
-                          'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
-                      },
-                      'Sex *',
-                    ),
-                    el(
-                      'select',
-                      {
-                        id: 'case-gender',
-                        required: true,
-                        style: `
-                width: 100%;
-                padding: 12px;
-                border: 1px solid var(--input-border);
-                border-radius: 6px;
-                font-size: 14px;
-                box-sizing: border-box;
-              `,
-                      },
-                      [
-                        el('option', { value: '' }, 'Select...'),
-                        el('option', { value: 'male' }, 'Male'),
-                        el('option', { value: 'female' }, 'Female'),
-                        el('option', { value: 'other' }, 'Other'),
-                        el('option', { value: 'prefer-not-to-say' }, 'Prefer not to say'),
-                      ],
-                    ),
-                  ]),
-                ],
-              ),
-
-              // Setting
-              el('div', { style: 'margin-bottom: 16px;' }, [
-                el(
-                  'label',
-                  {
-                    style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);',
-                  },
-                  'Clinical Setting *',
-                ),
-                el(
-                  'select',
-                  {
-                    id: 'case-setting',
-                    required: true,
-                    style:
-                      'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
-                  },
-                  [
-                    el('option', { value: '' }, 'Select setting...'),
-                    el('option', { value: 'Outpatient' }, 'Outpatient'),
-                    el('option', { value: 'Inpatient' }, 'Inpatient'),
-                    el('option', { value: 'Home Health' }, 'Home Health'),
-                    el('option', { value: 'SNF' }, 'Skilled Nursing Facility (SNF)'),
-                    el('option', { value: 'Acute Rehab' }, 'Acute Rehabilitation'),
-                    el('option', { value: 'Other' }, 'Other'),
-                  ],
-                ),
-              ]),
-
-              // Acuity
-              el('div', { style: 'margin-bottom: 20px;' }, [
-                el(
-                  'label',
-                  {
-                    style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);',
-                  },
-                  'Case Acuity *',
-                ),
-                el(
-                  'select',
-                  {
-                    id: 'case-acuity',
-                    required: true,
-                    style:
-                      'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
-                  },
-                  [
-                    el('option', { value: '' }, 'Select acuity...'),
-                    el('option', { value: 'acute' }, 'Acute - Recent onset'),
-                    el('option', { value: 'subacute' }, 'Subacute - Ongoing condition'),
-                    el('option', { value: 'chronic' }, 'Chronic - Long-term condition'),
-                    el('option', { value: 'unspecified' }, 'Unspecified'),
-                  ],
-                ),
-              ]),
-
-              // Buttons
-              el('div', { style: 'display:flex; gap: 12px; justify-content:flex-end;' }, [
-                el(
-                  'button',
-                  {
-                    type: 'button',
-                    class: 'btn neutral',
-                    style: 'padding: 12px 24px; font-size: 14px;',
-                    onclick: () => document.body.removeChild(modal),
-                  },
-                  'Cancel',
-                ),
-                el(
-                  'button',
-                  {
-                    type: 'submit',
-                    class: 'btn primary',
-                    style: 'padding: 12px 24px; font-size: 14px;',
-                  },
-                  'Create Case',
-                ),
-              ]),
+              el('option', { value: '' }, 'Select setting...'),
+              el('option', { value: 'Outpatient' }, 'Outpatient'),
+              el('option', { value: 'Inpatient' }, 'Inpatient'),
+              el('option', { value: 'Home Health' }, 'Home Health'),
+              el('option', { value: 'SNF' }, 'Skilled Nursing Facility (SNF)'),
+              el('option', { value: 'Acute Rehab' }, 'Acute Rehabilitation'),
+              el('option', { value: 'Other' }, 'Other'),
             ],
           ),
-        ],
-      ),
+        ]),
+        el('div', { style: 'margin-bottom:20px;' }, [
+          el(
+            'label',
+            { style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' },
+            'Case Acuity *',
+          ),
+          el(
+            'select',
+            {
+              id: 'case-acuity',
+              required: true,
+              style:
+                'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+            },
+            [
+              el('option', { value: '' }, 'Select acuity...'),
+              el('option', { value: 'acute' }, 'Acute - Recent onset'),
+              el('option', { value: 'subacute' }, 'Subacute - Ongoing condition'),
+              el('option', { value: 'chronic' }, 'Chronic - Long-term condition'),
+              el('option', { value: 'unspecified' }, 'Unspecified'),
+            ],
+          ),
+        ]),
+        el('div', { style: 'display:flex; gap:12px; justify-content:flex-end;' }, [
+          el(
+            'button',
+            {
+              type: 'button',
+              class: 'btn neutral',
+              style: 'padding:12px 24px; font-size:14px;',
+              onclick: () => close(),
+            },
+            'Cancel',
+          ),
+          el(
+            'button',
+            { type: 'submit', class: 'btn primary', style: 'padding:12px 24px; font-size:14px;' },
+            'Create Case',
+          ),
+        ]),
+      ]),
     ],
   );
-
+  modal.append(card);
   document.body.appendChild(modal);
-  setTimeout(() => document.getElementById('case-title')?.focus(), 100);
+  function close() {
+    modal.classList.remove('is-open');
+    card.classList.remove('is-open');
+    const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const removeNow = () => {
+      try {
+        modal.remove();
+      } catch {}
+    };
+    if (prefersReduce) return removeNow();
+    modal.addEventListener('transitionend', removeNow, { once: true });
+    setTimeout(removeNow, 480);
+  }
+  requestAnimationFrame(() => {
+    modal.classList.add('is-open');
+    card.classList.add('is-open');
+    setTimeout(() => document.getElementById('case-title')?.focus(), 100);
+  });
+}
+
+// Fallback: inject transitions if stylesheet not present (defensive for caching scenarios)
+if (
+  typeof document !== 'undefined' &&
+  !document.querySelector('link[href*="transitions.css"], style[data-inline-transitions]')
+) {
+  const style = document.createElement('style');
+  style.dataset.inlineTransitions = 'true';
+  style.textContent = `.popup-overlay-base{opacity:0;transition:opacity 380ms ease}.popup-overlay-base.is-open{opacity:1}.popup-card-base{opacity:0;transform:scale(.975);transition:opacity 340ms ease,transform 320ms ease}.popup-card-base.is-open{opacity:1;transform:scale(1)}@media (prefers-reduced-motion:reduce){.popup-overlay-base,.popup-card-base{transition:none!important;transform:none!important}}`;
+  document.head.appendChild(style);
 }
 
 // Prompt-driven Case Generation Modal
@@ -372,16 +357,20 @@ function showPromptGenerationModal() {
   const modal = el(
     'div',
     {
-      style: `position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;`,
+      class: 'popup-overlay-base',
+      style:
+        'position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;',
       onclick: (e) => {
-        if (e.target === modal) document.body.removeChild(modal);
+        if (e.target === modal) close();
       },
     },
     [
       el(
         'div',
         {
-          style: `background:var(--bg); padding:28px; border-radius:12px; max-width:720px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.15); color:var(--text);`,
+          class: 'popup-card-base',
+          style:
+            'background:var(--bg); padding:28px; border-radius:12px; max-width:720px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.15); color:var(--text);',
           onclick: (e) => e.stopPropagation(),
         },
         [
@@ -621,7 +610,26 @@ function showPromptGenerationModal() {
     ],
   );
   document.body.appendChild(modal);
-  setTimeout(() => document.getElementById('gen-prompt')?.focus(), 0);
+  function close() {
+    modal.classList.remove('is-open');
+    const cardEl = modal.querySelector('.popup-card-base');
+    if (cardEl) cardEl.classList.remove('is-open');
+    const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const removeNow = () => {
+      try {
+        modal.remove();
+      } catch {}
+    };
+    if (prefersReduce) return removeNow();
+    modal.addEventListener('transitionend', removeNow, { once: true });
+    setTimeout(removeNow, 480);
+  }
+  requestAnimationFrame(() => {
+    modal.classList.add('is-open');
+    const cardEl = modal.querySelector('.popup-card-base');
+    if (cardEl) cardEl.classList.add('is-open');
+    setTimeout(() => document.getElementById('gen-prompt')?.focus(), 80);
+  });
 }
 
 function handlePromptGeneration(modal) {
