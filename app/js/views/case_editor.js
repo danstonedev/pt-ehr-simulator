@@ -433,10 +433,27 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   window.refreshChartProgress = refreshChartProgress;
 
   // Sticky patient header (two-line stacked)
+  // Parse YYYY-MM-DD as a local date (avoid implicit UTC parsing which can shift a day in some TZs)
+  function parseLocalDateYMD(str) {
+    if (!str || typeof str !== 'string') return null;
+    // Accept only canonical YYYY-MM-DD
+    const m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) {
+      const d = new Date(str);
+      return isNaN(d.getTime()) ? null : d; // fallback for other formats
+    }
+    const [, y, mo, da] = m;
+    const year = Number(y);
+    const monthIndex = Number(mo) - 1; // 0-based
+    const day = Number(da);
+    // Construct local date (year, monthIndex, day) which uses local timezone midnight
+    return new Date(year, monthIndex, day, 0, 0, 0, 0);
+  }
+
   function computeAgeFromDobLocal(dobStr) {
     if (!dobStr) return '';
-    const dob = new Date(dobStr);
-    if (isNaN(dob.getTime())) return '';
+    const dob = parseLocalDateYMD(dobStr);
+    if (!dob) return '';
     const today = new Date();
     let age = today.getFullYear() - dob.getFullYear();
     const m = today.getMonth() - dob.getMonth();
@@ -524,8 +541,8 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       // Format MM-DD-YYYY
       let dobFmt = '';
       if (dob) {
-        const d = new Date(dob);
-        if (!isNaN(d.getTime())) {
+        const d = parseLocalDateYMD(dob);
+        if (d) {
           const mm = String(d.getMonth() + 1).padStart(2, '0');
           const dd = String(d.getDate()).padStart(2, '0');
           const yyyy = d.getFullYear();
