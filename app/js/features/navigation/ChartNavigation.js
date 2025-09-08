@@ -31,8 +31,37 @@ function saveArtifactCollapseState(state) {
   } catch {}
 }
 let artifactCollapseState = loadArtifactCollapseState();
+
+// Heuristic normalization for artifact type across legacy/new cases
+function normalizeArtifactType(mod) {
+  if (!mod) return 'other';
+  let t = (mod.type || '').toString().toLowerCase().trim();
+  const id = (mod.id || '').toString().toLowerCase();
+  const title = (mod.title || '').toString().toLowerCase();
+  const candidates = Object.keys(ARTIFACT_CATEGORY_META);
+  if (t && candidates.includes(t)) return t;
+  // Infer from id prefix
+  for (const k of candidates) {
+    if (id.startsWith(`${k}-`)) return k;
+  }
+  // Infer from title keywords
+  const rules = [
+    ['referral', /(referral|refer|consult)/i],
+    ['pmh', /(past medical history|pmh|history)/i],
+    ['imaging', /(x-?ray|radiograph|mri|ct\b|ultra\s?sound|us\b)/i],
+    ['labs', /(lab|cbc|cmp|blood work|test)/i],
+    ['meds', /(medication|meds|rx|prescription)/i],
+    ['vitals', /(vital|blood pressure|bp\b|heart rate|hr\b|temperature|temp\b)/i],
+    ['prior-notes', /(note|progress|previous)/i],
+  ];
+  for (const [k, re] of rules) {
+    if (re.test(title)) return k;
+  }
+  return 'other';
+}
+
 function getCategoryForArtifact(mod) {
-  const t = (mod && mod.type) || 'other';
+  const t = normalizeArtifactType(mod);
   return ARTIFACT_CATEGORY_META[t] ? t : 'other';
 }
 
@@ -714,7 +743,9 @@ function openViewArtifactModal(module, options = {}) {
     ]),
     el('div', { class: 'goal-selection-list case-details-body' }, [
       (() => {
-        const t = (module?.type || '').toLowerCase();
+        // Use the shared normalizer so new/legacy modules behave the same
+        const t = normalizeArtifactType(module);
+        if (!module.type) module.type = t;
         if (t === 'referral') {
           const d = module.data || {};
           return el(
@@ -749,10 +780,210 @@ function openViewArtifactModal(module, options = {}) {
             ],
           );
         }
+        if (t === 'imaging') {
+          const d = module.data || {};
+          const rows = [
+            ['Study', module.title || 'Imaging Study'],
+            ['Date', d.date || 'N/A'],
+            ['Modality', d.modality || d.type || 'N/A'],
+            ['Body Part', d.bodyPart || d.anatomy || 'N/A'],
+            d.views ? ['Views', d.views] : null,
+            d.findings ? ['Findings', d.findings] : null,
+            d.impression ? ['Impression', d.impression] : null,
+            d.notes ? ['Notes', d.notes] : null,
+          ].filter(Boolean);
+          return el(
+            'div',
+            {
+              class: 'module-card',
+              style:
+                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
+            },
+            [
+              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Imaging'),
+              el(
+                'div',
+                { class: 'case-info-grid case-details-grid' },
+                rows.map(([label, val]) =>
+                  el('div', { class: 'case-info-row' }, [
+                    el('span', { class: 'label' }, label),
+                    el('span', { class: 'value' }, String(val)),
+                  ]),
+                ),
+              ),
+            ],
+          );
+        }
+        if (t === 'labs') {
+          const d = module.data || {};
+          const rows = [
+            ['Ordered', d.date || 'N/A'],
+            ['Panel', d.panel || module.title || 'Labs'],
+            d.results ? ['Results', d.results] : null,
+            d.summary ? ['Summary', d.summary] : null,
+            d.notes ? ['Notes', d.notes] : null,
+          ].filter(Boolean);
+          return el(
+            'div',
+            {
+              class: 'module-card',
+              style:
+                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
+            },
+            [
+              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Labs'),
+              el(
+                'div',
+                { class: 'case-info-grid case-details-grid' },
+                rows.map(([label, val]) =>
+                  el('div', { class: 'case-info-row' }, [
+                    el('span', { class: 'label' }, label),
+                    el('span', { class: 'value' }, String(val)),
+                  ]),
+                ),
+              ),
+            ],
+          );
+        }
+        if (t === 'meds') {
+          const d = module.data || {};
+          const rows = [
+            ['Medication', d.name || module.title || 'Medication'],
+            ['Dose', d.dose || 'N/A'],
+            ['Route', d.route || 'N/A'],
+            ['Frequency', d.frequency || 'N/A'],
+            d.indication ? ['Indication', d.indication] : null,
+            d.notes ? ['Notes', d.notes] : null,
+          ].filter(Boolean);
+          return el(
+            'div',
+            {
+              class: 'module-card',
+              style:
+                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
+            },
+            [
+              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Medications'),
+              el(
+                'div',
+                { class: 'case-info-grid case-details-grid' },
+                rows.map(([label, val]) =>
+                  el('div', { class: 'case-info-row' }, [
+                    el('span', { class: 'label' }, label),
+                    el('span', { class: 'value' }, String(val)),
+                  ]),
+                ),
+              ),
+            ],
+          );
+        }
+        if (t === 'vitals') {
+          const d = module.data || {};
+          const rows = [
+            ['Date', d.date || 'N/A'],
+            d.bp ? ['BP', d.bp] : null,
+            d.hr ? ['HR', d.hr] : null,
+            d.temp ? ['Temp', d.temp] : null,
+            d.rr ? ['RR', d.rr] : null,
+            d.spo2 ? ['SpO2', d.spo2] : null,
+            d.weight ? ['Weight', d.weight] : null,
+            d.height ? ['Height', d.height] : null,
+            d.notes ? ['Notes', d.notes] : null,
+          ].filter(Boolean);
+          return el(
+            'div',
+            {
+              class: 'module-card',
+              style:
+                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
+            },
+            [
+              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Vitals'),
+              el(
+                'div',
+                { class: 'case-info-grid case-details-grid' },
+                rows.map(([label, val]) =>
+                  el('div', { class: 'case-info-row' }, [
+                    el('span', { class: 'label' }, label),
+                    el('span', { class: 'value' }, String(val)),
+                  ]),
+                ),
+              ),
+            ],
+          );
+        }
+        if (t === 'pmh' || t === 'prior-notes' || t === 'other') {
+          const d = module.data || {};
+          const rows = [
+            ['Title', module.title || (t === 'pmh' ? 'Past Medical History' : 'Document')],
+            d.date ? ['Date', d.date] : null,
+            d.summary ? ['Summary', d.summary] : null,
+            d.notes ? ['Notes', d.notes] : null,
+          ].filter(Boolean);
+          return el(
+            'div',
+            {
+              class: 'module-card',
+              style:
+                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
+            },
+            [
+              el(
+                'div',
+                { style: 'font-weight:600; margin-bottom:6px;' },
+                t === 'pmh' ? 'Past Medical History' : module.title || 'Document',
+              ),
+              el(
+                'div',
+                { class: 'case-info-grid case-details-grid' },
+                rows.map(([label, val]) =>
+                  el('div', { class: 'case-info-row' }, [
+                    el('span', { class: 'label' }, label),
+                    el('span', { class: 'value' }, String(val)),
+                  ]),
+                ),
+              ),
+            ],
+          );
+        }
+        // Generic fallback table for unknown types
+        const entries = Object.entries(module.data || {});
+        const hasRows = entries.length > 0;
+        if (hasRows) {
+          return el(
+            'div',
+            {
+              class: 'module-card',
+              style:
+                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
+            },
+            [
+              el(
+                'div',
+                { style: 'font-weight:600; margin-bottom:6px;' },
+                module.title || 'Details',
+              ),
+              el(
+                'div',
+                { class: 'case-info-grid case-details-grid' },
+                entries.map(([k, v]) =>
+                  el('div', { class: 'case-info-row' }, [
+                    el(
+                      'span',
+                      { class: 'label' },
+                      k.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase()),
+                    ),
+                    el('span', { class: 'value' }, typeof v === 'string' ? v : JSON.stringify(v)),
+                  ]),
+                ),
+              ),
+            ],
+          );
+        }
         return el(
-          'pre',
-          { style: 'white-space:pre-wrap; font-size:12px;' },
-          JSON.stringify(module, null, 2),
+          'div',
+          { style: 'font-size:12px; color: var(--text-secondary);' },
+          'No details available.',
         );
       })(),
       (() => {
@@ -1311,7 +1542,12 @@ function openAddArtifactModal(onAdd) {
               }
               const id = `${currentType}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
               const mod = { id, type: currentType, title, data: {} };
-              if (currentType === 'referral') mod.data = { ...ref };
+              if (currentType === 'referral') {
+                mod.data = { ...ref };
+              } else if (ref.attachments && ref.attachments.length) {
+                // For non-referral types, still allow attachments
+                mod.data.attachments = [...ref.attachments];
+              }
               onAdd?.(mod);
               overlay.remove();
             },
@@ -1612,13 +1848,12 @@ function openEditArtifactModal(module, onSave) {
                 titleInput.focus();
                 return;
               }
-              const updated = {
-                id: module.id,
-                type: currentType,
-                title,
-                data: {},
-              };
-              if (currentType === 'referral') updated.data = { ...ref };
+              const updated = { id: module.id, type: currentType, title, data: {} };
+              if (currentType === 'referral') {
+                updated.data = { ...ref };
+              } else if (ref.attachments && ref.attachments.length) {
+                updated.data.attachments = [...ref.attachments];
+              }
               onSave?.(updated);
               overlay.remove();
             },

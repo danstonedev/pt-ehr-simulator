@@ -1,7 +1,6 @@
 // Home view - Rich Landing page for PT EMR Simulator
 import { route } from '../core/router.js';
-import { navigate as urlNavigate, navigateHash } from '../core/url.js';
-import { storage } from '../core/index.js';
+import { navigate as urlNavigate } from '../core/url.js';
 import { el } from '../ui/utils.js';
 // no case fetch needed on home view
 
@@ -26,39 +25,114 @@ function buildWhatsNewPanel() {
 route('#/', async (app) => {
   app.replaceChildren();
 
-  const lastHash = storage.getItem('pt_emr_last_route');
-  const resumeInfo = (() => {
-    if (!lastHash || lastHash === '#/' || lastHash === '#/404') return null;
-    const [path] = lastHash.split('?');
-    const isFaculty = path.startsWith('#/instructor/');
-    return { audience: isFaculty ? 'Faculty' : 'Student', hash: lastHash };
-  })();
+  // Quick access row: Student (left) • EMR badge (center) • Faculty (right)
+  const quickRow = (() => {
+    const row = el('div', {
+      class: 'home-quick-row',
+      style:
+        'display:grid; width:100%; align-items:center; justify-items:center; grid-template-columns: 1fr auto 1fr; gap:32px; padding:16px 0; margin-top: calc(33vh - 96px);',
+    });
+    const studentBtn = el(
+      'button',
+      {
+        class: 'btn primary',
+        onClick: () => urlNavigate('/student/cases'),
+        'aria-label': 'Open Student',
+        style: 'font-size:44px; padding:24px 44px; border-radius:14px; justify-self:end;',
+      },
+      'STUDENT',
+    );
+    const facultyBtn = el(
+      'button',
+      {
+        class: 'btn primary',
+        onClick: () => urlNavigate('/instructor/cases'),
+        'aria-label': 'Open Faculty',
+        style: 'font-size:44px; padding:24px 44px; border-radius:14px; justify-self:start;',
+      },
+      'FACULTY',
+    );
+    const img = el('img', {
+      alt: 'EMR badge',
+      title: 'Click to reveal Student & Faculty sections and the overview',
+      role: 'button',
+      tabindex: '0',
+      style:
+        'width:min(280px, 30vw); height:auto; display:block; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,.15); cursor:pointer;',
+    });
+    // Theme-aware logo switching (light vs dark) with filename auto-detect.
+    // We'll probe common filenames and pick the first that loads.
+    const darkCandidates = ['img/green-white-favicon.2.png', 'img/emr favicon green circle.png'];
+    const lightCandidates = [
+      'img/emr-white-circle.png',
+      'img/emr white circle.png',
+      'img/emr_white_circle.png',
+      'img/EMR-white-circle.png',
+    ];
+    const pickFirstAvailable = (candidates, cb) => {
+      let i = 0;
+      const tryNext = () => {
+        if (i >= candidates.length) {
+          cb(null);
+          return;
+        }
+        const url = candidates[i++];
+        const test = new Image();
+        test.onload = () => cb(url);
+        test.onerror = tryNext;
+        test.src = url;
+      };
+      tryNext();
+    };
+    let resolvedDark = darkCandidates[0];
+    let resolvedLight = null;
+    // Start with dark default to avoid blank, then resolve both
+    img.src = resolvedDark;
+    pickFirstAvailable(darkCandidates, (url) => {
+      if (url) resolvedDark = url;
+    });
+    pickFirstAvailable(lightCandidates, (url) => {
+      resolvedLight = url;
+    });
 
-  // Hero banner (UND green gradient parallelogram)
-  const hero = el('div', { class: 'home-hero' }, [
-    el('h1', { class: 'home-hero__title' }, 'UND Physical Therapy EMR Simulator'),
-  ]);
+    const mqlDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+    const setLogo = (isDark) => {
+      const desired = isDark ? resolvedDark : resolvedLight || resolvedDark;
+      img.src = desired;
+    };
+    // Initial logo based on theme
+    setLogo(mqlDark ? mqlDark.matches : false);
+    // React to theme changes
+    if (mqlDark) {
+      const handler = (e) => setLogo(e.matches);
+      if (mqlDark.addEventListener) mqlDark.addEventListener('change', handler);
+      else if (mqlDark.addListener) mqlDark.addListener(handler);
+    }
+    row.replaceChildren(studentBtn, img, facultyBtn);
+    // Expose a hook so we can attach reveal behavior later
+    row._badgeEl = img;
+    // Responsive: stack on very small screens
+    const applyLayout = () => {
+      const mobile = window.innerWidth < 560;
+      row.style.gridTemplateColumns = mobile ? '1fr' : '1fr auto 1fr';
+      row.style.gap = mobile ? '16px' : '32px';
+      // When stacked, center both buttons
+      if (mobile) {
+        studentBtn.style.justifySelf = 'center';
+        facultyBtn.style.justifySelf = 'center';
+      } else {
+        studentBtn.style.justifySelf = 'end';
+        facultyBtn.style.justifySelf = 'start';
+      }
+    };
+    applyLayout();
+    window.addEventListener('resize', applyLayout, { passive: true });
+    return row;
+  })();
 
   // (editor navigation helpers not needed on simplified home)
 
   // Build main panels
-  const studentActions = [];
-  studentActions.push(
-    el(
-      'button',
-      { class: 'btn primary', onClick: () => urlNavigate('/student/cases') },
-      'Student Dashboard',
-    ),
-  );
-  if (resumeInfo && resumeInfo.audience === 'Student') {
-    studentActions.push(
-      el(
-        'button',
-        { class: 'btn primary', onClick: () => navigateHash(resumeInfo.hash) },
-        'Resume Case',
-      ),
-    );
-  }
 
   const studentPanel = el('div', { class: 'panel' }, [
     el('h2', {}, 'Student'),
@@ -75,30 +149,7 @@ route('#/', async (app) => {
         el('li', {}, 'Export: Word report with structured tables'),
       ]),
     ]),
-    el(
-      'div',
-      { class: 'home-actions', style: 'display:flex; gap:8px; flex-wrap:wrap;' },
-      studentActions,
-    ),
   ]);
-
-  const facultyActions = [];
-  facultyActions.push(
-    el(
-      'button',
-      { class: 'btn primary', onClick: () => urlNavigate('/instructor/cases') },
-      'Faculty Dashboard',
-    ),
-  );
-  if (resumeInfo && resumeInfo.audience === 'Faculty') {
-    facultyActions.push(
-      el(
-        'button',
-        { class: 'btn primary', onClick: () => navigateHash(resumeInfo.hash) },
-        'Resume Case',
-      ),
-    );
-  }
 
   const facultyPanel = el('div', { class: 'panel' }, [
     el('h2', {}, 'Faculty'),
@@ -115,11 +166,6 @@ route('#/', async (app) => {
         el('li', {}, 'Review: student exports mirror app structure for grading'),
       ]),
     ]),
-    el(
-      'div',
-      { class: 'home-actions', style: 'display:flex; gap:8px; flex-wrap:wrap;' },
-      facultyActions,
-    ),
   ]);
 
   // Side panels
@@ -157,11 +203,90 @@ route('#/', async (app) => {
   setGrid();
   window.addEventListener('resize', setGrid, { passive: true });
 
-  // Final container: hero (row 1), student/faculty (row 2), then side grid (row 3)
+  // Hide details until the badge is clicked
+  const revealWrap = el(
+    'div',
+    {
+      style:
+        'display:none; opacity:0; transform: translateY(-12px); transition: opacity 600ms ease, transform 600ms ease;',
+    },
+    [studentFacultyRow, grid],
+  );
+  // Assign an id so the badge can reference it for accessibility
+  revealWrap.id = 'home-reveal';
+  // Click/keyboard toggle handler (show/hide with animation)
+  let isRevealed = false;
+  let isTransitioning = false;
+  const badge = quickRow && quickRow._badgeEl;
+  if (badge) {
+    badge.setAttribute('aria-controls', revealWrap.id);
+    badge.setAttribute('aria-expanded', 'false');
+  }
+  const onTransitionEnd = (e) => {
+    if (e.target !== revealWrap) return;
+    isTransitioning = false;
+    // When hiding completes, set display:none
+    if (!isRevealed) {
+      revealWrap.style.display = 'none';
+    }
+  };
+  revealWrap.addEventListener('transitionend', onTransitionEnd);
+
+  const show = () => {
+    if (isRevealed || isTransitioning) return;
+    isTransitioning = true;
+    revealWrap.style.display = '';
+    requestAnimationFrame(() => {
+      void revealWrap.offsetWidth;
+      revealWrap.style.opacity = '1';
+      revealWrap.style.transform = 'translateY(0)';
+      isRevealed = true;
+      if (badge) {
+        badge.setAttribute('aria-expanded', 'true');
+        badge.title = 'Click to hide Student & Faculty sections and the overview';
+      }
+      // gentle scroll after animation begins
+      setTimeout(() => {
+        try {
+          revealWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch {}
+      }, 120);
+    });
+  };
+
+  const hide = () => {
+    if (!isRevealed || isTransitioning) return;
+    isTransitioning = true;
+    requestAnimationFrame(() => {
+      void revealWrap.offsetWidth;
+      revealWrap.style.opacity = '0';
+      revealWrap.style.transform = 'translateY(-12px)';
+      isRevealed = false;
+      if (badge) {
+        badge.setAttribute('aria-expanded', 'false');
+        badge.title = 'Click to reveal Student & Faculty sections and the overview';
+      }
+    });
+  };
+
+  const toggle = () => {
+    if (isRevealed) hide();
+    else show();
+  };
+  if (badge) {
+    badge.addEventListener('click', toggle);
+    badge.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggle();
+      }
+    });
+  }
+
+  // Final container: quick access row then reveal-on-click content
   const container = el('div', { class: 'home-container', style: 'display:grid; gap:12px;' }, [
-    hero,
-    studentFacultyRow,
-    grid,
+    quickRow,
+    revealWrap,
   ]);
 
   app.append(container);
