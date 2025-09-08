@@ -471,32 +471,24 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     '',
   );
   // Simple inline avatar (silhouette)
-  const avatarEl = el(
-    'div',
-    {
-      style:
-        'width:40px; height:40px; border-radius:50%; background: var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color: var(--text); flex:0 0 auto;',
-      'aria-hidden': 'true',
-    },
-    [
-      el(
-        'svg',
-        {
-          width: '24',
-          height: '24',
-          viewBox: '0 0 64 64',
-          'aria-hidden': 'true',
-          focusable: 'false',
-          style: 'display:block;',
-        },
-        [
-          el('circle', { cx: '32', cy: '22', r: '12', fill: 'currentColor' }),
-          // Shoulders/torso as a filled ellipse for clear visibility
-          el('ellipse', { cx: '32', cy: '50', rx: '20', ry: '10', fill: 'currentColor' }),
-        ],
-      ),
-    ],
-  );
+  const avatarEl = el('div', { class: 'patient-avatar', 'aria-hidden': 'true' }, [
+    el(
+      'svg',
+      {
+        width: '24',
+        height: '24',
+        viewBox: '0 0 24 24',
+        'aria-hidden': 'true',
+        focusable: 'false',
+        style: 'display:block;',
+      },
+      [
+        el('path', {
+          d: 'M12 12c2.761 0 5-2.239 5-5s-2.239-5-5-5-5 2.239-5 5 2.239 5 5 5zm0 2c-4.418 0-8 2.239-8 5v2h16v-2c0-2.761-3.582-5-8-5z',
+        }),
+      ],
+    ),
+  ]);
 
   const patientHeader = el(
     'div',
@@ -529,11 +521,17 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   function updatePatientHeader() {
     try {
       const displayName =
+        // Explicit patientName fields first
         c.patientName ||
         c.name ||
-        (c.meta && c.meta.patientName) ||
+        // Meta-provided patient label or meta.title (older cases store title only in meta)
+        (c.meta && (c.meta.patientName || c.meta.title)) ||
+        // Snapshot-provided patient name (published case snapshots)
+        (c.snapshot && (c.snapshot.patientName || c.snapshot.name)) ||
+        // Alternate case title keys
         c.caseTitle ||
         c.title ||
+        // Final fallback
         'Untitled Case';
       const dob = c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '';
       const age = computeAgeFromDobLocal(dob) || c.patientAge || c.age || '';

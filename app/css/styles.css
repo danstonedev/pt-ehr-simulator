@@ -3093,3 +3093,32 @@ header.topbar a.button {
 /* Old theme-toggle button styles removed in favor of switch variant */
 
 /* Print styles moved to css/print.css */
+
+/* Patient avatar (sticky header) */
+.patient-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--avatar-bg, linear-gradient(135deg, var(--neutral-100), var(--neutral-50)));
+  border: 1px solid var(--border, var(--neutral-300));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+.patient-avatar svg {
+  display: block;
+}
+.patient-avatar svg path {
+  fill: var(--avatar-icon, #4a4f55);
+} /* explicit so it doesn't inherit white */
+[data-theme='dark'] .patient-avatar {
+  background: var(
+    --avatar-bg-dark,
+    linear-gradient(135deg, var(--neutral-800), var(--neutral-850))
+  );
+  border-color: var(--border, var(--neutral-700));
+}
+[data-theme='dark'] .patient-avatar svg path {
+  fill: var(--avatar-icon-dark, #e0e0e0);
+}
