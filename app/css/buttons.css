@@ -74,10 +74,10 @@
   color: var(--text);
 }
 .btn.secondary:hover {
-  background: var(--btn-hover);
-  border-color: var(--und-green);
-  color: var(--und-green);
-  font-weight: 700;
+  background: var(--und-green-dark);
+  border-color: var(--und-green-dark);
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 .btn.success {
   background: var(--accent);
@@ -331,10 +331,9 @@ html:not([data-theme='dark']) .btn.secondary {
   color: var(--text);
 }
 html:not([data-theme='dark']) .btn.secondary:hover {
-  background: var(--neutral-50);
-  border-color: var(--und-green);
-  color: var(--und-green);
-  font-weight: 700;
+  background: var(--und-green-dark);
+  border-color: var(--und-green-dark);
+  color: #ffffff;
 }
 /* Orange button light theme override - ensure consistent styling */
 html:not([data-theme='dark']) .btn.orange {
@@ -364,4 +363,19 @@ html:not([data-theme='dark']) .btn.orange:hover {
   border-color: var(--und-orange);
   color: #ffffff; /* white text on orange background */
   font-weight: 600;
+}
+
+/* Feedback Buttons: use dark-style secondary appearance in all themes */
+#feedbackBtn.btn.secondary,
+#siteMenuFeedback.btn.secondary {
+  background: var(--neutral-800);
+  border-color: var(--und-green);
+  color: #ffffff;
+}
+
+#feedbackBtn.btn.secondary:hover,
+#siteMenuFeedback.btn.secondary:hover {
+  background: var(--und-green-dark);
+  border-color: var(--und-green-dark);
+  color: #ffffff;
 }

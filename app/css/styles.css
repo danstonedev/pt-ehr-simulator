@@ -298,6 +298,11 @@
   display: none;
 }
 
+/* Topbar brand label suffix color ("| Proof of Concept") */
+.brand-label-suffix {
+  color: var(--und-gray);
+}
+
 /* Light theme - Accessibility-compliant (WCAG AA) */
 :root {
   /* Semantic Background System */
@@ -538,14 +543,14 @@ html {
   justify-content: center;
   /* Dark gradient: true black → dark gray to mirror topbar */
   background: linear-gradient(90deg, var(--und-black) 0%, var(--chrome-topbar-right) 100%);
-  color: #fff;
+  color: var(--und-gray);
   font-size: 0.75rem; /* 12px */
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 0 12px; /* side padding for layout */
   padding-bottom: env(safe-area-inset-bottom);
 }
-/* Gradient top accent line: darker orange → flame orange */
+/* Gradient top accent line: UND green gradient */
 .edu-ribbon::before {
   content: '';
   position: absolute;
@@ -553,10 +558,11 @@ html {
   right: 0;
   top: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--und-orange-dark) 0%, var(--und-orange) 100%);
+  background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
 }
 .edu-ribbon span {
   opacity: 0.9;
+  color: var(--und-gray);
 }
 /* Left/Right inline layout */
 .edu-ribbon {
@@ -571,7 +577,7 @@ html {
 }
 /* Small flame orange text on right */
 .edu-ribbon .edu-right {
-  color: var(--und-orange);
+  color: var(--und-gray);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: none;
@@ -3075,7 +3081,7 @@ header.topbar a.button {
 .brand-label .brand-label-suffix {
   margin-left: 4px;
   font-weight: 700;
-  color: var(--und-orange); /* flame orange for visibility */
+  color: var(--und-gray); /* UND gray per request */
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); /* pop against dark header */
   white-space: nowrap;
 }
