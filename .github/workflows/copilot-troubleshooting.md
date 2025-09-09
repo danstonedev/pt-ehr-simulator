@@ -36,12 +36,12 @@ Convert inline event handlers to addEventListener with delegation where sensible
 - Return a unified diff.
 ```
 
-### innerHTML → Safe Templating
+### innerHTML → Safe DOM construction
 
 ```
-Replace innerHTML usage with safe templating:
+Replace innerHTML usage with safer patterns:
 - Prefer textContent for plain text.
-- For markup, use utils/html.js `html` helper (sanitizes) and append template.content.
+- For markup, construct nodes with ui/utils.el() or document.createElement and append children explicitly.
 - Keep the same DOM shape and classes.
 - Return a unified diff.
 ```
@@ -84,7 +84,7 @@ Make the header responsive:
 
 ### D. Unsafe `innerHTML` (XSS risk)
 
-- **Fix:** “Use `textContent` or sanitized template utility.” Provide `utils/html.js` snippet.
+- **Fix:** “Use `textContent` or build nodes with `el()` and append them.” Avoid raw innerHTML.
 
 ### E. DOM access before ready
 
@@ -123,7 +123,7 @@ Make the header responsive:
 ### Playbook 3: `innerHTML` → `textContent`/`html()`
 
 1. If text-only: `node.textContent = value`.
-2. If markup: build with `utils/html.js` `html\`...\``and append`content`.
+2. If markup: build nodes with `el()` or `document.createElement`, then append children.
 3. Ensure event binding occurs after insertion.
 
 ### Playbook 4: Deep Selectors → BEM + Utilities

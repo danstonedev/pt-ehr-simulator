@@ -1,9 +1,7 @@
 // NavigationHeader.js - Case Editor Navigation & Action Controls
 // Handles tabs, action buttons, mode switching, and case metadata display
 
-import { navigate } from '../../core/router.js';
-import { exportToWord } from '../../services/document-export.js';
-import { createCase } from '../../core/store.js';
+// (imports removed: navigate, exportToWord, createCase were unused)
 import { el } from '../../ui/utils.js';
 
 /**

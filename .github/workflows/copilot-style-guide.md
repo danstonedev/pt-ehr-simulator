@@ -244,29 +244,19 @@ document.getElementById('patient-form').addEventListener('submit', (e) => {
 
 ---
 
-### 5) Safe Templating Utility (Sanitized) & Usage
+### 5) Safe DOM building (no innerHTML)
+
+- Prefer creating elements with `ui/utils.el()` and setting `textContent` for user data.
+- If you must render markup, build it node-by-node instead of injecting HTML.
 
 ```js
-// utils/html.js
-const ENT = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-const esc = (s) => String(s).replace(/[&<>"']/g, (m) => ENT[m]);
-export const html = (strings, ...values) => {
-  const safe = values.map((v) => (typeof v === 'string' ? esc(v) : v));
-  const markup = String.raw({ raw: strings }, ...safe).trim();
-  const tpl = document.createElement('template');
-  tpl.innerHTML = markup;
-  return tpl.content;
-};
-```
-
-```js
-// Using the utility
-import { html } from './utils/html.js';
+// Using el() and textContent
+import { el } from '../../app/js/ui/utils.js';
 export function renderCaseItem(caseData) {
-  return html` <li class="case">
-    <h3 class="case__title">${caseData.title}</h3>
-    <p class="case__meta">#${caseData.id}</p>
-  </li>`;
+  return el('li', { class: 'case' }, [
+    el('h3', { class: 'case__title' }, caseData.title),
+    el('p', { class: 'case__meta' }, `#${caseData.id}`),
+  ]);
 }
 ```
 

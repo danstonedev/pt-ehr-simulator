@@ -21,7 +21,6 @@ export function createEditableTable(config) {
     compactAddButton = false,
     startWithOneRow = false,
     showHeader = true,
-    allowReorder = false,
     className = '',
     style = {},
   } = config;

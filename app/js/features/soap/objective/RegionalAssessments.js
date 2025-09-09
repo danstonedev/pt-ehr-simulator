@@ -408,7 +408,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
       } else {
         allAssessmentData._promEndfeelMigrated = true;
       }
-    } catch (e) {
+    } catch {
       // no-op
       allAssessmentData._promEndfeelMigrated = true;
     }
@@ -422,10 +422,12 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
     const isValid = regionalAssessments.hasOwnProperty(regionKey);
     if (!isValid && regionKey) {
       // Only warn in development when env is available; silently filter in browsers
-      // In browser builds, process may be undefined; keep this as a soft dev-only warning
+      // Avoid referencing Node globals in browser; approximate dev by hostname
       try {
         const isDev =
-          typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production';
+          typeof window !== 'undefined' &&
+          window.location &&
+          (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
         if (isDev) {
           console.warn(`Regional assessment: Invalid region "${regionKey}" filtered out.`);
         }

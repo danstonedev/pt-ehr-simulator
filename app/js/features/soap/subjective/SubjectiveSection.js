@@ -1,7 +1,7 @@
 // SubjectiveSection.js - Comprehensive Subjective Assessment Module
 // Handles pain assessment, functional status, and medical history collection
 
-import { textAreaField, inputField, selectField } from '../../../ui/form-components.js';
+import { textAreaField } from '../../../ui/form-components.js';
 import { el } from '../../../ui/utils.js';
 import { PainAssessment } from './PainAssessment.js';
 

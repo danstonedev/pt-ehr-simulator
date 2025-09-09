@@ -2,7 +2,7 @@
 // Evidence-based intervention selection and scheduling
 
 import { el } from '../../../ui/utils.js';
-import { textAreaField, selectField, inputField } from '../../../ui/form-components.js';
+import { textAreaField, selectField } from '../../../ui/form-components.js';
 // Use the same editable table system as Regional Assessments for consistent styling
 import { createEditableTable } from '../objective/EditableTable.js';
 

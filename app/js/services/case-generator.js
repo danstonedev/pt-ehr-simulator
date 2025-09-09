@@ -558,7 +558,7 @@ function getRegionTemplate(regionSlug, acuity, condition, painLevel, patientGoal
     plan: {
       frequency: mapFrequencyToEnum(getFrequencyForAcuity(acuity)),
       duration: mapDurationToEnum(getDurationForAcuity(acuity)),
-      interventions: getInterventionsForRegion(regionSlug, acuity),
+      interventions: getInterventionsForRegion(regionSlug),
       stg: goals.shortTerm,
       ltg: goals.longTerm,
     },
@@ -652,7 +652,7 @@ function getDurationForAcuity(acuity) {
   return durations[acuity] || durations.chronic;
 }
 
-function getInterventionsForRegion(region, acuity) {
+function getInterventionsForRegion(region) {
   const base = ['Manual therapy', 'Therapeutic exercise', 'Patient education'];
   const regionSpecific = {
     shoulder: ['Joint mobilization', 'Rotator cuff strengthening'],

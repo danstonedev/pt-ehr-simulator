@@ -1,7 +1,7 @@
 // PlanMain.js - Main Plan Module (SOAP-P)
 // Comprehensive treatment planning and goal setting
 
-import { textAreaField } from '../../../ui/form-components.js';
+// form-components are imported within subsections as needed
 import { el } from '../../../ui/utils.js';
 import { TreatmentPlan } from './TreatmentPlan.js';
 import { GoalSetting } from './GoalSetting.js';
