@@ -142,6 +142,8 @@ See docs for deeper guides:
 - docs/ROUTING.md
 - docs/THEMING.md
 - docs/TESTING.md
+- docs/CASE_AUTHORING.md
+- docs/CONTRIBUTING.md
 
 ### Clean Modular Design
 
