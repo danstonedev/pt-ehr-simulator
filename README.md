@@ -118,9 +118,7 @@ app/  ← single source of truth for the site
 │   ├── services/                    # External service integrations
 │   │   └── document-export.js       # Word export (requires global `docx`)
 │   ├── ui/                          # User interface components
-│   │   ├── components.js            # Reusable UI elements
-│   │   ├── form-components.js       # Form input components
-│   │   ├── utils.js                 # DOM manipulation utilities
+│   │   ├── utils.js                 # DOM helpers (el(), download, print, textareaAutoResize)
 │   │   └── Icons.js                 # SVG icon system
 │   └── views/                       # Route handlers & page components
 │       ├── student/                 # Student-specific views

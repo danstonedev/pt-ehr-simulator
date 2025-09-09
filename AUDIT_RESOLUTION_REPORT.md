@@ -21,7 +21,7 @@ Legend: Done = resolved, Pending = still present or intentionally retained.
 
 ## Low (sampling of representative rows in CSV)
 
-- ID selectors in CSS (#primaryNav, #app, etc.) — Partially Done. Many were removed/converted; remaining legacy blocks exist in styles.css and mobile-patch.css for compatibility; schedule cleanup with minimal regression risk.
+- ID selectors in CSS (#primaryNav, #app, etc.) — Partially Done. Many were removed/converted; remaining legacy blocks exist in styles.css. Legacy mobile-patch.css has been removed; continue cleanup with minimal regression risk.
 - !important usages — Partially Done. print.css cleaned; styles.css and mobile-patch-v2.css retain a few for utility/override purposes; evaluate case-by-case.
 - Vendor prefixes (-webkit-backdrop-filter) — Intentionally Kept for Safari/iOS blur support.
 - Font sizes in px — Partially Done. Buttons and many components now use rem; some legacy px remain in large stylesheets; continue conversion opportunistically.
