@@ -1,8 +1,7 @@
-# PT EMR Simulator — Modern Physical Therapy Electronic Medical Record
+# UND‑PT EMR Simulator — Modern Physical Therapy Electronic Medical Record
 
-> **Professional-grade Physical Therapy documentation simulator with comprehensive SOAP workflow, advanced regional assessments, and embedded clinical cases. Built as a modern pure frontend application with contemporary theming system.**
+> Professional‑grade Physical Therapy documentation simulator with comprehensive SOAP workflow, advanced regional assessments, and embedded clinical cases. Pure‑frontend SPA with a clean theming system—no backend required.
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-GitHub_Pages-blue?style=for-the-badge)](https://danstonedev.github.io/pt-ehr-simulator/)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg?style=for-the-badge)](package.json)
 [![Built with Vanilla JS ES6+](https://img.shields.io/badge/Built%20with-Vanilla%20JS%20ES6+-yellow?style=for-the-badge)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 
@@ -45,27 +44,17 @@
 
 ## 🚀 Quick Start
 
-> **No installation required!** This application runs entirely in your browser with zero setup complexity.
+> No database or server to configure—this app runs in your browser.
 
-### 🌐 **Option 1: Use Live Demo (Recommended)**
-
-**[🔗 Open PT EMR Simulator](https://danstonedev.github.io/pt-ehr-simulator/)**
-
-The application is deployed on GitHub Pages and ready to use immediately.
-
-### 💻 **Option 2: Run Locally**
+### 💻 Run Locally (Windows PowerShell)
 
 **PowerShell (Windows) - Recommended:**
 
 ```powershell
-# Clone the repository
-git clone https://github.com/danstonedev/pt-ehr-simulator.git
-cd pt-ehr-simulator
-
-# Launch the application (serves app/ directory)
+# From the repo root (this folder)
 ./start_servers_simple.ps1
 
-# Open http://localhost:3000 in your browser
+# Then open http://localhost:3000
 ```
 
 **Python HTTP Server:**
@@ -82,7 +71,7 @@ python -m http.server 3000
 2. Open the project in VS Code
 3. Right-click `app/index.html` → **"Open with Live Server"**
 
-### 🎯 **Getting Started**
+### 🎯 Getting Started
 
 1. **Faculty Users**: Navigate to **Faculty Dashboard** to create cases or view embedded examples
 2. **Students**: Visit **Student Dashboard** to practice documentation with provided cases
@@ -90,7 +79,7 @@ python -m http.server 3000
    - 🎾 **Tennis Player - Shoulder Pain** (Impingement syndrome)
    - 💻 **Office Worker - Cervical Radiculopathy** (C6 nerve root)
 
-### 🔧 **Troubleshooting**
+### 🔧 Troubleshooting
 
 If you don't see the embedded cases in Faculty Dashboard:
 
@@ -98,9 +87,9 @@ If you don't see the embedded cases in Faculty Dashboard:
 2. Run: `ptStore.forceReloadCases()`
 3. Refresh the page
 
-This clears the storage adapter cache (browser storage) and reloads cases from the manifest.
+This clears the local cache (browser storage) and reloads cases from the manifest.
 
-## 📁 Project Structure
+## 📁 Project Structure (high level)
 
 ```text
 app/  ← single source of truth for the site
@@ -116,19 +105,18 @@ app/  ← single source of truth for the site
 │   │   ├── schema.js                # Data validation & migration
 │   │   └── index.js                 # Core module barrel export
 │   ├── features/                    # Feature-based organization
-│   │   ├── case-management/         # Case initialization & management
+│   │   ├── case-management/         # Case initialization helpers
 │   │   ├── navigation/              # Chart navigation & headers
 │   │   ├── soap/                    # SOAP documentation modules
-│   │   │   ├── subjective/          # Subjective assessment
-│   │   │   ├── objective/           # Objective measurements & tests
-│   │   │   ├── assessment/          # Clinical assessment & diagnosis
+│   │   │   ├── subjective/          # History, pain assessment, goals
+│   │   │   ├── objective/           # ROM/MMT/Tests, regional assessments
+│   │   │   ├── assessment/          # ICF, clinical reasoning, impression
 │   │   │   ├── plan/                # Treatment planning & goals
-│   │   │   └── billing/             # ICD-10 & CPT code management
-│   │   └── index.js                 # Features barrel export
+│   │   │   └── billing/             # ICD‑10 & CPT
+│   │   └── index.js                 # Feature entrypoints
 │   ├── modules/                     # Shared utility modules
-│   ├── features/soap/objective/EditableTable.js  # Standardized editable table used across app
 │   ├── services/                    # External service integrations
-│   │   └── document-export.js       # Word document generation
+│   │   └── document-export.js       # Word export (requires global `docx`)
 │   ├── ui/                          # User interface components
 │   │   ├── components.js            # Reusable UI elements
 │   │   ├── form-components.js       # Form input components
@@ -142,12 +130,20 @@ app/  ← single source of truth for the site
 
 Repository root
 ├── start_servers_simple.ps1         # Delegates to app/start_servers_simple.ps1
-└── .github/workflows/               # GitHub Actions workflows (CI, deploy)
+└── .github/workflows/               # CI / smoke tests / Pages deploy
 ```
 
-## 🏗️ Modern Architecture & Organization
+## 🏗️ Architecture & Organization
 
-### Clean Modular Design (2025)
+See docs for deeper guides:
+
+- docs/ARCHITECTURE.md
+- docs/DATA_AND_STORAGE.md
+- docs/ROUTING.md
+- docs/THEMING.md
+- docs/TESTING.md
+
+### Clean Modular Design
 
 - **Feature-based organization**: SOAP modules, navigation, case management grouped logically
 - **Modern ES6+ patterns**: Object destructuring, barrel exports, async/await throughout
@@ -187,9 +183,9 @@ Repository root
 - **Scalable**: New features integrate seamlessly with existing patterns
 - **Professional**: Production-ready error handling and data validation
 
-## 🔧 Development & Data Management
+## 🔧 Development & Data
 
-### Modern Data Architecture
+### Data Architecture
 
 - **Cases**: Stored in browser storage (localStorage) via the storage adapter, with auto-initialization from sample data
 - **Student Drafts**: Isolated practice work saved separately per case/encounter
@@ -197,7 +193,7 @@ Repository root
 - **Regional Assessments**: ROM, MMT, PROM, and special tests organized by body region
 - **Professional Validation**: Data integrity checks and migration utilities
 
-### Key Application Routes
+### Key Routes
 
 - `#/instructor/cases` - Faculty case management dashboard
 - `#/instructor/editor?case=new` - Integrated case creation with metadata panel
@@ -222,11 +218,11 @@ This modernized application runs entirely in the browser with contemporary patte
 - ✅ **Instant development** - works with any static server
 - ✅ **Production ready** - can be hosted on any CDN or static hosting
 
-## 🔄 2025 Modernization
+## 🔄 Modernization highlights
 
 This version represents a comprehensive modernization and cleanup:
 
-### Major Improvements
+### Major improvements
 
 - ✅ **Aggressive modernization**: Eliminated all backward compatibility code
 - ✅ **Clean codebase**: Removed debug statements, TODO comments, and temporary files
@@ -237,7 +233,7 @@ This version represents a comprehensive modernization and cleanup:
 - ✅ **Professional billing**: Comprehensive ICD-10 and CPT codes with proper units
 - ✅ **Case quality**: Removed incomplete cases, validated complete data structures
 
-### Technical Architecture
+### Technical architecture
 
 - **Pure frontend approach**: No backend complexity, runs entirely in browser
 - **Browser storage via storage adapter**: Robust data management with sample auto-initialization
@@ -245,9 +241,9 @@ This version represents a comprehensive modernization and cleanup:
 - **Modern form components**: Object-based API with comprehensive validation
 - **Professional error handling**: Appropriate logging for production debugging
 
-Start developing immediately with no environment setup required! 🎉
+Start developing immediately with no environment setup required.
 
-## 🤖 Optional AI Integration
+## 🤖 Optional AI integration
 
 You can configure an external AI HTTP endpoint (any provider) by setting one of:
 
@@ -257,7 +253,7 @@ You can configure an external AI HTTP endpoint (any provider) by setting one of:
 
 If not configured, the app uses the built-in deterministic case generator. No external services required.
 
-Note: Legacy Azure Functions sample code has been removed. If you need a server-side endpoint, any HTTP service will work—just provide its URL via one of the mechanisms above.
+Note: No server components are required. If you need a server‑side endpoint, any HTTP service will work—just provide its URL via one of the mechanisms above.
 
 ## 📦 Deployment (GitHub Pages)
 
@@ -266,3 +262,14 @@ Note: Legacy Azure Functions sample code has been removed. If you need a server-
 - `.nojekyll` disables Jekyll processing; `404.html` provides SPA fallback so deep links reload correctly.
 
 If your Pages URL hasn’t updated yet, check Actions for the latest “Deploy to GitHub Pages” run.
+
+## 🧪 Dev workflow quick refs
+
+- Lint/format: npm run lint, npm run format, npm run check
+- Start local server: ./start_servers_simple.ps1 (or app/start_servers_simple.ps1)
+- Browser tests: open app/tests/\*.test.html while the server runs
+- Debug logs: append ?debug=1 to the app URL
+
+## 📚 Notes on Word Export
+
+Word export relies on the global docx library. If it’s not present, the app will show an alert. To enable it, include docx via a script tag on the page you deploy this app to, or wire it into your hosting template. The app won’t fetch or bundle docx by itself.

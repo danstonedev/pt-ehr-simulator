@@ -18,8 +18,8 @@ Use with: `.github/workflows/copilot-style-guide.md` (checklist + snippets). Pas
 
 - Create `app/js/views/feature/foo.js` and register the route:
   `import { route } from '../../core/router.js';
- import { el } from '../../ui/utils.js';
- route('#/feature/foo', async (app)=>{ app.replaceChildren(el('h1',{},'Foo')); });`
+import { el } from '../../ui/utils.js';
+route('#/feature/foo', async (app)=>{ app.replaceChildren(el('h1',{},'Foo')); });`
 - Add a dynamic import to `initializeApp()` in `core/router.js` so it loads before `startRouter()`.
 - For navigation, link via `href="#/feature/foo"` or use `url.navigate('/feature/foo')`.
 
