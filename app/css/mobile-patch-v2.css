@@ -44,7 +44,7 @@
     left: auto;
     width: min(86vw, 360px);
     max-width: 92vw;
-    transform: translateX(100%);
+    transform: translate3d(100%, 0, 0);
     transition: transform 0.25s ease;
     z-index: 1100;
     /* Ensure background is opaque; override gradient if needed */
@@ -53,17 +53,21 @@
     border-left: 1px solid var(--border, #232a36);
     display: flex;
     flex-direction: column;
+    contain: layout paint; /* isolate layout/paint */
+    will-change: transform; /* hint for compositor */
+    backface-visibility: hidden; /* fix flicker on iOS Safari */
   }
   .chart-navigation.is-open,
   .chart-navigation.mobile-open {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
 
-  /* Panel inside drawer */
+  /* Panel inside drawer: avoid nested scrolling; outer drawer scrolls */
   .chart-navigation .sidebar-nav-panel {
-    height: 100%;
-    overflow: auto;
-    padding: 10px var(--mobile-safe-pad) 88px;
+    height: auto;
+    overflow: visible;
+    padding: 10px var(--mobile-safe-pad)
+      calc(var(--edu-ribbon-h, 24px) + env(safe-area-inset-bottom, 0px) + 16px);
   }
 
   /* Visible close control (uses your .btn styles) */
@@ -99,9 +103,12 @@
     backdrop-filter: blur(1px);
     z-index: 1090;
     display: none;
+    opacity: 0;
+    transition: opacity 0.18s ease;
   }
   .drawer-overlay.is-visible {
     display: block;
+    opacity: 1;
   }
   body.mobile-drawer-open {
     overflow: hidden;

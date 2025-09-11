@@ -32,6 +32,22 @@ function saveArtifactCollapseState(state) {
 }
 let artifactCollapseState = loadArtifactCollapseState();
 
+// Persisted collapse state for section cards
+const SECTION_COLLAPSE_KEY = 'sectionCollapse_v1';
+function loadSectionCollapseState() {
+  try {
+    return JSON.parse(localStorage.getItem(SECTION_COLLAPSE_KEY) || '{}') || {};
+  } catch {
+    return {};
+  }
+}
+function saveSectionCollapseState(state) {
+  try {
+    localStorage.setItem(SECTION_COLLAPSE_KEY, JSON.stringify(state || {}));
+  } catch {}
+}
+let sectionCollapseState = loadSectionCollapseState();
+
 // Heuristic normalization for artifact type across legacy/new cases
 function normalizeArtifactType(mod) {
   if (!mod) return 'other';
@@ -111,6 +127,7 @@ function createSubsectionIndicator(status) {
       return el(
         'span',
         {
+          class: 'subsection-indicator subsection-indicator-complete',
           style: 'color: var(--und-green); font-size: 14px; font-weight: bold; margin-right: 6px;',
         },
         '✓',
@@ -118,6 +135,7 @@ function createSubsectionIndicator(status) {
 
     case 'partial':
       return el('div', {
+        class: 'subsection-indicator subsection-indicator-partial',
         style: `
           width: 12px;
           height: 12px;
@@ -130,14 +148,8 @@ function createSubsectionIndicator(status) {
 
     default: // 'empty'
       return el('div', {
-        style: `
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: var(--bg);
-          margin-right: 6px;
-          flex-shrink: 0;
-        `,
+        class: 'subsection-indicator subsection-indicator-empty',
+        style: `width:12px;height:12px;border-radius:50%;margin-right:6px;flex-shrink:0;`,
       });
   }
 }
@@ -164,10 +176,16 @@ function getSubsectionStatus(subsectionData, subsectionType, fullSectionData = {
   const subsectionRequirements = {
     // Subjective subsections
     hpi: (data, section) => {
-      const chiefComplaint = section?.chiefComplaint;
-      const hpi = section?.historyOfPresentIllness || data;
-      // Require both chief concern and HPI content for completion
-      return isFieldComplete(chiefComplaint) && isFieldComplete(hpi);
+      // Chief complaint stored separately; detailed narrative may use one of several keys
+      const chiefComplaint = section?.chiefComplaint || section?.chiefConcern;
+      // Only treat explicit narrative fields as HPI text (do NOT fall back to whole subsection object)
+      const hpiText =
+        section?.historyOfPresentIllness ??
+        section?.detailedHistoryOfCurrentCondition ??
+        section?.hpi ??
+        '';
+      // Completion requires BOTH chief complaint and detailed narrative
+      return isFieldComplete(chiefComplaint) && isFieldComplete(hpiText);
     },
     /* eslint-disable-next-line complexity */
     'pain-assessment': (data, section) => {
@@ -452,12 +470,11 @@ function applySubsectionVisibilityControls({
                 'margin-left:auto; display:flex; align-items:center; gap:10px; font-weight:500; font-size:12px; color: var(--text-secondary); position: relative;',
             },
             [
-              el('span', { class: 'toggle-text', style: 'user-select:none;' }, 'OFF'),
               // Accessible checkbox drives the visual switch via sibling selectors
               el('input', {
                 type: 'checkbox',
                 class: 'und-toggle-input',
-                'aria-label': 'Show subsection',
+                'aria-label': 'Toggle subsection visibility',
                 'aria-checked': 'false',
                 style: 'position:absolute; opacity:0; width:0; height:0;',
               }),
@@ -469,10 +486,8 @@ function applySubsectionVisibilityControls({
           header.appendChild(toggleWrap);
         }
         const checkbox = toggleWrap.querySelector('input[type="checkbox"]');
-        const textEl = toggleWrap.querySelector('.toggle-text');
         checkbox.checked = !!visible;
         checkbox.setAttribute('aria-checked', checkbox.checked ? 'true' : 'false');
-        if (textEl) textEl.textContent = checkbox.checked ? 'ON' : 'OFF';
         checkbox.onchange = (e) => {
           const next = JSON.parse(JSON.stringify(caseData.editorSettings || { visibility: {} }));
           if (!next.visibility[activeSection]) next.visibility[activeSection] = {};
@@ -480,7 +495,6 @@ function applySubsectionVisibilityControls({
           setSubsectionCollapsed(anchorEl, !e.target.checked);
           onEditorSettingsChange?.(next);
           checkbox.setAttribute('aria-checked', e.target.checked ? 'true' : 'false');
-          if (textEl) textEl.textContent = e.target.checked ? 'ON' : 'OFF';
         };
         // In faculty view, keep banner; collapse content if off
         setSubsectionCollapsed(anchorEl, !visible);
@@ -652,36 +666,6 @@ function openCaseDetailsModal(caseInfo) {
       ),
     ]),
     el('div', { class: 'goal-selection-list case-details-body' }, [
-      // Top summary row: Title, DOB (with computed age), Sex
-      (() => {
-        const age = computeAgeFromDob(caseInfo.dob) || caseInfo.age || '';
-        return el(
-          'div',
-          {
-            class: 'case-details-summary',
-            style:
-              'display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; margin-bottom: 12px;',
-          },
-          [
-            el('div', { style: 'flex:1 1 280px; min-width:240px;' }, [
-              el('div', { class: 'label', style: 'margin-bottom:4px;' }, 'Title'),
-              el(
-                'div',
-                { class: 'value', style: 'font-weight:600;' },
-                caseInfo.title || 'Untitled Case',
-              ),
-            ]),
-            el('div', { style: 'flex:1 1 180px; min-width:180px;' }, [
-              el('div', { class: 'label', style: 'margin-bottom:4px;' }, 'DOB (years)'),
-              el('div', { class: 'value' }, `${caseInfo.dob || 'N/A'}${age ? ` (${age}y)` : ''}`),
-            ]),
-            el('div', { style: 'flex:1 1 140px; min-width:140px;' }, [
-              el('div', { class: 'label', style: 'margin-bottom:4px;' }, 'Sex'),
-              el('div', { class: 'value' }, caseInfo.sex || 'N/A'),
-            ]),
-          ],
-        );
-      })(),
       el('div', { class: 'case-info-grid case-details-grid' }, [
         // Secondary details: Setting, Acuity
         el('div', { class: 'case-info-row' }, [
@@ -2473,53 +2457,107 @@ export function createChartNavigation(config) {
     });
   };
 
-  // Create section navigation item
-  const createSectionNav = (section) => {
+  // Create section header (collapsible card toggle)
+  const createSectionNav = (section, isCollapsed, rebuild) => {
     const isActive = section.id === activeSection;
     const progressInfo = getProgressStatus(section.id, config.caseData);
+    // Determine dirty (unsaved / partial) state: treat 'partial' as dirty indicator
+    let isDirty = progressInfo.status === 'partial';
+    try {
+      // Optional deeper dirty detection: compare serialized subsection data snapshot
+      const original = window.__initialCaseSnapshot?.[section.id];
+      const current = config.caseData?.[section.id];
+      if (!isDirty && original && current) {
+        const origStr = JSON.stringify(original);
+        const curStr = JSON.stringify(current);
+        if (origStr !== curStr) isDirty = true;
+      }
+    } catch {}
 
+    // New layout: label left, arrow (twisty) right, no progress dot. Status will be on card border.
     const navItem = el(
       'div',
       {
         class: `section-nav-item ${isActive ? 'active' : ''}`,
+        'data-section-id': section.id,
         'aria-current': isActive ? 'page' : undefined,
-        role: 'link',
-        tabIndex: 0,
+        'aria-expanded': String(!isCollapsed),
+        role: 'button',
+        tabindex: '0',
         onClick: () => {
-          // Delegate navigation; editor will handle aligned scrolling
-          onSectionChange(section.id);
+          // Preserve scroll position of sidebar before rebuild to avoid jump
+          let scrollEl = null;
+          let prevScroll = 0;
+          try {
+            scrollEl = navItem.closest('.chart-navigation');
+            if (scrollEl) prevScroll = scrollEl.scrollTop;
+          } catch {}
+          sectionCollapseState[section.id] = !isCollapsed;
+          saveSectionCollapseState(sectionCollapseState);
+          rebuild();
+          // Restore scroll position & refocus equivalent button after rebuild
+          try {
+            if (scrollEl) {
+              requestAnimationFrame(() => {
+                scrollEl.scrollTop = prevScroll;
+                const replacement = scrollEl.querySelector(
+                  `.section-nav-item[data-section-id="${section.id}"]`,
+                );
+                if (replacement) replacement.focus({ preventScroll: true });
+              });
+            }
+          } catch {}
         },
         onKeyDown: (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            onSectionChange(section.id);
+            // Same handling as click for keyboard activation
+            let scrollEl = null;
+            let prevScroll = 0;
+            try {
+              scrollEl = navItem.closest('.chart-navigation');
+              if (scrollEl) prevScroll = scrollEl.scrollTop;
+            } catch {}
+            sectionCollapseState[section.id] = !isCollapsed;
+            saveSectionCollapseState(sectionCollapseState);
+            rebuild();
+            try {
+              if (scrollEl) {
+                requestAnimationFrame(() => {
+                  scrollEl.scrollTop = prevScroll;
+                  const replacement = scrollEl.querySelector(
+                    `.section-nav-item[data-section-id="${section.id}"]`,
+                  );
+                  if (replacement) replacement.focus({ preventScroll: true });
+                });
+              }
+            } catch {}
           }
         },
+        // Inline layout kept minimal; spacing now handled purely via CSS to avoid conflicts
+        style:
+          'display:flex; align-items:center; width:100%; background:none; border:none; text-align:left; cursor:pointer;',
+        title: 'Toggle section',
       },
       [
-        // Tri-state progress indicator
-        createProgressIndicator(progressInfo.status),
-
-        // Section info
         el(
-          'div',
+          'span',
           {
-            style: 'margin-left: 12px; flex: 1;',
+            class: 'nav-label',
+            // font-size now controlled in CSS (sidebar.css) for consistent scaling
+            style: `flex:1; font-weight:${isActive ? '600' : '500'}; text-align:left; margin:0;`,
           },
-          [
-            el(
-              'div',
-              {
-                class: 'nav-label',
-                style: `
-            font-weight: ${isActive ? '600' : '500'};
-              font-size: 13px;
-            color: inherit;
-          `,
-              },
-              section.label,
-            ),
-          ],
+          section.label,
+        ),
+        // Removed dirty-indicator circle per updated design
+        el(
+          'span',
+          {
+            class: 'twisty-right',
+            style:
+              'width:14px; display:inline-block; color:var(--text-secondary); margin-left:auto; text-align:right;',
+          },
+          isCollapsed ? '▶' : '▼',
         ),
       ],
     );
@@ -2529,25 +2567,9 @@ export function createChartNavigation(config) {
     return navItem;
   };
 
-  // Create subsection table of contents dynamically from DOM anchors (shown when section is active)
-  const createSubsectionTOC = (section) => {
-    if (section.id !== activeSection) return null;
-    // Do not show subsections for the Billing section per UX request
-    if (section.id === 'billing') return null;
-
-    // Find the main content area and locate anchors for this section
-    const contentRoot = document.querySelector('.section-content');
-    let anchors = Array.from(contentRoot?.querySelectorAll('.section-anchor') || []).filter((a) =>
-      a.closest(`.${section.id}-section`),
-    );
-    // Filter by case-level visibility settings for both faculty and students
-    const vis = config.caseData?.editorSettings?.visibility?.[section.id];
-    if (vis && typeof vis === 'object') {
-      anchors = anchors.filter((a) => vis[a.id] !== false);
-    }
-
-    const subs = anchors.map((a) => ({ id: a.id, label: extractTitle(a) }));
-
+  // Create subsection table of contents dynamically; derive from DOM if active else fallback
+  const createSubsectionTOC = (section, isCollapsed) => {
+    const subs = getSubsectionsForSection(section.id, activeSection);
     return el(
       'div',
       { class: 'subsection-toc' },
@@ -2563,27 +2585,75 @@ export function createChartNavigation(config) {
           {
             class: 'subsection-item',
             style: `display:flex; align-items:center; padding:4px 8px; font-size:12px; cursor:pointer; transition:all 0.2s ease; border-radius:4px;`,
+            role: 'button',
+            tabIndex: 0,
             onClick: () => {
-              requestAnimationFrame(() => {
-                const elTarget = document.getElementById(sub.id);
-                if (!elTarget || elTarget.offsetParent === null) return;
-                const cs = getComputedStyle(document.documentElement);
-                const topbarH = parseInt(
-                  (cs.getPropertyValue('--topbar-h') || '').replace('px', '').trim(),
-                  10,
-                );
-                const dividerH = parseInt(
-                  (cs.getPropertyValue('--section-divider-h') || '').replace('px', '').trim(),
-                  10,
-                );
-                const tb = isNaN(topbarH) ? 72 : topbarH;
-                const sd = isNaN(dividerH) ? 0 : dividerH;
-                const sticky = document.getElementById('patient-sticky-header');
-                const sh = sticky && sticky.offsetParent !== null ? sticky.offsetHeight : 0;
-                const rect = elTarget.getBoundingClientRect();
-                const targetY = Math.max(0, window.scrollY + rect.top - (tb + sh + sd));
-                window.scrollTo({ top: targetY, behavior: 'smooth' });
-              });
+              if (section.id !== activeSection) {
+                // Stage target subsection ID in a temporary callback to run after section mount
+                try {
+                  window.__pendingAnchorScrollId = sub.id;
+                  window.__scrollToPendingSubsection = () => {
+                    requestAnimationFrame(() => {
+                      const elTarget = document.getElementById(sub.id);
+                      if (!elTarget || elTarget.offsetParent === null) return;
+                      const cs = getComputedStyle(document.documentElement);
+                      const topbarH = parseInt(
+                        (cs.getPropertyValue('--topbar-h') || '').replace('px', '').trim(),
+                        10,
+                      );
+                      const dividerH = parseInt(
+                        (cs.getPropertyValue('--section-divider-h') || '').replace('px', '').trim(),
+                        10,
+                      );
+                      const tb = isNaN(topbarH) ? 72 : topbarH;
+                      const sd = isNaN(dividerH) ? 0 : dividerH;
+                      const sticky = document.getElementById('patient-sticky-header');
+                      const sh = sticky && sticky.offsetParent !== null ? sticky.offsetHeight : 0;
+                      const rect = elTarget.getBoundingClientRect();
+                      const targetY = Math.max(0, window.scrollY + rect.top - (tb + sh + sd));
+                      window.scrollTo({ top: targetY, behavior: 'smooth' });
+                      try {
+                        if (window.__pendingAnchorScrollId === sub.id)
+                          window.__pendingAnchorScrollId = '';
+                      } catch {}
+                    });
+                  };
+                } catch {}
+                onSectionChange(section.id);
+              } else {
+                // Same section: immediate scroll without leaving stale pending id
+                try {
+                  if (window.__pendingAnchorScrollId === sub.id)
+                    window.__pendingAnchorScrollId = '';
+                } catch {}
+                requestAnimationFrame(() => {
+                  const elTarget = document.getElementById(sub.id);
+                  if (!elTarget || elTarget.offsetParent === null) return;
+                  const cs = getComputedStyle(document.documentElement);
+                  const topbarH = parseInt(
+                    (cs.getPropertyValue('--topbar-h') || '').replace('px', '').trim(),
+                    10,
+                  );
+                  const dividerH = parseInt(
+                    (cs.getPropertyValue('--section-divider-h') || '').replace('px', '').trim(),
+                    10,
+                  );
+                  const tb = isNaN(topbarH) ? 72 : topbarH;
+                  const sd = isNaN(dividerH) ? 0 : dividerH;
+                  const sticky = document.getElementById('patient-sticky-header');
+                  const sh = sticky && sticky.offsetParent !== null ? sticky.offsetHeight : 0;
+                  const rect = elTarget.getBoundingClientRect();
+                  const targetY = Math.max(0, window.scrollY + rect.top - (tb + sh + sd));
+                  window.scrollTo({ top: targetY, behavior: 'smooth' });
+                });
+              }
+            },
+            onKeyDown: (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const click = row && typeof row.click === 'function' ? row.click.bind(row) : null;
+                if (click) click();
+              }
             },
           },
           [createSubsectionIndicator(subsectionStatus), el('span', {}, sub.label)],
@@ -2617,9 +2687,16 @@ export function createChartNavigation(config) {
     : [];
 
   // Standalone CASE FILE header (full-width in sidebar)
-  const caseFileHeader = el('h4', { class: 'case-file-header' }, [
-    el('span', { class: 'case-file-badge' }, 'Case File'),
-  ]);
+  // Inline styles enforce visual in case of stylesheet load/cascade issues.
+  const caseFileHeader = el(
+    'h4',
+    {
+      class: 'case-file-header',
+      style:
+        'background:#00883A;display:flex;align-items:center;justify-content:center;margin:0;padding:0;height:56px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;font-size:clamp(0.95rem,2.7vw,1.125rem);color:#fff;border:0;border-bottom:2px solid #fff;box-sizing:border-box;',
+    },
+    [el('span', { class: 'case-file-badge', style: 'all:unset;display:contents;' }, 'Case File')],
+  );
 
   const sidebar = el(
     'div',
@@ -2627,6 +2704,7 @@ export function createChartNavigation(config) {
       class: 'chart-navigation',
       role: 'complementary',
       'aria-label': 'Chart navigation',
+      tabindex: '-1',
     },
     [
       // CASE FILE header row aligned with patient header
@@ -2806,10 +2884,68 @@ export function createChartNavigation(config) {
             },
             'Current Encounter',
           ),
-          // Section cards + subsections
-          ...sections.map((section) =>
-            el('div', {}, [createSectionNav(section), createSubsectionTOC(section)]),
-          ),
+          // Section cards + subsections (collapsible)
+          (() => {
+            const sectionsContainer = el('div', { class: 'sections-container' });
+            const rebuild = () => {
+              sectionsContainer.replaceChildren(
+                ...sections.map((section) => {
+                  // Default collapsed unless active, with persisted override
+                  const hasState = Object.prototype.hasOwnProperty.call(
+                    sectionCollapseState,
+                    section.id,
+                  );
+                  // For 'plan' section: remove auto open/close behavior (user-controlled only)
+                  // Other sections still default to collapsed when not active.
+                  let collapsed;
+                  if (section.id === 'plan') {
+                    collapsed = hasState ? !!sectionCollapseState[section.id] : true; // start collapsed unless user expands
+                  } else {
+                    collapsed = hasState
+                      ? !!sectionCollapseState[section.id]
+                      : section.id !== activeSection;
+                  }
+                  const isActive = section.id === activeSection;
+                  // Capture immutable initial snapshot once for dirty comparison
+                  if (!window.__initialCaseSnapshot && config.caseData) {
+                    try {
+                      window.__initialCaseSnapshot = JSON.parse(JSON.stringify(config.caseData));
+                    } catch {}
+                  }
+                  const card = el(
+                    'div',
+                    { class: `section-card ${collapsed ? 'collapsed' : ''}` },
+                    [
+                      createSectionNav(section, collapsed, rebuild),
+                      createSubsectionTOC(section, collapsed),
+                    ],
+                  );
+                  // Add status class for border styling (empty | partial | complete)
+                  try {
+                    const prog = getProgressStatus(section.id, config.caseData);
+                    card.classList.add(`section-status-${prog.status}`);
+                  } catch {}
+                  if (isActive) card.classList.add('active');
+                  // Mark collapsed state on inner TOC for CSS animation
+                  if (collapsed) {
+                    const toc = card.querySelector('.subsection-toc');
+                    if (toc) toc.setAttribute('data-collapsed', 'true');
+                  }
+                  return card;
+                }),
+              );
+              // After rebuild, if a deferred scroll callback exists (after section change), run it once
+              if (typeof window.__scrollToPendingSubsection === 'function') {
+                const fn = window.__scrollToPendingSubsection;
+                window.__scrollToPendingSubsection = null;
+                try {
+                  fn();
+                } catch {}
+              }
+            };
+            rebuild();
+            return sectionsContainer;
+          })(),
           // Footer actions: Sign & Export (Word)
           (() => {
             async function handleExportClick() {
@@ -2863,6 +2999,8 @@ export function createChartNavigation(config) {
   setTimeout(() => {
     /* layout offsets handled by drawer CSS */
   }, 100);
+
+  // Removed experimental auto-scroll activation (was forcing view jump). Consider reintroducing with IntersectionObserver later.
 
   // Expose a reusable toggle for header hamburger and FAB
   window.toggleMobileNav = function toggleMobileNav() {

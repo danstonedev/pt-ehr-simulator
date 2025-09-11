@@ -28,6 +28,12 @@
   --und-green: #009a44;
   --und-orange: #ff671f;
   --und-black: #000000;
+  /* Generic core colors */
+  --white: #ffffff;
+  --black: #000000;
+  /* Subtle light surface variants (replaces scattered #f7f8f9 / #f0f2f4) */
+  --surface-alt: #f7f8f9;
+  --surface-alt-hover: #f0f2f4;
 
   /* UND Green Variants */
   --und-green-light: rgba(0, 154, 68, 0.08);
@@ -51,6 +57,43 @@
   --neutral-950: #1a1a1a; /* Very dark */
   /* Honor both light and dark UA color schemes */
   color-scheme: light dark;
+  /* Extended semantic color ramps */
+  --danger-50: #f3e8e8;
+  --danger-100: #fee2e2;
+  --danger-200: #fca5a5;
+  --danger-600: #dc2626;
+  --danger-700: #b91c1c;
+  --danger-strong: #e53e3e;
+  --danger-base: var(--danger-600);
+  --success-400: #68d391;
+  --success-600: #38a169;
+  --success-base: var(--success-600);
+  --warning-400: #f6e05e;
+  --warning-500: #d69e2e;
+  /* Elevation shadow scale */
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.12);
+  --elev-2: 0 2px 4px rgba(0, 0, 0, 0.16);
+  --elev-3: 0 3px 6px rgba(0, 0, 0, 0.22);
+  --elev-4: 0 4px 8px rgba(0, 0, 0, 0.28);
+  --elev-5: 0 6px 12px rgba(0, 0, 0, 0.32);
+  /* Extended composite / legacy mapping shadows */
+  --elev-hero: 0 2px 6px rgba(0, 0, 0, 0.3);
+  --elev-hero-lg: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --elev-inline-sep: 0 1px 0 rgba(0, 0, 0, 0.06);
+  --elev-soft: 0 1px 3px rgba(0, 0, 0, 0.15);
+  --elev-neutral-depth: 0 2px 6px rgba(0, 0, 0, 0.12);
+  --elev-focus-ring: 0 0 0 2px var(--und-green-light);
+  --elev-focus-strong: 0 0 0 3px rgba(0, 154, 68, 0.25);
+  --elev-focus-neutral: 0 0 0 2px var(--neutral-400);
+  --elev-focus-danger: 0 0 0 2px var(--danger-100);
+  --elev-fab: 0 2px 6px rgba(0, 0, 0, 0.25);
+  --elev-fab-hover: 0 4px 10px rgba(0, 0, 0, 0.3);
+  --elev-accent-glow: 0 2px 8px rgba(56, 161, 105, 0.3);
+  --elev-deep: 0 20px 60px rgba(0, 0, 0, 0.3);
+  /* Border & ring tokens */
+  --bw-1: 1px;
+  --bw-2: 2px;
+  --ring-thin: 0.1em;
 }
 
 /* Accessibility utilities */
@@ -72,7 +115,7 @@
   left: 8px;
   z-index: 10000;
   background: var(--und-green);
-  color: #fff;
+  color: var(--white);
   padding: 8px 12px;
   border-radius: var(--radius-sm);
   text-decoration: none;
@@ -80,7 +123,7 @@
 }
 .skip-link:focus {
   transform: translateY(0);
-  outline: 2px solid #fff;
+  outline: 2px solid var(--white);
   outline-offset: 2px;
 }
 
@@ -116,10 +159,10 @@
   --section-stripe-fill-frac: 0.35; /* white slash portion per period (35%) */
   --section-stripe-period: 48px; /* width of one gap+slash tile (adjust to taste) */
   --section-stripe-count: 3; /* number of visible slashes */
-  --section-stripe-color: #fff; /* slash color (white on UND green) */
+  --section-stripe-color: var(--white); /* slash color (white on UND green) */
   /* Side-edge slant computed from height and brand angle so edges match 56° */
   --section-parallelogram-slant: 38px; /* ≈ 56px / tan(56°) */
-  --sidebar-w: 280px; /* unify sidebar width */
+  --sidebar-w: 300px; /* widened sidebar to prevent content squeeze */
   --section-divider-h: 56px; /* sticky in-content section banner height (taller for prominence) */
 
   /* Z-index layers */
@@ -677,7 +720,7 @@ body[data-route='instructor-editor'] #app {
 /* Light theme: match subsection header gradient and ensure readable text on dark bg */
 html:not([data-theme='dark']) #patient-sticky-header {
   /* Scope text tokens inside the header for correct contrast */
-  --text: #ffffff;
+  --text: var(--white);
   --text-secondary: rgba(255, 255, 255, 0.9);
   color: var(--text);
 }
@@ -685,7 +728,7 @@ html:not([data-theme='dark']) #patient-sticky-header {
 /* Ensure the white Edit button uses dark text inside the gradient header */
 html:not([data-theme='dark']) #patient-sticky-header .btn.secondary {
   color: var(--neutral-900);
-  background: #ffffff; /* keep white button fill */
+  background: var(--white); /* keep white button fill */
   border-color: var(--und-green);
 }
 html:not([data-theme='dark']) #patient-sticky-header .btn.secondary:hover {
@@ -754,7 +797,8 @@ body:has(header.topbar) {
   background: var(--bg);
   display: grid;
   place-items: center;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  /* Standardized control elevation (matches FAB base) */
+  box-shadow: var(--elev-fab);
   transition:
     transform 0.22s ease,
     background 0.2s ease;
@@ -875,7 +919,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--elev-1);
   background: var(--bg);
   transition: transform 0.2s ease;
 }
@@ -889,7 +933,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 }
 /* Focus ring for accessibility */
 .und-toggle-input:focus-visible + .und-toggle-track {
-  box-shadow: 0 0 0 2px var(--und-green-light);
+  box-shadow: var(--elev-focus-ring);
 }
 /* Hover brightness */
 .und-toggle:hover .und-toggle-track {
@@ -958,8 +1002,9 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   z-index: var(--z-sticky-header);
   left: 0;
   width: 100%;
-  margin-left: var(--sidebar-w);
-  width: calc(100% - var(--sidebar-w));
+  /* When a sidebar is present in desktop layout, offset content; otherwise, full width */
+  margin-left: 0;
+  width: 100%;
   transition:
     margin-left 0.3s ease,
     width 0.3s ease;
@@ -968,7 +1013,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   /* Visual styling - clean professional design with exact height */
   /* Subtle left→right gradient: darker green to UND green */
   background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
-  color: #fff;
+  color: var(--white);
   height: var(--header-h); /* Fixed height via shared variable */
   display: flex;
   align-items: center;
@@ -982,6 +1027,14 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Offset only when desktop sidebar exists */
+@media (min-width: 901px) {
+  body:has(.chart-navigation) .sticky-top-bar {
+    margin-left: var(--sidebar-w);
+    width: calc(100% - var(--sidebar-w));
+  }
+}
+
 /* In-content sticky section divider that gently pushes when next section arrives */
 .editor-section-divider {
   position: sticky; /* stick just under the top app bar */
@@ -993,8 +1046,8 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   justify-content: center; /* center the section title */
   /* Use editor canvas background so cutout triangles blend with page in light/dark */
   background: var(--editor-bg);
-  color: #fff;
-  box-shadow: none; /* avoid rectangular shadow peeking outside slants */
+  color: var(--white);
+  box-shadow: none; /* no elevation: keep flush with content */
   /* Full bleed: cancel parent .section-content horizontal padding so width matches patient header */
   margin-left: calc(-1 * var(--pad-x));
   margin-right: calc(-1 * var(--pad-x));
@@ -1027,10 +1080,11 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   align-items: center;
   justify-content: center; /* center the title */
   padding: var(--space-4) calc(1.5 * var(--pad-x)); /* slightly less vertical padding; overshoot horizontally */
-  color: #fff;
+  color: var(--white);
   margin-left: calc(-2.5 * var(--pad-x)); /* bleed further left */
   margin-right: calc(-2.5 * var(--pad-x)); /* bleed further right */
   isolation: isolate;
+  box-shadow: var(--elev-hero);
   overflow: hidden;
 }
 .home-hero::before {
@@ -1045,7 +1099,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   font-weight: 800;
   letter-spacing: 0.5px;
   margin: 0;
-  color: #fff; /* ensure white text regardless of global h1 color */
+  color: var(--white); /* ensure white text regardless of global h1 color */
   text-align: center;
 }
 .editor-section-divider::after {
@@ -1056,7 +1110,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   font-size: 20px;
   letter-spacing: 0.4px;
   text-transform: uppercase;
-  color: #fff;
+  color: var(--white);
   font-weight: 800;
   line-height: 1;
   width: 100%;
@@ -1090,7 +1144,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 /* Sticky top bar section title */
 .sticky-top-bar .active-section-title {
   margin: 0;
-  color: #fff;
+  color: var(--white);
   font-size: 18px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1119,7 +1173,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   border: 1px solid transparent;
   border-radius: 999px;
   padding: 6px 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--elev-soft);
 }
 .sticky-top-bar .save-status-pill .dot {
   width: 8px;
@@ -1148,18 +1202,23 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   font-size: 14px;
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #fff;
+  color: var(--white);
 }
 
 .sticky-top-bar .btn.secondary:hover {
   background: rgba(255, 255, 255, 0.3);
   border-color: rgba(255, 255, 255, 0.5);
-  color: #fff;
+  color: var(--white);
   transform: translateY(-1px);
 }
+/* Desktop-only offset; on narrow viewports the mobile drawer handles layout */
+@media (min-width: 901px) {
+  .main-content-with-sidebar {
+    margin-left: var(--sidebar-w);
+    width: calc(100% - var(--sidebar-w));
+  }
+}
 .main-content-with-sidebar {
-  margin-left: var(--sidebar-w);
-  width: calc(100% - var(--sidebar-w));
   /* Let content define height; ensure safe space for bottom ribbon via padding */
   padding-bottom: calc(var(--edu-ribbon-h) + 16px);
   margin-top: 0;
@@ -1210,7 +1269,7 @@ body[data-route='instructor-editor'] .section-content {
   border-radius: 9999px;
   padding: 10px 16px;
   min-height: 40px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--elev-neutral-depth);
   font-weight: 700;
 }
 .section-content .pager-btn.pager-next.btn.primary,
@@ -1258,7 +1317,7 @@ body[data-route='instructor-editor'] .section-content {
     var(--header-gradient-left) 0%,
     var(--header-gradient-right) 100%
   );
-  color: #fff;
+  color: var(--white);
   font-weight: 600;
   /* Subtle rounding for a cleaner pill-like header */
   border-radius: var(--radius-sm);
@@ -1709,7 +1768,7 @@ html[data-theme='dark'] .section-content .form-row {
 .pain-scale-btn.active {
   background: var(--accent2);
   border-color: var(--accent2);
-  color: #fff;
+  color: var(--white);
   transform: scale(1.05);
 }
 /* Dark theme: make pain scale pills dark with light text */
@@ -1726,7 +1785,7 @@ html[data-theme='dark'] .pain-scale-btn:hover {
 html[data-theme='dark'] .pain-scale-btn.active {
   background: var(--accent2);
   border-color: var(--accent2);
-  color: #fff;
+  color: var(--white);
 }
 
 /* Dark mode: restore black gradients for subsection headers */
@@ -2137,16 +2196,16 @@ html[data-theme='dark'] .subsection-title {
 .case-details-modal .goal-linker-header {
   /* UND green gradient header applied in both themes */
   background: linear-gradient(135deg, var(--und-green) 0%, var(--und-green-dark) 85%);
-  color: #fff;
+  color: var(--white);
   position: relative;
 }
 .case-details-modal .goal-linker-header h3 {
   font-size: 20px;
-  color: #fff;
+  color: var(--white);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .case-details-modal .goal-linker-header .close-btn {
-  color: #fff;
+  color: var(--white);
   border-radius: 4px;
   padding: 4px 8px;
 }
@@ -2219,9 +2278,9 @@ html[data-theme='dark'] .subsection-title {
 }
 .goal-chip:hover {
   background: var(--und-green);
-  color: #fff;
+  color: var(--white);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(56, 161, 105, 0.3);
+  box-shadow: var(--elev-accent-glow);
 }
 .link-goals-btn {
   background: transparent;
@@ -2591,7 +2650,7 @@ select:focus,
 .form-input-standard:focus {
   border-color: var(--und-green);
   outline: none;
-  box-shadow: 0 0 0 2px var(--und-green-light);
+  box-shadow: var(--elev-focus-ring);
 }
 .form-input-standard:focus-visible {
   outline: 2px solid var(--und-green);
@@ -2660,7 +2719,7 @@ select:focus,
 .instructor-form-input:focus {
   border-color: var(--und-green);
   outline: none;
-  box-shadow: 0 0 0 2px var(--und-green-light);
+  box-shadow: var(--elev-focus-ring);
 }
 .instructor-form-input:focus-visible {
   outline: 2px solid var(--und-green);
@@ -2689,7 +2748,7 @@ select:focus,
 .form-input-standard.success,
 .instructor-form-input.success {
   border-color: var(--success);
-  box-shadow: 0 0 0 2px var(--und-green-light);
+  box-shadow: var(--elev-focus-ring);
 }
 
 /* Field validation messages */
@@ -2740,9 +2799,7 @@ select:focus,
 /* Focus within containers for keyboard navigation */
 .case-metadata-panel:focus-within,
 .instructor-dashboard:focus-within {
-  box-shadow:
-    var(--shadow-1),
-    0 0 0 2px var(--und-green-light);
+  box-shadow: var(--shadow-1), var(--elev-focus-ring);
 }
 
 /* Ensure all interactive elements have proper contrast */
@@ -2942,14 +2999,14 @@ header.topbar {
   display: none; /* hidden on desktop; shown on mobile via media query */
   background: transparent;
   border: 0;
-  color: #fff;
+  color: var(--white);
   height: var(--topbar-h);
   width: 48px;
   align-items: center;
   justify-content: center;
 }
 .hamburger-btn:focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--white);
   outline-offset: 2px;
 }
 
@@ -3004,7 +3061,7 @@ header.topbar {
 
 header.topbar .brand {
   font-weight: 700;
-  color: #ffffff; /* ensure legibility on dark header */
+  color: var(--white); /* ensure legibility on dark header */
 }
 
 header.topbar .topnav a {
@@ -3023,14 +3080,14 @@ header.topbar .topnav {
   flex-wrap: nowrap;
 }
 header.topbar .topnav a:hover {
-  color: #ffffff;
+  color: var(--white);
   background: rgba(255, 255, 255, 0.08);
 }
 header.topbar .topnav a:focus-visible {
   outline-color: var(--und-green);
 }
 header.topbar .topnav a.active {
-  color: #ffffff;
+  color: var(--white);
   border-bottom-color: var(--und-green);
 }
 
@@ -3038,7 +3095,7 @@ header.topbar .topnav a.active {
 header.topbar .btn,
 header.topbar button,
 header.topbar a.button {
-  color: #ffffff;
+  color: var(--white);
 }
 
 /* UND logo on right side */
@@ -3070,7 +3127,7 @@ header.topbar a.button {
   font-family:
     'Oswald', 'Trade Gothic', 'TradeGothic LT', 'Trade Gothic Next', 'TradeGothicLTStd',
     'TradeGothic LT Std', 'News Gothic', 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  color: #ffffff;
+  color: var(--white);
   font-weight: 700;
   letter-spacing: 0.06em;
   margin-left: 10px;

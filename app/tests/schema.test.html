@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Schema Sanity Tests</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+        padding: 16px;
+      }
+      .pass {
+        color: #0a7;
+      }
+      .fail {
+        color: #c00;
+      }
+      pre {
+        background: #f6f8fa;
+        padding: 8px;
+        border-radius: 6px;
+        overflow: auto;
+      }
+      .test {
+        margin-bottom: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Schema Tests</h1>
+    <div id="results"></div>
+
+    <script type="module">
+      import {
+        makeBlankCase,
+        validateCase,
+        ensureDataIntegrity,
+        migrateOldCaseData,
+      } from '../js/core/schema.js';
+
+      const results = document.getElementById('results');
+      const log = (name, ok, details = '') => {
+        const div = document.createElement('div');
+        div.className = 'test';
+        div.innerHTML =
+          `<strong>${ok ? '✅' : '❌'} ${name}</strong>` + (details ? `<pre>${details}</pre>` : '');
+        div.classList.add(ok ? 'pass' : 'fail');
+        results.appendChild(div);
+      };
+
+      try {
+        const blank = makeBlankCase();
+        const errs = validateCase(blank);
+        log(
+          'Blank case has title required error only or minimal',
+          Array.isArray(errs) && errs.includes('meta.title is required'),
+        );
+
+        const legacy = {
+          assessment: 'overall good',
+          subjective: 'ache in knee',
+          snapshot: { sex: 'Prefer Not To Say' },
+          meta: { acuity: 'Routine' },
+        };
+        const migrated = migrateOldCaseData(legacy);
+        const ok1 = migrated?.assessment?.primaryImpairments === 'overall good';
+        const ok2 = migrated?.subjective?.historyOfPresentIllness === 'ache in knee';
+        const ok3 = migrated?.snapshot?.sex === 'unspecified';
+        const ok4 = migrated?.meta?.acuity === 'unspecified';
+        log(
+          'Migration maps old string formats and normalizes enums',
+          ok1 && ok2 && ok3 && ok4,
+          JSON.stringify(migrated, null, 2),
+        );
+
+        const noExam = {
+          findings: { vitals: { bp: '120/80' } },
+          modules: null,
+          snapshot: {},
+          meta: {},
+        };
+        const fixed = ensureDataIntegrity(noExam);
+        const ok5 = !!fixed.exam && Array.isArray(fixed.modules);
+        log('Integrity ensures exam mirror and modules array', ok5, JSON.stringify(fixed, null, 2));
+      } catch (e) {
+        log('Unhandled error in schema tests', false, String(e?.stack || e));
+      }
+    </script>
+  </body>
+</html>

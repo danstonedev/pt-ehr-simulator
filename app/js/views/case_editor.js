@@ -1,5 +1,6 @@
 // Modern Case Editor with Conservative Imports
 import { route } from '../core/index.js';
+import { EXPERIMENT_FLAGS } from '../core/constants.js';
 import { setQueryParams, onRouteChange, navigate as urlNavigate } from '../core/url.js';
 import { el } from '../ui/utils.js';
 import {
@@ -357,15 +358,23 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   const sections = ['subjective', 'objective', 'assessment', 'plan', 'billing'];
   const isValidSection = (s) => sections.includes(s);
   let active = isValidSection(initialSectionParam) ? initialSectionParam : 'subjective';
-  let needsInitialPercentScroll = Number.isFinite(initialScrollPercent) && isValidSection(active);
+  const initialActiveSection = active;
+  // Simple mode: only permit initial scroll if URL explicitly requests it
+  // Simple mode defaults on; allow URL to opt out with navsimple=0
+  const navParam = qs.get('navsimple');
+  const simpleMode = navParam === '0' ? false : !!EXPERIMENT_FLAGS.NAV_SIMPLE_MODE;
+  let needsInitialPercentScroll =
+    !simpleMode && Number.isFinite(initialScrollPercent) && isValidSection(active);
   let needsInitialAnchorScroll =
-    !needsInitialPercentScroll && !!initialAnchorParam && isValidSection(active);
+    (!simpleMode && !needsInitialPercentScroll && !!initialAnchorParam && isValidSection(active)) ||
+    (simpleMode && !!initialAnchorParam && isValidSection(active));
 
   // During a programmatic section change we temporarily suppress scroll-driven
   // active section recalculation to avoid rapid re-renders (jitter) while the
   // browser animates smooth scrolling. We store a timestamp instead of a boolean
   // so overlapping programmatic navigations extend the window naturally.
   let programmaticScrollBlockUntil = 0;
+  let isProgrammaticScroll = false; // simple guard
 
   // Sticky top bar removed; preview can be triggered from elsewhere if desired
 
@@ -769,7 +778,39 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   }
 
   function performInitialScrollIfNeeded(currentSectionId) {
+    // If the user navigated away from the initially requested section before
+    // the initial scroll fired, cancel the initial scroll behavior entirely.
+    if (currentSectionId !== initialActiveSection) {
+      needsInitialPercentScroll = false;
+      needsInitialAnchorScroll = false;
+      // Also check for any transient pending anchor requests and clear them if no longer relevant
+      try {
+        if (window.__pendingAnchorScrollId && currentSectionId !== active) {
+          window.__pendingAnchorScrollId = '';
+        }
+      } catch {}
+      return;
+    }
     if (currentSectionId !== active) return;
+    // If a pending anchor scroll was requested by the sidebar while changing sections, honor it first
+    try {
+      if (window.__pendingAnchorScrollId) {
+        const id = String(window.__pendingAnchorScrollId);
+        window.__pendingAnchorScrollId = '';
+        // Attempt immediate scroll; retry lightly after next layout
+        let ok = scrollToAnchorExact(id, 'smooth');
+        afterNextLayout(() => {
+          if (!ok) ok = scrollToAnchorExact(id, 'smooth');
+        });
+        setTimeout(() => {
+          if (!ok) scrollToAnchorExact(id, 'smooth');
+        }, 120);
+        // Do not proceed with percent/anchor initial behavior in this pass
+        needsInitialPercentScroll = false;
+        needsInitialAnchorScroll = false;
+        return;
+      }
+    } catch {}
     if (needsInitialPercentScroll && Number.isFinite(initialScrollPercent)) {
       let okP = scrollToPercentWithinActive(initialScrollPercent);
       afterNextLayout(() => {
@@ -824,8 +865,13 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     const changingSection = s !== active;
     active = s;
 
+    // User selection overrides any pending initial scroll behavior
+    needsInitialPercentScroll = false;
+    needsInitialAnchorScroll = false;
+
     // Prevent scroll-driven active recalculation for the duration of the smooth scroll
     programmaticScrollBlockUntil = Date.now() + 700; // ~0.7s window
+    isProgrammaticScroll = true;
 
     // Sync section to URL (replace by default to avoid history spam)
     try {
@@ -885,14 +931,23 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     const header = getSectionHeader(s);
     const root = getSectionRoot(s) || header;
     if (root) {
+      // Sidebar may request a specific subsection anchor
+      let pendingAnchorId = '';
+      try {
+        if (window.__pendingAnchorScrollId) {
+          pendingAnchorId = String(window.__pendingAnchorScrollId);
+          window.__pendingAnchorScrollId = '';
+        }
+      } catch {}
       const preferredAnchorBySection = {
         subjective: 'hpi',
-        objective: 'general-observations',
+        // Use a valid Objective anchor present in the section
+        objective: 'regional-assessment',
         assessment: 'primary-impairments',
         plan: 'goal-setting',
         billing: 'diagnosis-codes',
       };
-      const targetId = preferredAnchorBySection[s];
+      const targetId = pendingAnchorId || preferredAnchorBySection[s];
       let success = false;
       if (targetId) success = scrollToAnchorExact(targetId, 'smooth');
       if (!success) {
@@ -905,6 +960,17 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         const rect = root.getBoundingClientRect();
         const y = Math.max(0, window.scrollY + rect.top - offset);
         window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+      // Clear programmatic flag on scroll end or timeout
+      const clearProg = () => {
+        isProgrammaticScroll = false;
+        window.removeEventListener('scrollend', clearProg);
+      };
+      try {
+        window.addEventListener('scrollend', clearProg, { once: true });
+      } catch {
+        // scrollend not supported; fallback timeout
+        setTimeout(() => (isProgrammaticScroll = false), 800);
       }
       // Accessibility focus + live region
       try {
@@ -984,7 +1050,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   /* eslint-disable-next-line complexity */
   function determineActiveByScroll() {
     // Suppress scroll-based recalculation while a programmatic smooth scroll is in progress
-    if (Date.now() < programmaticScrollBlockUntil) return;
+    if (Date.now() < programmaticScrollBlockUntil || isProgrammaticScroll) return;
     const offset = getHeaderOffsetPx();
     const entries = Object.entries(sectionHeaders);
     let current = entries[0]?.[0] || 'subjective';

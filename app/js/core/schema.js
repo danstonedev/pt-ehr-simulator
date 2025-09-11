@@ -152,54 +152,122 @@ export function makeBlankCase() {
   };
 }
 
-// Enhanced validation with specific field checks
-export function validateCase(c) {
-  const e = [];
+/**
+ * Lightweight enum guard
+ * @param {any} v
+ * @param {readonly string[]} allowed
+ */
+function inEnum(v, allowed) {
+  return allowed.includes(v);
+}
 
-  // Meta validation
-  if (!c?.meta?.title) e.push('meta.title is required');
-  if (c?.meta?.setting && !ENUMS.setting.includes(c.meta.setting)) e.push('meta.setting invalid');
-  if (c?.meta?.diagnosis && !ENUMS.diagnosis.includes(c.meta.diagnosis))
-    e.push('meta.diagnosis invalid');
-  if (c?.meta?.acuity && !ENUMS.acuity.includes(c.meta.acuity)) e.push('meta.acuity invalid');
+// Small path accessor to avoid optional chaining branches in validators
+function getPath(obj, path) {
+  return path.reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj);
+}
 
-  // Snapshot validation
+function pushIfMissing(obj, path, message, errors) {
+  const v = getPath(obj, path);
+  if (v === undefined || v === null || v === '') errors.push(message);
+}
+
+function pushIfPresentAndNotEnum(obj, path, allowed, message, errors) {
+  const v = getPath(obj, path);
+  if (v !== undefined && v !== '' && !inEnum(v, allowed)) errors.push(message);
+}
+
+function pushIfPresentAndNotArray(obj, path, message, errors) {
+  const v = getPath(obj, path);
+  if (v !== undefined && !Array.isArray(v)) errors.push(message);
+}
+
+/**
+ * Validate meta block
+ * @param {any} c
+ * @param {string[]} e
+ */
+function validateMeta(c, e) {
+  // required
+  pushIfMissing(c, ['meta', 'title'], 'meta.title is required', e);
+  // enums
+  pushIfPresentAndNotEnum(c, ['meta', 'setting'], ENUMS.setting, 'meta.setting invalid', e);
+  pushIfPresentAndNotEnum(c, ['meta', 'diagnosis'], ENUMS.diagnosis, 'meta.diagnosis invalid', e);
+  pushIfPresentAndNotEnum(c, ['meta', 'acuity'], ENUMS.acuity, 'meta.acuity invalid', e);
+}
+
+/**
+ * Validate snapshot block
+ * @param {any} c
+ * @param {string[]} e
+ */
+function validateSnapshot(c, e) {
   if (!c?.snapshot) e.push('snapshot is missing');
-  if (c?.snapshot?.sex && !ENUMS.sex.includes(c.snapshot.sex)) e.push('snapshot.sex invalid');
+  if (c?.snapshot?.sex && !inEnum(c.snapshot.sex, ENUMS.sex)) e.push('snapshot.sex invalid');
+}
 
-  // History validation
-  if (!c?.history) e.push('history is missing');
-  if (c?.history?.red_flag_signals && !Array.isArray(c.history.red_flag_signals))
-    e.push('history.red_flag_signals must be array');
-  if (c?.history?.pmh && !Array.isArray(c.history.pmh)) e.push('history.pmh must be array');
-  if (c?.history?.meds && !Array.isArray(c.history.meds)) e.push('history.meds must be array');
+/**
+ * Validate history block
+ * @param {any} c
+ * @param {string[]} e
+ */
+function validateHistory(c, e) {
+  if (!c?.history) {
+    e.push('history is missing');
+    return;
+  }
+  pushIfPresentAndNotArray(
+    c,
+    ['history', 'red_flag_signals'],
+    'history.red_flag_signals must be array',
+    e,
+  );
+  pushIfPresentAndNotArray(c, ['history', 'pmh'], 'history.pmh must be array', e);
+  pushIfPresentAndNotArray(c, ['history', 'meds'], 'history.meds must be array', e);
+}
 
-  // Structure validation
+/**
+ * Validate presence of core structures
+ * @param {any} c
+ * @param {string[]} e
+ */
+function validateStructures(c, e) {
   if (!c?.findings) e.push('findings is missing');
   if (!c?.encounters) e.push('encounters is missing');
+}
 
-  // Assessment validation (if present)
-  if (c?.assessment?.prognosis && !ENUMS.prognosis.includes(c.assessment.prognosis)) {
+/**
+ * Validate assessment specific enums
+ * @param {any} c
+ * @param {string[]} e
+ */
+function validateAssessment(c, e) {
+  if (c?.assessment?.prognosis && !inEnum(c.assessment.prognosis, ENUMS.prognosis)) {
     e.push('assessment.prognosis invalid');
   }
+}
 
+// Enhanced validation with specific field checks (decomposed)
+export function validateCase(c) {
+  const e = [];
+  validateMeta(c, e);
+  validateSnapshot(c, e);
+  validateHistory(c, e);
+  validateStructures(c, e);
+  validateAssessment(c, e);
   return e;
 }
 
-// New helper functions for data integrity
-export function ensureDataIntegrity(caseData) {
-  // Ensure required data structures exist
-  if (!caseData.exam && caseData.findings) {
-    caseData.exam = { ...caseData.findings };
-  }
-  if (!caseData.findings && caseData.exam) {
-    caseData.findings = { ...caseData.exam };
-  }
+// Data integrity helpers
+function syncExamAndFindings(caseData) {
+  if (!caseData.exam && caseData.findings) caseData.exam = { ...caseData.findings };
+  if (!caseData.findings && caseData.exam) caseData.findings = { ...caseData.exam };
+}
 
-  // Ensure modules container exists
+function ensureModulesArray(caseData) {
   if (!Array.isArray(caseData.modules)) caseData.modules = [];
+}
 
-  // Ensure assessment has visibility structure for faculty mode
+function ensureAssessmentVisibility(caseData) {
   if (caseData.assessment && !caseData.assessment.visibility) {
     caseData.assessment.visibility = {
       primaryImpairments: { studentKey: true, studentExaminer: true },
@@ -212,38 +280,46 @@ export function ensureDataIntegrity(caseData) {
       clinicalReasoning: { studentKey: true, studentExaminer: false },
     };
   }
+}
 
-  // Normalize enums for backward compatibility and UI variance
+function normalizeEnums(caseData) {
+  // Acuity mapping
+  if (caseData.meta) {
+    const mapAcuity = (a) => {
+      if (!a) return undefined;
+      const v = String(a).toLowerCase();
+      if (ENUMS.acuity.includes(v)) return v;
+      if (v === 'routine') return 'unspecified';
+      if (v === 'complex') return 'chronic';
+      if (v === 'critical') return 'acute';
+      return 'unspecified';
+    };
+    const normA = mapAcuity(caseData.meta.acuity);
+    if (normA) caseData.meta.acuity = normA;
+  }
+  // Sex mapping
+  if (caseData.snapshot) {
+    const mapSex = (s) => {
+      if (!s) return undefined;
+      const v = String(s).toLowerCase();
+      if (ENUMS.sex.includes(v)) return v;
+      if (v === 'prefer not to say' || v === 'prefer-not-to-say' || v === 'n/a' || v === 'na')
+        return 'unspecified';
+      return 'unspecified';
+    };
+    const normS = mapSex(caseData.snapshot.sex);
+    if (normS) caseData.snapshot.sex = normS;
+  }
+}
+
+// New helper functions for data integrity (decomposed)
+export function ensureDataIntegrity(caseData) {
   try {
-    // Acuity mapping
-    if (caseData.meta) {
-      const mapAcuity = (a) => {
-        if (!a) return undefined;
-        const v = String(a).toLowerCase();
-        if (ENUMS.acuity.includes(v)) return v;
-        if (v === 'routine') return 'unspecified';
-        if (v === 'complex') return 'chronic';
-        if (v === 'critical') return 'acute';
-        return 'unspecified';
-      };
-      const normA = mapAcuity(caseData.meta.acuity);
-      if (normA) caseData.meta.acuity = normA;
-    }
-    // Sex mapping
-    if (caseData.snapshot) {
-      const mapSex = (s) => {
-        if (!s) return undefined;
-        const v = String(s).toLowerCase();
-        if (ENUMS.sex.includes(v)) return v;
-        if (v === 'prefer not to say' || v === 'prefer-not-to-say' || v === 'n/a' || v === 'na')
-          return 'unspecified';
-        return 'unspecified';
-      };
-      const normS = mapSex(caseData.snapshot.sex);
-      if (normS) caseData.snapshot.sex = normS;
-    }
+    syncExamAndFindings(caseData);
+    ensureModulesArray(caseData);
+    ensureAssessmentVisibility(caseData);
+    normalizeEnums(caseData);
   } catch {}
-
   return caseData;
 }
 

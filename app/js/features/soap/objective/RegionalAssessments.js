@@ -374,25 +374,89 @@ export function createRegionalAssessment(regionKey, assessmentData, onChange) {
 export function createMultiRegionalAssessment(allAssessmentData, onChange) {
   const container = el('div', { class: 'multi-regional-assessment' });
 
-  // Track selected regions
-  let selectedRegions = new Set();
+  // Normalize and restore state
+  allAssessmentData = normalizeAllAssessmentData(allAssessmentData, onChange);
+  let selectedRegions = new Set(
+    filterInvalidRegions(allAssessmentData.selectedRegions, onChange, allAssessmentData),
+  );
 
-  // Initialize data structure if needed
-  if (!allAssessmentData) allAssessmentData = {};
-  if (!allAssessmentData.selectedRegions) allAssessmentData.selectedRegions = [];
-  if (!allAssessmentData.rom) allAssessmentData.rom = {};
-  if (!allAssessmentData.prom) allAssessmentData.prom = {};
-  if (!allAssessmentData.mmt) allAssessmentData.mmt = {};
-  if (!allAssessmentData.specialTests) allAssessmentData.specialTests = {};
-  if (!allAssessmentData.promExcluded) allAssessmentData.promExcluded = [];
+  // Region selector
+  const { selectorEl, buttonsMap } = makeRegionSelector(
+    getRegionOrder(),
+    selectedRegions,
+    (regionKey) => {
+      // Toggle selection and update UI classes
+      const button = buttonsMap[regionKey];
+      if (!button) return;
+      if (selectedRegions.has(regionKey)) {
+        selectedRegions.delete(regionKey);
+        button.classList.remove('primary');
+        button.classList.add('secondary');
+      } else {
+        selectedRegions.add(regionKey);
+        button.classList.remove('secondary');
+        button.classList.add('primary');
+      }
+      allAssessmentData.selectedRegions = Array.from(selectedRegions);
+      refreshTables();
+      onChange(allAssessmentData);
+    },
+  );
+  container.appendChild(selectorEl);
 
-  // One-time data migration: if older data set endfeel to 'capsular' by default, clear it so the dropdown starts blank
-  if (!allAssessmentData._promEndfeelMigrated) {
+  // Tables containers
+  const promContainer = el('div', { class: 'prom-container', style: 'margin-bottom: 30px;' });
+  const romContainer = el('div', { class: 'rom-container', style: 'margin-bottom: 30px;' });
+  const mmtContainer = el('div', { class: 'mmt-container', style: 'margin-bottom: 30px;' });
+  const specialTestsContainer = el('div', {
+    class: 'special-tests-container',
+    style: 'margin-bottom: 30px;',
+  });
+  const tablesContainer = el('div', { class: 'tables-container' }, [
+    promContainer,
+    romContainer,
+    mmtContainer,
+    specialTestsContainer,
+  ]);
+  container.appendChild(tablesContainer);
+
+  // Build refresh function
+  const refreshTables = makeRefreshTables({
+    getSelectedRegions: () => selectedRegions,
+    allAssessmentData,
+    onChange,
+    promContainer,
+    romContainer,
+    mmtContainer,
+    specialTestsContainer,
+  });
+
+  // Initial render
+  refreshTables();
+
+  return {
+    element: container,
+    getSelectedRegions: () => Array.from(selectedRegions),
+    getData: () => allAssessmentData,
+    updateData: onChange,
+    refreshTables,
+  };
+}
+
+function normalizeAllAssessmentData(data, onChange) {
+  const d = data || {};
+  d.selectedRegions = d.selectedRegions || [];
+  d.rom = d.rom || {};
+  d.prom = d.prom || {};
+  d.mmt = d.mmt || {};
+  d.specialTests = d.specialTests || {};
+  d.promExcluded = d.promExcluded || [];
+  if (!d._promEndfeelMigrated) {
     try {
-      const promKeys = Object.keys(allAssessmentData.prom || {});
+      const promKeys = Object.keys(d.prom || {});
       let changed = false;
       promKeys.forEach((k) => {
-        const row = allAssessmentData.prom[k];
+        const row = d.prom[k];
         if (row && typeof row === 'object') {
           const isCapsular =
             typeof row.endfeel === 'string' && row.endfeel.toLowerCase() === 'capsular';
@@ -402,53 +466,54 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
           }
         }
       });
-      if (changed) {
-        allAssessmentData._promEndfeelMigrated = true;
-        onChange(allAssessmentData);
-      } else {
-        allAssessmentData._promEndfeelMigrated = true;
-      }
+      d._promEndfeelMigrated = true;
+      if (changed) onChange(d);
     } catch {
-      // no-op
-      allAssessmentData._promEndfeelMigrated = true;
+      d._promEndfeelMigrated = true;
     }
   }
+  return d;
+}
 
-  // Restore selected regions from saved data
-  selectedRegions = new Set(allAssessmentData.selectedRegions || []);
-
-  // Filter out any invalid region keys that don't exist in regionalAssessments
-  const validRegions = Array.from(selectedRegions).filter((regionKey) => {
-    const isValid = regionalAssessments.hasOwnProperty(regionKey);
-    if (!isValid && regionKey) {
-      // Only warn in development when env is available; silently filter in browsers
-      // Avoid referencing Node globals in browser; approximate dev by hostname
+function filterInvalidRegions(regions, onChange, dataRef) {
+  const valid = (regions || []).filter((regionKey) => {
+    const exists = Object.prototype.hasOwnProperty.call(regionalAssessments, regionKey);
+    if (!exists && regionKey) {
       try {
         const isDev =
           typeof window !== 'undefined' &&
           window.location &&
           (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-        if (isDev) {
-          console.warn(`Regional assessment: Invalid region "${regionKey}" filtered out.`);
-        }
-      } catch {
-        // ignore
-      }
+        if (isDev) console.warn(`Regional assessment: Invalid region "${regionKey}" filtered out.`);
+      } catch {}
     }
-    return isValid;
+    return exists;
   });
-
-  selectedRegions = new Set(validRegions);
-
-  // Update the data if we filtered out invalid regions
-  if (validRegions.length !== allAssessmentData.selectedRegions.length) {
-    allAssessmentData.selectedRegions = validRegions;
-    onChange(allAssessmentData);
+  if (valid.length !== (regions || []).length) {
+    dataRef.selectedRegions = valid;
+    onChange(dataRef);
   }
+  return valid;
+}
 
-  // Header intentionally omitted per requirements
+function getRegionOrder() {
+  const desiredOrder = [
+    'hip',
+    'knee',
+    'ankle',
+    'shoulder',
+    'elbow',
+    'wrist-hand',
+    'cervical-spine',
+    'thoracic-spine',
+    'lumbar-spine',
+  ];
+  const availableKeys = Object.keys(regionalAssessments);
+  const remaining = availableKeys.filter((k) => !desiredOrder.includes(k));
+  return [...desiredOrder.filter((k) => availableKeys.includes(k)), ...remaining];
+}
 
-  // Region selection (multi-select checkboxes)
+function makeRegionSelector(regionOrder, selectedRegions, onToggle) {
   const regionSelector = el('div', { class: 'region-selector', style: 'margin-bottom: 20px;' });
   const regionLabel = el(
     'p',
@@ -459,207 +524,79 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
     class: 'region-buttons',
     style: 'display: flex; gap: 10px; flex-wrap: wrap;',
   });
-
-  // Create region toggle buttons
-  // Desired display order
-  const desiredOrder = [
-    'hip',
-    'knee',
-    'ankle', // Foot & Ankle
-    'shoulder',
-    'elbow',
-    'wrist-hand',
-    'cervical-spine',
-    'thoracic-spine',
-    'lumbar-spine',
-  ];
-
-  // Build final order: desired first, then any remaining keys not listed (future-proof)
-  const availableKeys = Object.keys(regionalAssessments);
-  const remaining = availableKeys.filter((k) => !desiredOrder.includes(k));
-  const regionOrder = [...desiredOrder.filter((k) => availableKeys.includes(k)), ...remaining];
-
-  // Map for quick access to button elements by region key
-  const regionButtonsMap = {};
-
+  const buttonsMap = {};
   regionOrder.forEach((regionKey) => {
     const region = regionalAssessments[regionKey];
     const isSelected = selectedRegions.has(regionKey);
-
     const button = el(
       'button',
       {
         type: 'button',
         class: `btn region-toggle-btn ${isSelected ? 'primary' : 'secondary'}`,
         style: 'padding: 8px 16px; border-radius: 20px; font-size: 14px;',
-        onclick: () => toggleRegion(regionKey),
+        onclick: () => onToggle(regionKey),
       },
       region.name,
     );
-
-    regionButtonsMap[regionKey] = button;
+    buttonsMap[regionKey] = button;
     regionButtons.appendChild(button);
   });
-
-  const toggleRegion = (regionKey) => {
-    const button = regionButtonsMap[regionKey];
-    if (!button) return;
-
-    if (selectedRegions.has(regionKey)) {
-      // Remove region
-      selectedRegions.delete(regionKey);
-      button.classList.remove('primary');
-      button.classList.add('secondary');
-    } else {
-      // Add region
-      selectedRegions.add(regionKey);
-      button.classList.remove('secondary');
-      button.classList.add('primary');
-    }
-
-    // Update data and refresh tables
-    allAssessmentData.selectedRegions = Array.from(selectedRegions);
-    refreshTables();
-    onChange(allAssessmentData);
-  };
-
   regionSelector.appendChild(regionLabel);
   regionSelector.appendChild(regionButtons);
-  container.appendChild(regionSelector);
+  return { selectorEl: regionSelector, buttonsMap, toggleRegion: onToggle };
+}
 
-  // Permanently visible tables container
-  const tablesContainer = el('div', { class: 'tables-container' });
-
-  // PROM Table (always visible, placed at top)
-  let promTable;
-  const promContainer = el('div', { class: 'prom-container', style: 'margin-bottom: 30px;' });
-
-  // ROM Table (always visible)
-  let romSection;
-  const romContainer = el('div', { class: 'rom-container', style: 'margin-bottom: 30px;' });
-
-  // MMT Table (always visible)
-  let mmtSection;
-  const mmtContainer = el('div', { class: 'mmt-container', style: 'margin-bottom: 30px;' });
-
-  // Special Tests Table (always visible)
-  let specialTestsSection;
-  const specialTestsContainer = el('div', {
-    class: 'special-tests-container',
-    style: 'margin-bottom: 30px;',
-  });
-
-  tablesContainer.appendChild(promContainer);
-  tablesContainer.appendChild(romContainer);
-  tablesContainer.appendChild(mmtContainer);
-  tablesContainer.appendChild(specialTestsContainer);
-  container.appendChild(tablesContainer);
-
-  // Function to refresh all tables based on selected regions
-  const refreshTables = () => {
-    // Build PROM combined data
-    const combinedPromData = [];
-    selectedRegions.forEach((regionKey) => {
+function makeRefreshTables({
+  getSelectedRegions,
+  allAssessmentData,
+  onChange,
+  promContainer,
+  romContainer,
+  mmtContainer,
+  specialTestsContainer,
+}) {
+  let promTable, romSection, mmtSection, specialTestsSection;
+  const buildCombined = (key) => {
+    const out = [];
+    getSelectedRegions().forEach((regionKey) => {
       const region = regionalAssessments[regionKey];
-      if (region && region.rom) {
-        region.rom.forEach((romItem) => {
-          combinedPromData.push({
-            ...romItem,
-            regionKey,
-            regionName: region.name,
-          });
-        });
+      if (region && region[key]) {
+        region[key].forEach((item) => out.push({ ...item, regionKey, regionName: region.name }));
       }
     });
+    return out;
+  };
 
-    // Collect all ROM data from selected regions
-    const combinedRomData = [];
-    selectedRegions.forEach((regionKey) => {
-      const region = regionalAssessments[regionKey];
-      if (region && region.rom) {
-        region.rom.forEach((romItem) => {
-          combinedRomData.push({
-            ...romItem,
-            regionKey,
-            regionName: region.name,
-          });
-        });
-      }
-    });
+  return () => {
+    const combinedPromData = buildCombined('rom');
+    const combinedRomData = buildCombined('rom');
+    const combinedMmtData = buildCombined('mmt');
+    const combinedSpecialTestsData = buildCombined('specialTests');
 
-    // Collect all MMT data from selected regions
-    const combinedMmtData = [];
-    selectedRegions.forEach((regionKey) => {
-      const region = regionalAssessments[regionKey];
-      if (region && region.mmt) {
-        region.mmt.forEach((mmtItem) => {
-          combinedMmtData.push({
-            ...mmtItem,
-            regionKey,
-            regionName: region.name,
-          });
-        });
-      }
-    });
-
-    // Collect all Special Tests data from selected regions
-    const combinedSpecialTestsData = [];
-    selectedRegions.forEach((regionKey) => {
-      const region = regionalAssessments[regionKey];
-      if (region && region.specialTests) {
-        region.specialTests.forEach((testItem) => {
-          combinedSpecialTestsData.push({
-            ...testItem,
-            regionKey,
-            regionName: region.name,
-          });
-        });
-      }
-    });
-
-    // Create/update PROM section
+    // PROM
     promContainer.replaceChildren();
     if (combinedPromData.length > 0) {
-      // Group by base movement name (like bilateral table)
       const groups = {};
       combinedPromData.forEach((item) => {
         const baseName = item.name || item.joint || item.muscle;
-        if (!groups[baseName]) {
-          groups[baseName] = {
-            normal: item.normal,
-            left: null,
-            right: null,
-            bilateral: null,
-          };
-        }
-        if (item.side === 'L') {
-          groups[baseName].left = true;
-        } else if (item.side === 'R') {
-          groups[baseName].right = true;
-        } else {
-          groups[baseName].bilateral = true;
-        }
+        if (!groups[baseName])
+          groups[baseName] = { normal: item.normal, left: null, right: null, bilateral: null };
+        if (item.side === 'L') groups[baseName].left = true;
+        else if (item.side === 'R') groups[baseName].right = true;
+        else groups[baseName].bilateral = true;
       });
-
-      // Prepare table data
       const tableData = {};
       const excludedSet = new Set(allAssessmentData.promExcluded || []);
       Object.keys(groups).forEach((groupName) => {
         const rowId = groupName.toLowerCase().replace(/\s+/g, '-');
-        if (excludedSet.has(rowId)) return; // skip excluded rows
+        if (excludedSet.has(rowId)) return;
         const saved = allAssessmentData.prom[rowId] || {};
         const displayName = groups[groupName].normal
           ? `${groupName} (${groups[groupName].normal})`
           : groupName;
-        tableData[rowId] = {
-          name: displayName,
-          left: saved.left || '',
-          right: saved.right || '',
-        };
+        tableData[rowId] = { name: displayName, left: saved.left || '', right: saved.right || '' };
       });
-
       promTable = createEditableTable({
-        // No title; move label into first column header
         columns: [
           { field: 'name', label: 'Passive Range of Motion (PROM)', width: '50%' },
           { field: 'left', label: 'Left', width: '25%' },
@@ -667,30 +604,21 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
         ],
         data: tableData,
         onChange: (newData) => {
-          // Persist values and track deletions as exclusions
           const updated = { ...allAssessmentData.prom };
           Object.keys(newData).forEach((rowId) => {
             const row = newData[rowId];
-            updated[rowId] = {
-              left: row.left || '',
-              right: row.right || '',
-            };
+            updated[rowId] = { left: row.left || '', right: row.right || '' };
           });
-
-          // Determine current rowIds from groups and derive exclusions
           const currentRowIds = Object.keys(groups).map((n) =>
             n.toLowerCase().replace(/\s+/g, '-'),
           );
           const newRowIds = Object.keys(newData);
           const excluded = currentRowIds.filter((id) => !newRowIds.includes(id));
-
-          // Clean old exclusions not in current list
           const existingExcluded = new Set(allAssessmentData.promExcluded || []);
           const prunedExisting = Array.from(existingExcluded).filter((id) =>
             currentRowIds.includes(id),
           );
           const mergedExcluded = Array.from(new Set([...prunedExisting, ...excluded]));
-
           allAssessmentData.prom = updated;
           allAssessmentData.promExcluded = mergedExcluded;
           onChange(allAssessmentData);
@@ -713,7 +641,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
       );
     }
 
-    // Create/update ROM section
+    // ROM
     romContainer.replaceChildren();
     if (combinedRomData.length > 0) {
       romSection = createRomSection(
@@ -739,7 +667,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
       );
     }
 
-    // Create/update MMT section
+    // MMT
     mmtContainer.replaceChildren();
     if (combinedMmtData.length > 0) {
       mmtSection = createMmtSection(
@@ -765,7 +693,7 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
       );
     }
 
-    // Create/update Special Tests section
+    // Special Tests
     specialTestsContainer.replaceChildren();
     if (combinedSpecialTestsData.length > 0) {
       specialTestsSection = createSpecialTestsSection(
@@ -790,16 +718,5 @@ export function createMultiRegionalAssessment(allAssessmentData, onChange) {
         ),
       );
     }
-  };
-
-  // Initial table population
-  refreshTables();
-
-  return {
-    element: container,
-    getSelectedRegions: () => Array.from(selectedRegions),
-    getData: () => allAssessmentData,
-    updateData: onChange,
-    refreshTables,
   };
 }

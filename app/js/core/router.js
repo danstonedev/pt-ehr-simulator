@@ -87,62 +87,70 @@ export function startRouter() {
   const app = document.getElementById('app');
 
   async function render() {
-    let hash = (window.location.hash || '#/').replace(/\/$/, '');
-    if (hash === '#') hash = '#/';
-    const [path, query] = hash.split('?');
+    const { hash, path, query } = getNormalizedHash();
 
-    // First try exact match
-    let renderer = routes[path];
-    let params = {};
-
-    // If no exact match, try parameter matching
-    if (!renderer) {
-      for (const [routePath, routeRenderer] of Object.entries(routes)) {
-        const match = matchRoute(routePath, path);
-        if (match) {
-          renderer = routeRenderer;
-          params = match;
-          break;
-        }
-      }
-    }
-
-    // Fallback to 404
-    if (!renderer) renderer = routes['#/404'];
+    const { renderer, params } = resolveRendererAndParams(path);
     if (!renderer) return;
 
-    // Persist last route (exclude home/404) for Resume on the landing page
-    try {
-      if (path && path !== '#/' && path !== '#/404') {
-        storage.setItem('pt_emr_last_route', hash);
-      }
-    } catch {}
-
-    // Update navigation active states
+    persistLastRoute(hash, path);
     updateNavigation(hash);
+    setBodyRouteKey(path);
 
-    // Expose a simple route key on <body> for route-scoped styling
-    try {
-      const routeKey = path && path !== '#/' ? path.slice(2).replace(/\//g, '-') : 'home';
-      document.body.setAttribute('data-route', routeKey);
-    } catch {}
-
-    // Uniform fade transition for all routes (removed upward motion)
     const { before, after } = applyRouteTransition(app, 'fade');
-
-    let newWrapper = null;
-    before(() => {
-      // We create a wrapper so we can animate a single root element
-      app.replaceChildren();
-      newWrapper = document.createElement('div');
-      newWrapper.className = 'route-transition-container';
-      app.appendChild(newWrapper);
-    });
+    const newWrapper = buildRouteWrapper(app, before);
     await renderer(newWrapper, new URLSearchParams(query || ''), params);
     after(newWrapper);
   }
   window.addEventListener('hashchange', render);
   render();
+}
+
+function getNormalizedHash() {
+  let hash = (window.location.hash || '#/').replace(/\/$/, '');
+  if (hash === '#') hash = '#/';
+  const [path, query] = hash.split('?');
+  return { hash, path, query };
+}
+
+function resolveRendererAndParams(path) {
+  let renderer = routes[path];
+  let params = {};
+  if (!renderer) {
+    for (const [routePath, routeRenderer] of Object.entries(routes)) {
+      const match = matchRoute(routePath, path);
+      if (match) {
+        renderer = routeRenderer;
+        params = match;
+        break;
+      }
+    }
+  }
+  if (!renderer) renderer = routes['#/404'];
+  return { renderer, params };
+}
+
+function persistLastRoute(hash, path) {
+  try {
+    if (path && path !== '#/' && path !== '#/404') storage.setItem('pt_emr_last_route', hash);
+  } catch {}
+}
+
+function setBodyRouteKey(path) {
+  try {
+    const routeKey = path && path !== '#/' ? path.slice(2).replace(/\//g, '-') : 'home';
+    document.body.setAttribute('data-route', routeKey);
+  } catch {}
+}
+
+function buildRouteWrapper(app, before) {
+  let newWrapper = null;
+  before(() => {
+    app.replaceChildren();
+    newWrapper = document.createElement('div');
+    newWrapper.className = 'route-transition-container';
+    app.appendChild(newWrapper);
+  });
+  return newWrapper;
 }
 
 // Helper function to match parameterized routes

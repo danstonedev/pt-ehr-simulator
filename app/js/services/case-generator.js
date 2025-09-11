@@ -9,6 +9,13 @@ import { regionalAssessments } from '../features/soap/objective/RegionalAssessme
  * @returns {Object} Complete case structure
  */
 export function generateCase(anchors = {}) {
+  const ctx = buildGenerationContext(anchors);
+  const template = getRegionTemplate(ctx.regionSlug, ctx.acuity, ctx.condition, ctx.pain, ctx.goal);
+  return buildCaseFromTemplate(ctx, template);
+}
+
+// ----- helpers to reduce complexity in generateCase -----
+function buildGenerationContext(anchors) {
   const {
     title = '',
     region = 'shoulder',
@@ -20,115 +27,138 @@ export function generateCase(anchors = {}) {
     setting = 'Outpatient',
     prompt = '',
     goal = '',
-  } = anchors;
-
-  // Normalize inputs
-  const normalizedAge = normalizeAge(age);
-  const normalizedSex = normalizeSex(sex);
-  const regionSlug = normalizeRegionSlug(region);
-
-  // Get comprehensive template for region using normalized slug
-  const template = getRegionTemplate(regionSlug, acuity, condition, pain, goal);
-
-  // Generate comprehensive case structure
+  } = anchors || {};
   return {
-    title: title || `${capitalize(region)} ${capitalize(condition)} (${capitalize(acuity)})`,
-    setting,
-    patientAge: normalizedAge,
-    patientGender: normalizedSex,
+    title,
+    region,
+    condition,
+    age: normalizeAge(age),
+    sex: normalizeSex(sex),
+    pain,
     acuity,
+    setting,
+    prompt,
+    goal,
+    regionSlug: normalizeRegionSlug(region),
+  };
+}
+
+function buildMeta(ctx, template) {
+  return {
+    title: ctx.title || template.teaser,
+    setting: ctx.setting,
+    patientAge: ctx.age,
+    patientGender: ctx.sex,
+    acuity: ctx.acuity,
+    diagnosis: 'Musculoskeletal',
+    regions: ctx.regionSlug ? [ctx.regionSlug] : [],
+    generated: true,
+  };
+}
+
+function buildHistory(ctx, template) {
+  const hpi = ctx.prompt ? `${ctx.prompt} ${template.hpi}`.trim() : template.hpi;
+  return {
+    chief_complaint: template.chiefComplaint,
+    hpi,
+    pmh: template.pmh || [],
+    meds: template.meds || [],
+    red_flag_signals: template.redFlags || [],
+  };
+}
+
+function buildFindings(template) {
+  return {
+    rom: template.rom || {},
+    mmt: template.mmt || {},
+    special_tests: template.specialTests || [],
+    outcome_options: template.outcome ? [template.outcome] : [],
+  };
+}
+
+function buildSubjective(ctx, template) {
+  return {
+    chiefComplaint: template.chiefComplaint,
+    historyOfPresentIllness: ctx.prompt ? `${ctx.prompt} ${template.hpi}`.trim() : template.hpi,
+    painScale: String(ctx.pain ?? ''),
+    patientGoals: ctx.goal || template.defaultGoal,
+  };
+}
+
+function buildObjective(ctx, template) {
+  return {
+    regionalAssessments: {
+      selectedRegions: [ctx.regionSlug],
+      rom: template.rom || {},
+      mmt: template.mmt || {},
+      prom: template.prom || {},
+      specialTests: template.specialTests || {},
+    },
+  };
+}
+
+function buildAssessment(ctx, template) {
+  return {
+    primaryImpairments: template.impairments ? template.impairments.join('; ') : '',
+    ptDiagnosis: ctx.condition,
+    prognosis: template.prognosis?.toLowerCase() || 'good',
+    prognosticFactors: template.prognosticFactors || '',
+  };
+}
+
+function buildPlan(template) {
+  return {
+    frequency: template.plan?.frequency || '',
+    duration: template.plan?.duration || '',
+    interventions: template.plan?.interventions || [],
+    shortTermGoals: template.plan?.stg || '',
+    longTermGoals: template.plan?.ltg || '',
+  };
+}
+
+function buildBilling(template) {
+  return {
+    diagnosisCodes: template.icd10
+      ? [
+          {
+            code: template.icd10.code,
+            description: template.icd10.desc,
+            isPrimary: true,
+          },
+        ]
+      : [],
+    billingCodes: template.cpt ? template.cpt.map((code) => ({ code, units: '1' })) : [],
+  };
+}
+
+function buildEncounterEval(ctx, template) {
+  return {
+    subjective: buildSubjective(ctx, template),
+    objective: buildObjective(ctx, template),
+    assessment: buildAssessment(ctx, template),
+    plan: buildPlan(template),
+    billing: buildBilling(template),
+    generated: true,
+  };
+}
+
+function buildCaseFromTemplate(ctx, template) {
+  return {
+    title:
+      ctx.title ||
+      `${capitalize(ctx.region)} ${capitalize(ctx.condition)} (${capitalize(ctx.acuity)})`,
+    setting: ctx.setting,
+    patientAge: ctx.age,
+    patientGender: ctx.sex,
+    acuity: ctx.acuity,
     patientDOB: undefined,
     createdBy: 'faculty',
     createdAt: new Date().toISOString(),
-
-    // Metadata for case management
-    meta: {
-      title: title || template.teaser,
-      setting,
-      patientAge: normalizedAge,
-      patientGender: normalizedSex,
-      acuity,
-      diagnosis: 'Musculoskeletal',
-      regions: regionSlug ? [regionSlug] : [],
-      generated: true,
-    },
-
-    // Case snapshot for quick reference
-    snapshot: {
-      age: String(normalizedAge),
-      sex: normalizedSex,
-      teaser: template.teaser,
-    },
-
-    // Clinical history
-    history: {
-      chief_complaint: template.chiefComplaint,
-      hpi: prompt ? `${prompt} ${template.hpi}`.trim() : template.hpi,
-      pmh: template.pmh || [],
-      meds: template.meds || [],
-      red_flag_signals: template.redFlags || [],
-    },
-
-    // Clinical findings
-    findings: {
-      rom: template.rom || {},
-      mmt: template.mmt || {},
-      special_tests: template.specialTests || [],
-      outcome_options: template.outcome ? [template.outcome] : [],
-    },
-
-    // SOAP documentation structure
-    encounters: {
-      eval: {
-        subjective: {
-          chiefComplaint: template.chiefComplaint,
-          historyOfPresentIllness: prompt ? `${prompt} ${template.hpi}`.trim() : template.hpi,
-          painScale: String(pain ?? ''),
-          patientGoals: goal || template.defaultGoal,
-        },
-        // Flag at root too (defensive) for any downstream logic that doesn't inspect meta
-        generated: true,
-        objective: {
-          regionalAssessments: {
-            selectedRegions: [regionSlug],
-            rom: template.rom || {},
-            mmt: template.mmt || {},
-            prom: template.prom || {},
-            specialTests: template.specialTests || {},
-          },
-        },
-        assessment: {
-          primaryImpairments: template.impairments ? template.impairments.join('; ') : '',
-          ptDiagnosis: condition,
-          prognosis: template.prognosis?.toLowerCase() || 'good',
-          prognosticFactors: template.prognosticFactors || '',
-        },
-        plan: {
-          frequency: template.plan?.frequency || '',
-          duration: template.plan?.duration || '',
-          interventions: template.plan?.interventions || [],
-          shortTermGoals: template.plan?.stg || '',
-          longTermGoals: template.plan?.ltg || '',
-        },
-        billing: {
-          diagnosisCodes: template.icd10
-            ? [
-                {
-                  code: template.icd10.code,
-                  description: template.icd10.desc,
-                  isPrimary: true,
-                },
-              ]
-            : [],
-          billingCodes: template.cpt
-            ? template.cpt.map((code) => ({
-                code,
-                units: '1',
-              }))
-            : [],
-        },
-      },
-    },
+    meta: buildMeta(ctx, template),
+    snapshot: { age: String(ctx.age), sex: ctx.sex, teaser: template.teaser },
+    history: buildHistory(ctx, template),
+    findings: buildFindings(template),
+    encounters: { eval: buildEncounterEval(ctx, template) },
   };
 }
 
@@ -168,50 +198,39 @@ function normalizeRegionSlug(region) {
   return regionMap[key] || key || 'shoulder';
 }
 
+const FREQUENCY_RULES = [
+  { re: /(^|\b)1x(\b|\/|\s)|1x per week|once per week/i, out: '1x-week' },
+  { re: /(^|\b)2x(\b|\/|\s)|2x per week|twice per week/i, out: '2x-week' },
+  { re: /(^|\b)3x(\b|\/|\s)|3x per week|three times per week/i, out: '3x-week' },
+  { re: /(^|\b)4x(\b|\/|\s)|4x per week|four times per week/i, out: '4x-week' },
+  { re: /(^|\b)5x(\b|\/|\s)|5x per week|daily|five times per week/i, out: '5x-week' },
+  { re: /2x per day|twice a day|twice daily/i, out: '2x-day' },
+  { re: /\bprn\b|as needed/i, out: 'prn' },
+];
+
 function mapFrequencyToEnum(frequency = '') {
   const s = String(frequency).toLowerCase();
   if (!s) return '';
-  if (/(^|\b)1x(\b|\/|\s)/.test(s) || s.includes('1x per week') || s.includes('once per week'))
-    return '1x-week';
-  if (/(^|\b)2x(\b|\/|\s)/.test(s) || s.includes('2x per week') || s.includes('twice per week'))
-    return '2x-week';
-  if (
-    /(^|\b)3x(\b|\/|\s)/.test(s) ||
-    s.includes('3x per week') ||
-    s.includes('three times per week')
-  )
-    return '3x-week';
-  if (
-    /(^|\b)4x(\b|\/|\s)/.test(s) ||
-    s.includes('4x per week') ||
-    s.includes('four times per week')
-  )
-    return '4x-week';
-  if (
-    /(^|\b)5x(\b|\/|\s)/.test(s) ||
-    s.includes('5x per week') ||
-    s.includes('daily') ||
-    s.includes('five times per week')
-  )
-    return '5x-week';
-  if (s.includes('2x per day') || s.includes('twice a day') || s.includes('twice daily'))
-    return '2x-day';
-  if (s.includes('prn') || s.includes('as needed')) return 'prn';
-  return s;
+  const rule = FREQUENCY_RULES.find((r) => r.re.test(s));
+  return rule ? rule.out : s;
 }
+
+const DURATION_RULES = [
+  { re: /\b2\b.*week|\b2\s*weeks/i, out: '2-weeks' },
+  { re: /\b4\b.*week|\b4\s*weeks/i, out: '4-weeks' },
+  { re: /\b6\b.*week|\b6\s*weeks/i, out: '6-weeks' },
+  { re: /\b8\b.*week|\b8\s*weeks/i, out: '8-weeks' },
+  { re: /\b12\b.*week|\b12\s*weeks/i, out: '12-weeks' },
+  { re: /\b16\b.*week|\b16\s*weeks/i, out: '16-weeks' },
+  { re: /\b6\b.*month|\b6\s*months/i, out: '6-months' },
+  { re: /ongoing|indefinite/i, out: 'ongoing' },
+];
 
 function mapDurationToEnum(duration = '') {
   const s = String(duration).toLowerCase();
   if (!s) return '';
-  if (s.includes('2') && s.includes('week')) return '2-weeks';
-  if (s.includes('4') && s.includes('week')) return '4-weeks';
-  if (s.includes('6') && s.includes('week')) return '6-weeks';
-  if (s.includes('8') && s.includes('week')) return '8-weeks';
-  if (s.includes('12') && s.includes('week')) return '12-weeks';
-  if (s.includes('16') && s.includes('week')) return '16-weeks';
-  if (s.includes('6') && s.includes('month')) return '6-months';
-  if (s.includes('ongoing') || s.includes('indefinite')) return 'ongoing';
-  return s;
+  const rule = DURATION_RULES.find((r) => r.re.test(s));
+  return rule ? rule.out : s;
 }
 
 function generateSmartGoals(region, condition, patientGoal, acuity, painLevel) {

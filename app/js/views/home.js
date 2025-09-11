@@ -62,13 +62,11 @@ route('#/', async (app) => {
     });
     // Theme-aware logo switching (light vs dark) with filename auto-detect.
     // We'll probe common filenames and pick the first that loads.
+    // Only include filenames that actually exist in /img to avoid 404 spam.
+    // Previous variants (emr-white-circle.*) did not exist and generated repeated 404s.
     const darkCandidates = ['img/green-white-favicon.2.png', 'img/emr favicon green circle.png'];
-    const lightCandidates = [
-      'img/emr-white-circle.png',
-      'img/emr white circle.png',
-      'img/emr_white_circle.png',
-      'img/EMR-white-circle.png',
-    ];
+    // For now we reuse an existing asset for light mode (second provides subtle variation if added later)
+    const lightCandidates = ['img/emr favicon green circle.png', 'img/green-white-favicon.2.png'];
     const pickFirstAvailable = (candidates, cb) => {
       let i = 0;
       const tryNext = () => {

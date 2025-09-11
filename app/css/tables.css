@@ -382,7 +382,7 @@ html[data-theme='dark'] .editable-table__select option:checked {
 .editable-table__textarea:focus {
   outline: none;
   border-color: var(--und-green);
-  box-shadow: 0 0 0 2px var(--und-green-light);
+  box-shadow: var(--elev-focus-ring);
 }
 /* Keyboard focus for editable table controls */
 .editable-table__input:focus-visible,

@@ -15,138 +15,73 @@ import { el } from '../../../ui/utils.js';
 export function createObjectiveSection(objectiveData, onUpdate) {
   const section = el('div', { class: 'objective-section' });
 
-  // Initialize data structure if needed
-  const data = {
-    text: '',
-    inspection: { visual: '' },
-    palpation: { findings: '' },
-    neuro: { screening: '' },
-    functional: { assessment: '' },
-    regionalAssessments: {
-      selectedRegions: [],
-      rom: {},
-      mmt: {},
-      specialTests: {},
-      prom: {},
-      promExcluded: [],
-    },
-    treatmentPerformed: {
-      patientEducation: '',
-      modalities: '',
-      therapeuticExercise: '',
-      manualTherapy: '',
-    },
-    ...objectiveData,
-  };
-
-  // Ensure nested objects exist
-  if (!data.inspection) data.inspection = { visual: '' };
-  if (!data.palpation) data.palpation = { findings: '' };
-  if (!data.neuro) data.neuro = { screening: '' };
-  if (!data.functional) data.functional = { assessment: '' };
-  if (!data.treatmentPerformed) {
-    data.treatmentPerformed = {
-      patientEducation: '',
-      modalities: '',
-      therapeuticExercise: '',
-      manualTherapy: '',
-    };
-  }
-  if (!data.regionalAssessments) {
-    data.regionalAssessments = {
-      selectedRegions: [],
-      rom: {},
-      mmt: {},
-      specialTests: {},
-      prom: {},
-      promExcluded: [],
-    };
-  }
-
-  // Update helper
-  const updateField = (field, value) => {
-    if (field.includes('.')) {
-      const [parent, child] = field.split('.');
-      if (!data[parent]) data[parent] = {};
-      data[parent][child] = value;
-    } else {
-      data[field] = value;
-    }
-    onUpdate(data);
-  };
+  const data = normalizeObjectiveData(objectiveData);
+  const updateField = makeUpdateField(data, onUpdate);
 
   // Systematic examination approach
-  const generalObsSection = el('div', { id: 'general-observations', class: 'section-anchor' }, [
-    el('h4', { class: 'subsection-title' }, 'General Observations & Vital Signs'),
-    textAreaField({
-      label: 'Posture, Gait, Appearance, Vitals',
-      value: data.text,
-      onChange: (v) => updateField('text', v),
-    }),
-  ]);
-  section.append(generalObsSection);
-
-  // Inspection section
-  const inspectionSection = el('div', { id: 'inspection', class: 'section-anchor' }, [
-    el('h4', { class: 'subsection-title' }, 'Inspection'),
-    textAreaField({
-      label: 'Visual Assessment (swelling, deformity, skin changes, asymmetry)',
-      value: data.inspection.visual || '',
-      onChange: (v) => updateField('inspection.visual', v),
-    }),
-  ]);
-  section.append(inspectionSection);
-
-  // Palpation section
-  const palpationSection = el('div', { id: 'palpation', class: 'section-anchor' }, [
-    el('h4', { class: 'subsection-title' }, 'Palpation'),
-    textAreaField({
-      label: 'Tenderness, Temperature, Muscle Tone, Tissue Quality',
-      value: data.palpation.findings || '',
-      onChange: (v) => updateField('palpation.findings', v),
-    }),
-  ]);
-  section.append(palpationSection);
-
-  // Regional assessment section
-  const regionalSection = el('div', { id: 'regional-assessment', class: 'section-anchor' }, [
-    el('h4', { class: 'subsection-title' }, 'Regional Assessment'),
-  ]);
-
-  // Use modular assessment components
-  const multiAssessment = createMultiRegionalAssessment(
-    data.regionalAssessments || {},
-    (assessmentData) => {
-      updateField('regionalAssessments', assessmentData);
-    },
+  section.append(
+    buildTextAreaSection(
+      'general-observations',
+      'General Observations & Vital Signs',
+      'Posture, Gait, Appearance, Vitals',
+      data.text,
+      (v) => updateField('text', v),
+    ),
   );
-  regionalSection.append(multiAssessment.element);
-  section.append(regionalSection);
+
+  // Inspection
+  section.append(
+    buildTextAreaSection(
+      'inspection',
+      'Inspection',
+      'Visual Assessment (swelling, deformity, skin changes, asymmetry)',
+      data.inspection.visual || '',
+      (v) => updateField('inspection.visual', v),
+    ),
+  );
+
+  // Palpation
+  section.append(
+    buildTextAreaSection(
+      'palpation',
+      'Palpation',
+      'Tenderness, Temperature, Muscle Tone, Tissue Quality',
+      data.palpation.findings || '',
+      (v) => updateField('palpation.findings', v),
+    ),
+  );
+
+  // Regional Assessment
+  section.append(
+    buildRegionalSection(data.regionalAssessments || {}, (assessmentData) =>
+      updateField('regionalAssessments', assessmentData),
+    ),
+  );
 
   // Neurological screening
-  const neuroSection = el('div', { id: 'neurological-screening', class: 'section-anchor' }, [
-    el('h4', { class: 'subsection-title' }, 'Neurological Screening'),
-    textAreaField({
-      label: 'Reflexes, Sensation, Dermatomes, Myotomes, Neural Tension',
-      value: data.neuro.screening || '',
-      onChange: (v) => updateField('neuro.screening', v),
-    }),
-  ]);
-  section.append(neuroSection);
+  section.append(
+    buildTextAreaSection(
+      'neurological-screening',
+      'Neurological Screening',
+      'Reflexes, Sensation, Dermatomes, Myotomes, Neural Tension',
+      data.neuro.screening || '',
+      (v) => updateField('neuro.screening', v),
+    ),
+  );
 
   // Functional movement assessment
-  const functionalSection = el('div', { id: 'functional-movement', class: 'section-anchor' }, [
-    el('h4', { class: 'subsection-title' }, 'Functional Movement Assessment'),
-    textAreaField({
-      label: 'Transfers, Ambulation, ADL Performance, Movement Patterns',
-      value: data.functional.assessment || '',
-      onChange: (v) => updateField('functional.assessment', v),
-    }),
-  ]);
-  section.append(functionalSection);
+  section.append(
+    buildTextAreaSection(
+      'functional-movement',
+      'Functional Movement Assessment',
+      'Transfers, Ambulation, ADL Performance, Movement Patterns',
+      data.functional.assessment || '',
+      (v) => updateField('functional.assessment', v),
+    ),
+  );
 
   // Treatment Performed subsection
-  const performedSection = el('div', { id: 'treatment-performed', class: 'section-anchor' }, [
+  const performed = el('div', { id: 'treatment-performed', class: 'section-anchor' }, [
     el('h4', { class: 'subsection-title' }, 'Treatment Performed'),
     textAreaField({
       label: 'Patient Education',
@@ -169,9 +104,81 @@ export function createObjectiveSection(objectiveData, onUpdate) {
       onChange: (v) => updateField('treatmentPerformed.manualTherapy', v),
     }),
   ]);
-  section.append(performedSection);
+  section.append(performed);
 
   // CPT Codes widget is rendered only in BillingSection to ensure single source of truth
-
   return section;
+}
+
+function normalizeObjectiveData(obj = {}) {
+  const base = {
+    text: '',
+    inspection: { visual: '' },
+    palpation: { findings: '' },
+    neuro: { screening: '' },
+    functional: { assessment: '' },
+    regionalAssessments: {
+      selectedRegions: [],
+      rom: {},
+      mmt: {},
+      specialTests: {},
+      prom: {},
+      promExcluded: [],
+    },
+    treatmentPerformed: {
+      patientEducation: '',
+      modalities: '',
+      therapeuticExercise: '',
+      manualTherapy: '',
+    },
+  };
+  const data = { ...base, ...obj };
+  data.inspection = data.inspection || { visual: '' };
+  data.palpation = data.palpation || { findings: '' };
+  data.neuro = data.neuro || { screening: '' };
+  data.functional = data.functional || { assessment: '' };
+  data.treatmentPerformed = data.treatmentPerformed || {
+    patientEducation: '',
+    modalities: '',
+    therapeuticExercise: '',
+    manualTherapy: '',
+  };
+  data.regionalAssessments = data.regionalAssessments || {
+    selectedRegions: [],
+    rom: {},
+    mmt: {},
+    specialTests: {},
+    prom: {},
+    promExcluded: [],
+  };
+  return data;
+}
+
+function makeUpdateField(data, onUpdate) {
+  return (field, value) => {
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.');
+      if (!data[parent]) data[parent] = {};
+      data[parent][child] = value;
+    } else {
+      data[field] = value;
+    }
+    onUpdate(data);
+  };
+}
+
+function buildTextAreaSection(id, title, label, value, onChange) {
+  return el('div', { id, class: 'section-anchor' }, [
+    el('h4', { class: 'subsection-title' }, title),
+    textAreaField({ label, value, onChange }),
+  ]);
+}
+
+function buildRegionalSection(regionalAssessments, onChange) {
+  const regionalSection = el('div', { id: 'regional-assessment', class: 'section-anchor' }, [
+    el('h4', { class: 'subsection-title' }, 'Regional Assessment'),
+  ]);
+  const multiAssessment = createMultiRegionalAssessment(regionalAssessments, onChange);
+  regionalSection.append(multiAssessment.element);
+  return regionalSection;
 }

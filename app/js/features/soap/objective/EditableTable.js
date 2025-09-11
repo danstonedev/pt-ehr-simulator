@@ -4,6 +4,195 @@
  */
 import { el, textareaAutoResize } from '../../../ui/utils.js';
 
+// ---- Internal builders to reduce complexity ----
+function buildTableHeader({ title, showAddButton, compactAddButton, addButtonText, onAdd }) {
+  if (!title && !(showAddButton && !compactAddButton)) return null;
+  const header = el('div', {
+    class: 'editable-table__header',
+    style:
+      'display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;',
+  });
+  if (title) {
+    header.appendChild(
+      el(
+        'h5',
+        { class: 'editable-table__title', style: 'margin: 0; color: var(--accent2);' },
+        title,
+      ),
+    );
+  }
+  if (showAddButton && !compactAddButton) {
+    header.appendChild(
+      el(
+        'button',
+        { type: 'button', class: 'btn small primary editable-table__add-btn', onclick: onAdd },
+        addButtonText,
+      ),
+    );
+  }
+  return header;
+}
+
+function ensureEmptyOption(options) {
+  const raw = Array.isArray(options) ? options.slice() : [];
+  const hasEmpty = raw.some((opt) =>
+    opt && typeof opt === 'object' ? String(opt.value ?? '') === '' : String(opt) === '',
+  );
+  if (!hasEmpty) raw.unshift({ value: '', label: '' });
+  return raw;
+}
+
+function buildSelectInput(column, value, onChange) {
+  const input = el('select', {
+    class: 'editable-table__select',
+    style: 'width: 100%; padding: 4px;',
+    onchange: (e) => onChange(String(e.target.value)),
+  });
+  const rawOptions = ensureEmptyOption(column.options);
+  rawOptions.forEach((option) => {
+    const isObj = option && typeof option === 'object';
+    const optValue = isObj
+      ? Object.prototype.hasOwnProperty.call(option, 'value')
+        ? option.value
+        : (option.label ?? '')
+      : option;
+    const optLabel = isObj ? (option.label ?? String(optValue)) : String(optValue);
+    input.appendChild(el('option', { value: String(optValue) }, optLabel));
+  });
+  input.value = String(value ?? '');
+  return input;
+}
+
+function buildInputForColumn(column, value, onChange) {
+  if (column.type === 'select') return buildSelectInput(column, value, onChange);
+  if (column.type === 'number')
+    return el('input', {
+      type: 'number',
+      class: 'editable-table__input',
+      value: value,
+      placeholder: column.placeholder || '',
+      min: column.min,
+      max: column.max,
+      step: column.step,
+      style: 'width: 100%; padding: 4px;',
+      onblur: (e) => onChange(e.target.value),
+    });
+  if (column.type === 'textarea') {
+    const t = el(
+      'textarea',
+      {
+        class: 'editable-table__textarea',
+        rows: column.rows || 1,
+        placeholder: column.placeholder || '',
+        style: 'width: 100%; padding: 4px; min-height: 40px;',
+        onblur: (e) => onChange(e.target.value),
+      },
+      value,
+    );
+    textareaAutoResize(t);
+    return t;
+  }
+  return el('input', {
+    type: column.type || 'text',
+    class: 'editable-table__input',
+    value: value,
+    placeholder: column.placeholder || '',
+    style: 'width: 100%; padding: 4px;',
+    onblur: (e) => onChange(e.target.value),
+  });
+}
+
+function buildBodyRow(columns, rowId, rowData, createCell, showDeleteButton, onDelete) {
+  return el('tr', { class: 'editable-table__row', 'data-row-id': rowId }, [
+    ...columns.map((col) => createCell(col, rowData, rowId)),
+    ...(showDeleteButton
+      ? [
+          el(
+            'td',
+            { class: 'editable-table__cell editable-table__cell--actions' },
+            el(
+              'button',
+              {
+                type: 'button',
+                class: 'remove-btn editable-table__delete-btn',
+                title: 'Delete row',
+                onclick: () => onDelete(rowId),
+              },
+              '×',
+            ),
+          ),
+        ]
+      : []),
+  ]);
+}
+
+function buildTableElement({
+  columns,
+  data,
+  showHeader,
+  actionsHeaderLabel,
+  showDeleteButton,
+  createCell,
+  onDelete,
+}) {
+  const rows = Object.keys(data);
+  const tableChildren = [];
+  if (showHeader) {
+    tableChildren.push(
+      el(
+        'thead',
+        { class: 'editable-table__head' },
+        el('tr', {}, [
+          ...columns.map((col) =>
+            el(
+              'th',
+              {
+                class: `editable-table__header-cell editable-table__header-cell--${col.field}`,
+                style: col.width ? `width: ${col.width};` : '',
+              },
+              col.label,
+            ),
+          ),
+          ...(showDeleteButton
+            ? [
+                el(
+                  'th',
+                  {
+                    class: 'editable-table__header-cell editable-table__header-cell--actions',
+                    style: 'width: 50px;',
+                  },
+                  actionsHeaderLabel,
+                ),
+              ]
+            : []),
+        ]),
+      ),
+    );
+  }
+  tableChildren.push(
+    el(
+      'tbody',
+      { class: 'editable-table__body' },
+      rows.map((rowId) =>
+        buildBodyRow(columns, rowId, data[rowId], createCell, showDeleteButton, onDelete),
+      ),
+    ),
+  );
+  return el('table', { class: 'table editable-table__table' }, tableChildren);
+}
+
+function buildCompactFooter(showAddButton, compactAddButton, onAdd) {
+  if (!(showAddButton && compactAddButton)) return null;
+  return el(
+    'div',
+    {
+      class: 'editable-table__footer',
+      style: 'display:flex; justify-content:center; margin-bottom: 16px;',
+    },
+    el('div', { class: 'compact-add-btn', title: 'Add row', onclick: onAdd }, '+'),
+  );
+}
+
 /**
  * Creates a standardized editable table with consistent styling and behavior
  * @param {object} config - Table configuration
@@ -27,155 +216,53 @@ export function createEditableTable(config) {
 
   const container = el('div', {
     class: `editable-table ${className}`.trim(),
-    style: Object.assign(
-      {
-        marginBottom: '16px',
-      },
-      style,
-    ),
+    style: Object.assign({ marginBottom: '16px' }, style),
   });
 
   // Add title and controls
-  if (title || (showAddButton && !compactAddButton)) {
-    const header = el('div', {
-      class: 'editable-table__header',
-      style:
-        'display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;',
-    });
+  const updateCell = makeUpdateCell(data, onChange);
+  let rebuildTable;
+  const addRow = makeAddRow(columns, data, onChange, () => rebuildTable());
+  const deleteRow = makeDeleteRow(data, onChange, () => rebuildTable());
 
-    if (title) {
-      header.appendChild(
-        el(
-          'h5',
-          {
-            class: 'editable-table__title',
-            style: 'margin: 0; color: var(--accent2);',
-          },
-          title,
-        ),
-      );
-    }
+  attachHeader(container, { title, showAddButton, compactAddButton, addButtonText }, () =>
+    addRow(),
+  );
 
-    if (showAddButton && !compactAddButton) {
-      header.appendChild(
-        el(
-          'button',
-          {
-            type: 'button',
-            class: 'btn small primary editable-table__add-btn',
-            onclick: () => addRow(),
-          },
-          addButtonText,
-        ),
-      );
-    }
+  const createCell = makeCreateCell(updateCell);
+  rebuildTable = makeRebuildTable({
+    container,
+    columns,
+    data,
+    showHeader,
+    actionsHeaderLabel,
+    showDeleteButton,
+    createCell,
+    onDelete: deleteRow,
+    showAddButton,
+    compactAddButton,
+    onAdd: () => addRow(),
+  });
 
-    container.appendChild(header);
-  }
-
-  let table;
-  let footerEl;
-
-  const addRow = () => {
-    const newRow = {};
-    columns.forEach((col) => {
-      newRow[col.field] = col.defaultValue || '';
-    });
-    const newId = Date.now().toString();
-    data[newId] = newRow;
-    onChange(data);
-    rebuildTable();
+  initializeTable(startWithOneRow, data, addRow, rebuildTable);
+  return {
+    element: container,
+    rebuild: rebuildTable,
+    addRow,
+    deleteRow,
+    updateCell,
   };
+}
 
-  const deleteRow = (rowId) => {
-    delete data[rowId];
-    onChange(data);
-    rebuildTable();
-  };
+function attachHeader(container, { title, showAddButton, compactAddButton, addButtonText }, onAdd) {
+  const header = buildTableHeader({ title, showAddButton, compactAddButton, addButtonText, onAdd });
+  if (header) container.appendChild(header);
+}
 
-  const updateCell = (rowId, field, value) => {
-    if (!data[rowId]) data[rowId] = {};
-    data[rowId][field] = value;
-    onChange(data);
-  };
-
-  const createCell = (column, rowData, rowId) => {
+function makeCreateCell(updateCell) {
+  return (column, rowData, rowId) => {
     const value = rowData[column.field] || '';
-
-    let input;
-
-    if (column.type === 'select') {
-      input = el('select', {
-        class: 'editable-table__select',
-        style: 'width: 100%; padding: 4px;',
-        onchange: (e) => updateCell(rowId, column.field, e.target.value),
-      });
-
-      // Support both string options and { value, label } objects.
-      // Do not attach a `selected` attribute; instead, set the select's value after
-      // appending options to avoid boolean-attribute mishandling.
-      const rawOptions = Array.isArray(column.options) ? column.options.slice() : [];
-      const hasEmpty = rawOptions.some((opt) => {
-        if (opt && typeof opt === 'object') {
-          return String(opt.value ?? '') === '';
-        }
-        return String(opt) === '';
-      });
-      if (!hasEmpty) rawOptions.unshift({ value: '', label: '' });
-
-      rawOptions.forEach((option) => {
-        const isObj = option && typeof option === 'object';
-        const optValue = isObj
-          ? Object.prototype.hasOwnProperty.call(option, 'value')
-            ? option.value
-            : (option.label ?? '')
-          : option;
-        const optLabel = isObj ? (option.label ?? String(optValue)) : String(option);
-        const optValueStr = String(optValue);
-
-        const optionEl = el('option', { value: optValueStr }, optLabel);
-        input.appendChild(optionEl);
-      });
-
-      // Assign current value (string) to select; if no match, browser keeps first option.
-      input.value = String(value ?? '');
-    } else if (column.type === 'number') {
-      input = el('input', {
-        type: 'number',
-        class: 'editable-table__input',
-        value: value,
-        placeholder: column.placeholder || '',
-        min: column.min,
-        max: column.max,
-        step: column.step,
-        style: 'width: 100%; padding: 4px;',
-        onblur: (e) => updateCell(rowId, column.field, e.target.value),
-      });
-    } else if (column.type === 'textarea') {
-      input = el(
-        'textarea',
-        {
-          class: 'editable-table__textarea',
-          rows: column.rows || 1,
-          placeholder: column.placeholder || '',
-          style: 'width: 100%; padding: 4px; min-height: 40px;',
-          onblur: (e) => updateCell(rowId, column.field, e.target.value),
-        },
-        value,
-      );
-      // Auto-expand as the user types; no scrollbars/resizer needed
-      textareaAutoResize(input);
-    } else {
-      input = el('input', {
-        type: column.type || 'text',
-        class: 'editable-table__input',
-        value: value,
-        placeholder: column.placeholder || '',
-        style: 'width: 100%; padding: 4px;',
-        onblur: (e) => updateCell(rowId, column.field, e.target.value),
-      });
-    }
-
+    const input = buildInputForColumn(column, value, (val) => updateCell(rowId, column.field, val));
     return el(
       'td',
       {
@@ -185,128 +272,81 @@ export function createEditableTable(config) {
       input,
     );
   };
+}
 
-  const rebuildTable = () => {
+function makeRebuildTable({
+  container,
+  columns,
+  data,
+  showHeader,
+  actionsHeaderLabel,
+  showDeleteButton,
+  createCell,
+  onDelete,
+  showAddButton,
+  compactAddButton,
+  onAdd,
+}) {
+  let table = null;
+  let footerEl = null;
+  return () => {
     if (table) table.remove();
     if (footerEl) {
       footerEl.remove();
       footerEl = null;
     }
-
-    const rows = Object.keys(data);
-
-    const tableChildren = [];
-    if (showHeader) {
-      tableChildren.push(
-        el(
-          'thead',
-          { class: 'editable-table__head' },
-          el('tr', {}, [
-            ...columns.map((col) =>
-              el(
-                'th',
-                {
-                  class: `editable-table__header-cell editable-table__header-cell--${col.field}`,
-                  style: col.width ? `width: ${col.width};` : '',
-                },
-                col.label,
-              ),
-            ),
-            ...(showDeleteButton
-              ? [
-                  el(
-                    'th',
-                    {
-                      class: 'editable-table__header-cell editable-table__header-cell--actions',
-                      style: 'width: 50px;',
-                    },
-                    actionsHeaderLabel,
-                  ),
-                ]
-              : []),
-          ]),
-        ),
-      );
-    }
-    tableChildren.push(
-      el(
-        'tbody',
-        { class: 'editable-table__body' },
-        rows.map((rowId) => {
-          const rowData = data[rowId];
-          return el(
-            'tr',
-            {
-              class: 'editable-table__row',
-              'data-row-id': rowId,
-            },
-            [
-              ...columns.map((col) => createCell(col, rowData, rowId)),
-              ...(showDeleteButton
-                ? [
-                    el(
-                      'td',
-                      {
-                        class: 'editable-table__cell editable-table__cell--actions',
-                      },
-                      el(
-                        'button',
-                        {
-                          type: 'button',
-                          class: 'remove-btn editable-table__delete-btn',
-                          title: 'Delete row',
-                          onclick: () => deleteRow(rowId),
-                        },
-                        '×',
-                      ),
-                    ),
-                  ]
-                : []),
-            ],
-          );
-        }),
-      ),
-    );
-
-    table = el('table', { class: 'table editable-table__table' }, tableChildren);
-
+    table = buildTableElement({
+      columns,
+      data,
+      showHeader,
+      actionsHeaderLabel,
+      showDeleteButton,
+      createCell,
+      onDelete,
+    });
     container.appendChild(table);
-
-    // Compact add button centered beneath the table (Plan/Billing style)
-    if (showAddButton && compactAddButton) {
-      footerEl = el(
-        'div',
-        {
-          class: 'editable-table__footer',
-          style: 'display:flex; justify-content:center; margin-bottom: 16px;',
-        },
-        el(
-          'div',
-          {
-            class: 'compact-add-btn',
-            title: 'Add row',
-            onclick: () => addRow(),
-          },
-          '+',
-        ),
-      );
+    const footer = buildCompactFooter(showAddButton, compactAddButton, onAdd);
+    if (footer) {
+      footerEl = footer;
       container.appendChild(footerEl);
     }
   };
+}
 
-  // Optionally start with one row if no data exists
+function initializeTable(startWithOneRow, data, addRow, rebuildTable) {
   if (startWithOneRow && Object.keys(data || {}).length === 0) {
     addRow();
   } else {
     rebuildTable();
   }
+}
 
-  return {
-    element: container,
-    rebuild: rebuildTable,
-    addRow,
-    deleteRow,
-    updateCell,
+function makeAddRow(columns, data, onChange, onAfter) {
+  return () => {
+    const newRow = {};
+    columns.forEach((col) => {
+      newRow[col.field] = col.defaultValue || '';
+    });
+    const newId = Date.now().toString();
+    data[newId] = newRow;
+    onChange(data);
+    onAfter();
+  };
+}
+
+function makeDeleteRow(data, onChange, onAfter) {
+  return (rowId) => {
+    delete data[rowId];
+    onChange(data);
+    onAfter();
+  };
+}
+
+function makeUpdateCell(data, onChange) {
+  return (rowId, field, value) => {
+    if (!data[rowId]) data[rowId] = {};
+    data[rowId][field] = value;
+    onChange(data);
   };
 }
 

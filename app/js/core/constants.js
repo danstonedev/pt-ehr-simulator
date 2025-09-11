@@ -47,3 +47,8 @@ export const UI_CONSTANTS = {
   ANIMATION_DURATION: 200,
   DEBOUNCE_DELAY: 300,
 };
+
+// Experimental flags (opt-in via URL or code). Keep defaults conservative (false).
+export const EXPERIMENT_FLAGS = {
+  NAV_SIMPLE_MODE: true,
+};

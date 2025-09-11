@@ -6,7 +6,7 @@
 
 /* Base */
 .btn {
-  border: 1px solid var(--border);
+  border: var(--bw-1, 1px) solid var(--border);
   background: var(--btn-bg);
   color: var(--text);
   padding: var(--space-2) var(--space-3);
@@ -59,14 +59,30 @@
 
 /* Variants */
 .btn.primary {
-  border-color: var(--und-green);
+  /* Scalable white ring for contrast */
+  border: var(--ring-thin, 0.1em) solid var(--white);
   background: var(--und-green);
-  color: #fff;
+  color: var(--white);
   font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+/* Theme-specific tweaks so the white ring reads on light theme too */
+/* (Light theme primary shadow handled by shared light overrides later; removed duplicate) */
+html[data-theme='dark'] .btn.primary {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
 }
 .btn.primary:hover {
   background: var(--und-green-dark);
-  border-color: var(--und-green-dark);
+  border-color: var(--white); /* keep white ring */
+  box-shadow: var(--elev-3, 0 3px 6px rgba(0, 0, 0, 0.32));
+}
+html:not([data-theme='dark']) .btn.primary:hover {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.1),
+    0 4px 6px rgba(0, 0, 0, 0.28);
+}
+html[data-theme='dark'] .btn.primary:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.55);
 }
 .btn.secondary {
   background: var(--btn-bg);
@@ -76,13 +92,13 @@
 .btn.secondary:hover {
   background: var(--und-green-dark);
   border-color: var(--und-green-dark);
-  color: #ffffff;
+  color: var(--white);
   transform: translateY(-1px);
 }
 .btn.success {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--white);
   font-weight: 600;
 }
 .btn.success:hover {
@@ -91,7 +107,7 @@
   transform: translateY(-1px);
 }
 .btn.neutral {
-  background: #fff;
+  background: var(--white);
   border-color: var(--border);
   color: var(--text);
   font-weight: 600;
@@ -118,15 +134,15 @@
 /* Subtle red (outline) variant for destructive actions */
 /* Rest: very light red border, white fill; Hover: soft red fill + darker red border/text */
 .btn.subtle-danger {
-  background: #fff;
-  border-color: #f3e8e8;
-  color: #dc2626;
+  background: var(--white);
+  border-color: var(--danger-50);
+  color: var(--danger-600);
   font-weight: 600;
 }
 .btn.subtle-danger:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
-  color: #b91c1c;
+  background: var(--danger-100);
+  border-color: var(--danger-200);
+  color: var(--danger-700);
   transform: none;
   box-shadow: none;
 }
@@ -200,7 +216,7 @@
   border-radius: 9999px;
   border: 1px solid var(--und-green);
   background: var(--und-green); /* match primary button fill */
-  color: #fff; /* white plus icon/text */
+  color: var(--white); /* white plus icon/text */
   font-size: 0.875rem; /* 14px, scale + symbol */
   font-weight: 700;
   line-height: 1;
@@ -246,9 +262,9 @@
   width: 24px;
   height: 24px;
   border-radius: 4px;
-  border: 1px solid #f3e8e8;
-  background: #fefefe;
-  color: #dc2626;
+  border: var(--bw-1, 1px) solid var(--danger-50);
+  background: var(--white);
+  color: var(--danger-600);
   font-size: 0.875rem; /* 14px */
   cursor: pointer;
   display: flex;
@@ -257,16 +273,16 @@
   transition: all 0.15s ease;
 }
 .remove-btn:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
-  color: #b91c1c;
+  background: var(--danger-100);
+  border-color: var(--danger-200);
+  color: var(--danger-700);
 }
 
 /* Legacy shims for backward compatibility */
 .btn.btn-primary {
   background: var(--und-green);
   border-color: var(--und-green);
-  color: #fff;
+  color: var(--white);
 }
 .btn.btn-primary:hover {
   background: var(--und-green-dark);
@@ -284,7 +300,7 @@
 .btn.btn-danger {
   background: var(--danger);
   border-color: var(--danger);
-  color: #fff;
+  color: var(--white);
 }
 .btn.btn-danger:hover {
   background: var(--danger-dark);
@@ -307,7 +323,7 @@
 /* Light theme overrides */
 html:not([data-theme='dark']) .btn {
   border-color: var(--neutral-300);
-  background: #fff;
+  background: var(--white);
   color: var(--neutral-700);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
@@ -318,15 +334,15 @@ html:not([data-theme='dark']) .btn:hover {
 }
 html:not([data-theme='dark']) .btn.primary {
   background: var(--und-green);
-  border-color: var(--und-green);
-  color: #fff;
+  border: var(--ring-thin, 0.1em) solid var(--white);
+  color: var(--white);
 }
 html:not([data-theme='dark']) .btn.primary:hover {
   background: var(--und-green-dark);
-  border-color: var(--und-green-dark);
+  border-color: var(--white); /* keep white ring on hover */
 }
 html:not([data-theme='dark']) .btn.secondary {
-  background: #fff;
+  background: var(--white);
   border-color: var(--und-green);
   color: var(--text);
 }
@@ -339,13 +355,13 @@ html:not([data-theme='dark']) .btn.secondary:hover {
 html:not([data-theme='dark']) .btn.orange {
   background: var(--neutral-800);
   border-color: var(--und-orange);
-  color: #ffffff;
+  color: var(--white);
   font-weight: 500;
 }
 html:not([data-theme='dark']) .btn.orange:hover {
   background: var(--und-orange);
   border-color: var(--und-orange);
-  color: #ffffff;
+  color: var(--white);
   font-weight: 600;
 }
 /* subtle-danger styling handled by base definition - no theme override needed */
@@ -354,14 +370,14 @@ html:not([data-theme='dark']) .btn.orange:hover {
 .btn.orange {
   background: var(--neutral-800); /* Darker UND gray spectrum */
   border-color: var(--und-orange);
-  color: #ffffff; /* white text */
+  color: var(--white); /* white text */
   font-weight: 500;
 }
 
 .btn.orange:hover {
   background: var(--und-orange);
   border-color: var(--und-orange);
-  color: #ffffff; /* white text on orange background */
+  color: var(--white); /* white text on orange background */
   font-weight: 600;
 }
 
@@ -370,12 +386,12 @@ html:not([data-theme='dark']) .btn.orange:hover {
 #siteMenuFeedback.btn.secondary {
   background: var(--neutral-800);
   border-color: var(--und-green);
-  color: #ffffff;
+  color: var(--white);
 }
 
 #feedbackBtn.btn.secondary:hover,
 #siteMenuFeedback.btn.secondary:hover {
   background: var(--und-green-dark);
   border-color: var(--und-green-dark);
-  color: #ffffff;
+  color: var(--white);
 }

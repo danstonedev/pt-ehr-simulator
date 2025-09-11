@@ -7,30 +7,53 @@ import { el, textareaAutoResize } from './utils.js';
 
 // --- Core Form Components ---
 
-/**
- * Enhanced Input Field Component
- * @param {object} options - Configuration options object
- */
-export function inputField(options = {}) {
-  // Modern props format: inputField({ label, value, onChange, ...props })
-  const { label, value, onChange, ...config } = options;
+// Internal helpers to reduce branching in component builders
+function applyAttributes(node, attrs = {}) {
+  Object.entries(attrs).forEach(([k, v]) => {
+    if (v !== null && v !== undefined && v !== false && v !== '') node[k] = v;
+  });
+}
 
-  const {
-    type = 'text',
-    placeholder = '',
-    disabled = false,
-    required = false,
-    maxLength = null,
-    pattern = null,
-    className = '',
-    id = null,
-    autocomplete = null,
-    hint = '',
-    error = '',
-    size = 'normal', // 'small', 'normal', 'large'
-  } = config;
+function buildLabelEl(text, id, required, extraClass = '') {
+  return el(
+    'label',
+    { class: `form-label ${required ? 'form-label--required' : ''} ${extraClass}`.trim(), for: id },
+    text,
+  );
+}
 
-  // Create input element using direct DOM approach (like working direct input)
+function buildFieldContainer(kind, disabled, error, children, extraClass = '') {
+  return el(
+    'div',
+    {
+      class:
+        `form-field form-field--${kind} ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''} ${extraClass}`.trim(),
+    },
+    children,
+  );
+}
+
+function appendHintAndError(wrapper, hint, error) {
+  if (hint) wrapper.appendChild(el('div', { class: 'form-hint' }, hint));
+  if (error) wrapper.appendChild(el('div', { class: 'form-error' }, error));
+}
+
+function withDefaults(obj, defaults) {
+  return { ...defaults, ...obj };
+}
+
+// Element builders
+function buildInput({
+  type,
+  placeholder,
+  value,
+  disabled,
+  required,
+  size,
+  className,
+  error,
+  onChange,
+}) {
   const input = document.createElement('input');
   input.type = type;
   input.placeholder = placeholder;
@@ -39,52 +62,171 @@ export function inputField(options = {}) {
   input.required = required;
   input.className =
     `form-input form-input--${size} ${className} ${error ? 'form-input--error' : ''}`.trim();
-
-  // Add direct event listener - use blur instead of input to avoid triggering on every keystroke
   input.addEventListener('blur', (e) => {
-    onChange && onChange(e.target.value);
+    if (onChange) onChange(e.target.value);
+  });
+  return input;
+}
+
+function buildTextarea({
+  placeholder,
+  disabled,
+  required,
+  rows,
+  size,
+  className,
+  error,
+  value,
+  onChange,
+}) {
+  const t = document.createElement('textarea');
+  t.placeholder = placeholder;
+  t.disabled = disabled;
+  t.required = required;
+  t.rows = rows;
+  t.className =
+    `form-textarea form-textarea--${size} ${className} ${error ? 'form-textarea--error' : ''}`.trim();
+  t.value = value || '';
+  t.addEventListener('blur', (e) => {
+    if (onChange) onChange(e.target.value);
+  });
+  return t;
+}
+
+function buildSelect({ disabled, required, multiple, size, className, error, onChange }) {
+  const s = document.createElement('select');
+  s.disabled = disabled;
+  s.required = required;
+  s.multiple = multiple;
+  s.className =
+    `form-select form-select--${size} ${className} ${error ? 'form-select--error' : ''}`.trim();
+  s.onchange = function (e) {
+    if (!onChange) return;
+    const selectedValue = multiple
+      ? Array.from(e.target.selectedOptions).map((opt) => opt.value)
+      : e.target.value;
+    onChange(selectedValue);
+  };
+  return s;
+}
+
+function buildInputWrapper(node, hint, error) {
+  const wrapper = el('div', { class: 'form-input-wrapper' }, [node]);
+  appendHintAndError(wrapper, hint, error);
+  return wrapper;
+}
+
+function appendCharCount(wrapper, textarea, maxLength, value) {
+  if (!maxLength) return;
+  const charCount = el('div', { class: 'form-char-count' }, `${(value || '').length}/${maxLength}`);
+  textarea.addEventListener('input', () => {
+    charCount.textContent = `${textarea.value.length}/${maxLength}`;
+  });
+  wrapper.appendChild(charCount);
+}
+
+function appendPlaceholderOption(select, shouldAdd, value, placeholder) {
+  if (!shouldAdd) return;
+  const placeholderOption = document.createElement('option');
+  placeholderOption.value = '';
+  placeholderOption.disabled = !value;
+  placeholderOption.textContent = placeholder;
+  select.appendChild(placeholderOption);
+}
+
+function buildOption(option, value, multiple) {
+  const optionEl = document.createElement('option');
+  optionEl.value = option.value;
+  optionEl.textContent = option.label;
+  optionEl.disabled = option.disabled || false;
+  if (multiple) {
+    if (Array.isArray(value) && value.includes(option.value)) optionEl.selected = true;
+  } else if (value === option.value) {
+    optionEl.selected = true;
+  }
+  return optionEl;
+}
+
+function buildRadioItem({ option, index, name, value, disabled, required, onChange }) {
+  const radioId = `${name}-${index}`;
+  const radio = el('input', {
+    type: 'radio',
+    name,
+    value: option.value,
+    id: radioId,
+    checked: value === option.value,
+    disabled: disabled || option.disabled,
+    required,
+    class: 'form-radio',
+    onchange: (e) => onChange(e.target.value),
+  });
+  const radioLabel = el('label', { for: radioId, class: 'form-label form-label--radio' }, [
+    radio,
+    el('span', {}, option.label),
+  ]);
+  return el('div', { class: 'form-radio-item' }, [radioLabel]);
+}
+
+/**
+ * Enhanced Input Field Component
+ * @param {object} options - Configuration options object
+ */
+export function inputField(options = {}) {
+  // Modern props format: inputField({ label, value, onChange, ...props })
+  const { label, value, onChange, ...rest } = options;
+  const cfg = withDefaults(rest, {
+    type: 'text',
+    placeholder: '',
+    disabled: false,
+    required: false,
+    maxLength: null,
+    pattern: null,
+    className: '',
+    id: null,
+    autocomplete: null,
+    hint: '',
+    error: '',
+    size: 'normal',
+  });
+  const {
+    type,
+    placeholder,
+    disabled,
+    required,
+    maxLength,
+    pattern,
+    className,
+    id,
+    autocomplete,
+    hint,
+    error,
+    size,
+  } = cfg;
+
+  // Create input element
+  const input = buildInput({
+    type,
+    placeholder,
+    value,
+    disabled,
+    required,
+    size,
+    className,
+    error,
+    onChange,
   });
 
   // Add optional attributes
-  if (maxLength) input.maxLength = maxLength;
-  if (pattern) input.pattern = pattern;
-  if (id) input.id = id;
-  if (autocomplete) input.autocomplete = autocomplete;
+  applyAttributes(input, { maxLength, pattern, id, autocomplete });
 
-  // Build field wrapper
-  const fieldElements = [
-    el(
-      'label',
-      {
-        class: `form-label ${required ? 'form-label--required' : ''}`,
-        for: id,
-      },
-      label,
-    ),
-  ];
+  return buildInputFieldContainer({ label, id, required, node: input, hint, error, disabled });
+}
 
-  const inputWrapper = el('div', { class: 'form-input-wrapper' }, [input]);
-
-  // Add hint text if provided
-  if (hint) {
-    inputWrapper.appendChild(el('div', { class: 'form-hint' }, hint));
-  }
-
-  // Add error message if provided
-  if (error) {
-    inputWrapper.appendChild(el('div', { class: 'form-error' }, error));
-  }
-
+function buildInputFieldContainer({ label, id, required, node, hint, error, disabled }) {
+  const fieldElements = [buildLabelEl(label, id, required)];
+  const inputWrapper = buildInputWrapper(node, hint, error);
   fieldElements.push(inputWrapper);
-
-  return el(
-    'div',
-    {
-      class:
-        `form-field form-field--input ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''}`.trim(),
-    },
-    fieldElements,
-  );
+  return buildFieldContainer('input', disabled, error, fieldElements);
 }
 
 /**
@@ -93,93 +235,82 @@ export function inputField(options = {}) {
  */
 export function textAreaField(options = {}) {
   // Modern props format: textAreaField({ label, value, onChange, ...props })
+  const { label, value, onChange, ...rest } = options;
+  const cfg = withDefaults(rest, {
+    placeholder: '',
+    disabled: false,
+    required: false,
+    rows: 2,
+    maxLength: null,
+    autoResize: true,
+    className: '',
+    id: null,
+    hint: '',
+    error: '',
+    size: 'normal',
+  });
   const {
-    label,
+    placeholder,
+    disabled,
+    required,
+    rows,
+    maxLength,
+    autoResize,
+    className,
+    id,
+    hint,
+    error,
+    size,
+  } = cfg;
+
+  // Create textarea element
+  const textarea = buildTextarea({
+    placeholder,
+    disabled,
+    required,
+    rows,
+    size,
+    className,
+    error,
     value,
     onChange,
-    placeholder = '',
-    disabled = false,
-    required = false,
-    rows = 2,
-    maxLength = null,
-    autoResize = true,
-    className = '',
-    id = null,
-    hint = '',
-    error = '',
-    size = 'normal', // 'small', 'normal', 'large'
-  } = options;
-
-  // Create textarea element using direct DOM approach
-  const textarea = document.createElement('textarea');
-  textarea.placeholder = placeholder;
-  textarea.disabled = disabled;
-  textarea.required = required;
-  textarea.rows = rows;
-  textarea.className =
-    `form-textarea form-textarea--${size} ${className} ${error ? 'form-textarea--error' : ''}`.trim();
-  textarea.value = value || '';
-
-  // Add direct event listener - use blur instead of input to avoid triggering on every keystroke
-  textarea.addEventListener('blur', (e) => {
-    onChange && onChange(e.target.value);
   });
 
-  if (maxLength) textarea.maxLength = maxLength;
-  if (id) textarea.id = id;
+  applyAttributes(textarea, { maxLength, id });
 
   // Apply auto-resize if enabled
-  if (autoResize) {
-    textareaAutoResize(textarea);
-  }
+  if (autoResize) textareaAutoResize(textarea);
 
-  // Build field wrapper
-  const fieldElements = [
-    el(
-      'label',
-      {
-        class: `form-label ${required ? 'form-label--required' : ''}`,
-        for: id,
-      },
-      label,
-    ),
-  ];
+  return buildTextareaFieldContainer({
+    label,
+    id,
+    required,
+    node: textarea,
+    hint,
+    error,
+    disabled,
+    maxLength,
+    value,
+  });
+}
 
-  const inputWrapper = el('div', { class: 'form-input-wrapper' }, [textarea]);
-
-  // Add character count if maxLength is set
-  if (maxLength) {
-    const charCount = el(
-      'div',
-      { class: 'form-char-count' },
-      `${(value || '').length}/${maxLength}`,
-    );
-    textarea.addEventListener('input', () => {
-      charCount.textContent = `${textarea.value.length}/${maxLength}`;
-    });
-    inputWrapper.appendChild(charCount);
-  }
-
-  // Add hint text if provided
-  if (hint) {
-    inputWrapper.appendChild(el('div', { class: 'form-hint' }, hint));
-  }
-
-  // Add error message if provided
-  if (error) {
-    inputWrapper.appendChild(el('div', { class: 'form-error' }, error));
-  }
-
-  fieldElements.push(inputWrapper);
-
-  return el(
-    'div',
-    {
-      class:
-        `form-field form-field--textarea ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''}`.trim(),
-    },
-    fieldElements,
-  );
+function buildTextareaFieldContainer({
+  label,
+  id,
+  required,
+  node,
+  hint,
+  error,
+  disabled,
+  maxLength,
+  value,
+}) {
+  const fieldElements = [buildLabelEl(label, id, required)];
+  const wrapper = buildInputWrapper(node);
+  appendCharCount(wrapper, node, maxLength, value);
+  appendHintAndError(wrapper, hint, error);
+  fieldElements.push(wrapper);
+  return buildFieldContainer('textarea', disabled, error, fieldElements);
 }
 
 /**
@@ -188,106 +319,51 @@ export function textAreaField(options = {}) {
  */
 export function selectField(options = {}) {
   // Modern props format: selectField({ label, value, options, onChange, ...props })
+  const { label, value, options: optionsArray, onChange, ...rest } = options;
+  const cfg = withDefaults(rest, {
+    placeholder: 'Select...',
+    disabled: false,
+    required: false,
+    multiple: false,
+    className: '',
+    id: null,
+    hint: '',
+    error: '',
+    size: 'normal',
+    allowEmpty: true,
+  });
   const {
-    label,
-    value,
-    options: optionsArray,
-    onChange,
-    placeholder = 'Select...',
-    disabled = false,
-    required = false,
-    multiple = false,
-    className = '',
-    id = null,
-    hint = '',
-    error = '',
-    size = 'normal', // 'small', 'normal', 'large'
-    allowEmpty = true,
-  } = options;
+    placeholder,
+    disabled,
+    required,
+    multiple,
+    className,
+    id,
+    hint,
+    error,
+    size,
+    allowEmpty,
+  } = cfg;
 
-  // Create select element using direct DOM approach
-  const select = document.createElement('select');
-  select.disabled = disabled;
-  select.required = required;
-  select.multiple = multiple;
-  select.className =
-    `form-select form-select--${size} ${className} ${error ? 'form-select--error' : ''}`.trim();
+  // Create select element
+  const select = buildSelect({ disabled, required, multiple, size, className, error, onChange });
 
-  // Add direct event listener using onchange property for maximum compatibility
-  select.onchange = function (e) {
-    if (!onChange) return;
-    const selectedValue = multiple
-      ? Array.from(e.target.selectedOptions).map((opt) => opt.value)
-      : e.target.value;
-    onChange(selectedValue);
-  };
-
-  if (id) select.id = id;
+  applyAttributes(select, { id });
 
   // Add placeholder option if allowed
-  if (allowEmpty && !multiple) {
-    const placeholderOption = document.createElement('option');
-    placeholderOption.value = '';
-    placeholderOption.disabled = !value;
-    placeholderOption.textContent = placeholder;
-    select.appendChild(placeholderOption);
-  }
+  appendPlaceholderOption(select, allowEmpty && !multiple, value, placeholder);
 
   // Add all options using direct DOM creation
-  optionsArray.forEach((option) => {
-    const optionEl = document.createElement('option');
-    optionEl.value = option.value;
-    optionEl.textContent = option.label;
-    optionEl.disabled = option.disabled || false;
+  optionsArray.forEach((option) => select.appendChild(buildOption(option, value, multiple)));
 
-    // Handle selection for both single and multiple select
-    if (multiple) {
-      if (Array.isArray(value) && value.includes(option.value)) {
-        optionEl.selected = true;
-      }
-    } else {
-      if (value === option.value) {
-        optionEl.selected = true;
-      }
-    }
+  return buildSelectFieldContainer({ label, id, required, node: select, hint, error, disabled });
+}
 
-    select.appendChild(optionEl);
-  });
-
-  // Build field wrapper
-  const fieldElements = [
-    el(
-      'label',
-      {
-        class: `form-label ${required ? 'form-label--required' : ''}`,
-        for: id,
-      },
-      label,
-    ),
-  ];
-
-  const inputWrapper = el('div', { class: 'form-input-wrapper' }, [select]);
-
-  // Add hint text if provided
-  if (hint) {
-    inputWrapper.appendChild(el('div', { class: 'form-hint' }, hint));
-  }
-
-  // Add error message if provided
-  if (error) {
-    inputWrapper.appendChild(el('div', { class: 'form-error' }, error));
-  }
-
-  fieldElements.push(inputWrapper);
-
-  return el(
-    'div',
-    {
-      class:
-        `form-field form-field--select ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''}`.trim(),
-    },
-    fieldElements,
-  );
+function buildSelectFieldContainer({ label, id, required, node, hint, error, disabled }) {
+  const fieldElements = [buildLabelEl(label, id, required)];
+  const wrapper = buildInputWrapper(node, hint, error);
+  fieldElements.push(wrapper);
+  return buildFieldContainer('select', disabled, error, fieldElements);
 }
 
 /**
@@ -298,19 +374,20 @@ export function selectField(options = {}) {
  * @param {object} options - Configuration options
  */
 export function numberField(label, value, onChange, options = {}) {
-  const {
-    min = null,
-    max = null,
-    step = null,
-    placeholder = '',
-    disabled = false,
-    required = false,
-    className = '',
-    id = null,
-    hint = '',
-    error = '',
-    size = 'normal',
-  } = options;
+  const cfg = withDefaults(options, {
+    min: null,
+    max: null,
+    step: null,
+    placeholder: '',
+    disabled: false,
+    required: false,
+    className: '',
+    id: null,
+    hint: '',
+    error: '',
+    size: 'normal',
+  });
+  const { min, max, step, placeholder, disabled, required, className, id, hint, error, size } = cfg;
 
   const numberOptions = {
     type: 'number',
@@ -324,22 +401,20 @@ export function numberField(label, value, onChange, options = {}) {
     size,
   };
 
-  // Use the input field but override the onChange to handle numbers
-  const field = inputField(
+  // Use the input field but override the onChange to handle numbers (adapt to object signature)
+  const field = inputField({
     label,
     value,
-    (val) => {
+    onChange: (val) => {
       const numValue = val === '' ? null : Number(val);
       onChange(numValue);
     },
-    numberOptions,
-  );
+    ...numberOptions,
+  });
 
   // Add number-specific attributes to the input
   const input = field.querySelector('input');
-  if (min !== null) input.min = min;
-  if (max !== null) input.max = max;
-  if (step !== null) input.step = step;
+  applyAttributes(input, { min, max, step });
 
   return field;
 }
@@ -390,14 +465,7 @@ export function checkboxField(label, checked, onChange, options = {}) {
     fieldElements.push(el('div', { class: 'form-error' }, error));
   }
 
-  return el(
-    'div',
-    {
-      class:
-        `form-field form-field--checkbox ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''}`.trim(),
-    },
-    fieldElements,
-  );
+  return buildFieldContainer('checkbox', disabled, error, fieldElements);
 }
 
 /**
@@ -409,41 +477,20 @@ export function checkboxField(label, checked, onChange, options = {}) {
  * @param {object} config - Configuration options
  */
 export function radioField(label, value, options, onChange, config = {}) {
-  const {
-    name = `radio-${Date.now()}`,
-    disabled = false,
-    required = false,
-    className = '',
-    hint = '',
-    error = '',
-    inline = false,
-  } = config;
-
-  const radioOptions = options.map((option, index) => {
-    const radioId = `${name}-${index}`;
-    const radio = el('input', {
-      type: 'radio',
-      name,
-      value: option.value,
-      id: radioId,
-      checked: value === option.value,
-      disabled: disabled || option.disabled,
-      required,
-      class: 'form-radio',
-      onchange: (e) => onChange(e.target.value),
-    });
-
-    const radioLabel = el(
-      'label',
-      {
-        for: radioId,
-        class: 'form-label form-label--radio',
-      },
-      [radio, el('span', {}, option.label)],
-    );
-
-    return el('div', { class: 'form-radio-item' }, [radioLabel]);
+  const cfg = withDefaults(config, {
+    name: `radio-${Date.now()}`,
+    disabled: false,
+    required: false,
+    className: '',
+    hint: '',
+    error: '',
+    inline: false,
   });
+  const { name, disabled, required, className, hint, error, inline } = cfg;
+
+  const radioOptions = options.map((option, index) =>
+    buildRadioItem({ option, index, name, value, disabled, required, onChange }),
+  );
 
   const fieldElements = [
     el(
@@ -470,14 +517,7 @@ export function radioField(label, value, options, onChange, config = {}) {
     fieldElements.push(el('div', { class: 'form-error' }, error));
   }
 
-  return el(
-    'div',
-    {
-      class:
-        `form-field form-field--radio ${disabled ? 'form-field--disabled' : ''} ${error ? 'form-field--error' : ''} ${className}`.trim(),
-    },
-    fieldElements,
-  );
+  return buildFieldContainer('radio', disabled, error, fieldElements, className);
 }
 
 // --- Utility Components ---
