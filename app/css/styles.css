@@ -1036,37 +1036,46 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 }
 
 /* In-content sticky section divider that gently pushes when next section arrives */
+/* Section divider (NEW STYLE): text on canvas with a thick gradient underline instead of full banner */
 .editor-section-divider {
   position: sticky; /* stick just under the top app bar */
   top: calc(var(--topbar-h) + var(--patient-sticky-h, 0px));
   z-index: var(--z-sticky-header);
-  height: var(--section-divider-h);
+  /* Allow dynamic layout: base height token + gap (JS still uses token for offsets) */
+  height: calc(var(--section-divider-h) + var(--divider-underline-gap, 0px));
   display: flex;
   align-items: center;
   justify-content: center; /* center the section title */
-  /* Use editor canvas background so cutout triangles blend with page in light/dark */
-  background: var(--editor-bg);
-  color: var(--white);
-  box-shadow: none; /* no elevation: keep flush with content */
-  /* Full bleed: cancel parent .section-content horizontal padding so width matches patient header */
+  background: var(--editor-bg); /* no green fill */
+  color: var(--und-green);
+  box-shadow: none;
   margin-left: calc(-1 * var(--pad-x));
   margin-right: calc(-1 * var(--pad-x));
   padding-left: var(--pad-x);
   padding-right: var(--pad-x);
-  /* ensure the pseudo-element stacks behind content */
+  /* Provide space between text and underline */
+  /* Underline sizing (single source of truth) */
+  --divider-underline-thickness: 0.5rem; /* 8px underline per spec */
+  --divider-underline-gap: 0.5rem; /* 8px gap; in rem for scalability */
+  padding-bottom: calc(var(--divider-underline-gap) + var(--divider-underline-thickness));
   isolation: isolate;
-  overflow: hidden; /* ensure stripe/SVG crop aligns to parallelogram edges */
+  overflow: visible;
 }
-
-/* Parallelogram background (keeps text upright) */
+/* Remove old full-bleed rectangle */
 .editor-section-divider::before {
+  content: none !important;
+}
+/* Gradient underline */
+.editor-section-divider::after {
   content: '';
   position: absolute;
-  inset: 0; /* cover full element */
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: var(--divider-underline-thickness);
   background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
-  border-bottom: none; /* avoid seam on light canvas */
-  z-index: -2; /* sit behind stripes and content */
-  /* Previously used clip-path parallelogram removed (Option C) to show simple rectangle */
+  z-index: -1; /* sit behind text but above page */
+  pointer-events: none;
 }
 
 /* Three brand slashes at the right edge */
@@ -1102,19 +1111,19 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   color: var(--white); /* ensure white text regardless of global h1 color */
   text-align: center;
 }
-.editor-section-divider::after {
-  content: none !important;
-}
+/* NOTE: Previous build disabled the divider pseudo underline entirely.
+  Removed so the new gradient underline (::after defined earlier) renders. */
+/* .editor-section-divider::after { content: none !important; } */
 .editor-section-divider h3 {
   margin: 0;
-  font-size: 20px;
+  font-size: 2rem; /* reduced slightly from 40px (~32px now) */
   letter-spacing: 0.4px;
   text-transform: uppercase;
-  color: var(--white);
+  color: var(--und-green);
   font-weight: 800;
-  line-height: 1;
+  line-height: 1; /* restore full line height for readability; gap handled by padding */
   width: 100%;
-  text-align: center; /* explicit text centering */
+  text-align: center;
 }
 
 /* Section wrapper spacing so upcoming dividers are visible early */
