@@ -40,6 +40,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   const ac = new AbortController();
   let offRoute = null;
   let activeObserver = null;
+  let headerRO = null;
   const caseId = qs.get('case');
   // Version param removed with header changes
   const encounter = qs.get('encounter') || 'eval';
@@ -657,15 +658,26 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       document.documentElement.style.setProperty('--patient-sticky-h', `${h}px`);
     } catch {}
   }
-  // Recompute on resize in case wrapping changes height
-  window.addEventListener(
-    'resize',
-    () => {
-      const h = patientHeader.offsetHeight || 0;
-      document.documentElement.style.setProperty('--patient-sticky-h', `${h}px`);
-    },
-    { passive: true, signal: ac.signal },
-  );
+  // Prefer ResizeObserver to track header height changes precisely (wrapping/content/theme)
+  try {
+    if ('ResizeObserver' in window) {
+      headerRO = new ResizeObserver(() => {
+        const h = patientHeader.offsetHeight || 0;
+        document.documentElement.style.setProperty('--patient-sticky-h', `${h}px`);
+      });
+      headerRO.observe(patientHeader);
+    } else {
+      // Fallback: recompute on resize in environments without ResizeObserver
+      window.addEventListener(
+        'resize',
+        () => {
+          const h = patientHeader.offsetHeight || 0;
+          document.documentElement.style.setProperty('--patient-sticky-h', `${h}px`);
+        },
+        { passive: true, signal: ac.signal },
+      );
+    }
+  } catch {}
 
   // Create main content container with sidebar offset + header
   const contentRoot = el('div', { id: 'section', class: 'section-content' });
@@ -1119,18 +1131,11 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   // Return teardown so the router can clean this view on navigation
   return () => {
-    try {
-      offRoute && offRoute();
-    } catch {}
-    try {
-      themeObserver && themeObserver.disconnect && themeObserver.disconnect();
-    } catch {}
-    try {
-      activeObserver && activeObserver.disconnect && activeObserver.disconnect();
-    } catch {}
-    try {
-      ac.abort();
-    } catch {}
+    offRoute?.();
+    themeObserver?.disconnect?.();
+    activeObserver?.disconnect?.();
+    headerRO?.disconnect?.();
+    ac.abort();
   };
 }
 
