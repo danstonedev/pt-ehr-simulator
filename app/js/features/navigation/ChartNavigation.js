@@ -462,7 +462,6 @@ function applySubsectionVisibilityControls({
                 class: 'und-toggle-input',
                 'aria-label': 'Toggle subsection visibility',
                 'aria-checked': 'false',
-                style: 'position:absolute; opacity:0; width:0; height:0;',
               }),
               el('span', { class: 'und-toggle-track', 'aria-hidden': 'true' }, [
                 el('span', { class: 'und-toggle-thumb' }),
