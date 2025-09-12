@@ -134,6 +134,9 @@
 .ai-center {
   align-items: center;
 }
+.jc-between {
+  justify-content: space-between;
+}
 .fw-600 {
   font-weight: 600;
 }
@@ -194,6 +197,10 @@
 .d-grid {
   display: grid;
 }
+/* Positioning */
+.relative {
+  position: relative;
+}
 /* Gap helpers */
 .gap-6 {
   gap: 6px;
@@ -219,6 +226,9 @@
 }
 .mr-4 {
   margin-right: 4px;
+}
+.ml-auto {
+  margin-left: auto;
 }
 .mb-8 {
   margin-bottom: 8px;

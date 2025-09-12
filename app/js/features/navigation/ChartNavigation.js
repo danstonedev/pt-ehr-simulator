@@ -441,9 +441,7 @@ function applySubsectionVisibilityControls({
       if (isFacultyMode) {
         // Flex the header to place toggle at right
         if (!header.dataset.flexified) {
-          header.style.display = 'flex';
-          header.style.alignItems = 'center';
-          header.style.justifyContent = 'space-between';
+          header.classList.add('d-flex', 'ai-center', 'jc-between');
           header.dataset.flexified = 'true';
         }
         let toggleWrap = header.querySelector('.subsection-visibility-toggle');
@@ -451,9 +449,8 @@ function applySubsectionVisibilityControls({
           toggleWrap = el(
             'label',
             {
-              class: 'subsection-visibility-toggle und-toggle',
-              style:
-                'margin-left:auto; display:flex; align-items:center; gap:10px; font-weight:500; font-size:12px; color: var(--text-secondary); position: relative;',
+              class:
+                'subsection-visibility-toggle und-toggle d-flex ai-center gap-10 fw-500 fs-12 text-secondary ml-auto relative',
             },
             [
               // Accessible checkbox drives the visual switch via sibling selectors
