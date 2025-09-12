@@ -154,6 +154,89 @@
   white-space: nowrap;
 }
 
+/* Global utility classes (theme-agnostic) */
+/* Positioning & overlay */
+.fixed {
+  position: fixed;
+}
+.inset-0 {
+  inset: 0;
+}
+.overlay-65 {
+  background: rgba(0, 0, 0, 0.65);
+}
+.z-modal {
+  z-index: var(--z-modal);
+}
+/* Spacing */
+.px-14 {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+.py-12 {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.py-10 {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.p-20 {
+  padding: 20px;
+}
+/* Borders */
+.bb-1 {
+  border-bottom: 1px solid var(--border);
+}
+.bt-1 {
+  border-top: 1px solid var(--border);
+}
+.border-0 {
+  border: 0;
+}
+/* Font sizing */
+.fs-14 {
+  font-size: 14px;
+}
+.fs-42 {
+  font-size: 42px;
+}
+/* Max dimensions */
+.mw-100 {
+  max-width: 100%;
+}
+.mh-78vh {
+  max-height: 78vh;
+}
+.h-78vh {
+  height: 78vh;
+}
+/* Object fit variants */
+.obj-contain {
+  object-fit: contain;
+}
+/* Background colors */
+.bg-white {
+  background: #fff;
+}
+/* Border radius & shadows for modal panel */
+.br-md {
+  border-radius: 8px;
+}
+.br-lg {
+  border-radius: 12px;
+}
+.shadow-modal {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+/* Text color & surface helpers */
+.text-color {
+  color: var(--text);
+}
+.bg-surface {
+  background: var(--surface);
+}
+
 /* Size utilities */
 .w-40 {
   width: 40px;

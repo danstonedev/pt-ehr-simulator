@@ -994,38 +994,33 @@ function openViewArtifactModal(module, options = {}) {
                     onclick: async () => {
                       // In-page preview overlay
                       const overlay = document.createElement('div');
-                      overlay.style.cssText =
-                        'position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:10000;';
+                      overlay.className =
+                        'fixed inset-0 overlay-65 d-flex ai-center jc-center z-modal';
                       const panel = document.createElement('div');
+                      panel.className = 'bg-surface text-color br-lg shadow-modal d-flex fd-column';
                       panel.style.cssText =
-                        'background:var(--surface); color:var(--text); max-width:90vw; max-height:90vh; width:min(1000px, 92vw); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.35); display:flex; flex-direction:column;';
+                        'max-width:90vw; max-height:90vh; width:min(1000px, 92vw);';
                       const header = document.createElement('div');
-                      header.style.cssText =
-                        'display:flex; align-items:center; gap:8px; padding:12px 14px; border-bottom:1px solid var(--border);';
+                      header.className = 'd-flex ai-center gap-8 py-12 px-14 bb-1';
                       const title = document.createElement('div');
-                      title.style.cssText =
-                        'flex:1; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+                      title.className = 'flex-1 fw-600 fs-14 text-ellipsis';
                       title.textContent = m.name || 'Attachment';
                       const closeBtn = document.createElement('button');
-                      closeBtn.className = 'btn secondary';
+                      closeBtn.className = 'btn secondary small';
                       closeBtn.textContent = 'Close';
-                      closeBtn.style.cssText = 'padding:6px 10px;';
                       header.appendChild(title);
                       header.appendChild(closeBtn);
                       const content = document.createElement('div');
-                      content.style.cssText =
-                        'padding:10px 14px; overflow:auto; display:flex; align-items:center; justify-content:center; background:var(--bg-secondary);';
+                      content.className =
+                        'py-10 px-14 overflow-auto d-flex ai-center jc-center bg-secondary';
                       const footer = document.createElement('div');
-                      footer.style.cssText =
-                        'display:flex; gap:8px; justify-content:flex-end; padding:10px 14px; border-top:1px solid var(--border);';
+                      footer.className = 'd-flex gap-8 jc-end py-10 px-14 bt-1';
                       const openTabBtn = document.createElement('button');
-                      openTabBtn.className = 'btn secondary';
+                      openTabBtn.className = 'btn secondary small';
                       openTabBtn.textContent = 'Open in new tab';
-                      openTabBtn.style.cssText = 'padding:6px 10px;';
                       const downloadBtn = document.createElement('button');
-                      downloadBtn.className = 'btn secondary';
+                      downloadBtn.className = 'btn secondary small';
                       downloadBtn.textContent = 'Download';
-                      downloadBtn.style.cssText = 'padding:6px 10px;';
                       footer.appendChild(openTabBtn);
                       footer.appendChild(downloadBtn);
                       panel.appendChild(header);
@@ -1059,27 +1054,25 @@ function openViewArtifactModal(module, options = {}) {
                           const img = document.createElement('img');
                           img.src = objectUrl;
                           img.alt = m.name || 'image';
-                          img.style.cssText =
-                            'max-width:100%; max-height:78vh; object-fit:contain; border-radius:8px; background:#fff;';
+                          img.className = 'mw-100 mh-78vh obj-contain br-md bg-white';
                           content.replaceChildren();
                           content.appendChild(img);
                         } else if (isPdf) {
                           const iframe = document.createElement('iframe');
                           iframe.src = objectUrl;
-                          iframe.style.cssText =
-                            'width:86vw; max-width:calc(1000px - 28px); height:78vh; border:0; background:#fff;';
+                          iframe.className = 'h-78vh bg-white border-0';
+                          iframe.style.cssText = 'width:86vw; max-width:calc(1000px - 28px);';
                           content.replaceChildren();
                           content.appendChild(iframe);
                         } else {
                           // Generic fallback: attempt iframe, else message
                           const info = document.createElement('div');
-                          info.style.cssText =
-                            'display:flex; flex-direction:column; align-items:center; gap:8px; padding:20px; color:var(--text-secondary);';
+                          info.className = 'd-flex fd-column ai-center gap-8 p-20 text-secondary';
                           const icon = document.createElement('div');
-                          icon.style.cssText = 'font-size:42px;';
+                          icon.className = 'fs-42';
                           icon.textContent = '📄';
                           const msg = document.createElement('div');
-                          msg.style.cssText = 'font-size:14px;';
+                          msg.className = 'fs-14';
                           msg.textContent =
                             'Preview is not available for this file type. Use Open in new tab or Download.';
                           info.replaceChildren(icon, msg);
