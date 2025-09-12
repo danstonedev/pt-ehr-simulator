@@ -22,9 +22,7 @@ function spriteIcon(name, { className = 'icon', size } = {}) {
 // Modal to create a blank SOAP note (not tied to a case)
 function openCreateNoteModal() {
   const overlay = el('div', {
-    class: 'popup-overlay-base',
-    style:
-      'position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;',
+    class: 'popup-overlay-base fixed inset-0 overlay-65 d-flex ai-center jc-center z-modal',
     onclick: (e) => {
       if (e.target === overlay) close();
     },
@@ -33,31 +31,29 @@ function openCreateNoteModal() {
   const content = el(
     'div',
     {
-      class: 'popup-card-base',
+      class: 'popup-card-base bg-surface text-color br-lg shadow-modal',
       role: 'dialog',
       'aria-modal': 'true',
       'aria-label': 'Create SOAP Note',
-      style:
-        'background:var(--bg); color:var(--text); padding:24px; border-radius:12px; width:92%; max-width:520px; box-shadow:0 20px 25px -5px rgba(0,0,0,0.15);',
+      style: 'padding:24px; width:92%; max-width:520px;',
       onclick: (e) => e.stopPropagation(),
     },
     [
       el('h3', { style: 'margin-top:0;' }, 'Create SOAP Note'),
       el(
         'p',
-        { class: 'small', style: 'margin-top:4px; color:var(--text-secondary);' },
+        { class: 'small mt-4 text-secondary' },
         'Give your note a title so you can find it later.',
       ),
-      el('label', { class: 'form-label-standard', style: 'margin-top:12px;' }, 'Note Title'),
+      el('label', { class: 'form-label-standard mt-12' }, 'Note Title'),
       el('input', {
         id: 'student-note-title-input',
         type: 'text',
-        class: 'form-input-standard',
+        class: 'form-input-standard w-100 box-border',
         value: defaultTitle,
         placeholder: 'e.g., Shoulder Pain Eval - Aug 2025',
-        style: 'width:100%; box-sizing:border-box;',
       }),
-      el('div', { style: 'display:flex; gap:8px; justify-content:flex-end; margin-top:18px;' }, [
+      el('div', { class: 'd-flex gap-8 jc-end', style: 'margin-top:18px;' }, [
         el('button', { class: 'btn secondary', onClick: () => close() }, 'Cancel'),
         el(
           'button',
