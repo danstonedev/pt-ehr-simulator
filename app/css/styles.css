@@ -154,6 +154,32 @@
   white-space: nowrap;
 }
 
+/* Size utilities */
+.w-40 {
+  width: 40px;
+}
+.h-40 {
+  height: 40px;
+}
+/* Flex justify helper */
+.jc-center {
+  justify-content: center;
+}
+/* Object-fit helper */
+.obj-cover {
+  object-fit: cover;
+}
+/* Border radius/border/background helpers */
+.br-sm {
+  border-radius: 6px;
+}
+.b-1 {
+  border: 1px solid var(--border);
+}
+.bg-secondary {
+  background: var(--bg-secondary);
+}
+
 .skip-link {
   position: fixed;
   top: 8px;

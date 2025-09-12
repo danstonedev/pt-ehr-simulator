@@ -956,16 +956,12 @@ function openViewArtifactModal(module, options = {}) {
             { class: 'd-flex fd-column gap-8' },
             atts.map((m) => {
               const row = el('div', { class: 'd-flex ai-center gap-8' }, []);
-              const thumbWrap = el('div', {
-                style:
-                  'width:40px; height:40px; display:flex; align-items:center; justify-content:center;',
-              });
+              const thumbWrap = el('div', { class: 'w-40 h-40 d-flex ai-center jc-center' });
               // Create a placeholder; fill with image if mimetype is image/*
               const isImg = (m.mime || '').startsWith('image/');
               if (isImg) {
                 const img = el('img', {
-                  style:
-                    'width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid var(--border); background: var(--bg-secondary);',
+                  class: 'w-40 h-40 obj-cover br-sm b-1 bg-secondary',
                   alt: m.name || 'attachment',
                 });
                 thumbWrap.appendChild(img);
