@@ -201,6 +201,10 @@
 .relative {
   position: relative;
 }
+.sticky-bottom {
+  position: sticky;
+  bottom: 0;
+}
 /* Gap helpers */
 .gap-6 {
   gap: 6px;
@@ -220,6 +224,9 @@
 }
 .mt-8 {
   margin-top: 8px;
+}
+.mt-24 {
+  margin-top: 24px;
 }
 .mt-20 {
   margin-top: 20px;
@@ -271,6 +278,9 @@
 .w-100 {
   width: 100%;
 }
+.w-12 {
+  width: 12px;
+}
 /* Object fit variants */
 .obj-contain {
   object-fit: contain;
@@ -278,6 +288,10 @@
 /* Background colors */
 .bg-white {
   background: #fff;
+}
+.reset-contents {
+  all: unset;
+  display: contents;
 }
 /* Border radius & shadows for modal panel */
 .br-md {

@@ -1955,32 +1955,25 @@ export function openEditCaseModal(caseInfo, onSave) {
             ]),
             // Case Artifacts moved to dedicated modal and sidebar block
             // Buttons (sticky footer area so actions remain visible)
-            el(
-              'div',
-              {
-                class: 'd-flex jc-end gap-8 pt-12 mt-16 bt-1 bg-surface',
-                style: 'position: sticky; bottom: 0;',
-              },
-              [
-                el(
-                  'button',
-                  {
-                    type: 'button',
-                    class: 'btn secondary',
-                    onclick: () => document.body.removeChild(modal),
-                  },
-                  'Cancel',
-                ),
-                el(
-                  'button',
-                  {
-                    type: 'submit',
-                    class: 'btn primary',
-                  },
-                  'Save Changes',
-                ),
-              ],
-            ),
+            el('div', { class: 'd-flex jc-end gap-8 pt-12 mt-16 bt-1 bg-surface sticky-bottom' }, [
+              el(
+                'button',
+                {
+                  type: 'button',
+                  class: 'btn secondary',
+                  onclick: () => document.body.removeChild(modal),
+                },
+                'Cancel',
+              ),
+              el(
+                'button',
+                {
+                  type: 'submit',
+                  class: 'btn primary',
+                },
+                'Save Changes',
+              ),
+            ]),
           ]),
         ],
       ),
@@ -2518,7 +2511,7 @@ export function createChartNavigation(config) {
       style:
         'background:#00883A;display:flex;align-items:center;justify-content:center;margin:0;padding:0;height:56px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;font-size:clamp(0.95rem,2.7vw,1.125rem);color:#fff;border:0;border-bottom:2px solid #fff;box-sizing:border-box;',
     },
-    [el('span', { class: 'case-file-badge', style: 'all:unset;display:contents;' }, 'Case File')],
+    [el('span', { class: 'case-file-badge reset-contents' }, 'Case File')],
   );
 
   const sidebar = el(
@@ -2577,11 +2570,7 @@ export function createChartNavigation(config) {
                   },
                 },
                 [
-                  el(
-                    'span',
-                    { class: 'twisty d-inline-block', style: 'width:12px;' },
-                    isCollapsed ? '▶' : '▼',
-                  ),
+                  el('span', { class: 'twisty d-inline-block w-12' }, isCollapsed ? '▶' : '▼'),
                   el(
                     'span',
                     { class: 'flex-1 ta-left' },
@@ -2788,7 +2777,7 @@ export function createChartNavigation(config) {
                 },
               });
             }
-            return el('div', { style: 'margin: 24px 0 8px 0; display:flex; gap:8px;' }, [
+            return el('div', { class: 'd-flex gap-8 mt-24 mb-8' }, [
               el(
                 'button',
                 {
