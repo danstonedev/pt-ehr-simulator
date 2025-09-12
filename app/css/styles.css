@@ -137,6 +137,22 @@
 .fw-600 {
   font-weight: 600;
 }
+/* Typography & color utilities */
+.fs-12 {
+  font-size: 12px;
+}
+.text-secondary {
+  color: var(--text-secondary);
+}
+/* Layout/text helpers */
+.flex-1 {
+  flex: 1 1 auto;
+}
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .skip-link {
   position: fixed;

@@ -944,11 +944,7 @@ function openViewArtifactModal(module, options = {}) {
             ],
           );
         }
-        return el(
-          'div',
-          { style: 'font-size:12px; color: var(--text-secondary);' },
-          'No details available.',
-        );
+        return el('div', { class: 'fs-12 text-secondary' }, 'No details available.');
       })(),
       (() => {
         const atts = Array.isArray(module?.data?.attachments) ? module.data.attachments : [];
@@ -988,10 +984,7 @@ function openViewArtifactModal(module, options = {}) {
               }
               const nameSpan = el(
                 'span',
-                {
-                  style:
-                    'flex:1; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;',
-                },
+                { class: 'flex-1 fs-12 text-ellipsis' },
                 `${m.name} (${Math.ceil((m.size || 0) / 1024)} KB)`,
               );
               row.appendChild(thumbWrap);
