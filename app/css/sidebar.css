@@ -828,37 +828,31 @@ html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item:hover:not(.ac
   border-left-color: var(--neutral-600); /* UND gray spectrum */
 }
 
-/* Theme-scoped tracker pills to avoid conflicts */
+/* Theme-scoped section items - backgrounds removed for cleaner look */
 html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item {
-  border: 1px solid var(--surface-light-border) !important;
-  background: var(--surface-light) !important;
+  border: none !important;
+  background: transparent !important;
   box-shadow: none !important;
-}
-html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item:hover {
-  border-color: var(--surface-light-border) !important;
-  background-color: var(--surface-light-hover) !important; /* not dark in light theme */
 }
 html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item.active {
-  border: 1px solid var(--surface-light-border) !important;
-  background: var(--white) !important;
+  border: none !important;
+  background: transparent !important;
   box-shadow: none !important;
+  font-weight: 700 !important; /* Keep bold for active state */
 }
 html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item.active:hover {
-  background: var(--white) !important;
+  background: transparent !important;
 }
 
 html[data-theme='dark'] .sidebar-nav-panel .section-nav-item {
-  border: 1px solid var(--border) !important;
-  background: var(--panel) !important; /* dark pills in dark theme */
+  border: none !important;
+  background: transparent !important;
   box-shadow: none !important;
-}
-html[data-theme='dark'] .sidebar-nav-panel .section-nav-item:hover {
-  border-color: var(--border) !important;
-  background-color: var(--bg-hover) !important;
 }
 html[data-theme='dark'] .sidebar-nav-panel .section-nav-item.active {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: transparent !important;
   box-shadow: none !important;
+  font-weight: 700 !important; /* Keep bold for active state */
 }
 
 /* Navigation text styles with consistent hierarchy */
