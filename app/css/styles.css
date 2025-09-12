@@ -208,8 +208,14 @@
 .mt-4 {
   margin-top: 4px;
 }
+.mt-6 {
+  margin-top: 6px;
+}
 .mt-8 {
   margin-top: 8px;
+}
+.mt-20 {
+  margin-top: 20px;
 }
 .mr-4 {
   margin-right: 4px;
@@ -219,6 +225,10 @@
 }
 .mb-16 {
   margin-bottom: 16px;
+}
+.my-4 {
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 /* Borders */
 .bb-1 {

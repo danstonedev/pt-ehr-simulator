@@ -2582,12 +2582,12 @@ export function createChartNavigation(config) {
                 [
                   el(
                     'span',
-                    { class: 'twisty', style: 'display:inline-block; width:12px;' },
+                    { class: 'twisty d-inline-block', style: 'width:12px;' },
                     isCollapsed ? '▶' : '▼',
                   ),
                   el(
                     'span',
-                    { style: 'flex:1; text-align:left;' },
+                    { class: 'flex-1 ta-left' },
                     `${cat.meta?.label || cat.key} (${cat.items.length})`,
                   ),
                 ],
@@ -2627,9 +2627,7 @@ export function createChartNavigation(config) {
 
               return el('div', { class: 'artifact-category' }, [
                 header,
-                isCollapsed
-                  ? el('div')
-                  : el('div', { class: 'artifact-list', style: 'margin-top:4px;' }, itemButtons),
+                isCollapsed ? el('div') : el('div', { class: 'artifact-list mt-4' }, itemButtons),
               ]);
             }
 
@@ -2640,10 +2638,7 @@ export function createChartNavigation(config) {
                 nodes.push(
                   el(
                     'div',
-                    {
-                      class: 'editable-table__footer artifact-add-footer',
-                      style: 'margin-top:6px;',
-                    },
+                    { class: 'editable-table__footer artifact-add-footer mt-6' },
                     el(
                       'div',
                       {
@@ -2664,17 +2659,10 @@ export function createChartNavigation(config) {
               }
               if (!nodes.length && config.isFacultyMode) {
                 nodes.push(
+                  el('div', { class: 'fs-12 my-4 text-secondary' }, 'No artifacts yet.'),
                   el(
                     'div',
-                    { style: 'font-size:12px; margin:4px 0; color: var(--text-secondary);' },
-                    'No artifacts yet.',
-                  ),
-                  el(
-                    'div',
-                    {
-                      class: 'editable-table__footer artifact-add-footer',
-                      style: 'margin-top:6px;',
-                    },
+                    { class: 'editable-table__footer artifact-add-footer mt-6' },
                     el(
                       'div',
                       {
@@ -2700,7 +2688,7 @@ export function createChartNavigation(config) {
             return container;
           })(),
           // Extra padding before section trackers
-          el('div', { style: 'height: 20px;' }),
+          el('div', { class: 'mt-20' }),
           // Current Encounter header (renamed from Note Progress)
           el(
             'h4',
@@ -2808,7 +2796,7 @@ export function createChartNavigation(config) {
                 'button',
                 {
                   class: 'btn primary',
-                  style: 'flex:1;',
+                  class: 'flex-1 btn primary',
                   title: 'Sign the evaluation then export to a Word document',
                   onClick: handleExportClick,
                 },
