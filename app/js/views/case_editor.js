@@ -555,32 +555,19 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     img.src = src;
   }
 
-  const patientHeader = el(
-    'div',
-    {
-      id: 'patient-sticky-header',
-      style: [
-        'position: sticky',
-        'top: var(--topbar-h, 72px)',
-        // Ensure patient banner stays above sticky section dividers
-        'z-index: var(--z-case-header)',
-        'background: var(--case-header-bg, var(--bg))',
-        'display:flex',
-        'align-items:center',
-        'justify-content: space-between',
-        'gap: 12px',
-      ].join('; '),
-    },
-    [
-      // Left: avatar + name lines
-      el('div', { style: 'display:flex; align-items:center; gap:12px;' }, [
-        avatarEl,
-        el('div', {}, [patientHeaderNameEl, patientHeaderDemoEl]),
-      ]),
-      // Right: actions
-      el('div', { id: 'patient-header-actions' }, []),
-    ],
-  );
+  // Apply CSS classes to reduce inline styles
+  patientHeaderNameEl.className = 'patient-name-line';
+  patientHeaderDemoEl.className = 'patient-demo-line';
+
+  const patientHeader = el('div', { id: 'patient-sticky-header' }, [
+    // Left: avatar + name lines
+    el('div', { class: 'patient-header-left' }, [
+      avatarEl,
+      el('div', {}, [patientHeaderNameEl, patientHeaderDemoEl]),
+    ]),
+    // Right: actions
+    el('div', { id: 'patient-header-actions' }, []),
+  ]);
 
   // Initial neutral avatar
   updatePatientAvatar();
@@ -636,22 +623,14 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       patientHeaderNameEl.replaceChildren();
       patientHeaderNameEl.append(
         el('span', { style: 'font-weight:700' }, displayName),
-        ...(sexDisplay
-          ? [
-              el(
-                'span',
-                { style: 'font-weight:400; color: var(--text-secondary); margin-left:6px;' },
-                `(${sexDisplay})`,
-              ),
-            ]
-          : []),
+        ...(sexDisplay ? [el('span', { class: 'patient-sex' }, `(${sexDisplay})`)] : []),
       );
       // Line 2: MM-DD-YYYY (xx years old) with date bold
       const dateText = dobFmt || dob || 'N/A';
       patientHeaderDemoEl.replaceChildren();
       patientHeaderDemoEl.append(
-        el('span', { style: 'font-weight:700; color: var(--text);' }, dateText),
-        ...(age ? [el('span', { style: 'font-weight:400' }, ` (${age} years old)`)] : []),
+        el('span', { class: 'patient-dob' }, dateText),
+        ...(age ? [el('span', {}, ` (${age} years old)`)] : []),
       );
       // Expose measured height to CSS as a variable so sticky offsets and anchors account for it
       const h = patientHeader.offsetHeight || 0;
