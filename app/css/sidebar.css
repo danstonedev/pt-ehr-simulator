@@ -367,6 +367,11 @@ html:not([data-theme='dark']) .chart-navigation .section-card.active > .section-
 /* Subsection status indicators */
 .subsection-indicator {
   display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
 }
 .subsection-indicator-empty {
   background: var(--surface-light-border);
@@ -377,9 +382,16 @@ html[data-theme='dark'] .subsection-indicator-empty {
 }
 .subsection-indicator-partial {
   box-shadow: inset 0 0 0 1px var(--surface-light-border);
+  background: linear-gradient(90deg, var(--und-orange) 50%, var(--border) 50%);
 }
 html[data-theme='dark'] .subsection-indicator-partial {
   box-shadow: inset 0 0 0 1px var(--border);
+}
+/* Complete indicator: green check mark styles applied to the glyph, keep geometry via base class */
+.subsection-indicator-complete {
+  color: var(--und-green);
+  font-size: 14px;
+  font-weight: 700;
 }
 /* Subsection items: use secondary text unless active section, improve hierarchy */
 .chart-navigation .section-card .subsection-item {

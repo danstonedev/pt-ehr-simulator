@@ -128,29 +128,15 @@ function createSubsectionIndicator(status) {
         'span',
         {
           class: 'subsection-indicator subsection-indicator-complete',
-          style: 'color: var(--und-green); font-size: 14px; font-weight: bold; margin-right: 6px;',
         },
         '✓',
       );
 
     case 'partial':
-      return el('div', {
-        class: 'subsection-indicator subsection-indicator-partial',
-        style: `
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: linear-gradient(90deg, var(--und-orange) 50%, var(--border) 50%);
-          margin-right: 6px;
-          flex-shrink: 0;
-        `,
-      });
+      return el('div', { class: 'subsection-indicator subsection-indicator-partial' });
 
     default: // 'empty'
-      return el('div', {
-        class: 'subsection-indicator subsection-indicator-empty',
-        style: `width:12px;height:12px;border-radius:50%;margin-right:6px;flex-shrink:0;`,
-      });
+      return el('div', { class: 'subsection-indicator subsection-indicator-empty' });
   }
 }
 
