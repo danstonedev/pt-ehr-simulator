@@ -1,5 +1,8 @@
 import { storage } from './adapters/storageAdapter.js';
 
+// Track per-view cleanup returned by renderers to avoid stacked listeners/memory leaks
+let currentCleanup = null;
+
 // Basic route transition utility
 function applyRouteTransition(appEl, mode = 'fade') {
   // Skip if user prefers reduced motion
@@ -92,13 +95,19 @@ export function startRouter() {
     const { renderer, params } = resolveRendererAndParams(path);
     if (!renderer) return;
 
+    // Teardown previous view before rendering the next one
+    try {
+      if (typeof currentCleanup === 'function') currentCleanup();
+    } catch {}
+
     persistLastRoute(hash, path);
     updateNavigation(hash);
     setBodyRouteKey(path);
 
     const { before, after } = applyRouteTransition(app, 'fade');
     const newWrapper = buildRouteWrapper(app, before);
-    await renderer(newWrapper, new URLSearchParams(query || ''), params);
+    const maybeCleanup = await renderer(newWrapper, new URLSearchParams(query || ''), params);
+    currentCleanup = typeof maybeCleanup === 'function' ? maybeCleanup : null;
     after(newWrapper);
   }
   window.addEventListener('hashchange', render);

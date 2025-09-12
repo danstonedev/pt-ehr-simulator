@@ -36,6 +36,10 @@ route('#/instructor/editor', async (app, qs) => {
 
 /* eslint-disable-next-line complexity */
 async function renderCaseEditor(app, qs, isFacultyMode) {
+  // AbortController for all event listeners in this view; router will call returned cleanup
+  const ac = new AbortController();
+  let offRoute = null;
+  let activeObserver = null;
   const caseId = qs.get('case');
   // Version param removed with header changes
   const encounter = qs.get('encounter') || 'eval';
@@ -81,16 +85,22 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     return best?.id || '';
   }
 
-  // Robust scrolling to an anchor accounting for fixed headers and layout shifts
+  // Prefer native anchor scrolling using CSS scroll-margin-top; fallback to manual offset
   function scrollToAnchorExact(anchorId, behavior = 'auto') {
     if (!anchorId) return false;
-    const el = document.getElementById(anchorId);
-    if (!el || el.offsetParent === null) return false; // not present or display:none
-    const offset = getHeaderOffsetPx();
-    const rect = el.getBoundingClientRect();
-    const targetY = Math.max(0, window.scrollY + rect.top - offset);
-    window.scrollTo({ top: targetY, behavior });
-    return true;
+    const target = document.getElementById(anchorId);
+    if (!target || target.offsetParent === null) return false;
+    try {
+      target.scrollIntoView({ behavior, block: 'start', inline: 'nearest' });
+      return true;
+    } catch {
+      // Fallback for older browsers
+      const offset = getHeaderOffsetPx();
+      const rect = target.getBoundingClientRect();
+      const y = Math.max(0, window.scrollY + rect.top - offset);
+      window.scrollTo({ top: y, behavior });
+      return true;
+    }
   }
 
   function afterNextLayout(fn) {
@@ -435,7 +445,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   // React to external URL changes (e.g., user edits hash or navigates)
   try {
-    onRouteChange((e) => {
+    offRoute = onRouteChange((e) => {
       const { params } = e.detail || {};
       const next = params && params.section ? String(params.section).toLowerCase() : '';
       if (next && next !== active && isValidSection(next)) {
@@ -654,7 +664,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
       const h = patientHeader.offsetHeight || 0;
       document.documentElement.style.setProperty('--patient-sticky-h', `${h}px`);
     },
-    { passive: true },
+    { passive: true, signal: ac.signal },
   );
 
   // Create main content container with sidebar offset + header
@@ -858,6 +868,54 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     }
   }
 
+  // Use IntersectionObserver to update active section based on section headers entering the viewport
+  function setupActiveSectionObserver() {
+    try {
+      if (activeObserver) activeObserver.disconnect();
+    } catch {}
+    const offset = Math.max(0, getHeaderOffsetPx());
+    function setActiveSectionFromObserver(id) {
+      if (!id || id === active) return;
+      if (!['subjective', 'objective', 'assessment', 'plan', 'billing'].includes(id)) return;
+      active = id;
+      refreshChartNavigation(chartNav, {
+        activeSection: active,
+        onSectionChange: (sectionId) => switchTo(sectionId),
+        isFacultyMode: isFacultyMode,
+        caseData: {
+          ...c,
+          ...draft,
+          modules: Array.isArray(draft.modules) ? draft.modules : c.modules,
+          editorSettings: c.editorSettings || draft.editorSettings,
+        },
+        caseInfo: getCaseInfoSnapshot(),
+        onCaseInfoUpdate: handleCaseInfoUpdate,
+        onEditorSettingsChange: (nextSettings) => {
+          draft.editorSettings = nextSettings;
+          c.editorSettings = nextSettings;
+          save();
+          if (window.refreshChartProgress) window.refreshChartProgress();
+        },
+      });
+    }
+
+    activeObserver = new IntersectionObserver(
+      (entries) => {
+        if (Date.now() < programmaticScrollBlockUntil || isProgrammaticScroll) return;
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          const id = (e.target.id || '').replace('section-', '');
+          setActiveSectionFromObserver(id);
+        }
+      },
+      { root: null, rootMargin: `-${offset + 8}px 0px -60% 0px`, threshold: 0.01 },
+    );
+    // Observe all section headers
+    try {
+      Object.values(sectionHeaders).forEach((hdr) => hdr && activeObserver.observe(hdr));
+    } catch {}
+  }
+
   /* eslint-disable-next-line complexity */
   function switchTo(s) {
     if (!isValidSection(s)) return;
@@ -967,7 +1025,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         window.removeEventListener('scrollend', clearProg);
       };
       try {
-        window.addEventListener('scrollend', clearProg, { once: true });
+        window.addEventListener('scrollend', clearProg, { once: true, signal: ac.signal });
       } catch {
         // scrollend not supported; fallback timeout
         setTimeout(() => (isProgrammaticScroll = false), 800);
@@ -992,6 +1050,8 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   updatePatientHeader();
   renderPatientHeaderActions();
   renderAllSections();
+  // Set up IntersectionObserver for active section tracking
+  setupActiveSectionObserver();
   // Initial nav state + optional deep link handling
   refreshChartNavigation(chartNav, {
     activeSection: active,
@@ -1046,88 +1106,32 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   // Perform initial anchor/percent scroll after content is laid out
   afterNextLayout(() => performInitialScrollIfNeeded(active));
 
-  // Observe scroll to update active section and sidebar
-  /* eslint-disable-next-line complexity */
-  function determineActiveByScroll() {
-    // Suppress scroll-based recalculation while a programmatic smooth scroll is in progress
-    if (Date.now() < programmaticScrollBlockUntil || isProgrammaticScroll) return;
-    const offset = getHeaderOffsetPx();
-    const entries = Object.entries(sectionHeaders);
-    let current = entries[0]?.[0] || 'subjective';
-    for (const [id, elHeader] of entries) {
-      const top = elHeader.getBoundingClientRect().top;
-      if (top - offset <= 8) current = id;
-      else break;
-    }
-    if (current !== active) {
-      active = current;
-      refreshChartNavigation(chartNav, {
-        activeSection: active,
-        onSectionChange: (sectionId) => switchTo(sectionId),
-        isFacultyMode: isFacultyMode,
-        caseData: {
-          ...c,
-          ...draft,
-          modules: Array.isArray(draft.modules) ? draft.modules : c.modules,
-          editorSettings: c.editorSettings || draft.editorSettings,
-        },
-        caseInfo: {
-          title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
-          setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
-          age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
-          sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-          acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
-          dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
-          modules: Array.isArray(c.modules) ? c.modules : [],
-        },
-        onCaseInfoUpdate: (updatedInfo) => {
-          c.caseTitle = updatedInfo.title;
-          c.title = updatedInfo.title;
-          c.setting = updatedInfo.setting;
-          c.patientAge = updatedInfo.age;
-          c.patientGender = updatedInfo.sex;
-          c.acuity = updatedInfo.acuity;
-          c.patientDOB = updatedInfo.dob;
-          if (Array.isArray(updatedInfo.modules)) {
-            c.modules = updatedInfo.modules;
-            draft.modules = updatedInfo.modules;
-          }
-          // Keep canonical containers in sync
-          c.meta = c.meta || {};
-          c.meta.title = updatedInfo.title;
-          c.meta.setting = updatedInfo.setting;
-          c.meta.acuity = updatedInfo.acuity;
-          c.snapshot = c.snapshot || {};
-          c.snapshot.age = updatedInfo.age;
-          c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
-          c.snapshot.dob = updatedInfo.dob;
-          updatePatientHeader();
-          save();
-        },
-        onEditorSettingsChange: (nextSettings) => {
-          draft.editorSettings = nextSettings;
-          c.editorSettings = nextSettings;
-          save();
-          if (window.refreshChartProgress) window.refreshChartProgress();
-        },
-      });
-    }
-  }
-
-  let scrollTicking = false;
+  // Recreate observer on resize to keep rootMargin aligned with sticky header height
   window.addEventListener(
-    'scroll',
+    'resize',
     () => {
-      if (!scrollTicking) {
-        scrollTicking = true;
-        requestAnimationFrame(() => {
-          determineActiveByScroll();
-          scrollTicking = false;
-        });
-      }
+      try {
+        setupActiveSectionObserver();
+      } catch {}
     },
-    { passive: true },
+    { passive: true, signal: ac.signal },
   );
+
+  // Return teardown so the router can clean this view on navigation
+  return () => {
+    try {
+      offRoute && offRoute();
+    } catch {}
+    try {
+      themeObserver && themeObserver.disconnect && themeObserver.disconnect();
+    } catch {}
+    try {
+      activeObserver && activeObserver.disconnect && activeObserver.disconnect();
+    } catch {}
+    try {
+      ac.abort();
+    } catch {}
+  };
 }
 
 /**

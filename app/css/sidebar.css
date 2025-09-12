@@ -28,6 +28,15 @@
   contain: layout style; /* Performance optimization - isolate layout calculations */
   will-change: transform; /* Optimize for frequent transforms */
 }
+
+/* Prefer dynamic viewport units on supporting browsers to avoid URL bar jank */
+@supports (height: 100dvh) {
+  .chart-navigation {
+    height: calc(
+      100dvh - var(--topbar-h, 56px) - var(--edu-ribbon-h, 24px) - env(safe-area-inset-bottom, 0px)
+    );
+  }
+}
 .chart-navigation.collapsed {
   transform: translateX(calc(-1 * var(--sidebar-w)));
 }
@@ -306,34 +315,14 @@ html[data-theme='dark'] .chart-navigation .section-card.section-status-complete 
   width: 0.25rem; /* 4px */
   opacity: 1;
 }
-/* TEST: Make all section nav items bright red to verify CSS is loading */
-.chart-navigation .section-card .section-nav-item {
-  background: red !important;
-  color: white !important;
-  width: 100% !important;
-  /* Fixed padding like patient header - no responsive units */
-  padding: 0.75rem 20px !important; /* increased padding, no bottom padding needed */
-  border: none !important;
-  /* Remove border-bottom - we'll use dividers between sections instead */
-  border-bottom: none !important;
-  background: transparent !important;
-  display: flex !important;
-  align-items: center !important;
-  font-weight: 600 !important;
-  font-size: 0.95rem !important; /* fixed font size, no responsive scaling */
-  gap: 0.25rem !important; /* 4px */
-  text-transform: uppercase !important;
-  letter-spacing: 0.03125rem !important; /* 0.5px */
-  cursor: pointer !important;
-  box-sizing: border-box !important;
-  font-family: inherit !important;
-  color: var(--text) !important;
-  transform: translateZ(0) !important; /* sub-pixel snapping like patient header */
-  line-height: 1 !important; /* kill extra line-height growth like patient header */
-  /* Ensure smooth transitions for background changes */
-  transition:
-    background 0.15s ease,
-    color 0.15s ease !important;
+
+/* Restore comfortable spacing between the status bar and section headers */
+.chart-navigation .section-card > .section-nav-item {
+  padding: 0.625rem 12px 0.625rem 16px; /* top/right/bottom/left */
+  display: flex;
+  align-items: center;
+  line-height: 1.25;
+  box-sizing: border-box;
 }
 
 /* Hover / active interactions disabled - cleaner look without background rectangles */
