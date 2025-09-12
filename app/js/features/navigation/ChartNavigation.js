@@ -1612,17 +1612,12 @@ function openEditArtifactModal(module, onSave) {
     attList.replaceChildren();
     if (!ref.attachments || !ref.attachments.length) return;
     ref.attachments.forEach((m, idx) => {
-      const row = el('div', { style: 'display:flex; align-items:center; gap:8px;' }, [
-        el(
-          'span',
-          { style: 'flex:1; font-size:12px;' },
-          `${m.name} (${Math.ceil((m.size || 0) / 1024)} KB)`,
-        ),
+      const row = el('div', { class: 'd-flex ai-center gap-8' }, [
+        el('span', { class: 'flex-1 fs-12' }, `${m.name} (${Math.ceil((m.size || 0) / 1024)} KB)`),
         el(
           'button',
           {
-            class: 'btn secondary',
-            style: 'font-size:11px; padding:4px 8px;',
+            class: 'btn secondary small',
             title: 'Remove attachment from this document',
             onclick: () => {
               ref.attachments.splice(idx, 1);
@@ -1635,7 +1630,7 @@ function openEditArtifactModal(module, onSave) {
       attList.appendChild(row);
     });
   }
-  const refForm = el('div', { style: 'display:grid; gap:10px; margin-top: 8px;' }, [
+  const refForm = el('div', { class: 'd-grid gap-10 mt-8' }, [
     el('div', {}, [
       el('label', { class: 'instructor-form-label' }, 'Date'),
       el('input', {
@@ -1643,15 +1638,6 @@ function openEditArtifactModal(module, onSave) {
         class: 'instructor-form-input',
         value: ref.date,
         oninput: (e) => (ref.date = e.target.value),
-      }),
-    ]),
-    el('div', {}, [
-      el('label', { class: 'instructor-form-label' }, 'From (provider/department)'),
-      el('input', {
-        type: 'text',
-        class: 'instructor-form-input',
-        value: ref.source,
-        oninput: (e) => (ref.source = e.target.value),
       }),
     ]),
     el('div', {}, [
@@ -1667,11 +1653,7 @@ function openEditArtifactModal(module, onSave) {
       el('label', { class: 'instructor-form-label' }, 'Notes'),
       el(
         'textarea',
-        {
-          class: 'instructor-form-input',
-          style: 'min-height:68px;',
-          oninput: (e) => (ref.notes = e.target.value),
-        },
+        { class: 'instructor-form-input minh-68', oninput: (e) => (ref.notes = e.target.value) },
         ref.notes,
       ),
     ]),
@@ -1900,8 +1882,7 @@ export function openEditCaseModal(caseInfo, onSave) {
                   type: 'date',
                   id: 'edit-dob',
                   value: caseInfo.dob || '',
-                  style:
-                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+                  class: 'w-100 p-12 b-1i br-sm fs-14 box-border',
                   oninput: (e) => {
                     // If user is typing a DOB, mark as user-edited so age changes won't overwrite
                     if (e.isTrusted) delete e.target.dataset.autofilled;
@@ -1912,52 +1893,37 @@ export function openEditCaseModal(caseInfo, onSave) {
                 }),
                 el(
                   'div',
-                  { style: 'margin-top: 6px; font-size: 12px; color: var(--text-secondary);' },
+                  { class: 'mt-4 fs-12 text-secondary' },
                   'Age auto-fills when DOB is entered.',
                 ),
               ]),
             ]),
             // Sex (full width row)
-            el('div', { style: 'margin-bottom: 16px;' }, [
-              el(
-                'label',
-                {
-                  style:
-                    'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
-                },
-                'Sex',
-              ),
-              el(
-                'select',
-                {
-                  id: 'edit-gender',
-                  style:
-                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
-                },
-                [
-                  el('option', { value: '' }, 'Select...'),
-                  el(
-                    'option',
-                    { value: 'male', selected: caseSex === 'male' ? '' : undefined },
-                    'Male',
-                  ),
-                  el(
-                    'option',
-                    { value: 'female', selected: caseSex === 'female' ? '' : undefined },
-                    'Female',
-                  ),
-                  el(
-                    'option',
-                    { value: 'other', selected: caseSex === 'other' ? '' : undefined },
-                    'Other',
-                  ),
-                  el(
-                    'option',
-                    { value: 'unspecified', selected: caseSex === 'unspecified' ? '' : undefined },
-                    'Prefer not to say',
-                  ),
-                ],
-              ),
+            el('div', { class: 'mb-16' }, [
+              el('label', { class: 'block mb-8 fw-500 text-color' }, 'Sex'),
+              el('select', { id: 'edit-gender', class: 'w-100 p-12 b-1i br-sm fs-14 box-border' }, [
+                el('option', { value: '' }, 'Select...'),
+                el(
+                  'option',
+                  { value: 'male', selected: caseSex === 'male' ? '' : undefined },
+                  'Male',
+                ),
+                el(
+                  'option',
+                  { value: 'female', selected: caseSex === 'female' ? '' : undefined },
+                  'Female',
+                ),
+                el(
+                  'option',
+                  { value: 'other', selected: caseSex === 'other' ? '' : undefined },
+                  'Other',
+                ),
+                el(
+                  'option',
+                  { value: 'unspecified', selected: caseSex === 'unspecified' ? '' : undefined },
+                  'Prefer not to say',
+                ),
+              ]),
             ]),
             // Setting (moved below Age/Sex)
             el('div', { class: 'instructor-form-field' }, [
@@ -2009,49 +1975,34 @@ export function openEditCaseModal(caseInfo, onSave) {
               ]),
             ]),
             // Acuity (schema enums)
-            el('div', { style: 'margin-bottom: 24px;' }, [
-              el(
-                'label',
-                {
-                  style:
-                    'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
-                },
-                'Case Acuity',
-              ),
-              el(
-                'select',
-                {
-                  id: 'edit-acuity',
-                  style:
-                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
-                },
-                [
-                  el('option', { value: '' }, 'Select acuity...'),
-                  el(
-                    'option',
-                    { value: 'acute', selected: caseAcuity === 'acute' ? '' : undefined },
-                    'Acute',
-                  ),
-                  el(
-                    'option',
-                    { value: 'subacute', selected: caseAcuity === 'subacute' ? '' : undefined },
-                    'Subacute',
-                  ),
-                  el(
-                    'option',
-                    { value: 'chronic', selected: caseAcuity === 'chronic' ? '' : undefined },
-                    'Chronic',
-                  ),
-                  el(
-                    'option',
-                    {
-                      value: 'unspecified',
-                      selected: caseAcuity === 'unspecified' ? '' : undefined,
-                    },
-                    'Unspecified',
-                  ),
-                ],
-              ),
+            el('div', { class: 'mb-16' }, [
+              el('label', { class: 'block mb-8 fw-500 text-color' }, 'Case Acuity'),
+              el('select', { id: 'edit-acuity', class: 'w-100 p-12 b-1i br-sm fs-14 box-border' }, [
+                el('option', { value: '' }, 'Select acuity...'),
+                el(
+                  'option',
+                  { value: 'acute', selected: caseAcuity === 'acute' ? '' : undefined },
+                  'Acute',
+                ),
+                el(
+                  'option',
+                  { value: 'subacute', selected: caseAcuity === 'subacute' ? '' : undefined },
+                  'Subacute',
+                ),
+                el(
+                  'option',
+                  { value: 'chronic', selected: caseAcuity === 'chronic' ? '' : undefined },
+                  'Chronic',
+                ),
+                el(
+                  'option',
+                  {
+                    value: 'unspecified',
+                    selected: caseAcuity === 'unspecified' ? '' : undefined,
+                  },
+                  'Unspecified',
+                ),
+              ]),
             ]),
             // Case Artifacts moved to dedicated modal and sidebar block
             // Buttons (sticky footer area so actions remain visible)
