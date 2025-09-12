@@ -724,7 +724,7 @@ function openViewArtifactModal(module, options = {}) {
                 'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
             },
             [
-              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Referral'),
+              el('div', { class: 'fw-600 mb-6' }, 'Referral'),
               el('div', { class: 'case-info-grid case-details-grid' }, [
                 el('div', { class: 'case-info-row' }, [
                   el('span', { class: 'label' }, 'Date'),
@@ -768,7 +768,7 @@ function openViewArtifactModal(module, options = {}) {
                 'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
             },
             [
-              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Imaging'),
+              el('div', { class: 'fw-600 mb-6' }, 'Imaging'),
               el(
                 'div',
                 { class: 'case-info-grid case-details-grid' },
@@ -799,7 +799,7 @@ function openViewArtifactModal(module, options = {}) {
                 'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
             },
             [
-              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Labs'),
+              el('div', { class: 'fw-600 mb-6' }, 'Labs'),
               el(
                 'div',
                 { class: 'case-info-grid case-details-grid' },
@@ -831,7 +831,7 @@ function openViewArtifactModal(module, options = {}) {
                 'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
             },
             [
-              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Medications'),
+              el('div', { class: 'fw-600 mb-6' }, 'Medications'),
               el(
                 'div',
                 { class: 'case-info-grid case-details-grid' },
@@ -866,7 +866,7 @@ function openViewArtifactModal(module, options = {}) {
                 'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
             },
             [
-              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Vitals'),
+              el('div', { class: 'fw-600 mb-6' }, 'Vitals'),
               el(
                 'div',
                 { class: 'case-info-grid case-details-grid' },
@@ -898,7 +898,7 @@ function openViewArtifactModal(module, options = {}) {
             [
               el(
                 'div',
-                { style: 'font-weight:600; margin-bottom:6px;' },
+                { class: 'fw-600 mb-6' },
                 t === 'pmh' ? 'Past Medical History' : module.title || 'Document',
               ),
               el(
@@ -926,11 +926,7 @@ function openViewArtifactModal(module, options = {}) {
                 'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
             },
             [
-              el(
-                'div',
-                { style: 'font-weight:600; margin-bottom:6px;' },
-                module.title || 'Details',
-              ),
+              el('div', { class: 'fw-600 mb-6' }, module.title || 'Details'),
               el(
                 'div',
                 { class: 'case-info-grid case-details-grid' },
@@ -957,13 +953,13 @@ function openViewArtifactModal(module, options = {}) {
       (() => {
         const atts = Array.isArray(module?.data?.attachments) ? module.data.attachments : [];
         if (!atts.length) return null;
-        return el('div', { style: 'margin-top:12px;' }, [
+        return el('div', { class: 'mt-12' }, [
           el('div', { class: 'goal-section-title' }, 'Attachments'),
           el(
             'div',
-            { style: 'display:flex; flex-direction:column; gap:8px;' },
+            { class: 'd-flex fd-column gap-8' },
             atts.map((m) => {
-              const row = el('div', { style: 'display:flex; align-items:center; gap:8px;' }, []);
+              const row = el('div', { class: 'd-flex ai-center gap-8' }, []);
               const thumbWrap = el('div', {
                 style:
                   'width:40px; height:40px; display:flex; align-items:center; justify-content:center;',

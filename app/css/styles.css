@@ -116,6 +116,27 @@
 .fs-18 {
   font-size: 18px;
 }
+.mb-6 {
+  margin-bottom: 6px;
+}
+.mt-12 {
+  margin-top: 12px;
+}
+.gap-8 {
+  gap: 8px;
+}
+.d-flex {
+  display: flex;
+}
+.fd-column {
+  flex-direction: column;
+}
+.ai-center {
+  align-items: center;
+}
+.fw-600 {
+  font-weight: 600;
+}
 
 .skip-link {
   position: fixed;
