@@ -716,37 +716,29 @@ function openViewArtifactModal(module, options = {}) {
         if (!module.type) module.type = t;
         if (t === 'referral') {
           const d = module.data || {};
-          return el(
-            'div',
-            {
-              class: 'module-card',
-              style:
-                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
-            },
-            [
-              el('div', { class: 'fw-600 mb-6' }, 'Referral'),
-              el('div', { class: 'case-info-grid case-details-grid' }, [
-                el('div', { class: 'case-info-row' }, [
-                  el('span', { class: 'label' }, 'Date'),
-                  el('span', { class: 'value' }, d.date || 'N/A'),
-                ]),
-                el('div', { class: 'case-info-row' }, [
-                  el('span', { class: 'label' }, 'From'),
-                  el('span', { class: 'value' }, d.source || 'N/A'),
-                ]),
-                el('div', { class: 'case-info-row' }, [
-                  el('span', { class: 'label' }, 'Reason'),
-                  el('span', { class: 'value' }, d.reason || 'N/A'),
-                ]),
-                d.notes
-                  ? el('div', { class: 'case-info-row' }, [
-                      el('span', { class: 'label' }, 'Notes'),
-                      el('span', { class: 'value' }, d.notes || ''),
-                    ])
-                  : null,
+          return el('div', { class: 'module-card b-1 br-md p-12 bg-surface' }, [
+            el('div', { class: 'fw-600 mb-6' }, 'Referral'),
+            el('div', { class: 'case-info-grid case-details-grid' }, [
+              el('div', { class: 'case-info-row' }, [
+                el('span', { class: 'label' }, 'Date'),
+                el('span', { class: 'value' }, d.date || 'N/A'),
               ]),
-            ],
-          );
+              el('div', { class: 'case-info-row' }, [
+                el('span', { class: 'label' }, 'From'),
+                el('span', { class: 'value' }, d.source || 'N/A'),
+              ]),
+              el('div', { class: 'case-info-row' }, [
+                el('span', { class: 'label' }, 'Reason'),
+                el('span', { class: 'value' }, d.reason || 'N/A'),
+              ]),
+              d.notes
+                ? el('div', { class: 'case-info-row' }, [
+                    el('span', { class: 'label' }, 'Notes'),
+                    el('span', { class: 'value' }, d.notes || ''),
+                  ])
+                : null,
+            ]),
+          ]);
         }
         if (t === 'imaging') {
           const d = module.data || {};
@@ -760,27 +752,19 @@ function openViewArtifactModal(module, options = {}) {
             d.impression ? ['Impression', d.impression] : null,
             d.notes ? ['Notes', d.notes] : null,
           ].filter(Boolean);
-          return el(
-            'div',
-            {
-              class: 'module-card',
-              style:
-                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
-            },
-            [
-              el('div', { class: 'fw-600 mb-6' }, 'Imaging'),
-              el(
-                'div',
-                { class: 'case-info-grid case-details-grid' },
-                rows.map(([label, val]) =>
-                  el('div', { class: 'case-info-row' }, [
-                    el('span', { class: 'label' }, label),
-                    el('span', { class: 'value' }, String(val)),
-                  ]),
-                ),
+          return el('div', { class: 'module-card b-1 br-md p-12 bg-surface' }, [
+            el('div', { class: 'fw-600 mb-6' }, 'Imaging'),
+            el(
+              'div',
+              { class: 'case-info-grid case-details-grid' },
+              rows.map(([label, val]) =>
+                el('div', { class: 'case-info-row' }, [
+                  el('span', { class: 'label' }, label),
+                  el('span', { class: 'value' }, String(val)),
+                ]),
               ),
-            ],
-          );
+            ),
+          ]);
         }
         if (t === 'labs') {
           const d = module.data || {};
@@ -791,27 +775,19 @@ function openViewArtifactModal(module, options = {}) {
             d.summary ? ['Summary', d.summary] : null,
             d.notes ? ['Notes', d.notes] : null,
           ].filter(Boolean);
-          return el(
-            'div',
-            {
-              class: 'module-card',
-              style:
-                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
-            },
-            [
-              el('div', { class: 'fw-600 mb-6' }, 'Labs'),
-              el(
-                'div',
-                { class: 'case-info-grid case-details-grid' },
-                rows.map(([label, val]) =>
-                  el('div', { class: 'case-info-row' }, [
-                    el('span', { class: 'label' }, label),
-                    el('span', { class: 'value' }, String(val)),
-                  ]),
-                ),
+          return el('div', { class: 'module-card b-1 br-md p-12 bg-surface' }, [
+            el('div', { class: 'fw-600 mb-6' }, 'Labs'),
+            el(
+              'div',
+              { class: 'case-info-grid case-details-grid' },
+              rows.map(([label, val]) =>
+                el('div', { class: 'case-info-row' }, [
+                  el('span', { class: 'label' }, label),
+                  el('span', { class: 'value' }, String(val)),
+                ]),
               ),
-            ],
-          );
+            ),
+          ]);
         }
         if (t === 'meds') {
           const d = module.data || {};
@@ -823,27 +799,19 @@ function openViewArtifactModal(module, options = {}) {
             d.indication ? ['Indication', d.indication] : null,
             d.notes ? ['Notes', d.notes] : null,
           ].filter(Boolean);
-          return el(
-            'div',
-            {
-              class: 'module-card',
-              style:
-                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
-            },
-            [
-              el('div', { class: 'fw-600 mb-6' }, 'Medications'),
-              el(
-                'div',
-                { class: 'case-info-grid case-details-grid' },
-                rows.map(([label, val]) =>
-                  el('div', { class: 'case-info-row' }, [
-                    el('span', { class: 'label' }, label),
-                    el('span', { class: 'value' }, String(val)),
-                  ]),
-                ),
+          return el('div', { class: 'module-card b-1 br-md p-12 bg-surface' }, [
+            el('div', { class: 'fw-600 mb-6' }, 'Medications'),
+            el(
+              'div',
+              { class: 'case-info-grid case-details-grid' },
+              rows.map(([label, val]) =>
+                el('div', { class: 'case-info-row' }, [
+                  el('span', { class: 'label' }, label),
+                  el('span', { class: 'value' }, String(val)),
+                ]),
               ),
-            ],
-          );
+            ),
+          ]);
         }
         if (t === 'vitals') {
           const d = module.data || {};
@@ -858,27 +826,19 @@ function openViewArtifactModal(module, options = {}) {
             d.height ? ['Height', d.height] : null,
             d.notes ? ['Notes', d.notes] : null,
           ].filter(Boolean);
-          return el(
-            'div',
-            {
-              class: 'module-card',
-              style:
-                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
-            },
-            [
-              el('div', { class: 'fw-600 mb-6' }, 'Vitals'),
-              el(
-                'div',
-                { class: 'case-info-grid case-details-grid' },
-                rows.map(([label, val]) =>
-                  el('div', { class: 'case-info-row' }, [
-                    el('span', { class: 'label' }, label),
-                    el('span', { class: 'value' }, String(val)),
-                  ]),
-                ),
+          return el('div', { class: 'module-card b-1 br-md p-12 bg-surface' }, [
+            el('div', { class: 'fw-600 mb-6' }, 'Vitals'),
+            el(
+              'div',
+              { class: 'case-info-grid case-details-grid' },
+              rows.map(([label, val]) =>
+                el('div', { class: 'case-info-row' }, [
+                  el('span', { class: 'label' }, label),
+                  el('span', { class: 'value' }, String(val)),
+                ]),
               ),
-            ],
-          );
+            ),
+          ]);
         }
         if (t === 'pmh' || t === 'prior-notes' || t === 'other') {
           const d = module.data || {};
@@ -888,31 +848,23 @@ function openViewArtifactModal(module, options = {}) {
             d.summary ? ['Summary', d.summary] : null,
             d.notes ? ['Notes', d.notes] : null,
           ].filter(Boolean);
-          return el(
-            'div',
-            {
-              class: 'module-card',
-              style:
-                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
-            },
-            [
-              el(
-                'div',
-                { class: 'fw-600 mb-6' },
-                t === 'pmh' ? 'Past Medical History' : module.title || 'Document',
+          return el('div', { class: 'module-card b-1 br-md p-12 bg-surface' }, [
+            el(
+              'div',
+              { class: 'fw-600 mb-6' },
+              t === 'pmh' ? 'Past Medical History' : module.title || 'Document',
+            ),
+            el(
+              'div',
+              { class: 'case-info-grid case-details-grid' },
+              rows.map(([label, val]) =>
+                el('div', { class: 'case-info-row' }, [
+                  el('span', { class: 'label' }, label),
+                  el('span', { class: 'value' }, String(val)),
+                ]),
               ),
-              el(
-                'div',
-                { class: 'case-info-grid case-details-grid' },
-                rows.map(([label, val]) =>
-                  el('div', { class: 'case-info-row' }, [
-                    el('span', { class: 'label' }, label),
-                    el('span', { class: 'value' }, String(val)),
-                  ]),
-                ),
-              ),
-            ],
-          );
+            ),
+          ]);
         }
         // Generic fallback table for unknown types
         const entries = Object.entries(module.data || {});
