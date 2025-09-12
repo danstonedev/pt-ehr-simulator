@@ -169,6 +169,9 @@
   z-index: var(--z-modal);
 }
 /* Spacing */
+.p-12 {
+  padding: 12px;
+}
 .px-14 {
   padding-left: 14px;
   padding-right: 14px;
@@ -183,6 +186,39 @@
 }
 .p-20 {
   padding: 20px;
+}
+/* Display helpers */
+.d-none {
+  display: none !important;
+}
+.d-grid {
+  display: grid;
+}
+/* Gap helpers */
+.gap-6 {
+  gap: 6px;
+}
+.gap-10 {
+  gap: 10px;
+}
+.gap-16 {
+  gap: 16px;
+}
+/* Margin helpers */
+.mt-4 {
+  margin-top: 4px;
+}
+.mt-8 {
+  margin-top: 8px;
+}
+.mr-4 {
+  margin-right: 4px;
+}
+.mb-8 {
+  margin-bottom: 8px;
+}
+.mb-16 {
+  margin-bottom: 16px;
 }
 /* Borders */
 .bb-1 {
@@ -210,6 +246,10 @@
 }
 .h-78vh {
   height: 78vh;
+}
+/* Width helpers */
+.w-100 {
+  width: 100%;
 }
 /* Object fit variants */
 .obj-contain {
@@ -259,8 +299,56 @@
 .b-1 {
   border: 1px solid var(--border);
 }
+.b-1i {
+  border: 1px solid var(--border) !important;
+}
 .bg-secondary {
   background: var(--bg-secondary);
+}
+/* Box sizing helper */
+.box-border {
+  box-sizing: border-box;
+}
+/* Font weight and display helpers */
+.fw-500 {
+  font-weight: 500;
+}
+.block {
+  display: block;
+}
+
+/* Min-dimension helpers */
+.minh-68 {
+  min-height: 68px;
+}
+
+/* Attachment drop zone component */
+.attachment-drop-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+.attachment-drop-zone:hover,
+.attachment-drop-zone:focus,
+.attachment-drop-zone:focus-within {
+  background: var(--surface-secondary);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.attachment-drop-zone.dragover {
+  border-color: var(--accent);
+  background: var(--primary-light);
 }
 
 .skip-link {

@@ -1271,15 +1271,13 @@ function openAddArtifactModal(onAdd) {
     type: 'file',
     multiple: true,
     accept: '*/*',
-    style: 'display:none;',
+    class: 'd-none',
     onchange: async (e) => handleFiles(Array.from(e.target.files || [])),
   });
   const dropZone = el(
     'div',
     {
-      class: 'attachment-drop-zone',
-      style:
-        'margin-top:4px; padding:12px; border:2px dashed var(--border); border-radius:6px; text-align:center; font-size:12px; color: var(--text-secondary); cursor:pointer; transition:background .15s, border-color .15s;',
+      class: 'attachment-drop-zone mt-4',
       onclick: () => fileInput.click(),
       onkeydown: (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -1321,12 +1319,10 @@ function openAddArtifactModal(onAdd) {
     renderAttachmentList();
   }
   const dzHighlightOn = () => {
-    dropZone.style.background = 'var(--surface-alt, var(--surface-muted))';
-    dropZone.style.borderColor = 'var(--accent, var(--primary))';
+    dropZone.classList.add('dragover');
   };
   const dzHighlightOff = () => {
-    dropZone.style.background = '';
-    dropZone.style.borderColor = 'var(--border)';
+    dropZone.classList.remove('dragover');
   };
   ['dragenter', 'dragover'].forEach((evt) =>
     dropZone.addEventListener(evt, (e) => {
@@ -1348,22 +1344,17 @@ function openAddArtifactModal(onAdd) {
     dzHighlightOff();
     handleFiles(Array.from(e.dataTransfer?.files || []));
   });
-  const attList = el('div', { style: 'display:flex; flex-direction:column; gap:6px;' });
+  const attList = el('div', { class: 'd-flex fd-column gap-6' });
   function renderAttachmentList() {
     attList.replaceChildren();
     if (!ref.attachments || !ref.attachments.length) return;
     ref.attachments.forEach((m, idx) => {
-      const row = el('div', { style: 'display:flex; align-items:center; gap:8px;' }, [
-        el(
-          'span',
-          { style: 'flex:1; font-size:12px;' },
-          `${m.name} (${Math.ceil((m.size || 0) / 1024)} KB)`,
-        ),
+      const row = el('div', { class: 'd-flex ai-center gap-8' }, [
+        el('span', { class: 'flex-1 fs-12' }, `${m.name} (${Math.ceil((m.size || 0) / 1024)} KB)`),
         el(
           'button',
           {
-            class: 'btn secondary',
-            style: 'font-size:11px; padding:4px 8px;',
+            class: 'btn secondary small',
             title: 'Remove attachment (does not delete the stored file)',
             onclick: () => {
               ref.attachments.splice(idx, 1);
@@ -1376,7 +1367,7 @@ function openAddArtifactModal(onAdd) {
       attList.appendChild(row);
     });
   }
-  const refForm = el('div', { style: 'display:grid; gap:10px; margin-top: 8px;' }, [
+  const refForm = el('div', { class: 'd-grid gap-10 mt-8' }, [
     el('div', {}, [
       el('label', { class: 'instructor-form-label' }, 'Date'),
       el('input', {
@@ -1405,7 +1396,7 @@ function openAddArtifactModal(onAdd) {
       el('label', { class: 'instructor-form-label' }, 'Notes'),
       el('textarea', {
         class: 'instructor-form-input',
-        style: 'min-height:68px;',
+        class: 'minh-68',
         oninput: (e) => (ref.notes = e.target.value),
       }),
     ]),
@@ -1463,7 +1454,7 @@ function openAddArtifactModal(onAdd) {
           'button',
           {
             class: 'btn secondary',
-            style: 'margin-right:4px;' /* minor separate before gap spacing */,
+            class: 'mr-4' /* minor separate before gap spacing */,
             onclick: () => overlay.remove(),
           },
           'Cancel',
@@ -1546,15 +1537,13 @@ function openEditArtifactModal(module, onSave) {
     type: 'file',
     multiple: true,
     accept: '*/*',
-    style: 'display:none;',
+    class: 'd-none',
     onchange: async (e) => handleFilesEdit(Array.from(e.target.files || [])),
   });
   const dropZone = el(
     'div',
     {
-      class: 'attachment-drop-zone',
-      style:
-        'margin-top:4px; padding:12px; border:2px dashed var(--border); border-radius:6px; text-align:center; font-size:12px; color: var(--text-secondary); cursor:pointer; transition:background .15s, border-color .15s;',
+      class: 'attachment-drop-zone mt-4',
       onclick: () => fileInput.click(),
       onkeydown: (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -1595,12 +1584,10 @@ function openEditArtifactModal(module, onSave) {
     renderAttachmentList();
   }
   const dzHighlightOn = () => {
-    dropZone.style.background = 'var(--surface-alt, var(--surface-muted))';
-    dropZone.style.borderColor = 'var(--accent, var(--primary))';
+    dropZone.classList.add('dragover');
   };
   const dzHighlightOff = () => {
-    dropZone.style.background = '';
-    dropZone.style.borderColor = 'var(--border)';
+    dropZone.classList.remove('dragover');
   };
   ['dragenter', 'dragover'].forEach((evt) =>
     dropZone.addEventListener(evt, (e) => {
@@ -1622,7 +1609,7 @@ function openEditArtifactModal(module, onSave) {
     dzHighlightOff();
     handleFilesEdit(Array.from(e.dataTransfer?.files || []));
   });
-  const attList = el('div', { style: 'display:flex; flex-direction:column; gap:6px;' });
+  const attList = el('div', { class: 'd-flex fd-column gap-6' });
   function renderAttachmentList() {
     attList.replaceChildren();
     if (!ref.attachments || !ref.attachments.length) return;
@@ -1878,24 +1865,16 @@ export function openEditCaseModal(caseInfo, onSave) {
               }),
             ]),
             // Age + DOB (single row)
-            el('div', { style: 'display: flex; gap: 16px; margin-bottom: 16px;' }, [
+            el('div', { class: 'd-flex gap-16 mb-16' }, [
               // Age (left)
-              el('div', { style: 'flex: 1;' }, [
-                el(
-                  'label',
-                  {
-                    style:
-                      'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
-                  },
-                  'Age',
-                ),
+              el('div', { class: 'flex-1' }, [
+                el('label', { class: 'block mb-8 fw-500 text-color' }, 'Age'),
                 el('input', {
                   type: 'number',
                   id: 'edit-age',
                   min: 0,
                   max: 120,
-                  style:
-                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+                  class: 'w-100 p-12 b-1i br-sm fs-14 box-border',
                   value: caseInfo.age || '',
                   oninput: (e) => {
                     const dobEl = document.getElementById('edit-dob');
@@ -1917,15 +1896,8 @@ export function openEditCaseModal(caseInfo, onSave) {
                 }),
               ]),
               // DOB (right)
-              el('div', { style: 'flex: 1;' }, [
-                el(
-                  'label',
-                  {
-                    style:
-                      'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
-                  },
-                  'DOB',
-                ),
+              el('div', { class: 'flex-1' }, [
+                el('label', { class: 'block mb-8 fw-500 text-color' }, 'DOB'),
                 el('input', {
                   type: 'date',
                   id: 'edit-dob',
