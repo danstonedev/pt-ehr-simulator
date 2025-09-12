@@ -754,6 +754,21 @@ body[data-route='instructor-editor'] #app {
   color: var(--text);
 }
 
+/* Patient avatar */
+.patient-avatar {
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex: 0 0 40px;
+}
+.patient-avatar-img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: 50%;
+}
+
 /* Light theme: match subsection header gradient and ensure readable text on dark bg */
 html:not([data-theme='dark']) #patient-sticky-header {
   /* Scope text tokens inside the header for correct contrast */

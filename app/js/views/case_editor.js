@@ -537,12 +537,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     if (!img) {
       img = document.createElement('img');
       img.decoding = 'async';
-      img.width = 40;
-      img.height = 40;
-      img.style.display = 'block';
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.borderRadius = '50%';
+      img.className = 'patient-avatar-img';
       avatarEl.replaceChildren(img);
     }
     // Accessible alt text (describe visual symbol only once)
