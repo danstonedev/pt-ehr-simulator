@@ -109,6 +109,14 @@
   border: 0;
 }
 
+/* Spacing utilities (tiny, additive) */
+.ml-2 {
+  margin-left: 8px;
+}
+.fs-18 {
+  font-size: 18px;
+}
+
 .skip-link {
   position: fixed;
   top: 8px;

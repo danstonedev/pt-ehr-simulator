@@ -560,8 +560,7 @@ function createEditableCaseHeader(caseInfo, onUpdate, options = {}) {
           el(
             'button',
             {
-              class: 'btn secondary',
-              style: 'margin-left: 8px; padding:4px 8px; font-size:12px;',
+              class: 'btn secondary small ml-2',
               onclick: (e) => {
                 e.stopPropagation();
                 openEditCaseModal({ ...caseInfo }, (updated) => {
@@ -989,7 +988,7 @@ function openViewArtifactModal(module, options = {}) {
                   } catch {}
                 })();
               } else {
-                thumbWrap.appendChild(el('span', { style: 'font-size:18px;' }, '📄'));
+                thumbWrap.appendChild(el('span', { class: 'fs-18' }, '📄'));
               }
               const nameSpan = el(
                 'span',
@@ -1006,8 +1005,7 @@ function openViewArtifactModal(module, options = {}) {
                 el(
                   'button',
                   {
-                    class: 'btn secondary',
-                    style: 'font-size:12px; padding:6px 10px;',
+                    class: 'btn secondary small',
                     onclick: async () => {
                       // In-page preview overlay
                       const overlay = document.createElement('div');
@@ -1130,8 +1128,7 @@ function openViewArtifactModal(module, options = {}) {
                 const btn = el(
                   'button',
                   {
-                    class: 'btn secondary',
-                    style: 'font-size:12px; padding:6px 10px;',
+                    class: 'btn secondary small',
                   },
                   'Download',
                 );
@@ -1162,8 +1159,7 @@ function openViewArtifactModal(module, options = {}) {
                 const delBtn = el(
                   'button',
                   {
-                    class: 'btn secondary',
-                    style: 'font-size:12px; padding:6px 10px; color:#e53e3e; border-color:#e53e3e;',
+                    class: 'btn subtle-danger small',
                     title: 'Delete file from storage and remove from this document',
                   },
                   'Delete File',
@@ -1206,11 +1202,7 @@ function openViewArtifactModal(module, options = {}) {
       [
         ...(isFacultyMode
           ? (() => {
-              const remBtn = el(
-                'button',
-                { class: 'btn secondary', style: 'border-color:#e53e3e; color:#e53e3e;' },
-                'Remove',
-              );
+              const remBtn = el('button', { class: 'btn subtle-danger' }, 'Remove');
               remBtn.addEventListener('click', () => {
                 if (confirm('Remove this background document?')) {
                   try {
