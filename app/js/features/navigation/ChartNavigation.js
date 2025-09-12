@@ -1395,8 +1395,7 @@ function openAddArtifactModal(onAdd) {
     el('div', {}, [
       el('label', { class: 'instructor-form-label' }, 'Notes'),
       el('textarea', {
-        class: 'instructor-form-input',
-        class: 'minh-68',
+        class: 'instructor-form-input minh-68',
         oninput: (e) => (ref.notes = e.target.value),
       }),
     ]),
@@ -1453,8 +1452,7 @@ function openAddArtifactModal(onAdd) {
         el(
           'button',
           {
-            class: 'btn secondary',
-            class: 'mr-4' /* minor separate before gap spacing */,
+            class: 'btn secondary mr-4' /* minor separate before gap spacing */,
             onclick: () => overlay.remove(),
           },
           'Cancel',
