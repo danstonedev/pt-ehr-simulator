@@ -2009,8 +2009,8 @@ export function openEditCaseModal(caseInfo, onSave) {
             el(
               'div',
               {
-                style:
-                  'position: sticky; bottom: 0; background: var(--bg); padding-top: 12px; margin-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end;',
+                class: 'd-flex jc-end gap-8 pt-12 mt-16 bt-1 bg-surface',
+                style: 'position: sticky; bottom: 0;',
               },
               [
                 el(
@@ -2018,7 +2018,6 @@ export function openEditCaseModal(caseInfo, onSave) {
                   {
                     type: 'button',
                     class: 'btn secondary',
-                    style: 'padding: 12px 24px; font-size: 14px;',
                     onclick: () => document.body.removeChild(modal),
                   },
                   'Cancel',
@@ -2028,7 +2027,6 @@ export function openEditCaseModal(caseInfo, onSave) {
                   {
                     type: 'submit',
                     class: 'btn primary',
-                    style: 'padding: 12px 24px; font-size: 14px;',
                   },
                   'Save Changes',
                 ),
