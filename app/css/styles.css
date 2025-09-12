@@ -1055,27 +1055,42 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   padding-right: var(--pad-x);
   /* Provide space between text and underline */
   /* Underline sizing (single source of truth) */
-  --divider-underline-thickness: 0.5rem; /* 8px underline per spec */
-  --divider-underline-gap: 0.5rem; /* 8px gap; in rem for scalability */
+  --divider-underline-thickness: 0.125rem; /* 2px underline (another 50% reduction) */
+  --divider-underline-gap: 0.0625rem; /* 1px separation (50% smaller) */
   padding-bottom: calc(var(--divider-underline-gap) + var(--divider-underline-thickness));
   isolation: isolate;
+  --divider-bleed: clamp(24px, 4vw, 72px); /* symmetric extension */
   overflow: visible;
 }
 /* Remove old full-bleed rectangle */
 .editor-section-divider::before {
   content: none !important;
 }
-/* Gradient underline */
+/* Centered underline (single rule) */
 .editor-section-divider::after {
   content: '';
   position: absolute;
-  left: 0;
   bottom: 0;
-  width: 100%;
+  left: 50%;
+  transform: translateX(-50%);
   height: var(--divider-underline-thickness);
+  width: calc(100% + 2 * var(--divider-bleed));
+  max-width: 100vw;
   background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
-  z-index: -1; /* sit behind text but above page */
+  z-index: -1;
   pointer-events: none;
+}
+@supports (width: 100dvw) {
+  .editor-section-divider::after {
+    max-width: 100dvw;
+  }
+}
+
+/* Narrow screens: dial back bleed so the underline doesn't intrude into the sidebar */
+@media (max-width: 1100px) {
+  body:has(.chart-navigation) .editor-section-divider {
+    --divider-bleed: clamp(0px, 1.25vw, 16px);
+  }
 }
 
 /* Three brand slashes at the right edge */
@@ -1317,9 +1332,9 @@ body[data-route='instructor-editor'] .section-content {
 
 .subsection-title {
   font-size: 16px;
-  margin: 6px 0 var(--space-3);
-  /* Add horizontal padding so text doesn't touch the edges */
-  padding: var(--space-2) var(--space-4);
+  margin: 6px 0 16px 0; /* Fixed units instead of var(--space-3) */
+  /* Add horizontal padding with fixed units for consistent underline behavior */
+  padding: 12px 20px; /* Fixed units instead of var(--space-2) var(--space-4) */
   /* Theme-aware gradient using CSS variables */
   background: linear-gradient(
     90deg,
@@ -1332,7 +1347,7 @@ body[data-route='instructor-editor'] .section-content {
   border-radius: var(--radius-sm);
   text-transform: capitalize;
   letter-spacing: 0.3px;
-  /* Reinstate UND green underline for emphasis */
+  /* Fixed underline thickness for responsive stability */
   border-bottom: 3px solid var(--und-green);
 }
 
@@ -1850,7 +1865,7 @@ html[data-theme='dark'] .subsection-title {
   overflow: hidden;
 }
 
-/* SOAP section header */
+/* SOAP section header - Fixed responsive underline behavior */
 .soap-section h3,
 .subjective-section h3,
 .objective-section h3,
@@ -1860,8 +1875,8 @@ html[data-theme='dark'] .subsection-title {
   /* Subtle left→right gradient: slightly darker green to UND green */
   background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
   color: white;
-  margin: calc(-1 * var(--space-5)) calc(-1 * var(--space-5)) 0 calc(-1 * var(--space-5));
-  padding: var(--space-4) var(--space-5);
+  margin: -24px -24px 0 -24px; /* Fixed units instead of calc(-1 * var(--space-5)) */
+  padding: 16px 24px; /* Fixed units instead of var(--space-4) var(--space-5) */
   font-size: 20px;
   font-weight: 700;
   font-family:

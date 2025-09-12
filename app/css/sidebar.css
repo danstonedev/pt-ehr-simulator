@@ -21,7 +21,7 @@
   left: 0;
   top: var(--topbar-h);
   overflow-y: scroll; /* always show vertical scrollbar to avoid layout shift */
-  overflow-x: visible;
+  overflow-x: hidden; /* prevent underlines from extending beyond sidebar */
   z-index: var(--z-sidebar);
   box-shadow: var(--shadow-1);
   transition: transform 0.3s ease;
@@ -233,17 +233,28 @@ html:not([data-theme='dark'])
   flex-direction: column;
   gap: 6px;
 }
-/* Section card container - minimal styling for underline-only headers */
+/* Section card container - dividers removed for cleaner look */
 .chart-navigation .section-card {
   background: transparent;
   border: none;
   border-radius: 0;
   padding: 0;
   position: relative;
-  margin-bottom: 0.5rem; /* 8px */
+  margin-bottom: 0;
   /* status color variable (empty default) updated via modifier classes */
   --status-color: var(--surface-light-border);
 }
+
+/* Dividers between section cards removed */
+
+/* Fallback colors for when status classes aren't applied */
+.chart-navigation .section-card.active:not([class*='section-status-']) {
+  --status-color: var(--und-green);
+}
+html[data-theme='dark'] .chart-navigation .section-card.active:not([class*='section-status-']) {
+  --status-color: var(--und-green);
+}
+
 .chart-navigation .section-card.active {
   background: transparent;
   box-shadow: none;
@@ -257,6 +268,9 @@ html[data-theme='dark'] .chart-navigation .section-card.active {
   box-shadow: none;
 }
 /* Status modifiers set the --status-color token */
+.chart-navigation .section-card.section-status-empty {
+  --status-color: var(--surface-light-border);
+}
 .chart-navigation .section-card.section-status-partial {
   --status-color: var(--und-orange);
 }
@@ -292,77 +306,51 @@ html[data-theme='dark'] .chart-navigation .section-card.section-status-complete 
   width: 0.25rem; /* 4px */
   opacity: 1;
 }
-/* Clean underline-only section headers */
+/* TEST: Make all section nav items bright red to verify CSS is loading */
 .chart-navigation .section-card .section-nav-item {
-  width: 100%;
-  /* left padding = accent (0.25rem active) + desired gap (~0.75rem) + baseline (0.25rem) */
-  padding: 0.5rem 0.25rem 0.25rem 1.25rem; /* 8px 4px 4px 20px approx */
-  border: none;
-  border-bottom: 1px solid var(--surface-light-border);
-  background: transparent;
-  display: flex;
-  align-items: center;
-  font-weight: 600;
-  font-size: 0.95rem; /* slightly larger than default (~15.2px) */
-  gap: 0.25rem; /* 4px */
-  text-transform: uppercase;
-  letter-spacing: 0.03125rem; /* 0.5px */
-  cursor: pointer;
-  box-sizing: border-box;
-  font-family: inherit;
-  font-size: inherit;
-  color: var(--text);
-}
-
-/* Hover / active interactions leverage status color */
-.chart-navigation .section-card .section-nav-item:hover {
-  border-bottom-width: 0.125rem; /* 2px */
-  border-bottom-color: var(--status-color);
+  background: red !important;
+  color: white !important;
+  width: 100% !important;
+  /* Fixed padding like patient header - no responsive units */
+  padding: 0.75rem 20px !important; /* increased padding, no bottom padding needed */
+  border: none !important;
+  /* Remove border-bottom - we'll use dividers between sections instead */
+  border-bottom: none !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important; /* fixed font size, no responsive scaling */
+  gap: 0.25rem !important; /* 4px */
+  text-transform: uppercase !important;
+  letter-spacing: 0.03125rem !important; /* 0.5px */
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  font-family: inherit !important;
+  color: var(--text) !important;
+  transform: translateZ(0) !important; /* sub-pixel snapping like patient header */
+  line-height: 1 !important; /* kill extra line-height growth like patient header */
+  /* Ensure smooth transitions for background changes */
   transition:
     background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
+    color 0.15s ease !important;
 }
-/* Light theme hover/active background tint */
-html:not([data-theme='dark']) .chart-navigation .section-card .section-nav-item:hover {
-  background: var(--neutral-050, #f5f5f5);
-  color: var(--text);
-}
+
+/* Hover / active interactions disabled - cleaner look without background rectangles */
+
+/* Active section items keep bold font weight for distinction */
 html:not([data-theme='dark']) .chart-navigation .section-card.active > .section-nav-item {
-  background: var(--neutral-050, #f5f5f5);
-  border-bottom-width: 0.125rem;
-  border-bottom-color: var(--status-color);
-  color: var(--text);
-  font-weight: 700;
-}
-/* Dark theme hover/active background tint */
-html[data-theme='dark'] .chart-navigation .section-card .section-nav-item:hover {
-  background: var(--neutral-800, #2d2d2d);
-  border-bottom-color: var(--status-color);
-  color: var(--text); /* will be overridden to green by later combined rule */
-}
-html[data-theme='dark'] .chart-navigation .section-card.active > .section-nav-item {
-  background: var(--neutral-850, #262626);
-  border-bottom-width: 0.125rem;
-  border-bottom-color: var(--status-color);
-  color: var(--text); /* baseline prior to green accent */
-  font-weight: 700;
+  font-weight: 700 !important;
 }
 
 .chart-navigation .section-card:not(.active) > .section-nav-item {
   background: transparent;
 }
 
-html[data-theme='dark'] .chart-navigation .section-card > .section-nav-item {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-html[data-theme='dark'] .chart-navigation .section-card.active > .section-nav-item {
-  border-bottom-color: rgba(255, 255, 255, 0.38);
-}
-
-html[data-theme='dark'] .chart-navigation .section-card:not(.active) > .section-nav-item {
-  border-bottom-color: rgba(255, 255, 255, 0.18);
+/* Status color indication via left border accent instead of underline */
+.chart-navigation .section-card.active > .section-nav-item {
+  border-left: 3px solid var(--status-color);
+  font-weight: 700;
 }
 
 /* (Replaced old border-color status styling with accent + underline color) */
@@ -408,9 +396,9 @@ html[data-theme='dark'] .subsection-indicator-partial {
 .chart-navigation .section-card .subsection-item {
   color: var(--text-secondary);
 }
-/* Light theme: boost contrast of navigation text against darker gradient bg */
+/* Light theme: boost contrast of navigation text against darker gradient bg - OVERRIDE */
 html:not([data-theme='dark']) .chart-navigation .section-card .section-nav-item {
-  color: var(--white);
+  color: var(--white) !important;
 }
 html:not([data-theme='dark']) .chart-navigation .section-card .subsection-item {
   color: var(--white);
@@ -443,14 +431,16 @@ html[data-theme='dark'] .chart-navigation .section-card .subsection-item:hover {
   outline-offset: 0.125rem; /* 2px */
 }
 
-/* Hover + active text color accent (UND green) */
+/* Hover + active text color accent (UND green) - DISABLED TO PREVENT CONFLICTS */
 /* Green accent on hover/active (place after base color rules) */
+/*
 html:not([data-theme='dark']) .chart-navigation .section-card .section-nav-item:hover,
 html:not([data-theme='dark']) .chart-navigation .section-card.active > .section-nav-item,
 html[data-theme='dark'] .chart-navigation .section-card .section-nav-item:hover,
 html[data-theme='dark'] .chart-navigation .section-card.active > .section-nav-item {
   color: var(--und-green);
 }
+*/
 html:not([data-theme='dark']) .chart-navigation .section-card .subsection-item:hover,
 html:not([data-theme='dark']) .chart-navigation .section-card.active .subsection-item:hover,
 html[data-theme='dark'] .chart-navigation .section-card .subsection-item:hover,
@@ -623,302 +613,320 @@ html[data-theme='dark'] .sidebar-nav-panel .case-info-card:hover {
 /* (Removed) Autosave status pill styles */
 /* Flat list items in white panel */
 /* Deprecated pill styles removed; list uses new underline pattern. Preserve spacing. */
-.sidebar-nav-panel .section-nav-item {
-  /* Removed legacy .sidebar-nav-panel .section-nav-item overrides to rely on unified .chart-navigation rules */
 
-  /* Dark theme overrides with higher specificity */
-  html[data-theme='dark'] .sidebar-nav-panel .section-nav-item {
-    color: var(--text);
-  }
+/* Dark theme overrides with higher specificity */
+html[data-theme='dark'] .sidebar-nav-panel .section-nav-item {
+  color: var(--text);
+}
 
-  html[data-theme='dark'] .sidebar-nav-panel .section-nav-item .nav-progress-text {
-    color: var(--text-secondary);
-    opacity: 0.95;
-  }
+html[data-theme='dark'] .sidebar-nav-panel .section-nav-item .nav-progress-text {
+  color: var(--text-secondary);
+  opacity: 0.95;
+}
 
-  /* Chart navigation items - using proper cascade without !important */
-  .chart-navigation .section-nav-item {
-    color: var(--text-on-light);
-  }
+/* Chart navigation items - using proper cascade without !important */
+.chart-navigation .section-nav-item {
+  color: var(--text-on-light);
+}
 
-  .chart-navigation .section-nav-item * {
-    color: inherit;
-  }
+.chart-navigation .section-nav-item * {
+  color: inherit;
+}
 
-  .chart-navigation .section-nav-item .nav-progress-text {
-    display: none;
-  }
+.chart-navigation .section-nav-item .nav-progress-text {
+  display: none;
+}
 
-  /* Dark theme chart navigation */
-  html[data-theme='dark'] .chart-navigation .section-nav-item {
-    color: var(--text);
-  }
+/* Dark theme chart navigation */
+html[data-theme='dark'] .chart-navigation .section-nav-item {
+  color: var(--text);
+}
 
-  html[data-theme='dark'] .chart-navigation .section-nav-item .nav-progress-text {
-    color: var(--text-secondary);
-  }
-  /* Subsection list visuals inside the panel (rendered on dark gradient in both themes) */
-  /* Removed legacy border-left (was duplicating the vertical guide line created by
+html[data-theme='dark'] .chart-navigation .section-nav-item .nav-progress-text {
+  color: var(--text-secondary);
+}
+/* Subsection list visuals inside the panel (rendered on dark gradient in both themes) */
+/* Removed legacy border-left (was duplicating the vertical guide line created by
   .chart-navigation .section-card .subsection-toc::before). Keeping only the
   pseudo-element version for consistent spacing & theming. */
-  .sidebar-nav-panel .subsection-toc {
-    border-left: none;
-  }
-  .sidebar-nav-panel .subsection-item {
-    color: rgba(255, 255, 255, 0.92);
-  }
-  .sidebar-nav-panel .subsection-item:hover {
-    color: var(--white);
-    background-color: rgba(255, 255, 255, 0.08);
-  }
+.sidebar-nav-panel .subsection-toc {
+  border-left: none;
+}
+.sidebar-nav-panel .subsection-item {
+  color: rgba(255, 255, 255, 0.92);
+}
+.sidebar-nav-panel .subsection-item:hover {
+  color: var(--white);
+  background-color: rgba(255, 255, 255, 0.08);
+}
 
-  /* Case header (within sidebar) */
-  .case-header {
-    padding: var(--space-5) var(--space-4);
-    border-bottom: 1px solid var(--border);
-    background: var(--bg-secondary);
-    position: sticky;
-    top: 0;
-    z-index: var(--z-case-header);
-    margin: 0;
-  }
+/* Case header (within sidebar) - border removed */
+.case-header {
+  padding: var(--space-5) var(--space-4);
+  background: var(--bg-secondary);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-case-header);
+  margin: 0;
+}
 
-  /* Patient sticky header border (applied to #patient-sticky-header) */
-  /* Patient sticky header border handled in styles.css for unified geometry */
+/* Patient sticky header border (applied to #patient-sticky-header) */
+/* Patient sticky header border handled in styles.css for unified geometry */
 
-  /* Sidebar "Case File" header (STABLE BADGE VERSION) */
-  .case-file-header {
-    position: sticky;
-    top: 0;
-    z-index: var(--z-case-header);
-    height: var(--header-h, 56px);
-    margin: 0;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent; /* badge supplies color */
-    border: 0;
-  }
-  .case-file-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    background: var(--und-green);
-    color: var(--white);
-    font-weight: 900;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    font-size: clamp(0.95rem, 2.7vw, 1.125rem);
-    border: 2px solid transparent;
-    border-bottom-color: var(--white);
-  }
-  html[data-theme='dark'] .case-file-badge {
-    border-bottom-color: var(--und-green);
-  }
+/* Sidebar "Case File" header (STABLE BADGE VERSION) */
+.case-file-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-case-header);
+  height: var(--header-h, 56px);
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent; /* badge supplies color */
+  border: 0;
+}
+.case-file-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: var(--und-green);
+  color: var(--white);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: clamp(0.95rem, 2.7vw, 1.125rem);
+  border: 2px solid transparent;
+  /* Removed border-bottom underline for cleaner look */
+}
 
-  /* Case editing form in sidebar */
-  .case-header input,
-  .case-header select {
-    font-family: inherit;
-    background: var(--input-bg);
-    border: 1px solid var(--input-border);
-    transition:
-      border-color 0.2s ease,
-      box-shadow 0.2s ease;
-  }
-  .case-header input:focus-visible,
-  .case-header select:focus-visible {
-    outline: 2px solid var(--und-green);
-    outline-offset: 2px;
-  }
-  .case-header input:focus,
-  .case-header select:focus {
-    border-color: var(--und-green);
-    box-shadow: var(--elev-focus-ring);
-  }
-  .case-header button:hover {
-    background-color: var(--bg-hover) !important;
-  }
-  /* Match dark state consistently (no data-theme="light") */
-  html[data-theme='dark'] .case-header {
-    background: var(--bg-secondary);
-  }
+/* Case editing form in sidebar */
+.case-header input,
+.case-header select {
+  font-family: inherit;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.case-header input:focus-visible,
+.case-header select:focus-visible {
+  outline: 2px solid var(--und-green);
+  outline-offset: 2px;
+}
+.case-header input:focus,
+.case-header select:focus {
+  border-color: var(--und-green);
+  box-shadow: var(--elev-focus-ring);
+}
+.case-header button:hover {
+  background-color: var(--bg-hover) !important;
+}
+/* Match dark state consistently (no data-theme="light") */
+html[data-theme='dark'] .case-header {
+  background: var(--bg-secondary);
+}
 
-  /* ========================================
+/* ========================================
    SIDEBAR NAVIGATION WITH PROGRESS
    ======================================== */
-  /* Legacy global .section-nav-item pill styles neutralized (underline pattern used instead) */
-  .section-nav-item {
-    background: none;
-    border: none;
-    box-shadow: none;
-    padding: 0;
-    margin: 0;
-    border-radius: 0;
-  }
-  .section-nav-item:hover {
-    background: none;
-    border: none;
-    box-shadow: none;
-  }
-  .section-nav-item.active {
-    background: none;
-    border: none;
-    box-shadow: none;
-  }
+/* Legacy global .section-nav-item pill styles neutralized (underline pattern used instead) */
+.section-nav-item {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+}
+.section-nav-item:hover {
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+.section-nav-item.active {
+  background: none;
+  border: none;
+  box-shadow: none;
+}
 
-  /* Tighter rhythm between items on solid gray */
-  .section-nav-item + .section-nav-item {
-    margin-top: 6px;
-  }
+/* Tighter rhythm between items on solid gray */
+.section-nav-item + .section-nav-item {
+  margin-top: 6px;
+}
 
-  /* Subsection list */
-  .subsection-toc {
-    margin-left: var(--space-6);
-    margin-top: var(--space-2);
-    padding-left: var(--space-3);
-    border-left: 2px solid rgba(255, 255, 255, 0.15);
+/* Subsection list */
+.subsection-toc {
+  margin-left: var(--space-6);
+  margin-top: var(--space-2);
+  padding-left: var(--space-3);
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
+}
+.subsection-item {
+  padding: var(--space-1) var(--space-2);
+  font-size: 0.75rem; /* 12px */
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+  border-radius: var(--radius-sm);
+}
+.subsection-item:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+/* Neutralize auto-highlight of current subsection for a simpler look */
+.sidebar-nav-panel .subsection-item.current-subsection {
+  color: rgba(255, 255, 255, 0.85);
+  background: transparent;
+  border: none;
+}
+
+/* Keyboard focus visibility */
+.sidebar-nav-panel .section-nav-item:focus-visible,
+.sidebar-nav-panel .subsection-item:focus-visible {
+  outline: 3px solid var(--und-orange);
+  outline-offset: 2px;
+}
+
+/* High-contrast preference support */
+@media (prefers-contrast: more) {
+  .sidebar-nav-panel {
+    box-shadow: var(--elev-focus-neutral);
   }
-  .subsection-item {
-    padding: var(--space-1) var(--space-2);
-    font-size: 0.75rem; /* 12px */
-    color: rgba(255, 255, 255, 0.8);
-    cursor: pointer;
-    transition:
-      color 0.2s ease,
-      background-color 0.2s ease;
-    border-radius: var(--radius-sm);
+  .sidebar-nav-panel .section-nav-item {
+    border-color: var(--neutral-500);
+    background: var(--neutral-100);
   }
-  .subsection-item:hover {
-    color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.08);
+  .sidebar-nav-panel .section-nav-item.active {
+    background: #ffffff;
+    border-color: var(--und-green);
+    box-shadow: var(--elev-focus-strong);
   }
-  /* Neutralize auto-highlight of current subsection for a simpler look */
   .sidebar-nav-panel .subsection-item.current-subsection {
-    color: rgba(255, 255, 255, 0.85);
     background: transparent;
-    border: none;
+    border-color: transparent;
   }
+}
+/* Progress percentage text styling */
+html[data-theme='dark'] .chart-navigation .nav-progress-text {
+  color: rgba(255, 255, 255, 0.85);
+}
 
-  /* Keyboard focus visibility */
-  .sidebar-nav-panel .section-nav-item:focus-visible,
-  .sidebar-nav-panel .subsection-item:focus-visible {
-    outline: 3px solid var(--und-orange);
-    outline-offset: 2px;
-  }
+/* .section-anchor scroll offsets are defined in styles.css to keep a single source of truth */
 
-  /* High-contrast preference support */
-  @media (prefers-contrast: more) {
-    .sidebar-nav-panel {
-      box-shadow: var(--elev-focus-neutral);
-    }
-    .sidebar-nav-panel .section-nav-item {
-      border-color: var(--neutral-500);
-      background: var(--neutral-100);
-    }
-    .sidebar-nav-panel .section-nav-item.active {
-      background: #ffffff;
-      border-color: var(--und-green);
-      box-shadow: var(--elev-focus-strong);
-    }
-    .sidebar-nav-panel .subsection-item.current-subsection {
-      background: transparent;
-      border-color: transparent;
-    }
-  }
-  /* Progress percentage text styling */
-  html[data-theme='dark'] .chart-navigation .nav-progress-text {
-    color: rgba(255, 255, 255, 0.85);
-  }
+/* Keep left border accent only in light theme */
+html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item:not(.active) {
+  border-left: 1px solid var(--neutral-500); /* UND gray spectrum */
+}
+html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item:hover:not(.active) {
+  border-left-color: var(--neutral-600); /* UND gray spectrum */
+}
 
-  /* .section-anchor scroll offsets are defined in styles.css to keep a single source of truth */
+/* Theme-scoped tracker pills to avoid conflicts */
+html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item {
+  border: 1px solid var(--surface-light-border) !important;
+  background: var(--surface-light) !important;
+  box-shadow: none !important;
+}
+html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item:hover {
+  border-color: var(--surface-light-border) !important;
+  background-color: var(--surface-light-hover) !important; /* not dark in light theme */
+}
+html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item.active {
+  border: 1px solid var(--surface-light-border) !important;
+  background: var(--white) !important;
+  box-shadow: none !important;
+}
+html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item.active:hover {
+  background: var(--white) !important;
+}
 
-  /* Keep left border accent only in light theme */
-  html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item:not(.active) {
-    border-left: 1px solid var(--neutral-500); /* UND gray spectrum */
-  }
-  html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item:hover:not(.active) {
-    border-left-color: var(--neutral-600); /* UND gray spectrum */
-  }
+html[data-theme='dark'] .sidebar-nav-panel .section-nav-item {
+  border: 1px solid var(--border) !important;
+  background: var(--panel) !important; /* dark pills in dark theme */
+  box-shadow: none !important;
+}
+html[data-theme='dark'] .sidebar-nav-panel .section-nav-item:hover {
+  border-color: var(--border) !important;
+  background-color: var(--bg-hover) !important;
+}
+html[data-theme='dark'] .sidebar-nav-panel .section-nav-item.active {
+  background: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: none !important;
+}
 
-  /* Theme-scoped tracker pills to avoid conflicts */
-  html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item {
-    border: 1px solid var(--surface-light-border) !important;
-    background: var(--surface-light) !important;
-    box-shadow: none !important;
-  }
-  html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item:hover {
-    border-color: var(--surface-light-border) !important;
-    background-color: var(--surface-light-hover) !important; /* not dark in light theme */
-  }
-  html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item.active {
-    border: 1px solid var(--surface-light-border) !important;
-    background: var(--white) !important;
-    box-shadow: none !important;
-  }
-  html:not([data-theme='dark']) .sidebar-nav-panel .section-nav-item.active:hover {
-    background: var(--white) !important;
-  }
+/* Navigation text styles with consistent hierarchy */
+.nav-text-primary {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+.nav-text-secondary {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.nav-text-meta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  display: block;
+  line-height: 1.4;
+}
+.nav-success-indicator {
+  color: var(--success);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-right: 6px;
+}
 
-  html[data-theme='dark'] .sidebar-nav-panel .section-nav-item {
-    border: 1px solid var(--border) !important;
-    background: var(--panel) !important; /* dark pills in dark theme */
-    box-shadow: none !important;
-  }
-  html[data-theme='dark'] .sidebar-nav-panel .section-nav-item:hover {
-    border-color: var(--border) !important;
-    background-color: var(--bg-hover) !important;
-  }
-  html[data-theme='dark'] .sidebar-nav-panel .section-nav-item.active {
-    background: rgba(255, 255, 255, 0.08) !important;
-    box-shadow: none !important;
-  }
+/* Chart navigation specific */
 
-  /* Navigation text styles with consistent hierarchy */
-  .nav-text-primary {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text);
-    line-height: 1.4;
-  }
-  .nav-text-secondary {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    line-height: 1.4;
-  }
-  .nav-text-meta {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-    display: block;
-    line-height: 1.4;
-  }
-  .nav-success-indicator {
-    color: var(--success);
-    font-size: 0.875rem;
-    font-weight: 600;
-    margin-right: 6px;
-  }
+.case-info-header {
+  margin: 0 0 var(--space-2) 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  line-height: 1.3;
+}
+.case-info-description {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
 
-  /* Chart navigation specific */
+/* Mobile-first sidebar behavior is now handled by mobile-patch-v2.css */
 
-  .case-info-header {
-    margin: 0 0 var(--space-2) 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text);
-    flex: 1;
-    line-height: 1.3;
+/* Responsive improvements for section navigation */
+@media (max-width: 900px) {
+  /* Mobile: adjust padding for better touch targets */
+  .chart-navigation .section-card .section-nav-item {
+    padding: 1rem 20px; /* increased touch-friendly padding */
+    min-height: 44px; /* WCAG touch target minimum */
   }
-  .case-info-description {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    line-height: 1.4;
-  }
+}
 
-  /* Mobile-first sidebar behavior is now handled by mobile-patch-v2.css */
+@media (max-width: 640px) {
+  /* Small mobile: ensure adequate touch targets */
+  .chart-navigation .section-card .section-nav-item {
+    padding: 1.25rem 16px; /* even more padding for small screens */
+  }
+}
+
+/* High DPI displays: ensure text is crisp */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .chart-navigation .section-card .section-nav-item {
+    /* Better text rendering on high DPI */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
