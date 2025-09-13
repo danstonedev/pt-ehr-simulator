@@ -17,24 +17,52 @@ const ARTIFACT_CATEGORY_META = {
   'prior-notes': { label: 'Prior Notes', order: 7 },
   other: { label: 'Other', order: 99 },
 };
-// Collapse state keys are now case-scoped so settings persist per case, not globally
-const ARTIFACT_COLLAPSE_KEY_BASE = 'artifactCategoryCollapse_v1';
-const SECTION_COLLAPSE_KEY_BASE = 'sectionCollapse_v1';
-// Persisted visibility of the entire Case File (artifacts) block; per-case namespace
-const CASEFILE_PANEL_KEY_BASE = 'caseFilePanel_v1';
-
-function safeLoad(key) {
+const ARTIFACT_COLLAPSE_KEY = 'artifactCategoryCollapse_v1';
+function loadArtifactCollapseState() {
   try {
-    return JSON.parse(localStorage.getItem(key) || '{}') || {};
+    return JSON.parse(localStorage.getItem(ARTIFACT_COLLAPSE_KEY) || '{}') || {};
   } catch {
     return {};
   }
 }
-function safeSave(key, state) {
+function saveArtifactCollapseState(state) {
   try {
-    localStorage.setItem(key, JSON.stringify(state || {}));
+    localStorage.setItem(ARTIFACT_COLLAPSE_KEY, JSON.stringify(state || {}));
   } catch {}
 }
+let artifactCollapseState = loadArtifactCollapseState();
+
+// Persisted collapse state for top-level "Case File" artifact block
+const CASEFILE_COLLAPSED_KEY = 'caseFileCollapsed_v1';
+function loadCaseFileCollapsed() {
+  try {
+    return localStorage.getItem(CASEFILE_COLLAPSED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+function saveCaseFileCollapsed(v) {
+  try {
+    localStorage.setItem(CASEFILE_COLLAPSED_KEY, v ? '1' : '0');
+  } catch {}
+}
+let caseFileCollapsed = loadCaseFileCollapsed();
+
+// Persisted collapse state for section cards
+const SECTION_COLLAPSE_KEY = 'sectionCollapse_v1';
+function loadSectionCollapseState() {
+  try {
+    return JSON.parse(localStorage.getItem(SECTION_COLLAPSE_KEY) || '{}') || {};
+  } catch {
+    return {};
+  }
+}
+function saveSectionCollapseState(state) {
+  try {
+    localStorage.setItem(SECTION_COLLAPSE_KEY, JSON.stringify(state || {}));
+  } catch {}
+}
+let sectionCollapseState = loadSectionCollapseState();
 
 // Heuristic normalization for artifact type across legacy/new cases
 function normalizeArtifactType(mod) {
@@ -112,13 +140,7 @@ function createSVGElement(tag, attrs = {}, children = []) {
 function createSubsectionIndicator(status) {
   switch (status) {
     case 'complete':
-      return el(
-        'span',
-        {
-          class: 'subsection-indicator subsection-indicator-complete',
-        },
-        '✓',
-      );
+      return el('span', { class: 'subsection-indicator subsection-indicator-complete' }, '✓');
 
     case 'partial':
       return el('div', { class: 'subsection-indicator subsection-indicator-partial' });
@@ -429,7 +451,9 @@ function applySubsectionVisibilityControls({
       if (isFacultyMode) {
         // Flex the header to place toggle at right
         if (!header.dataset.flexified) {
-          header.classList.add('d-flex', 'ai-center', 'jc-between');
+          header.style.display = 'flex';
+          header.style.alignItems = 'center';
+          header.style.justifyContent = 'space-between';
           header.dataset.flexified = 'true';
         }
         let toggleWrap = header.querySelector('.subsection-visibility-toggle');
@@ -437,8 +461,9 @@ function applySubsectionVisibilityControls({
           toggleWrap = el(
             'label',
             {
-              class:
-                'subsection-visibility-toggle und-toggle d-flex ai-center gap-10 fw-500 fs-12 text-secondary ml-auto relative',
+              class: 'subsection-visibility-toggle und-toggle',
+              style:
+                'margin-left:auto; display:flex; align-items:center; gap:10px; font-weight:500; font-size:12px; color: var(--text-secondary); position: relative;',
             },
             [
               // Accessible checkbox drives the visual switch via sibling selectors
@@ -447,6 +472,7 @@ function applySubsectionVisibilityControls({
                 class: 'und-toggle-input',
                 'aria-label': 'Toggle subsection visibility',
                 'aria-checked': 'false',
+                style: 'position:absolute; opacity:0; width:0; height:0;',
               }),
               el('span', { class: 'und-toggle-track', 'aria-hidden': 'true' }, [
                 el('span', { class: 'und-toggle-thumb' }),
@@ -545,7 +571,8 @@ function createEditableCaseHeader(caseInfo, onUpdate, options = {}) {
           el(
             'button',
             {
-              class: 'btn secondary small ml-2',
+              class: 'btn secondary',
+              style: 'margin-left: 8px; padding:4px 8px; font-size:12px;',
               onclick: (e) => {
                 e.stopPropagation();
                 openEditCaseModal({ ...caseInfo }, (updated) => {
@@ -701,29 +728,37 @@ function openViewArtifactModal(module, options = {}) {
         if (!module.type) module.type = t;
         if (t === 'referral') {
           const d = module.data || {};
-          return el('div', { class: 'module-card b-1 br-md p-12 bg-surface' }, [
-            el('div', { class: 'fw-600 mb-6' }, 'Referral'),
-            el('div', { class: 'case-info-grid case-details-grid' }, [
-              el('div', { class: 'case-info-row' }, [
-                el('span', { class: 'label' }, 'Date'),
-                el('span', { class: 'value' }, d.date || 'N/A'),
+          return el(
+            'div',
+            {
+              class: 'module-card',
+              style:
+                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
+            },
+            [
+              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Referral'),
+              el('div', { class: 'case-info-grid case-details-grid' }, [
+                el('div', { class: 'case-info-row' }, [
+                  el('span', { class: 'label' }, 'Date'),
+                  el('span', { class: 'value' }, d.date || 'N/A'),
+                ]),
+                el('div', { class: 'case-info-row' }, [
+                  el('span', { class: 'label' }, 'From'),
+                  el('span', { class: 'value' }, d.source || 'N/A'),
+                ]),
+                el('div', { class: 'case-info-row' }, [
+                  el('span', { class: 'label' }, 'Reason'),
+                  el('span', { class: 'value' }, d.reason || 'N/A'),
+                ]),
+                d.notes
+                  ? el('div', { class: 'case-info-row' }, [
+                      el('span', { class: 'label' }, 'Notes'),
+                      el('span', { class: 'value' }, d.notes || ''),
+                    ])
+                  : null,
               ]),
-              el('div', { class: 'case-info-row' }, [
-                el('span', { class: 'label' }, 'From'),
-                el('span', { class: 'value' }, d.source || 'N/A'),
-              ]),
-              el('div', { class: 'case-info-row' }, [
-                el('span', { class: 'label' }, 'Reason'),
-                el('span', { class: 'value' }, d.reason || 'N/A'),
-              ]),
-              d.notes
-                ? el('div', { class: 'case-info-row' }, [
-                    el('span', { class: 'label' }, 'Notes'),
-                    el('span', { class: 'value' }, d.notes || ''),
-                  ])
-                : null,
-            ]),
-          ]);
+            ],
+          );
         }
         if (t === 'imaging') {
           const d = module.data || {};
@@ -737,19 +772,27 @@ function openViewArtifactModal(module, options = {}) {
             d.impression ? ['Impression', d.impression] : null,
             d.notes ? ['Notes', d.notes] : null,
           ].filter(Boolean);
-          return el('div', { class: 'module-card b-1 br-md p-12 bg-surface' }, [
-            el('div', { class: 'fw-600 mb-6' }, 'Imaging'),
-            el(
-              'div',
-              { class: 'case-info-grid case-details-grid' },
-              rows.map(([label, val]) =>
-                el('div', { class: 'case-info-row' }, [
-                  el('span', { class: 'label' }, label),
-                  el('span', { class: 'value' }, String(val)),
-                ]),
+          return el(
+            'div',
+            {
+              class: 'module-card',
+              style:
+                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
+            },
+            [
+              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Imaging'),
+              el(
+                'div',
+                { class: 'case-info-grid case-details-grid' },
+                rows.map(([label, val]) =>
+                  el('div', { class: 'case-info-row' }, [
+                    el('span', { class: 'label' }, label),
+                    el('span', { class: 'value' }, String(val)),
+                  ]),
+                ),
               ),
-            ),
-          ]);
+            ],
+          );
         }
         if (t === 'labs') {
           const d = module.data || {};
@@ -760,19 +803,27 @@ function openViewArtifactModal(module, options = {}) {
             d.summary ? ['Summary', d.summary] : null,
             d.notes ? ['Notes', d.notes] : null,
           ].filter(Boolean);
-          return el('div', { class: 'module-card b-1 br-md p-12 bg-surface' }, [
-            el('div', { class: 'fw-600 mb-6' }, 'Labs'),
-            el(
-              'div',
-              { class: 'case-info-grid case-details-grid' },
-              rows.map(([label, val]) =>
-                el('div', { class: 'case-info-row' }, [
-                  el('span', { class: 'label' }, label),
-                  el('span', { class: 'value' }, String(val)),
-                ]),
+          return el(
+            'div',
+            {
+              class: 'module-card',
+              style:
+                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
+            },
+            [
+              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Labs'),
+              el(
+                'div',
+                { class: 'case-info-grid case-details-grid' },
+                rows.map(([label, val]) =>
+                  el('div', { class: 'case-info-row' }, [
+                    el('span', { class: 'label' }, label),
+                    el('span', { class: 'value' }, String(val)),
+                  ]),
+                ),
               ),
-            ),
-          ]);
+            ],
+          );
         }
         if (t === 'meds') {
           const d = module.data || {};
@@ -784,19 +835,27 @@ function openViewArtifactModal(module, options = {}) {
             d.indication ? ['Indication', d.indication] : null,
             d.notes ? ['Notes', d.notes] : null,
           ].filter(Boolean);
-          return el('div', { class: 'module-card b-1 br-md p-12 bg-surface' }, [
-            el('div', { class: 'fw-600 mb-6' }, 'Medications'),
-            el(
-              'div',
-              { class: 'case-info-grid case-details-grid' },
-              rows.map(([label, val]) =>
-                el('div', { class: 'case-info-row' }, [
-                  el('span', { class: 'label' }, label),
-                  el('span', { class: 'value' }, String(val)),
-                ]),
+          return el(
+            'div',
+            {
+              class: 'module-card',
+              style:
+                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
+            },
+            [
+              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Medications'),
+              el(
+                'div',
+                { class: 'case-info-grid case-details-grid' },
+                rows.map(([label, val]) =>
+                  el('div', { class: 'case-info-row' }, [
+                    el('span', { class: 'label' }, label),
+                    el('span', { class: 'value' }, String(val)),
+                  ]),
+                ),
               ),
-            ),
-          ]);
+            ],
+          );
         }
         if (t === 'vitals') {
           const d = module.data || {};
@@ -811,19 +870,27 @@ function openViewArtifactModal(module, options = {}) {
             d.height ? ['Height', d.height] : null,
             d.notes ? ['Notes', d.notes] : null,
           ].filter(Boolean);
-          return el('div', { class: 'module-card b-1 br-md p-12 bg-surface' }, [
-            el('div', { class: 'fw-600 mb-6' }, 'Vitals'),
-            el(
-              'div',
-              { class: 'case-info-grid case-details-grid' },
-              rows.map(([label, val]) =>
-                el('div', { class: 'case-info-row' }, [
-                  el('span', { class: 'label' }, label),
-                  el('span', { class: 'value' }, String(val)),
-                ]),
+          return el(
+            'div',
+            {
+              class: 'module-card',
+              style:
+                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
+            },
+            [
+              el('div', { style: 'font-weight:600; margin-bottom:6px;' }, 'Vitals'),
+              el(
+                'div',
+                { class: 'case-info-grid case-details-grid' },
+                rows.map(([label, val]) =>
+                  el('div', { class: 'case-info-row' }, [
+                    el('span', { class: 'label' }, label),
+                    el('span', { class: 'value' }, String(val)),
+                  ]),
+                ),
               ),
-            ),
-          ]);
+            ],
+          );
         }
         if (t === 'pmh' || t === 'prior-notes' || t === 'other') {
           const d = module.data || {};
@@ -833,23 +900,31 @@ function openViewArtifactModal(module, options = {}) {
             d.summary ? ['Summary', d.summary] : null,
             d.notes ? ['Notes', d.notes] : null,
           ].filter(Boolean);
-          return el('div', { class: 'module-card b-1 br-md p-12 bg-surface' }, [
-            el(
-              'div',
-              { class: 'fw-600 mb-6' },
-              t === 'pmh' ? 'Past Medical History' : module.title || 'Document',
-            ),
-            el(
-              'div',
-              { class: 'case-info-grid case-details-grid' },
-              rows.map(([label, val]) =>
-                el('div', { class: 'case-info-row' }, [
-                  el('span', { class: 'label' }, label),
-                  el('span', { class: 'value' }, String(val)),
-                ]),
+          return el(
+            'div',
+            {
+              class: 'module-card',
+              style:
+                'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
+            },
+            [
+              el(
+                'div',
+                { style: 'font-weight:600; margin-bottom:6px;' },
+                t === 'pmh' ? 'Past Medical History' : module.title || 'Document',
               ),
-            ),
-          ]);
+              el(
+                'div',
+                { class: 'case-info-grid case-details-grid' },
+                rows.map(([label, val]) =>
+                  el('div', { class: 'case-info-row' }, [
+                    el('span', { class: 'label' }, label),
+                    el('span', { class: 'value' }, String(val)),
+                  ]),
+                ),
+              ),
+            ],
+          );
         }
         // Generic fallback table for unknown types
         const entries = Object.entries(module.data || {});
@@ -863,7 +938,11 @@ function openViewArtifactModal(module, options = {}) {
                 'border:1px solid var(--border); border-radius:8px; padding:12px; background: var(--surface);',
             },
             [
-              el('div', { class: 'fw-600 mb-6' }, module.title || 'Details'),
+              el(
+                'div',
+                { style: 'font-weight:600; margin-bottom:6px;' },
+                module.title || 'Details',
+              ),
               el(
                 'div',
                 { class: 'case-info-grid case-details-grid' },
@@ -881,24 +960,32 @@ function openViewArtifactModal(module, options = {}) {
             ],
           );
         }
-        return el('div', { class: 'fs-12 text-secondary' }, 'No details available.');
+        return el(
+          'div',
+          { style: 'font-size:12px; color: var(--text-secondary);' },
+          'No details available.',
+        );
       })(),
       (() => {
         const atts = Array.isArray(module?.data?.attachments) ? module.data.attachments : [];
         if (!atts.length) return null;
-        return el('div', { class: 'mt-12' }, [
+        return el('div', { style: 'margin-top:12px;' }, [
           el('div', { class: 'goal-section-title' }, 'Attachments'),
           el(
             'div',
-            { class: 'd-flex fd-column gap-8' },
+            { style: 'display:flex; flex-direction:column; gap:8px;' },
             atts.map((m) => {
-              const row = el('div', { class: 'd-flex ai-center gap-8' }, []);
-              const thumbWrap = el('div', { class: 'w-40 h-40 d-flex ai-center jc-center' });
+              const row = el('div', { style: 'display:flex; align-items:center; gap:8px;' }, []);
+              const thumbWrap = el('div', {
+                style:
+                  'width:40px; height:40px; display:flex; align-items:center; justify-content:center;',
+              });
               // Create a placeholder; fill with image if mimetype is image/*
               const isImg = (m.mime || '').startsWith('image/');
               if (isImg) {
                 const img = el('img', {
-                  class: 'w-40 h-40 obj-cover br-sm b-1 bg-secondary',
+                  style:
+                    'width:40px; height:40px; object-fit:cover; border-radius:6px; border:1px solid var(--border); background: var(--bg-secondary);',
                   alt: m.name || 'attachment',
                 });
                 thumbWrap.appendChild(img);
@@ -913,11 +1000,14 @@ function openViewArtifactModal(module, options = {}) {
                   } catch {}
                 })();
               } else {
-                thumbWrap.appendChild(el('span', { class: 'fs-18' }, '📄'));
+                thumbWrap.appendChild(el('span', { style: 'font-size:18px;' }, '📄'));
               }
               const nameSpan = el(
                 'span',
-                { class: 'flex-1 fs-12 text-ellipsis' },
+                {
+                  style:
+                    'flex:1; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;',
+                },
                 `${m.name} (${Math.ceil((m.size || 0) / 1024)} KB)`,
               );
               row.appendChild(thumbWrap);
@@ -927,37 +1017,43 @@ function openViewArtifactModal(module, options = {}) {
                 el(
                   'button',
                   {
-                    class: 'btn secondary small',
+                    class: 'btn secondary',
+                    style: 'font-size:12px; padding:6px 10px;',
                     onclick: async () => {
                       // In-page preview overlay
                       const overlay = document.createElement('div');
-                      overlay.className =
-                        'fixed inset-0 overlay-65 d-flex ai-center jc-center z-modal';
+                      overlay.style.cssText =
+                        'position:fixed; inset:0; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; z-index:10000;';
                       const panel = document.createElement('div');
-                      panel.className = 'bg-surface text-color br-lg shadow-modal d-flex fd-column';
                       panel.style.cssText =
-                        'max-width:90vw; max-height:90vh; width:min(1000px, 92vw);';
+                        'background:var(--surface); color:var(--text); max-width:90vw; max-height:90vh; width:min(1000px, 92vw); border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.35); display:flex; flex-direction:column;';
                       const header = document.createElement('div');
-                      header.className = 'd-flex ai-center gap-8 py-12 px-14 bb-1';
+                      header.style.cssText =
+                        'display:flex; align-items:center; gap:8px; padding:12px 14px; border-bottom:1px solid var(--border);';
                       const title = document.createElement('div');
-                      title.className = 'flex-1 fw-600 fs-14 text-ellipsis';
+                      title.style.cssText =
+                        'flex:1; font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
                       title.textContent = m.name || 'Attachment';
                       const closeBtn = document.createElement('button');
-                      closeBtn.className = 'btn secondary small';
+                      closeBtn.className = 'btn secondary';
                       closeBtn.textContent = 'Close';
+                      closeBtn.style.cssText = 'padding:6px 10px;';
                       header.appendChild(title);
                       header.appendChild(closeBtn);
                       const content = document.createElement('div');
-                      content.className =
-                        'py-10 px-14 overflow-auto d-flex ai-center jc-center bg-secondary';
+                      content.style.cssText =
+                        'padding:10px 14px; overflow:auto; display:flex; align-items:center; justify-content:center; background:var(--bg-secondary);';
                       const footer = document.createElement('div');
-                      footer.className = 'd-flex gap-8 jc-end py-10 px-14 bt-1';
+                      footer.style.cssText =
+                        'display:flex; gap:8px; justify-content:flex-end; padding:10px 14px; border-top:1px solid var(--border);';
                       const openTabBtn = document.createElement('button');
-                      openTabBtn.className = 'btn secondary small';
+                      openTabBtn.className = 'btn secondary';
                       openTabBtn.textContent = 'Open in new tab';
+                      openTabBtn.style.cssText = 'padding:6px 10px;';
                       const downloadBtn = document.createElement('button');
-                      downloadBtn.className = 'btn secondary small';
+                      downloadBtn.className = 'btn secondary';
                       downloadBtn.textContent = 'Download';
+                      downloadBtn.style.cssText = 'padding:6px 10px;';
                       footer.appendChild(openTabBtn);
                       footer.appendChild(downloadBtn);
                       panel.appendChild(header);
@@ -991,25 +1087,27 @@ function openViewArtifactModal(module, options = {}) {
                           const img = document.createElement('img');
                           img.src = objectUrl;
                           img.alt = m.name || 'image';
-                          img.className = 'mw-100 mh-78vh obj-contain br-md bg-white';
+                          img.style.cssText =
+                            'max-width:100%; max-height:78vh; object-fit:contain; border-radius:8px; background:#fff;';
                           content.replaceChildren();
                           content.appendChild(img);
                         } else if (isPdf) {
                           const iframe = document.createElement('iframe');
                           iframe.src = objectUrl;
-                          iframe.className = 'h-78vh bg-white border-0';
-                          iframe.style.cssText = 'width:86vw; max-width:calc(1000px - 28px);';
+                          iframe.style.cssText =
+                            'width:86vw; max-width:calc(1000px - 28px); height:78vh; border:0; background:#fff;';
                           content.replaceChildren();
                           content.appendChild(iframe);
                         } else {
                           // Generic fallback: attempt iframe, else message
                           const info = document.createElement('div');
-                          info.className = 'd-flex fd-column ai-center gap-8 p-20 text-secondary';
+                          info.style.cssText =
+                            'display:flex; flex-direction:column; align-items:center; gap:8px; padding:20px; color:var(--text-secondary);';
                           const icon = document.createElement('div');
-                          icon.className = 'fs-42';
+                          icon.style.cssText = 'font-size:42px;';
                           icon.textContent = '📄';
                           const msg = document.createElement('div');
-                          msg.className = 'fs-14';
+                          msg.style.cssText = 'font-size:14px;';
                           msg.textContent =
                             'Preview is not available for this file type. Use Open in new tab or Download.';
                           info.replaceChildren(icon, msg);
@@ -1043,7 +1141,8 @@ function openViewArtifactModal(module, options = {}) {
                 const btn = el(
                   'button',
                   {
-                    class: 'btn secondary small',
+                    class: 'btn secondary',
+                    style: 'font-size:12px; padding:6px 10px;',
                   },
                   'Download',
                 );
@@ -1074,7 +1173,8 @@ function openViewArtifactModal(module, options = {}) {
                 const delBtn = el(
                   'button',
                   {
-                    class: 'btn subtle-danger small',
+                    class: 'btn secondary',
+                    style: 'font-size:12px; padding:6px 10px; color:#e53e3e; border-color:#e53e3e;',
                     title: 'Delete file from storage and remove from this document',
                   },
                   'Delete File',
@@ -1117,7 +1217,11 @@ function openViewArtifactModal(module, options = {}) {
       [
         ...(isFacultyMode
           ? (() => {
-              const remBtn = el('button', { class: 'btn subtle-danger' }, 'Remove');
+              const remBtn = el(
+                'button',
+                { class: 'btn secondary', style: 'border-color:#e53e3e; color:#e53e3e;' },
+                'Remove',
+              );
               remBtn.addEventListener('click', () => {
                 if (confirm('Remove this background document?')) {
                   try {
@@ -1208,13 +1312,15 @@ function openAddArtifactModal(onAdd) {
     type: 'file',
     multiple: true,
     accept: '*/*',
-    class: 'd-none',
+    style: 'display:none;',
     onchange: async (e) => handleFiles(Array.from(e.target.files || [])),
   });
   const dropZone = el(
     'div',
     {
-      class: 'attachment-drop-zone mt-4',
+      class: 'attachment-drop-zone',
+      style:
+        'margin-top:4px; padding:12px; border:2px dashed var(--border); border-radius:6px; text-align:center; font-size:12px; color: var(--text-secondary); cursor:pointer; transition:background .15s, border-color .15s;',
       onclick: () => fileInput.click(),
       onkeydown: (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -1256,10 +1362,12 @@ function openAddArtifactModal(onAdd) {
     renderAttachmentList();
   }
   const dzHighlightOn = () => {
-    dropZone.classList.add('dragover');
+    dropZone.style.background = 'var(--surface-alt, var(--surface-muted))';
+    dropZone.style.borderColor = 'var(--accent, var(--primary))';
   };
   const dzHighlightOff = () => {
-    dropZone.classList.remove('dragover');
+    dropZone.style.background = '';
+    dropZone.style.borderColor = 'var(--border)';
   };
   ['dragenter', 'dragover'].forEach((evt) =>
     dropZone.addEventListener(evt, (e) => {
@@ -1281,17 +1389,22 @@ function openAddArtifactModal(onAdd) {
     dzHighlightOff();
     handleFiles(Array.from(e.dataTransfer?.files || []));
   });
-  const attList = el('div', { class: 'd-flex fd-column gap-6' });
+  const attList = el('div', { style: 'display:flex; flex-direction:column; gap:6px;' });
   function renderAttachmentList() {
     attList.replaceChildren();
     if (!ref.attachments || !ref.attachments.length) return;
     ref.attachments.forEach((m, idx) => {
-      const row = el('div', { class: 'd-flex ai-center gap-8' }, [
-        el('span', { class: 'flex-1 fs-12' }, `${m.name} (${Math.ceil((m.size || 0) / 1024)} KB)`),
+      const row = el('div', { style: 'display:flex; align-items:center; gap:8px;' }, [
+        el(
+          'span',
+          { style: 'flex:1; font-size:12px;' },
+          `${m.name} (${Math.ceil((m.size || 0) / 1024)} KB)`,
+        ),
         el(
           'button',
           {
-            class: 'btn secondary small',
+            class: 'btn secondary',
+            style: 'font-size:11px; padding:4px 8px;',
             title: 'Remove attachment (does not delete the stored file)',
             onclick: () => {
               ref.attachments.splice(idx, 1);
@@ -1304,7 +1417,7 @@ function openAddArtifactModal(onAdd) {
       attList.appendChild(row);
     });
   }
-  const refForm = el('div', { class: 'd-grid gap-10 mt-8' }, [
+  const refForm = el('div', { style: 'display:grid; gap:10px; margin-top: 8px;' }, [
     el('div', {}, [
       el('label', { class: 'instructor-form-label' }, 'Date'),
       el('input', {
@@ -1332,7 +1445,8 @@ function openAddArtifactModal(onAdd) {
     el('div', {}, [
       el('label', { class: 'instructor-form-label' }, 'Notes'),
       el('textarea', {
-        class: 'instructor-form-input minh-68',
+        class: 'instructor-form-input',
+        style: 'min-height:68px;',
         oninput: (e) => (ref.notes = e.target.value),
       }),
     ]),
@@ -1389,7 +1503,8 @@ function openAddArtifactModal(onAdd) {
         el(
           'button',
           {
-            class: 'btn secondary mr-4' /* minor separate before gap spacing */,
+            class: 'btn secondary',
+            style: 'margin-right:4px;' /* minor separate before gap spacing */,
             onclick: () => overlay.remove(),
           },
           'Cancel',
@@ -1472,13 +1587,15 @@ function openEditArtifactModal(module, onSave) {
     type: 'file',
     multiple: true,
     accept: '*/*',
-    class: 'd-none',
+    style: 'display:none;',
     onchange: async (e) => handleFilesEdit(Array.from(e.target.files || [])),
   });
   const dropZone = el(
     'div',
     {
-      class: 'attachment-drop-zone mt-4',
+      class: 'attachment-drop-zone',
+      style:
+        'margin-top:4px; padding:12px; border:2px dashed var(--border); border-radius:6px; text-align:center; font-size:12px; color: var(--text-secondary); cursor:pointer; transition:background .15s, border-color .15s;',
       onclick: () => fileInput.click(),
       onkeydown: (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -1519,10 +1636,12 @@ function openEditArtifactModal(module, onSave) {
     renderAttachmentList();
   }
   const dzHighlightOn = () => {
-    dropZone.classList.add('dragover');
+    dropZone.style.background = 'var(--surface-alt, var(--surface-muted))';
+    dropZone.style.borderColor = 'var(--accent, var(--primary))';
   };
   const dzHighlightOff = () => {
-    dropZone.classList.remove('dragover');
+    dropZone.style.background = '';
+    dropZone.style.borderColor = 'var(--border)';
   };
   ['dragenter', 'dragover'].forEach((evt) =>
     dropZone.addEventListener(evt, (e) => {
@@ -1544,17 +1663,22 @@ function openEditArtifactModal(module, onSave) {
     dzHighlightOff();
     handleFilesEdit(Array.from(e.dataTransfer?.files || []));
   });
-  const attList = el('div', { class: 'd-flex fd-column gap-6' });
+  const attList = el('div', { style: 'display:flex; flex-direction:column; gap:6px;' });
   function renderAttachmentList() {
     attList.replaceChildren();
     if (!ref.attachments || !ref.attachments.length) return;
     ref.attachments.forEach((m, idx) => {
-      const row = el('div', { class: 'd-flex ai-center gap-8' }, [
-        el('span', { class: 'flex-1 fs-12' }, `${m.name} (${Math.ceil((m.size || 0) / 1024)} KB)`),
+      const row = el('div', { style: 'display:flex; align-items:center; gap:8px;' }, [
+        el(
+          'span',
+          { style: 'flex:1; font-size:12px;' },
+          `${m.name} (${Math.ceil((m.size || 0) / 1024)} KB)`,
+        ),
         el(
           'button',
           {
-            class: 'btn secondary small',
+            class: 'btn secondary',
+            style: 'font-size:11px; padding:4px 8px;',
             title: 'Remove attachment from this document',
             onclick: () => {
               ref.attachments.splice(idx, 1);
@@ -1567,7 +1691,7 @@ function openEditArtifactModal(module, onSave) {
       attList.appendChild(row);
     });
   }
-  const refForm = el('div', { class: 'd-grid gap-10 mt-8' }, [
+  const refForm = el('div', { style: 'display:grid; gap:10px; margin-top: 8px;' }, [
     el('div', {}, [
       el('label', { class: 'instructor-form-label' }, 'Date'),
       el('input', {
@@ -1575,6 +1699,15 @@ function openEditArtifactModal(module, onSave) {
         class: 'instructor-form-input',
         value: ref.date,
         oninput: (e) => (ref.date = e.target.value),
+      }),
+    ]),
+    el('div', {}, [
+      el('label', { class: 'instructor-form-label' }, 'From (provider/department)'),
+      el('input', {
+        type: 'text',
+        class: 'instructor-form-input',
+        value: ref.source,
+        oninput: (e) => (ref.source = e.target.value),
       }),
     ]),
     el('div', {}, [
@@ -1590,7 +1723,11 @@ function openEditArtifactModal(module, onSave) {
       el('label', { class: 'instructor-form-label' }, 'Notes'),
       el(
         'textarea',
-        { class: 'instructor-form-input minh-68', oninput: (e) => (ref.notes = e.target.value) },
+        {
+          class: 'instructor-form-input',
+          style: 'min-height:68px;',
+          oninput: (e) => (ref.notes = e.target.value),
+        },
         ref.notes,
       ),
     ]),
@@ -1782,16 +1919,24 @@ export function openEditCaseModal(caseInfo, onSave) {
               }),
             ]),
             // Age + DOB (single row)
-            el('div', { class: 'd-flex gap-16 mb-16' }, [
+            el('div', { style: 'display: flex; gap: 16px; margin-bottom: 16px;' }, [
               // Age (left)
-              el('div', { class: 'flex-1' }, [
-                el('label', { class: 'block mb-8 fw-500 text-color' }, 'Age'),
+              el('div', { style: 'flex: 1;' }, [
+                el(
+                  'label',
+                  {
+                    style:
+                      'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
+                  },
+                  'Age',
+                ),
                 el('input', {
                   type: 'number',
                   id: 'edit-age',
                   min: 0,
                   max: 120,
-                  class: 'w-100 p-12 b-1i br-sm fs-14 box-border',
+                  style:
+                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
                   value: caseInfo.age || '',
                   oninput: (e) => {
                     const dobEl = document.getElementById('edit-dob');
@@ -1813,13 +1958,21 @@ export function openEditCaseModal(caseInfo, onSave) {
                 }),
               ]),
               // DOB (right)
-              el('div', { class: 'flex-1' }, [
-                el('label', { class: 'block mb-8 fw-500 text-color' }, 'DOB'),
+              el('div', { style: 'flex: 1;' }, [
+                el(
+                  'label',
+                  {
+                    style:
+                      'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
+                  },
+                  'DOB',
+                ),
                 el('input', {
                   type: 'date',
                   id: 'edit-dob',
                   value: caseInfo.dob || '',
-                  class: 'w-100 p-12 b-1i br-sm fs-14 box-border',
+                  style:
+                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
                   oninput: (e) => {
                     // If user is typing a DOB, mark as user-edited so age changes won't overwrite
                     if (e.isTrusted) delete e.target.dataset.autofilled;
@@ -1830,37 +1983,52 @@ export function openEditCaseModal(caseInfo, onSave) {
                 }),
                 el(
                   'div',
-                  { class: 'mt-4 fs-12 text-secondary' },
+                  { style: 'margin-top: 6px; font-size: 12px; color: var(--text-secondary);' },
                   'Age auto-fills when DOB is entered.',
                 ),
               ]),
             ]),
             // Sex (full width row)
-            el('div', { class: 'mb-16' }, [
-              el('label', { class: 'block mb-8 fw-500 text-color' }, 'Sex'),
-              el('select', { id: 'edit-gender', class: 'w-100 p-12 b-1i br-sm fs-14 box-border' }, [
-                el('option', { value: '' }, 'Select...'),
-                el(
-                  'option',
-                  { value: 'male', selected: caseSex === 'male' ? '' : undefined },
-                  'Male',
-                ),
-                el(
-                  'option',
-                  { value: 'female', selected: caseSex === 'female' ? '' : undefined },
-                  'Female',
-                ),
-                el(
-                  'option',
-                  { value: 'other', selected: caseSex === 'other' ? '' : undefined },
-                  'Other',
-                ),
-                el(
-                  'option',
-                  { value: 'unspecified', selected: caseSex === 'unspecified' ? '' : undefined },
-                  'Prefer not to say',
-                ),
-              ]),
+            el('div', { style: 'margin-bottom: 16px;' }, [
+              el(
+                'label',
+                {
+                  style:
+                    'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
+                },
+                'Sex',
+              ),
+              el(
+                'select',
+                {
+                  id: 'edit-gender',
+                  style:
+                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+                },
+                [
+                  el('option', { value: '' }, 'Select...'),
+                  el(
+                    'option',
+                    { value: 'male', selected: caseSex === 'male' ? '' : undefined },
+                    'Male',
+                  ),
+                  el(
+                    'option',
+                    { value: 'female', selected: caseSex === 'female' ? '' : undefined },
+                    'Female',
+                  ),
+                  el(
+                    'option',
+                    { value: 'other', selected: caseSex === 'other' ? '' : undefined },
+                    'Other',
+                  ),
+                  el(
+                    'option',
+                    { value: 'unspecified', selected: caseSex === 'unspecified' ? '' : undefined },
+                    'Prefer not to say',
+                  ),
+                ],
+              ),
             ]),
             // Setting (moved below Age/Sex)
             el('div', { class: 'instructor-form-field' }, [
@@ -1912,56 +2080,80 @@ export function openEditCaseModal(caseInfo, onSave) {
               ]),
             ]),
             // Acuity (schema enums)
-            el('div', { class: 'mb-16' }, [
-              el('label', { class: 'block mb-8 fw-500 text-color' }, 'Case Acuity'),
-              el('select', { id: 'edit-acuity', class: 'w-100 p-12 b-1i br-sm fs-14 box-border' }, [
-                el('option', { value: '' }, 'Select acuity...'),
-                el(
-                  'option',
-                  { value: 'acute', selected: caseAcuity === 'acute' ? '' : undefined },
-                  'Acute',
-                ),
-                el(
-                  'option',
-                  { value: 'subacute', selected: caseAcuity === 'subacute' ? '' : undefined },
-                  'Subacute',
-                ),
-                el(
-                  'option',
-                  { value: 'chronic', selected: caseAcuity === 'chronic' ? '' : undefined },
-                  'Chronic',
-                ),
-                el(
-                  'option',
-                  {
-                    value: 'unspecified',
-                    selected: caseAcuity === 'unspecified' ? '' : undefined,
-                  },
-                  'Unspecified',
-                ),
-              ]),
+            el('div', { style: 'margin-bottom: 24px;' }, [
+              el(
+                'label',
+                {
+                  style:
+                    'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
+                },
+                'Case Acuity',
+              ),
+              el(
+                'select',
+                {
+                  id: 'edit-acuity',
+                  style:
+                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+                },
+                [
+                  el('option', { value: '' }, 'Select acuity...'),
+                  el(
+                    'option',
+                    { value: 'acute', selected: caseAcuity === 'acute' ? '' : undefined },
+                    'Acute',
+                  ),
+                  el(
+                    'option',
+                    { value: 'subacute', selected: caseAcuity === 'subacute' ? '' : undefined },
+                    'Subacute',
+                  ),
+                  el(
+                    'option',
+                    { value: 'chronic', selected: caseAcuity === 'chronic' ? '' : undefined },
+                    'Chronic',
+                  ),
+                  el(
+                    'option',
+                    {
+                      value: 'unspecified',
+                      selected: caseAcuity === 'unspecified' ? '' : undefined,
+                    },
+                    'Unspecified',
+                  ),
+                ],
+              ),
             ]),
             // Case Artifacts moved to dedicated modal and sidebar block
             // Buttons (sticky footer area so actions remain visible)
-            el('div', { class: 'd-flex jc-end gap-8 pt-12 mt-16 bt-1 bg-surface sticky-bottom' }, [
-              el(
-                'button',
-                {
-                  type: 'button',
-                  class: 'btn secondary',
-                  onclick: () => document.body.removeChild(modal),
-                },
-                'Cancel',
-              ),
-              el(
-                'button',
-                {
-                  type: 'submit',
-                  class: 'btn primary',
-                },
-                'Save Changes',
-              ),
-            ]),
+            el(
+              'div',
+              {
+                style:
+                  'position: sticky; bottom: 0; background: var(--bg); padding-top: 12px; margin-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end;',
+              },
+              [
+                el(
+                  'button',
+                  {
+                    type: 'button',
+                    class: 'btn secondary',
+                    style: 'padding: 12px 24px; font-size: 14px;',
+                    onclick: () => document.body.removeChild(modal),
+                  },
+                  'Cancel',
+                ),
+                el(
+                  'button',
+                  {
+                    type: 'submit',
+                    class: 'btn primary',
+                    style: 'padding: 12px 24px; font-size: 14px;',
+                  },
+                  'Save Changes',
+                ),
+              ],
+            ),
           ]),
         ],
       ),
@@ -2036,31 +2228,6 @@ export function openEditCaseModal(caseInfo, onSave) {
 }
 
 export function createChartNavigation(config) {
-  // Derive a namespace for persistence (prefer stable case id; fallback to route param)
-  let ns = 'global';
-  try {
-    const caseIdFromData =
-      config?.caseData?.id || config?.caseData?.caseId || config?.caseData?.meta?.id;
-    if (caseIdFromData) ns = String(caseIdFromData);
-    else {
-      const hash = window.location.hash || '';
-      const m = hash.match(/[?#&]case=([^&#]+)/i);
-      if (m && m[1]) ns = decodeURIComponent(m[1]);
-    }
-  } catch {}
-
-  const ARTIFACT_COLLAPSE_KEY = `${ARTIFACT_COLLAPSE_KEY_BASE}__${ns}`;
-  const SECTION_COLLAPSE_KEY = `${SECTION_COLLAPSE_KEY_BASE}__${ns}`;
-  const CASEFILE_PANEL_KEY = `${CASEFILE_PANEL_KEY_BASE}__${ns}`;
-  const artifactContainerId = `casefile-artifacts-${ns}`;
-
-  let artifactCollapseState = safeLoad(ARTIFACT_COLLAPSE_KEY);
-  let sectionCollapseState = safeLoad(SECTION_COLLAPSE_KEY);
-  // Default to visible if no state stored
-  let caseFilePanelState = safeLoad(CASEFILE_PANEL_KEY);
-  let artifactsVisible = Object.prototype.hasOwnProperty.call(caseFilePanelState, 'visible')
-    ? !!caseFilePanelState.visible
-    : true;
   const {
     activeSection,
     onSectionChange,
@@ -2322,7 +2489,7 @@ export function createChartNavigation(config) {
             if (scrollEl) prevScroll = scrollEl.scrollTop;
           } catch {}
           sectionCollapseState[section.id] = !isCollapsed;
-          safeSave(SECTION_COLLAPSE_KEY, sectionCollapseState);
+          saveSectionCollapseState(sectionCollapseState);
           rebuild();
           // Restore scroll position & refocus equivalent button after rebuild
           try {
@@ -2348,7 +2515,7 @@ export function createChartNavigation(config) {
               if (scrollEl) prevScroll = scrollEl.scrollTop;
             } catch {}
             sectionCollapseState[section.id] = !isCollapsed;
-            safeSave(SECTION_COLLAPSE_KEY, sectionCollapseState);
+            saveSectionCollapseState(sectionCollapseState);
             rebuild();
             try {
               if (scrollEl) {
@@ -2517,139 +2684,27 @@ export function createChartNavigation(config) {
 
   // Standalone CASE FILE header (full-width in sidebar)
   // Inline styles enforce visual in case of stylesheet load/cascade issues.
-  let artifactContainer; // will be assigned below; used by header toggle
-
-  function persistCaseFileVisibility(v) {
-    try {
-      caseFilePanelState.visible = !!v;
-      safeSave(CASEFILE_PANEL_KEY, caseFilePanelState);
-    } catch {}
-  }
-
-  let caseFileToggleBtn;
-  // Animated expand/collapse helpers for the artifacts container
-  function animateCollapse(el) {
-    if (!el) return;
-    const current = el.scrollHeight;
-    el.style.maxHeight = current + 'px';
-    el.style.opacity = '1';
-    el.style.transform = 'translateY(0)';
-    // force reflow to apply starting values
-    void el.offsetHeight;
-    el.classList.add('is-collapsed');
-    el.style.maxHeight = '0px';
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(-6px)';
-  }
-  function animateExpand(el) {
-    if (!el) return;
-    el.classList.remove('is-collapsed');
-    el.style.maxHeight = el.scrollHeight + 'px';
-    el.style.opacity = '1';
-    el.style.transform = 'translateY(0)';
-    // after transition completes, remove explicit max-height so future content growth is allowed
-    const done = () => {
-      try {
-        el.style.maxHeight = 'none';
-        el.removeEventListener('transitionend', done);
-      } catch {}
-    };
-    el.addEventListener('transitionend', done);
-  }
-
-  function toggleCaseFileArtifacts() {
-    try {
-      console.warn('[CASE FILE] toggle requested');
-    } catch {}
-    artifactsVisible = !artifactsVisible;
-    persistCaseFileVisibility(artifactsVisible);
-    try {
-      console.warn('[CASE FILE] artifactsVisible =>', artifactsVisible);
-      if (caseFileHeader) caseFileHeader.setAttribute('aria-expanded', String(artifactsVisible));
-      if (caseFileToggleBtn)
-        caseFileToggleBtn.setAttribute('aria-expanded', String(artifactsVisible));
-      // Update aria-label to reflect the resulting action
-      try {
-        if (caseFileHeader)
-          caseFileHeader.setAttribute(
-            'aria-label',
-            artifactsVisible ? 'Collapse Case File' : 'Expand Case File',
-          );
-        if (caseFileToggleBtn)
-          caseFileToggleBtn.setAttribute(
-            'aria-label',
-            artifactsVisible ? 'Collapse Case File' : 'Expand Case File',
-          );
-      } catch {}
-      if (artifactContainer) {
-        if (artifactsVisible) animateExpand(artifactContainer);
-        else animateCollapse(artifactContainer);
-      }
-    } catch {}
-  }
   const caseFileHeader = el(
     'h4',
     {
       class: 'case-file-header',
-      // Header is a visual container; also interactive for fallback/older DOM
-      role: 'button',
-      tabindex: '0',
-      title: 'Toggle Case File',
-      'aria-expanded': String(artifactsVisible),
-      'aria-controls': artifactContainerId,
-      'aria-label': artifactsVisible ? 'Collapse Case File' : 'Expand Case File',
-      onclick: (e) => {
-        try {
-          console.warn('[CASE FILE] header click');
-        } catch {}
-        try {
-          e.stopPropagation();
-        } catch {}
-        toggleCaseFileArtifacts();
-      },
-      onkeydown: (e) => {
-        if (e.key === ' ' || e.key === 'Enter') {
-          e.preventDefault();
-          try {
-            e.stopPropagation();
-          } catch {}
-          toggleCaseFileArtifacts();
-        }
-      },
       style:
-        'display:flex;align-items:center;justify-content:center;margin:0;padding:0;box-sizing:border-box;',
+        'background:#00883A;display:flex;align-items:center;justify-content:center;margin:0;padding:0;height:56px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;font-size:clamp(0.95rem,2.7vw,1.125rem);color:#fff;border:0;border-bottom:2px solid #fff;box-sizing:border-box;',
     },
     [
-      (caseFileToggleBtn = el(
-        'button',
+      el(
+        'span',
         {
           class: 'case-file-badge',
-          type: 'button',
+          role: 'button',
+          tabIndex: 0,
+          'aria-label': 'Case File',
+          'aria-expanded': String(!caseFileCollapsed),
+          'aria-controls': 'artifact-block',
           title: 'Toggle Case File',
-          'aria-controls': artifactContainerId,
-          'aria-expanded': String(artifactsVisible),
-          'aria-label': artifactsVisible ? 'Collapse Case File' : 'Expand Case File',
-          onclick: (e) => {
-            try {
-              console.warn('[CASE FILE] button click');
-            } catch {}
-            try {
-              e.stopPropagation();
-            } catch {}
-            toggleCaseFileArtifacts();
-          },
-          onkeydown: (e) => {
-            if (e.key === ' ' || e.key === 'Enter') {
-              e.preventDefault();
-              try {
-                e.stopPropagation();
-              } catch {}
-              toggleCaseFileArtifacts();
-            }
-          },
         },
         'Case File',
-      )),
+      ),
     ],
   );
 
@@ -2660,7 +2715,6 @@ export function createChartNavigation(config) {
       role: 'complementary',
       'aria-label': 'Chart navigation',
       tabindex: '-1',
-      // No delegated click handler; header/button handlers manage toggle and stop propagation
     },
     [
       // CASE FILE header row aligned with patient header
@@ -2705,15 +2759,19 @@ export function createChartNavigation(config) {
                   'aria-expanded': String(!isCollapsed),
                   onclick: () => {
                     artifactCollapseState[cat.key] = !artifactCollapseState[cat.key];
-                    safeSave(ARTIFACT_COLLAPSE_KEY, artifactCollapseState);
+                    saveArtifactCollapseState(artifactCollapseState);
                     container.replaceChildren(...build());
                   },
                 },
                 [
-                  el('span', { class: 'twisty d-inline-block w-12' }, isCollapsed ? '▶' : '▼'),
                   el(
                     'span',
-                    { class: 'flex-1 ta-left' },
+                    { class: 'twisty', style: 'display:inline-block; width:12px;' },
+                    isCollapsed ? '▶' : '▼',
+                  ),
+                  el(
+                    'span',
+                    { style: 'flex:1; text-align:left;' },
                     `${cat.meta?.label || cat.key} (${cat.items.length})`,
                   ),
                 ],
@@ -2753,7 +2811,9 @@ export function createChartNavigation(config) {
 
               return el('div', { class: 'artifact-category' }, [
                 header,
-                isCollapsed ? el('div') : el('div', { class: 'artifact-list mt-4' }, itemButtons),
+                isCollapsed
+                  ? el('div')
+                  : el('div', { class: 'artifact-list', style: 'margin-top:4px;' }, itemButtons),
               ]);
             }
 
@@ -2764,7 +2824,10 @@ export function createChartNavigation(config) {
                 nodes.push(
                   el(
                     'div',
-                    { class: 'editable-table__footer artifact-add-footer mt-6' },
+                    {
+                      class: 'editable-table__footer artifact-add-footer',
+                      style: 'margin-top:6px;',
+                    },
                     el(
                       'div',
                       {
@@ -2785,10 +2848,17 @@ export function createChartNavigation(config) {
               }
               if (!nodes.length && config.isFacultyMode) {
                 nodes.push(
-                  el('div', { class: 'fs-12 my-4 text-secondary' }, 'No artifacts yet.'),
                   el(
                     'div',
-                    { class: 'editable-table__footer artifact-add-footer mt-6' },
+                    { style: 'font-size:12px; margin:4px 0; color: var(--text-secondary);' },
+                    'No artifacts yet.',
+                  ),
+                  el(
+                    'div',
+                    {
+                      class: 'editable-table__footer artifact-add-footer',
+                      style: 'margin-top:6px;',
+                    },
                     el(
                       'div',
                       {
@@ -2811,26 +2881,13 @@ export function createChartNavigation(config) {
             }
             const container = el('div', {
               class: 'artifact-block grouped-artifacts',
-              id: artifactContainerId,
+              id: 'artifact-block',
             });
             container.replaceChildren(...build());
-            // Apply initial visibility based on persisted state
-            artifactContainer = container;
-            if (!artifactsVisible) {
-              // initialize collapsed state
-              container.classList.add('is-collapsed');
-              container.style.maxHeight = '0px';
-              container.style.opacity = '0';
-              container.style.transform = 'translateY(-6px)';
-            } else {
-              container.style.maxHeight = 'none';
-              container.style.opacity = '1';
-              container.style.transform = 'translateY(0)';
-            }
             return container;
           })(),
           // Extra padding before section trackers
-          el('div', { class: 'mt-20' }),
+          el('div', { style: 'height: 20px;' }),
           // My Note header (toggleable)
           (() => {
             const noteHeader = el(
@@ -2845,7 +2902,7 @@ export function createChartNavigation(config) {
               },
               'My Note',
             );
-            // Compute aggregate status to color the underline
+            // Aggregate status to drive underline color
             try {
               const statuses = sections.map((s) => getProgressStatus(s.id, config.caseData).status);
               const hasComplete = statuses.includes('complete');
@@ -2856,21 +2913,20 @@ export function createChartNavigation(config) {
               else if (hasComplete && !hasPartial && !hasEmpty) agg = 'complete';
               noteHeader.setAttribute('data-status', agg);
             } catch {}
-            // Toggle handler wires to the subsequent note sections container
+            // Toggle handler finds the adjacent note-sections wrapper
             const toggle = () => {
               try {
                 const container = noteHeader.nextElementSibling;
                 if (!container || !container.classList.contains('note-sections')) return;
                 const isCollapsed = container.classList.contains('is-collapsed');
-                const next = !isCollapsed;
-                noteHeader.setAttribute('aria-expanded', String(!next));
-                if (next) {
+                noteHeader.setAttribute('aria-expanded', String(isCollapsed));
+                if (!isCollapsed) {
                   // collapse
                   const h = container.scrollHeight;
                   container.style.maxHeight = h + 'px';
                   container.style.opacity = '1';
                   container.style.transform = 'translateY(0)';
-                  void container.offsetHeight; // reflow
+                  void container.offsetHeight;
                   container.classList.add('is-collapsed');
                   container.style.maxHeight = '0px';
                   container.style.opacity = '0';
@@ -2900,7 +2956,7 @@ export function createChartNavigation(config) {
             });
             return noteHeader;
           })(),
-          // Section cards + subsections (collapsible), wrapped for note toggle
+          // Section cards + subsections (collapsible)
           (() => {
             const sectionsContainer = el('div', { class: 'sections-container' });
             const rebuild = () => {
@@ -2960,7 +3016,7 @@ export function createChartNavigation(config) {
               }
             };
             rebuild();
-            // Wrap in a collapsible container controlled by the My Note header
+            // Wrap in a collapsible container controlled by My Note header
             const wrapper = el('div', {
               class: 'note-sections',
               style: 'max-height:none; opacity:1; transform:translateY(0);',
@@ -2999,12 +3055,12 @@ export function createChartNavigation(config) {
                 },
               });
             }
-            return el('div', { class: 'd-flex gap-8 mt-24 mb-8' }, [
+            return el('div', { style: 'margin: 24px 0 8px 0; display:flex; gap:8px;' }, [
               el(
                 'button',
                 {
                   class: 'btn primary',
-                  class: 'flex-1 btn primary',
+                  style: 'flex:1;',
                   title: 'Sign the evaluation then export to a Word document',
                   onClick: handleExportClick,
                 },
@@ -3016,6 +3072,73 @@ export function createChartNavigation(config) {
       ),
     ],
   );
+
+  // Attach toggle behavior for the CASE FILE header now that the artifact block exists
+  try {
+    const badge = caseFileHeader.querySelector('.case-file-badge');
+    const artifactBlock = sidebar.querySelector('#artifact-block');
+    const applyInitial = () => {
+      if (!artifactBlock || !badge) return;
+      if (caseFileCollapsed) {
+        artifactBlock.classList.add('is-collapsed');
+        artifactBlock.style.maxHeight = '0px';
+        artifactBlock.style.opacity = '0';
+        artifactBlock.style.transform = 'translateY(-6px)';
+        badge.setAttribute('aria-expanded', 'false');
+      } else {
+        artifactBlock.classList.remove('is-collapsed');
+        artifactBlock.style.maxHeight = 'none';
+        artifactBlock.style.opacity = '1';
+        artifactBlock.style.transform = 'translateY(0)';
+        badge.setAttribute('aria-expanded', 'true');
+      }
+    };
+    applyInitial();
+
+    const toggleCaseFile = () => {
+      if (!artifactBlock || !badge) return;
+      const isCollapsed = artifactBlock.classList.contains('is-collapsed');
+      badge.setAttribute('aria-expanded', String(isCollapsed));
+      if (!isCollapsed) {
+        // collapse
+        const h = artifactBlock.scrollHeight;
+        artifactBlock.style.maxHeight = h + 'px';
+        artifactBlock.style.opacity = '1';
+        artifactBlock.style.transform = 'translateY(0)';
+        void artifactBlock.offsetHeight; // reflow
+        artifactBlock.classList.add('is-collapsed');
+        artifactBlock.style.maxHeight = '0px';
+        artifactBlock.style.opacity = '0';
+        artifactBlock.style.transform = 'translateY(-6px)';
+        caseFileCollapsed = true;
+        saveCaseFileCollapsed(true);
+      } else {
+        // expand
+        artifactBlock.classList.remove('is-collapsed');
+        artifactBlock.style.maxHeight = artifactBlock.scrollHeight + 'px';
+        artifactBlock.style.opacity = '1';
+        artifactBlock.style.transform = 'translateY(0)';
+        const done = () => {
+          try {
+            artifactBlock.style.maxHeight = 'none';
+            artifactBlock.removeEventListener('transitionend', done);
+          } catch {}
+        };
+        artifactBlock.addEventListener('transitionend', done);
+        caseFileCollapsed = false;
+        saveCaseFileCollapsed(false);
+      }
+    };
+    if (badge) {
+      badge.addEventListener('click', toggleCaseFile);
+      badge.addEventListener('keydown', (e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          toggleCaseFile();
+        }
+      });
+    }
+  } catch {}
 
   // Ensure content starts full width on small screens (nav closed)
   setTimeout(() => {

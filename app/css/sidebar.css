@@ -117,11 +117,11 @@ html[data-theme='dark'] .chart-navigation .section-nav-item {
 /* Theme-aware colors: subtle UND gray background, UND green text/border */
 /* Base background and text */
 html[data-theme='dark'] .chart-navigation .current-encounter-header {
-  background: rgb(174 174 174 / 12%);
+  background: transparent; /* remove translucent background from My Note */
   color: var(--white);
 }
 html:not([data-theme='dark']) .chart-navigation .current-encounter-header {
-  background: rgb(174 174 174 / 12%);
+  background: transparent; /* remove translucent background from My Note */
   color: var(--white);
 }
 /* Dynamic underline color based on overall note status */
@@ -270,6 +270,9 @@ html:not([data-theme='dark']) .chart-navigation .artifact-cat-header:hover {
 }
 html:not([data-theme='dark']) .chart-navigation .artifact-cat-header .twisty {
   color: var(--text-secondary);
+  /* Ensure indicator + label align vertically */
+  display: flex;
+  align-items: center;
 }
 html[data-theme='dark'] .chart-navigation .artifact-cat-header {
   background: var(--panel);
@@ -339,9 +342,23 @@ html[data-theme='dark'] .chart-navigation .section-card {
   background: transparent;
   border: none;
 }
+/* Override legacy transparent backgrounds within the chart navigation panel */
+.sidebar-nav-panel .chart-navigation .section-card > .section-nav-item {
+  background: rgba(255, 255, 255, 0.36) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 4px !important;
+}
+html[data-theme='dark'] .sidebar-nav-panel .chart-navigation .section-card > .section-nav-item {
+  background: rgba(255, 255, 255, 0.34) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
 html[data-theme='dark'] .chart-navigation .section-card.active {
   background: transparent;
   box-shadow: none;
+}
+/* Dark theme: keep the subtle translucent header background */
+html[data-theme='dark'] .chart-navigation .section-card > .section-nav-item {
+  background: rgba(255, 255, 255, 0.22);
 }
 /* Status modifiers set the --status-color token */
 .chart-navigation .section-card.section-status-empty {
@@ -385,11 +402,14 @@ html[data-theme='dark'] .chart-navigation .section-card.section-status-complete 
 
 /* Restore comfortable spacing between the status bar and section headers */
 .chart-navigation .section-card > .section-nav-item {
-  padding: 0.625rem 12px 0.625rem 16px; /* top/right/bottom/left */
+  padding: 0.375rem 12px 0.375rem 16px; /* even tighter height */
   display: flex;
   align-items: center;
   line-height: 1.25;
   box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.36); /* brighter, more obvious */
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 4px;
 }
 
 /* Hover / active interactions disabled - cleaner look without background rectangles */
@@ -400,19 +420,22 @@ html:not([data-theme='dark']) .chart-navigation .section-card.active > .section-
 }
 
 .chart-navigation .section-card:not(.active) > .section-nav-item {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.36);
 }
 
 /* Status color indication via left border accent instead of underline */
 .chart-navigation .section-card.active > .section-nav-item {
   border-left: 3px solid var(--status-color);
   font-weight: 700;
+  /* keep visible background when active */
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 /* (Replaced old border-color status styling with accent + underline color) */
 /* Removed dirty-indicator styles (status now only via border color) */
 .chart-navigation .section-card .subsection-toc {
-  margin-top: 0.375rem; /* 6px */
+  margin-top: 0.125rem; /* 2px: even tighter spacing */
   margin-left: 0.75rem; /* 12px */
   padding-left: 0.5rem; /* 8px */
   display: flex;
@@ -439,6 +462,12 @@ html:not([data-theme='dark']) .chart-navigation .section-card.active > .section-
   border-radius: 50%;
   margin-right: 6px;
   flex-shrink: 0;
+  /* Consistent 12x12 box that centers its content (checkmark) */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1; /* avoid baseline shift for ✓ */
 }
 .subsection-indicator-empty {
   background: var(--surface-light-border);
@@ -457,7 +486,8 @@ html[data-theme='dark'] .subsection-indicator-partial {
 /* Complete indicator: green check mark styles applied to the glyph, keep geometry via base class */
 .subsection-indicator-complete {
   color: var(--und-green);
-  font-size: 14px;
+  /* Match the 12x12 indicator box for perfect centering */
+  font-size: 12px;
   font-weight: 700;
 }
 /* Subsection items: use secondary text unless active section, improve hierarchy */
@@ -477,7 +507,7 @@ html:not([data-theme='dark']) .chart-navigation .section-card.active .subsection
   opacity: 1;
 }
 .chart-navigation .section-card .subsection-item:hover {
-  background: rgba(0, 0, 0, 0.06); /* leave as rgba for subtle overlay */
+  background: rgba(0, 0, 0, 0.06); /* subtle overlay */
   color: var(--text);
 }
 html[data-theme='dark'] .chart-navigation .section-card .subsection-item:hover {
