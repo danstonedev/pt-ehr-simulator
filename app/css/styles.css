@@ -146,6 +146,38 @@
 .fw-600 {
   font-weight: 600;
 }
+
+/* Minor opacity helpers for subtle icon/text states */
+.opacity-50 {
+  opacity: 0.5;
+}
+.opacity-90 {
+  opacity: 0.9;
+}
+
+/* No-JS notification banner */
+.noscript-banner {
+  background: #fff3cd;
+  color: #664d03;
+  padding: 12px 16px;
+  margin: 0;
+  text-align: center;
+  font:
+    14px/1.4 system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Ubuntu,
+    Cantarell,
+    Noto Sans,
+    Arial,
+    sans-serif;
+}
+
+/* Rare unit helper: points for print-like spacing in generated documents */
+.ml-12pt {
+  margin-left: 12pt;
+}
 /* Typography & color utilities */
 .fs-12 {
   font-size: 12px;
@@ -165,6 +197,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* Don’t clip focus outlines of interactive controls in flex utility wrappers */
+.d-flex,
+.d-inline-flex,
+.flex-1 {
+  overflow: visible;
 }
 
 /* Global utility classes (theme-agnostic) */
@@ -305,6 +343,9 @@
 .maxw-720 {
   max-width: 720px;
 }
+.maxw-520 {
+  max-width: 520px;
+}
 .mh-78vh {
   max-height: 78vh;
 }
@@ -443,6 +484,16 @@
 .minh-68 {
   min-height: 68px;
 }
+/* Small helpers used in UI text blocks */
+.minh-1em {
+  min-height: 1em;
+}
+.pl-18 {
+  padding-left: 18px;
+}
+.ml-18 {
+  margin-left: 18px;
+}
 
 /* Attachment drop zone component */
 .attachment-drop-zone {
@@ -526,7 +577,8 @@
   --section-stripe-color: var(--white); /* slash color (white on UND green) */
   /* Side-edge slant computed from height and brand angle so edges match 56° */
   --section-parallelogram-slant: 38px; /* ≈ 56px / tan(56°) */
-  --sidebar-w: 300px; /* widened sidebar to prevent content squeeze */
+  /* Responsive sidebar width: shrink slightly on tighter desktops, cap at previous 300px */
+  --sidebar-w: clamp(260px, 24vw, 300px);
   --section-divider-h: 56px; /* sticky in-content section banner height (taller for prominence) */
 
   /* Z-index layers */
@@ -1181,9 +1233,11 @@ body[data-route='instructor-editor'] #app {
   padding: 0 20px; /* match sticky-top-bar horizontal padding */
   line-height: 1; /* kill extra line-height growth */
   box-sizing: border-box;
-  border: var(--header-b) solid transparent; /* equal total box */
-  border-bottom-color: var(--und-green); /* only show bottom visually */
-  transform: translateZ(0); /* sub-pixel snapping */
+  /* Only a visible bottom border; remove transparent side borders that appeared as faint lines */
+  border: 0;
+  border-bottom: var(--header-b) solid var(--und-green);
+  /* Avoid forced compositing which can cause sticky lag in some browsers */
+  /* transform: translateZ(0); */
   /* Sticky behavior aligned with topbar height and layering */
   position: sticky;
   top: var(--topbar-h, 72px);
@@ -1320,9 +1374,7 @@ body:has(header.topbar) {
   place-items: center;
   /* Standardized control elevation (matches FAB base) */
   box-shadow: var(--elev-fab);
-  transition:
-    transform 0.22s ease,
-    background 0.2s ease;
+  transition: background 0.2s ease;
 }
 .theme-toggle .icon {
   font-size: 14px;
@@ -1385,7 +1437,6 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   /* Use the custom track ring instead of default outline */
   outline: none;
 }
-/* Provide a visible focus affordance on the track when focused */
 .theme-toggle:focus-visible .switch-track {
   box-shadow:
     0 0 0 3px color-mix(in srgb, var(--und-green) 30%, transparent),
@@ -1570,18 +1621,17 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   background: var(--editor-bg); /* no green fill */
   color: var(--und-green);
   box-shadow: none;
-  margin-left: calc(-1 * var(--pad-x));
-  margin-right: calc(-1 * var(--pad-x));
   padding-left: var(--pad-x);
   padding-right: var(--pad-x);
   /* Provide space between text and underline */
   /* Underline sizing (single source of truth) */
-  --divider-underline-thickness: 0.125rem; /* 2px underline (another 50% reduction) */
-  --divider-underline-gap: 0.0625rem; /* 1px separation (50% smaller) */
+  --divider-underline-thickness: 4px; /* 4px underline for crisp rendering */
+  --divider-underline-gap: 6px; /* visual breathing room above underline */
   padding-bottom: calc(var(--divider-underline-gap) + var(--divider-underline-thickness));
   isolation: isolate;
-  --divider-bleed: clamp(24px, 4vw, 72px); /* symmetric extension */
   overflow: visible;
+  /* Never animate the sticky divider itself */
+  transition: none !important;
 }
 /* Remove old full-bleed rectangle */
 .editor-section-divider::before {
@@ -1592,27 +1642,19 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   content: '';
   position: absolute;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  /* Span the full section width (content + padding), but not the viewport */
+  left: calc(-1 * var(--pad-x));
+  right: calc(-1 * var(--pad-x));
   height: var(--divider-underline-thickness);
-  width: calc(100% + 2 * var(--divider-bleed));
-  max-width: 100vw;
-  background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
-  z-index: -1;
+  background: var(--und-green);
+  border-radius: 2px;
+  z-index: 0;
   pointer-events: none;
-}
-@supports (width: 100dvw) {
-  .editor-section-divider::after {
-    max-width: 100dvw;
-  }
+  transition: none !important;
 }
 
 /* Narrow screens: dial back bleed so the underline doesn't intrude into the sidebar */
-@media (max-width: 1100px) {
-  body:has(.chart-navigation) .editor-section-divider {
-    --divider-bleed: clamp(0px, 1.25vw, 16px);
-  }
-}
+/* No bleed adjustments needed at narrower widths; underline is container-anchored by default */
 
 /* Three brand slashes at the right edge */
 /* Stripes disabled: show a clean green parallelogram only */
@@ -1754,7 +1796,8 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   background: rgba(255, 255, 255, 0.3);
   border-color: rgba(255, 255, 255, 0.5);
   color: var(--white);
-  transform: translateY(-1px);
+  /* Avoid transform near sticky header to reduce compositing churn */
+  /* transform: translateY(-1px); */
 }
 /* Desktop-only offset; on narrow viewports the mobile drawer handles layout */
 @media (min-width: 901px) {
@@ -1767,9 +1810,6 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   /* Let content define height; ensure safe space for bottom ribbon via padding */
   padding-bottom: calc(var(--edu-ribbon-h) + 16px);
   margin-top: 0;
-  transition:
-    margin-left 0.3s ease,
-    width 0.3s ease;
   background: var(--editor-bg);
 }
 
@@ -1790,7 +1830,8 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   --pad-x: clamp(16px, 3vw, 48px);
   padding: var(--space-5) var(--pad-x);
   margin: 0 auto;
-  max-width: 1100px;
+  /* Allow more width on big displays while keeping comfortable margins */
+  max-width: clamp(1100px, 82vw, 1400px);
 }
 /* Reduce initial top padding on editor pages so first section header sits closer to patient header */
 body[data-route='student-editor'] .section-content,
@@ -1983,13 +2024,22 @@ textarea {
   line-height: 1.6;
   /* Remove scrollbars and the resize handle; we auto-expand on input */
   resize: none;
-  overflow: hidden;
+  /* Allow focus ring to render outside while still hiding scrollbars */
+  overflow: auto; /* allow outline to render; we'll hide bars via vendor rules */
 }
 textarea::-webkit-scrollbar {
   display: none;
 } /* Chrome/Safari/Edge */
 textarea::-webkit-resizer {
   display: none;
+}
+
+/* Ensure no clipping of focus ring on textareas when focused */
+textarea:focus,
+textarea:focus-visible,
+.form-textarea:focus,
+.form-textarea:focus-visible {
+  overflow: visible;
 }
 
 /* Placeholder color (muted relative to input text) */
@@ -2166,6 +2216,14 @@ html[data-theme='dark'] input[type='checkbox'] {
   /* Performance optimization - only render visible sections */
   content-visibility: auto;
   contain-intrinsic-size: 200px; /* Estimated section height */
+}
+
+/* Editor routes: disable content-visibility paint containment to avoid clipping focus rings */
+body[data-route='student-editor'] .section-anchor,
+body[data-route='instructor-editor'] .section-anchor {
+  content-visibility: visible; /* prevents implicit contain: paint clipping */
+  contain-intrinsic-size: auto; /* reset; no effect when content-visibility is visible */
+  overflow: visible; /* belt-and-suspenders to ensure outlines can render fully */
 }
 
 /* Do not indent subsection titles; keep them aligned with the subsection edge */
@@ -2383,7 +2441,8 @@ html[data-theme='dark'] .subsection-title {
   background: transparent; /* Let uniform editor background show through */
   border-radius: var(--radius-lg);
   margin-bottom: var(--space-6);
-  overflow: hidden;
+  /* Do not clip keyboard focus outlines of inputs near the edges */
+  overflow: visible;
 }
 
 /* SOAP section header - Fixed responsive underline behavior */
@@ -3120,6 +3179,13 @@ select:focus,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+
+    /* While resizing the window, disable transitions/animations to prevent jank */
+    html.is-resizing *,
+    body.is-resizing * {
+      transition: none !important;
+      animation: none !important;
+    }
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
