@@ -304,9 +304,7 @@ function showPromptGenerationModal() {
   const modal = el(
     'div',
     {
-      class: 'popup-overlay-base',
-      style:
-        'position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;',
+      class: 'popup-overlay-base fixed inset-0 overlay-50 d-flex ai-center jc-center z-modal',
       onclick: (e) => {
         if (e.target === modal) close();
       },
@@ -315,54 +313,44 @@ function showPromptGenerationModal() {
       el(
         'div',
         {
-          class: 'popup-card-base',
-          style:
-            'background:var(--bg); padding:28px; border-radius:12px; max-width:720px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.15); color:var(--text);',
+          class: 'popup-card-base bg-surface text-color br-lg shadow-modal p-24',
+          style: 'max-width:720px; width:92%;',
           onclick: (e) => e.stopPropagation(),
         },
         [
-          el(
-            'h2',
-            { style: 'margin:0 0 12px 0; color: var(--text);' },
-            'Generate Case from Prompt',
-          ),
+          el('h2', { class: 'm-0 mb-12' }, 'Generate Case from Prompt'),
           el(
             'p',
-            { class: 'small', style: 'margin:0 0 14px 0; color:var(--text-secondary);' },
+            { class: 'small m-0 mb-12 text-secondary' },
             "Provide a short scenario and anchors; we'll seed a realistic draft you can edit.",
           ),
           // Title (optional)
-          el('div', { style: 'margin-bottom:12px;' }, [
-            el(
-              'label',
-              { style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' },
-              'Case Title (optional)',
-            ),
+          el('div', { class: 'mb-12' }, [
+            el('label', { class: 'block mb-6 fw-600 text-color' }, 'Case Title (optional)'),
             el('input', {
               id: 'gen-title',
               type: 'text',
               placeholder: 'e.g., Rotator Cuff Tendinopathy (R)',
-              style:
-                'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+              class: 'form-input-standard w-100 box-border',
             }),
           ]),
           // Scenario prompt
-          el('div', { style: 'margin-bottom:12px;' }, [
+          el('div', { class: 'mb-12' }, [
             el(
               'label',
-              { style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' },
+              { class: 'block mb-6 fw-600 text-color' },
               'Scenario Prompt (1–3 sentences) *',
             ),
             el('textarea', {
               id: 'gen-prompt',
               rows: 3,
               placeholder: 'Key history/context to ground the case...',
-              style:
-                'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px; resize:vertical;',
+              class: 'form-input-standard w-100 box-border',
+              style: 'resize:vertical;',
             }),
           ]),
           // Structured anchors row 1
-          el('div', { style: 'display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;' }, [
+          el('div', { class: 'd-flex gap-12 mb-12 flex-wrap' }, [
             // Region
             (() => {
               const regions = [
@@ -378,46 +366,33 @@ function showPromptGenerationModal() {
               const sel = el('select', {
                 id: 'gen-region',
                 required: true,
-                style:
-                  'flex:1; min-width:180px; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+                class: 'form-input-standard w-100 box-border',
               });
               sel.append(el('option', { value: '' }, 'Select region...'));
               regions.forEach((r) => sel.append(el('option', { value: r }, r)));
               return el('div', { style: 'flex:1; min-width:200px;' }, [
-                el(
-                  'label',
-                  {
-                    style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);',
-                  },
-                  'Body Region *',
-                ),
+                el('label', { class: 'block mb-6 fw-600 text-color' }, 'Body Region *'),
                 sel,
               ]);
             })(),
             // Condition
             el('div', { style: 'flex:1; min-width:200px;' }, [
-              el(
-                'label',
-                { style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' },
-                'Suspected Condition *',
-              ),
+              el('label', { class: 'block mb-6 fw-600 text-color' }, 'Suspected Condition *'),
               el('input', {
                 id: 'gen-condition',
                 type: 'text',
                 placeholder: 'e.g., Rotator cuff tendinopathy',
-                style:
-                  'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+                class: 'form-input-standard w-100 box-border',
               }),
             ]),
           ]),
           // Structured anchors row 2
-          el('div', { style: 'display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;' }, [
+          el('div', { class: 'd-flex gap-12 mb-12 flex-wrap' }, [
             // Setting
             (() => {
               const sel = el('select', {
                 id: 'gen-setting',
-                style:
-                  'flex:1; min-width:180px; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+                class: 'form-input-standard w-100 box-border',
               });
               sel.append(
                 el('option', { value: '' }, 'Select setting...'),
@@ -428,13 +403,7 @@ function showPromptGenerationModal() {
                 el('option', { value: 'Acute Rehab' }, 'Acute Rehab'),
               );
               return el('div', { style: 'flex:1; min-width:200px;' }, [
-                el(
-                  'label',
-                  {
-                    style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);',
-                  },
-                  'Clinical Setting *',
-                ),
+                el('label', { class: 'block mb-6 fw-600 text-color' }, 'Clinical Setting *'),
                 sel,
               ]);
             })(),
@@ -442,8 +411,7 @@ function showPromptGenerationModal() {
             (() => {
               const sel = el('select', {
                 id: 'gen-acuity',
-                style:
-                  'flex:1; min-width:180px; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+                class: 'form-input-standard w-100 box-border',
               });
               sel.append(
                 el('option', { value: '' }, 'Select acuity...'),
@@ -452,46 +420,30 @@ function showPromptGenerationModal() {
                 el('option', { value: 'chronic' }, 'Chronic'),
               );
               return el('div', { style: 'flex:1; min-width:200px;' }, [
-                el(
-                  'label',
-                  {
-                    style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);',
-                  },
-                  'Acuity *',
-                ),
+                el('label', { class: 'block mb-6 fw-600 text-color' }, 'Acuity *'),
                 sel,
               ]);
             })(),
           ]),
           // Structured anchors row 3
-          el('div', { style: 'display:flex; gap:12px; margin-bottom:12px; flex-wrap:wrap;' }, [
+          el('div', { class: 'd-flex gap-12 mb-12 flex-wrap' }, [
             el('div', { style: 'flex:1; min-width:160px;' }, [
-              el(
-                'label',
-                { style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' },
-                'Age (yrs)',
-              ),
+              el('label', { class: 'block mb-6 fw-600 text-color' }, 'Age (yrs)'),
               el('input', {
                 id: 'gen-age',
                 type: 'number',
                 min: 1,
                 max: 120,
                 placeholder: '45',
-                style:
-                  'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+                class: 'form-input-standard w-100 box-border',
               }),
             ]),
             el('div', { style: 'flex:1; min-width:180px;' }, [
-              el(
-                'label',
-                { style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' },
-                'Sex',
-              ),
+              el('label', { class: 'block mb-6 fw-600 text-color' }, 'Sex'),
               (() => {
                 const sel = el('select', {
                   id: 'gen-sex',
-                  style:
-                    'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+                  class: 'form-input-standard w-100 box-border',
                 });
                 sel.append(
                   el('option', { value: '' }, 'Select...'),
@@ -503,11 +455,7 @@ function showPromptGenerationModal() {
               })(),
             ]),
             el('div', { style: 'flex:1; min-width:200px;' }, [
-              el(
-                'label',
-                { style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' },
-                'Pain (0–10)',
-              ),
+              el('label', { class: 'block mb-6 fw-600 text-color' }, 'Pain (0–10)'),
               el('input', {
                 id: 'gen-pain',
                 type: 'number',
@@ -515,43 +463,29 @@ function showPromptGenerationModal() {
                 max: 10,
                 step: '1',
                 placeholder: '5',
-                style:
-                  'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+                class: 'form-input-standard w-100 box-border',
               }),
             ]),
           ]),
           // Functional goal
-          el('div', { style: 'margin-bottom:12px;' }, [
-            el(
-              'label',
-              { style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' },
-              'Functional Goal (optional)',
-            ),
+          el('div', { class: 'mb-12' }, [
+            el('label', { class: 'block mb-6 fw-600 text-color' }, 'Functional Goal (optional)'),
             el('input', {
               id: 'gen-goal',
               type: 'text',
               placeholder: 'e.g., reach overhead to place dishes',
-              style:
-                'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+              class: 'form-input-standard w-100 box-border',
             }),
           ]),
           // Buttons
-          el(
-            'div',
-            { style: 'display:flex; gap:10px; justify-content:flex-end; margin-top:6px;' },
-            [
-              el(
-                'button',
-                { class: 'btn neutral', onclick: () => document.body.removeChild(modal) },
-                'Cancel',
-              ),
-              el(
-                'button',
-                { class: 'btn primary', onclick: () => handlePromptGeneration(modal) },
-                'Generate Case',
-              ),
-            ],
-          ),
+          el('div', { class: 'd-flex gap-10 jc-end mt-6' }, [
+            el('button', { class: 'btn neutral', onclick: () => close() }, 'Cancel'),
+            el(
+              'button',
+              { class: 'btn primary', onclick: () => handlePromptGeneration(modal) },
+              'Generate Case',
+            ),
+          ]),
         ],
       ),
     ],
