@@ -4,6 +4,23 @@
  */
 import { el, textareaAutoResize } from '../../../ui/utils.js';
 
+// Map common percentage widths to utility classes to avoid inline styles
+function widthClass(width) {
+  const v = String(width || '').trim();
+  switch (v) {
+    case '50%':
+      return 'w-50p';
+    case '40%':
+      return 'w-40p';
+    case '25%':
+      return 'w-25p';
+    case '20%':
+      return 'w-20p';
+    default:
+      return '';
+  }
+}
+
 // ---- Internal builders to reduce complexity ----
 function buildTableHeader({ title, showAddButton, compactAddButton, addButtonText, onAdd }) {
   if (!title && !(showAddButton && !compactAddButton)) return null;
@@ -104,6 +121,7 @@ function buildBodyRow(columns, rowId, rowData, createCell, showDeleteButton, onD
                 type: 'button',
                 class: 'remove-btn editable-table__delete-btn',
                 title: 'Delete row',
+                'aria-label': 'Delete row',
                 onclick: () => onDelete(rowId),
               },
               '×',
@@ -135,8 +153,14 @@ function buildTableElement({
             el(
               'th',
               {
-                class: `editable-table__header-cell editable-table__header-cell--${col.field}`,
-                style: col.width ? `width: ${col.width};` : undefined,
+                class:
+                  `editable-table__header-cell editable-table__header-cell--${col.field} ${widthClass(col.width)}`.trim(),
+                style: widthClass(col.width)
+                  ? undefined
+                  : col.width
+                    ? `width: ${col.width};`
+                    : undefined,
+                scope: 'col',
               },
               col.label,
             ),
@@ -148,6 +172,8 @@ function buildTableElement({
                   {
                     class: 'editable-table__header-cell editable-table__header-cell--actions',
                     style: undefined,
+                    scope: 'col',
+                    'aria-label': 'Actions',
                   },
                   actionsHeaderLabel,
                 ),
@@ -166,7 +192,9 @@ function buildTableElement({
       ),
     ),
   );
-  return el('table', { class: 'table editable-table__table' }, tableChildren);
+  const table = el('table', { class: 'table editable-table__table' }, tableChildren);
+  // Wrap in responsive container for mobile horizontal scroll when needed
+  return el('div', { class: 'table-responsive' }, table);
 }
 
 function buildCompactFooter(showAddButton, compactAddButton, onAdd) {
@@ -176,7 +204,17 @@ function buildCompactFooter(showAddButton, compactAddButton, onAdd) {
     {
       class: 'editable-table__footer d-flex jc-center mb-16',
     },
-    el('div', { class: 'compact-add-btn', title: 'Add row', onclick: onAdd }, '+'),
+    el(
+      'button',
+      {
+        type: 'button',
+        class: 'compact-add-btn',
+        title: 'Add row',
+        'aria-label': 'Add row',
+        onclick: onAdd,
+      },
+      '+',
+    ),
   );
 }
 
@@ -253,8 +291,13 @@ function makeCreateCell(updateCell) {
     return el(
       'td',
       {
-        class: `editable-table__cell editable-table__cell--${column.field}`,
-        style: column.width ? `width: ${column.width};` : undefined,
+        class:
+          `editable-table__cell editable-table__cell--${column.field} ${widthClass(column.width)}`.trim(),
+        style: widthClass(column.width)
+          ? undefined
+          : column.width
+            ? `width: ${column.width};`
+            : undefined,
       },
       input,
     );

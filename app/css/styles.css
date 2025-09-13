@@ -271,6 +271,9 @@
 .mb-20 {
   margin-bottom: 20px;
 }
+.mb-24 {
+  margin-bottom: 24px;
+}
 .my-4 {
   margin-top: 4px;
   margin-bottom: 4px;
@@ -317,6 +320,19 @@
 }
 .w-12 {
   width: 12px;
+}
+/* Percent width helpers (for table columns without inline styles) */
+.w-50p {
+  width: 50%;
+}
+.w-40p {
+  width: 40%;
+}
+.w-25p {
+  width: 25%;
+}
+.w-20p {
+  width: 20%;
 }
 /* White-space helpers */
 .nowrap {

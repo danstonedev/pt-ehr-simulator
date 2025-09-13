@@ -394,6 +394,11 @@ html[data-theme='dark'] .editable-table__select option:checked {
 .editable-table__cell--actions {
   text-align: center;
 }
+/* Keep actions column a consistent narrow width */
+.editable-table__header-cell--actions,
+.editable-table__cell--actions {
+  width: 50px;
+}
 
 /* Bilateral table widths */
 .bilateral-table .editable-table__header-cell--name {
@@ -457,3 +462,13 @@ html[data-theme='dark'] .editable-table__select option:checked {
 }
 
 /* All table fields pick up var(--input-radius) via global input rules */
+
+/* When table inputs use the shared .form-input-standard, keep them compact within tables */
+.editable-table .form-input-standard {
+  padding: 2px var(--space-1);
+  min-height: 32px;
+  font-size: 12px;
+}
+.editable-table .form-input-standard.resize-vertical {
+  min-height: 32px;
+}
