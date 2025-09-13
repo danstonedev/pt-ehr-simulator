@@ -579,7 +579,7 @@
   --section-parallelogram-slant: 38px; /* ≈ 56px / tan(56°) */
   /* Responsive sidebar width: shrink slightly on tighter desktops, cap at previous 300px */
   --sidebar-w: clamp(260px, 24vw, 300px);
-  --section-divider-h: 56px; /* sticky in-content section banner height (taller for prominence) */
+  --section-divider-h: 28px; /* halved: sticky in-content section banner height */
 
   /* Z-index layers */
   --z-topbar: 3000;
@@ -1570,6 +1570,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 /* Sticky top bar + sidebar-aware adjustments */
 .sticky-top-bar {
   position: fixed;
+  isolation: isolate; /* enable gradient underline pseudo-element layering */
   top: var(--topbar-h);
   z-index: var(--z-sticky-header);
   left: 0;
@@ -1595,8 +1596,20 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   line-height: 1; /* avoid extra inline height */
   /* Unify total box height with sidebar tab: transparent full border + bottom color */
   border: var(--header-b) solid transparent;
-  border-bottom-color: var(--und-green);
+  border-bottom-color: transparent; /* draw gradient underline via ::after */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient bottom underline to match section headers */
+.sticky-top-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--header-b);
+  background: linear-gradient(90deg, var(--und-green-dark) 0%, var(--und-green) 100%);
+  pointer-events: none;
 }
 
 /* Offset only when desktop sidebar exists */
@@ -1618,15 +1631,18 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   display: flex;
   align-items: center;
   justify-content: center; /* center the section title */
-  background: var(--editor-bg); /* no green fill */
-  color: var(--und-green);
+  /* Background rendered by ::before so it can bleed into gutters */
+  background: transparent;
+  color: var(--white);
   box-shadow: none;
+  /* Restore horizontal padding so the divider contents align with the page column */
   padding-left: var(--pad-x);
   padding-right: var(--pad-x);
   /* Provide space between text and underline */
-  /* Underline sizing (single source of truth) */
-  --divider-underline-thickness: 4px; /* 4px underline for crisp rendering */
-  --divider-underline-gap: 6px; /* visual breathing room above underline */
+  /* Underline sizing (match CASE FILE white underline thickness) */
+  --divider-underline-thickness: 2px; /* match sidebar header border thickness */
+  /* Responsive minimal gap so total bottom padding is ~2–3px across sizes */
+  --divider-underline-gap: clamp(0px, 0.3vw, 1px);
   padding-bottom: calc(var(--divider-underline-gap) + var(--divider-underline-thickness));
   isolation: isolate;
   overflow: visible;
@@ -1635,18 +1651,29 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 }
 /* Remove old full-bleed rectangle */
 .editor-section-divider::before {
-  content: none !important;
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* Bleed the gradient into the container gutters */
+  left: calc(-1 * var(--pad-x));
+  right: calc(-1 * var(--pad-x));
+  /* Solid UND green fill for the section header background */
+  background: var(--und-green);
+  z-index: -1; /* sit behind text and underline */
+  pointer-events: none;
 }
 /* Centered underline (single rule) */
 .editor-section-divider::after {
   content: '';
   position: absolute;
   bottom: 0;
-  /* Span the full section width (content + padding), but not the viewport */
+  /* Span the full section width (content + divider padding), not the viewport */
   left: calc(-1 * var(--pad-x));
   right: calc(-1 * var(--pad-x));
   height: var(--divider-underline-thickness);
-  background: var(--und-green);
+  /* Thin white underline to match CASE FILE tile */
+  background: var(--white);
   border-radius: 2px;
   z-index: 0;
   pointer-events: none;
@@ -1694,10 +1721,11 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 /* .editor-section-divider::after { content: none !important; } */
 .editor-section-divider h3 {
   margin: 0;
-  font-size: 2rem; /* reduced slightly from 40px (~32px now) */
+  /* Match CASE FILE tile font sizing */
+  font-size: clamp(0.95rem, 2.7vw, 1.125rem);
   letter-spacing: 0.4px;
   text-transform: uppercase;
-  color: var(--und-green);
+  color: var(--white);
   font-weight: 800;
   line-height: 1; /* restore full line height for readability; gap handled by padding */
   width: 100%;
@@ -1896,7 +1924,8 @@ body[data-route='instructor-editor'] .section-content {
   font-size: 16px;
   margin: 6px 0 16px 0; /* Fixed units instead of var(--space-3) */
   /* Add horizontal padding with fixed units for consistent underline behavior */
-  padding: 12px 20px; /* Fixed units instead of var(--space-2) var(--space-4) */
+  /* Reduce height to ~2/3 by decreasing vertical padding (12px → 8px) */
+  padding: 8px 20px;
   /* Theme-aware gradient using CSS variables */
   background: linear-gradient(
     90deg,
@@ -1909,8 +1938,8 @@ body[data-route='instructor-editor'] .section-content {
   border-radius: var(--radius-sm);
   text-transform: capitalize;
   letter-spacing: 0.3px;
-  /* Fixed underline thickness for responsive stability */
-  border-bottom: 3px solid var(--und-green);
+  /* Remove bottom underline per new spec */
+  border-bottom: 0;
 }
 
 .brand {
@@ -2393,6 +2422,17 @@ html[data-theme='dark'] .pain-scale-btn.active {
 
 /* Dark mode: restore black gradients for subsection headers */
 html[data-theme='dark'] .subsection-title {
+  /* Much darker gray; ~4 notches darker via color-mix, still lighter than floating header */
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--neutral-950) 80%, var(--neutral-900)) 0%,
+    color-mix(in srgb, var(--neutral-950) 60%, var(--neutral-900)) 100%
+  );
+}
+
+/* Dark theme: make the floating header (sticky top bar) use the charcoal/black gradient
+   previously used by subsection titles for clearer contrast against green subsections */
+html[data-theme='dark'] .sticky-top-bar {
   background: linear-gradient(90deg, var(--und-black) 0%, var(--chrome-topbar-right) 100%);
 }
 .pain-scale-desc {
