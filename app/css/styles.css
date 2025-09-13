@@ -335,6 +335,9 @@
 .text-color {
   color: var(--text);
 }
+.text-center {
+  text-align: center;
+}
 .bg-surface {
   background: var(--surface);
 }
@@ -345,6 +348,9 @@
 }
 .h-40 {
   height: 40px;
+}
+.p-40 {
+  padding: 40px;
 }
 /* Flex justify helper */
 .jc-center {

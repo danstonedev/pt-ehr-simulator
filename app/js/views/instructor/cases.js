@@ -699,24 +699,20 @@ route('#/instructor/cases', async (app) => {
     const container = el('div', {});
 
     // Actions row (Search)
-    const actionsRow = el(
-      'div',
-      { style: 'display:flex; gap:12px; align-items:center; margin-bottom: 20px;' },
-      [
-        // Search bar
-        el('input', {
-          type: 'text',
-          placeholder: 'Search cases by title, setting, diagnosis, or acuity...',
-          value: searchTerm,
-          style:
-            'width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;',
-          onInput: (e) => {
-            searchTerm = e.target.value.toLowerCase();
-            renderTable();
-          },
-        }),
-      ],
-    );
+    const actionsRow = el('div', { class: 'd-flex gap-12 ai-center mb-20' }, [
+      // Search bar
+      el('input', {
+        type: 'text',
+        placeholder: 'Search cases by title, setting, diagnosis, or acuity...',
+        value: searchTerm,
+        style:
+          'width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;',
+        onInput: (e) => {
+          searchTerm = e.target.value.toLowerCase();
+          renderTable();
+        },
+      }),
+    ]);
 
     const tableContainer = el('div', { id: 'table-container', class: 'table-responsive' });
 
@@ -851,14 +847,13 @@ route('#/instructor/cases', async (app) => {
     app.replaceChildren(); // Clear loading indicator
     app.append(
       el('div', { class: 'panel' }, [
-        el('div', { class: 'flex-between', style: 'margin-bottom: 20px;' }, [
+        el('div', { class: 'flex-between mb-20' }, [
           el('h2', {}, 'Faculty Dashboard'),
-          el('div', { style: 'display:flex; gap:10px;' }, [
+          el('div', { class: 'd-flex gap-10' }, [
             el(
               'button',
               {
-                class: 'btn primary',
-                style: 'display: flex; align-items: center; gap: 8px;',
+                class: 'btn primary d-flex ai-center gap-8',
                 onclick: (e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -875,8 +870,7 @@ route('#/instructor/cases', async (app) => {
               return el(
                 'button',
                 {
-                  class: 'btn secondary',
-                  style: 'display: flex; align-items: center; gap: 8px;',
+                  class: 'btn secondary d-flex ai-center gap-8',
                   title: 'Generate a draft case from an AI prompt',
                   onclick: (e) => {
                     e.preventDefault();
@@ -912,7 +906,7 @@ route('#/instructor/cases', async (app) => {
     if (cases.length === 0) {
       return el(
         'div',
-        { style: 'text-align: center; padding: 40px; color: var(--muted);' },
+        { class: 'text-center p-40 text-secondary' },
         searchTerm ? `No cases match "${searchTerm}"` : 'No cases have been created yet.',
       );
     }
