@@ -113,6 +113,9 @@
 .ml-2 {
   margin-left: 8px;
 }
+.mb-6 {
+  margin-bottom: 6px;
+}
 .fs-18 {
   font-size: 18px;
 }
@@ -168,6 +171,9 @@
 .overlay-65 {
   background: rgba(0, 0, 0, 0.65);
 }
+.overlay-50 {
+  background: rgba(0, 0, 0, 0.5);
+}
 .z-modal {
   z-index: var(--z-modal);
 }
@@ -189,6 +195,9 @@
 }
 .p-20 {
   padding: 20px;
+}
+.p-24 {
+  padding: 24px;
 }
 /* Display helpers */
 .d-none {
@@ -215,6 +224,9 @@
 .gap-16 {
   gap: 16px;
 }
+.gap-12 {
+  gap: 12px;
+}
 /* Margin helpers */
 .mt-4 {
   margin-top: 4px;
@@ -234,18 +246,30 @@
 .mr-4 {
   margin-right: 4px;
 }
+.mr-12 {
+  margin-right: 12px;
+}
 .ml-auto {
   margin-left: auto;
 }
 .mb-8 {
   margin-bottom: 8px;
 }
+.mb-12 {
+  margin-bottom: 12px;
+}
 .mb-16 {
   margin-bottom: 16px;
+}
+.mb-20 {
+  margin-bottom: 20px;
 }
 .my-4 {
   margin-top: 4px;
   margin-bottom: 4px;
+}
+.m-0 {
+  margin: 0;
 }
 /* Borders */
 .bb-1 {
@@ -280,6 +304,10 @@
 }
 .w-12 {
   width: 12px;
+}
+/* White-space helpers */
+.nowrap {
+  white-space: nowrap;
 }
 /* Object fit variants */
 .obj-contain {
@@ -322,6 +350,9 @@
 .jc-center {
   justify-content: center;
 }
+.jc-end {
+  justify-content: flex-end;
+}
 /* Object-fit helper */
 .obj-cover {
   object-fit: cover;
@@ -349,6 +380,9 @@
 }
 .block {
   display: block;
+}
+.flex-wrap {
+  flex-wrap: wrap;
 }
 
 /* Min-dimension helpers */

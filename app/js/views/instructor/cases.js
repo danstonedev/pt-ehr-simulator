@@ -25,8 +25,7 @@ function computeAgeFromDob(dobStr) {
 // Lightweight YouTube-style Share Popup
 function showSharePopup(url) {
   const overlay = el('div', {
-    class: 'popup-overlay-base',
-    style: `position: fixed; inset: 0; background: rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:1100;`,
+    class: 'popup-overlay-base fixed inset-0 overlay-50 d-flex ai-center jc-center z-modal',
     onclick: (e) => {
       if (e.target === overlay) close();
     },
@@ -62,38 +61,17 @@ function showSharePopup(url) {
       role: 'dialog',
       'aria-modal': 'true',
       'aria-label': 'Share',
-      class: 'popup-card-base',
-      style: `background:var(--bg); color:var(--text); border-radius:12px; width:92%; max-width:520px; box-shadow:0 20px 45px rgba(0,0,0,0.2); padding:20px; position:relative;`,
+      class: 'popup-card-base bg-surface text-color br-lg shadow-modal p-20',
+      style: 'width:92%; max-width:520px; position:relative;',
       onclick: (e) => e.stopPropagation(),
     },
     [
-      el(
-        'div',
-        {
-          style:
-            'display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;',
-        },
-        [
-          el('h3', { style: 'margin:0; font-size:18px; font-weight:600;' }, 'Share link'),
-          el(
-            'button',
-            {
-              class: 'btn icon',
-              'aria-label': 'Close',
-              style:
-                'border:none; background:transparent; font-size:18px; cursor:pointer; padding:4px;',
-              onclick: () => close(),
-            },
-            '✕',
-          ),
-        ],
-      ),
-      el(
-        'p',
-        { class: 'small', style: 'margin:0 0 8px 0; color:var(--text-secondary);' },
-        'Share this URL with students.',
-      ),
-      el('div', { style: 'display:flex; gap:8px; align-items:center;' }, [
+      el('div', { class: 'd-flex ai-center jc-between mb-12' }, [
+        el('h3', { class: 'm-0 fs-18 fw-600' }, 'Share link'),
+        el('button', { class: 'btn icon', 'aria-label': 'Close', onclick: () => close() }, '✕'),
+      ]),
+      el('p', { class: 'small m-0 mb-8 text-secondary' }, 'Share this URL with students.'),
+      el('div', { class: 'd-flex gap-8 ai-center' }, [
         (inputRef = el('input', {
           type: 'text',
           value: url,
@@ -134,9 +112,7 @@ function showSharePopup(url) {
 function showCaseCreationModal() {
   const modal = el('div', {
     'data-modal': 'create-case',
-    class: 'popup-overlay-base',
-    style:
-      'position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:1000;',
+    class: 'popup-overlay-base fixed inset-0 overlay-50 d-flex ai-center jc-center z-modal',
     onclick: (e) => {
       if (e.target === modal) close();
     },
@@ -144,20 +120,15 @@ function showCaseCreationModal() {
   const card = el(
     'div',
     {
-      class: 'popup-card-base',
-      style:
-        'background:var(--bg); padding:24px; border-radius:12px; max-width:720px; width:92%; box-shadow:0 20px 25px -5px rgba(0,0,0,0.15); color:var(--text);',
+      class: 'popup-card-base bg-surface text-color br-lg shadow-modal p-24',
+      style: 'max-width:720px; width:92%;',
       onclick: (e) => e.stopPropagation(),
     },
     [
-      el('h2', { style: 'margin:0 0 12px 0;' }, 'Create Case'),
+      el('h2', { class: 'm-0 mb-12' }, 'Create Case'),
       el('form', { onsubmit: (e) => handleCaseCreation(e) }, [
-        el('div', { style: 'margin-bottom:16px;' }, [
-          el(
-            'label',
-            { style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' },
-            'Case Title *',
-          ),
+        el('div', { class: 'mb-16' }, [
+          el('label', { class: 'block mb-6 fw-600 text-color' }, 'Case Title *'),
           el('input', {
             id: 'case-title',
             type: 'text',
@@ -167,12 +138,8 @@ function showCaseCreationModal() {
               'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
           }),
         ]),
-        el('div', { style: 'margin-bottom:12px;' }, [
-          el(
-            'label',
-            { style: 'display:block; margin-bottom:8px; font-weight:500; color:var(--text);' },
-            'DOB',
-          ),
+        el('div', { class: 'mb-12' }, [
+          el('label', { class: 'block mb-8 fw-500 text-color' }, 'DOB'),
           el('input', {
             type: 'date',
             id: 'case-dob',
@@ -187,19 +154,11 @@ function showCaseCreationModal() {
               }
             },
           }),
-          el(
-            'div',
-            { style: 'margin-top:6px; font-size:12px; color:var(--text-secondary);' },
-            'Age auto-fills when DOB is entered.',
-          ),
+          el('div', { class: 'mt-6 fs-12 text-secondary' }, 'Age auto-fills when DOB is entered.'),
         ]),
-        el('div', { style: 'display:flex; gap:16px; margin-bottom:16px; flex-wrap:wrap;' }, [
+        el('div', { class: 'd-flex gap-16 mb-16 flex-wrap' }, [
           el('div', { style: 'flex:1; min-width:220px;' }, [
-            el(
-              'label',
-              { style: 'display:block; margin-bottom:8px; font-weight:500; color:var(--text);' },
-              'Patient Age *',
-            ),
+            el('label', { class: 'block mb-8 fw-500 text-color' }, 'Patient Age *'),
             el('input', {
               type: 'number',
               id: 'case-age',
@@ -228,11 +187,7 @@ function showCaseCreationModal() {
             }),
           ]),
           el('div', { style: 'flex:1; min-width:220px;' }, [
-            el(
-              'label',
-              { style: 'display:block; margin-bottom:8px; font-weight:500; color:var(--text);' },
-              'Sex *',
-            ),
+            el('label', { class: 'block mb-8 fw-500 text-color' }, 'Sex *'),
             el(
               'select',
               {
@@ -251,12 +206,8 @@ function showCaseCreationModal() {
             ),
           ]),
         ]),
-        el('div', { style: 'margin-bottom:16px;' }, [
-          el(
-            'label',
-            { style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' },
-            'Clinical Setting *',
-          ),
+        el('div', { class: 'mb-16' }, [
+          el('label', { class: 'block mb-6 fw-600 text-color' }, 'Clinical Setting *'),
           el(
             'select',
             {
@@ -276,12 +227,8 @@ function showCaseCreationModal() {
             ],
           ),
         ]),
-        el('div', { style: 'margin-bottom:20px;' }, [
-          el(
-            'label',
-            { style: 'display:block; margin-bottom:6px; font-weight:600; color:var(--text);' },
-            'Case Acuity *',
-          ),
+        el('div', { class: 'mb-20' }, [
+          el('label', { class: 'block mb-6 fw-600 text-color' }, 'Case Acuity *'),
           el(
             'select',
             {
@@ -299,7 +246,7 @@ function showCaseCreationModal() {
             ],
           ),
         ]),
-        el('div', { style: 'display:flex; gap:12px; justify-content:flex-end;' }, [
+        el('div', { class: 'd-flex gap-12 jc-end' }, [
           el(
             'button',
             {

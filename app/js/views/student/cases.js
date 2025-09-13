@@ -39,7 +39,7 @@ function openCreateNoteModal() {
       onclick: (e) => e.stopPropagation(),
     },
     [
-      el('h3', { style: 'margin-top:0;' }, 'Create SOAP Note'),
+      el('h3', { class: 'm-0' }, 'Create SOAP Note'),
       el(
         'p',
         { class: 'small mt-4 text-secondary' },
@@ -486,7 +486,7 @@ function createCaseRow(c, drafts, storage, urlNavigate) {
     el('td', {}, c.caseObj?.meta?.setting ?? ''),
     el('td', {}, c.caseObj?.meta?.diagnosis ?? ''),
     el('td', {}, statusContent),
-    el('td', { style: 'white-space:nowrap;' }, actionButtons),
+    el('td', { class: 'nowrap' }, actionButtons),
   ]);
 }
 
@@ -507,25 +507,21 @@ function makeCasesPanel(app, cases, drafts) {
   let searchTerm = '';
 
   const casesPanel = el('div', { class: 'panel' }, [
-    el(
-      'div',
-      { class: 'flex-between', style: 'margin-bottom: 16px; align-items:center; gap:12px;' },
-      [
-        el('div', {}, [el('h2', {}, 'Student Dashboard')]),
-        el('div', { style: 'display:flex; gap:10px;' }, [
-          el(
-            'button',
-            {
-              class: 'btn primary',
-              style: 'display:flex; align-items:center; gap:8px;',
-              title: 'Create a blank SOAP note not attached to a case',
-              onClick: () => openCreateNoteModal(),
-            },
-            [spriteIcon('plus'), 'Create SOAP Note'],
-          ),
-        ]),
-      ],
-    ),
+    el('div', { class: 'flex-between mb-16 ai-center' }, [
+      el('div', {}, [el('h2', {}, 'Student Dashboard')]),
+      el('div', { class: 'd-flex gap-10' }, [
+        el(
+          'button',
+          {
+            class: 'btn primary',
+            class: 'btn primary d-flex ai-center gap-8',
+            title: 'Create a blank SOAP note not attached to a case',
+            onClick: () => openCreateNoteModal(),
+          },
+          [spriteIcon('plus'), 'Create SOAP Note'],
+        ),
+      ]),
+    ]),
     el('input', {
       type: 'text',
       placeholder: 'Search cases by title, setting, diagnosis, or acuity...',
@@ -638,28 +634,21 @@ function getBlankNoteItems() {
 
 function renderBlankNotesPanel(app) {
   const blankItems = getBlankNoteItems();
-  const headerRow = el('div', { style: 'margin-bottom: 8px;' }, [
-    el('h3', { style: 'margin: 0;' }, 'My Blank Notes'),
-  ]);
+  const headerRow = el('div', { class: 'mb-8' }, [el('h3', { class: 'm-0' }, 'My Blank Notes')]);
   const panelChildren = [
     headerRow,
-    el(
-      'p',
-      { class: 'small', style: 'margin-top:0;' },
-      'Manage scratch SOAP notes not tied to a case.',
-    ),
+    el('p', { class: 'small m-0' }, 'Manage scratch SOAP notes not tied to a case.'),
   ];
   if (blankItems.length > 0) {
     const list = el('ul', { style: 'margin: 8px 0 0 0; padding-left: 18px;' });
     blankItems.forEach(({ key, title }) => {
       const noteId = key.replace('draft_', '').replace('_eval', '');
-      const li = el('li', { style: 'margin-bottom: 6px;' }, [
-        el('span', { style: 'margin-right: 12px; font-weight: 500;' }, title),
+      const li = el('li', { class: 'mb-6' }, [
+        el('span', { class: 'mr-12 fw-500' }, title),
         el(
           'button',
           {
-            class: 'btn primary small',
-            style: 'margin-right: 6px;',
+            class: 'btn primary small mr-6',
             onClick: () =>
               urlNavigate('/student/editor', { case: noteId, v: 0, encounter: 'eval' }),
           },
@@ -686,7 +675,7 @@ function renderBlankNotesPanel(app) {
     panelChildren.push(
       el(
         'p',
-        { class: 'small', style: 'color: var(--text-muted); margin-top: 8px;' },
+        { class: 'small text-secondary mt-8' },
         'No blank notes yet. Create one to get started.',
       ),
     );
