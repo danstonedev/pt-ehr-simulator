@@ -1219,6 +1219,7 @@ body[data-route='student-editor'],
 body[data-route='instructor-editor'] {
   background: var(--editor-bg);
 }
+/* (reverted: scrollbar-gutter/overflow-y adjustments on editor routes) */
 body[data-route='student-editor'] #app,
 body[data-route='instructor-editor'] #app {
   background: var(--editor-bg);
@@ -1922,7 +1923,7 @@ body[data-route='instructor-editor'] .section-content {
 
 .subsection-title {
   font-size: 16px;
-  margin: 6px 0 16px 0; /* Fixed units instead of var(--space-3) */
+  margin: 6px 0 16px 0; /* restore original spacing under subsection titles */
   /* Add horizontal padding with fixed units for consistent underline behavior */
   /* Reduce height to ~2/3 by decreasing vertical padding (12px → 8px) */
   padding: 8px 20px;
@@ -2214,7 +2215,8 @@ html[data-theme='dark'] input[type='checkbox'] {
   font-size: 14px;
   font-weight: 500;
   line-height: 1.4;
-  margin-bottom: var(--space-1);
+  /* Reduce gap beneath input titles to half */
+  margin-bottom: calc(var(--space-1) / 2);
 }
 .form-label--required::after {
   content: ' *';
@@ -2265,22 +2267,13 @@ body[data-route='instructor-editor'] .section-anchor {
   color: var(--text);
   font-weight: 600;
   position: relative;
+  /* Editor wants labels almost touching inputs */
+  margin-bottom: 0;
 }
 
 .section-anchor .form-label::before {
-  content: '///';
-  position: absolute;
-  left: -20px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: auto;
-  height: auto;
-  background: transparent;
-  color: var(--und-green);
-  font-size: 16px;
-  font-weight: 900;
-  font-family: monospace;
-  letter-spacing: -0.3em;
+  /* Remove the decorative slashes from input field titles */
+  content: none;
 }
 
 /* Indent form input wrappers within subsections to match labels */
@@ -2367,6 +2360,12 @@ html[data-theme='dark'] .section-content .form-row {
 }
 .form-row .form-field {
   margin-bottom: 0;
+}
+
+/* Editor routes: reduce vertical space between label and input (~75% closer) */
+body[data-route='student-editor'] .section-anchor .form-field,
+body[data-route='instructor-editor'] .section-anchor .form-field {
+  gap: calc(var(--space-2) * 0.25);
 }
 
 /* ========================================
