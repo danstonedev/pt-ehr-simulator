@@ -24,9 +24,18 @@
   overflow-x: hidden; /* prevent underlines from extending beyond sidebar */
   z-index: var(--z-sidebar);
   box-shadow: var(--shadow-1);
-  transition: transform 0.3s ease;
+  /* No transition on desktop to avoid perceived lag; mobile sets its own in mobile-patch-v2.css */
+  transition: none;
   contain: layout style; /* Performance optimization - isolate layout calculations */
-  will-change: transform; /* Optimize for frequent transforms */
+  will-change: auto; /* Avoid unnecessary layer promotion on desktop */
+}
+
+/* Progressive enhancement: reserve space for vertical scrollbar where supported */
+@supports (scrollbar-gutter: stable) {
+  .chart-navigation {
+    /* Reserve space only on the scrollbar side (right in LTR) to avoid a left gutter */
+    scrollbar-gutter: stable;
+  }
 }
 
 /* Prefer dynamic viewport units on supporting browsers to avoid URL bar jank */
@@ -99,18 +108,76 @@ html[data-theme='dark'] .chart-navigation .section-nav-item {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-radius: 4px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* left align the label */
+  position: relative; /* enable ::after indicator */
+  cursor: pointer; /* toggleable */
 }
 /* Theme-aware colors: subtle UND gray background, UND green text/border */
+/* Base background and text */
 html[data-theme='dark'] .chart-navigation .current-encounter-header {
-  background: rgb(174 174 174 / 12%); /* transparent UND gray */
-  color: var(--white); /* white text for readability in dark theme */
-  border-bottom: 2px solid var(--und-green);
+  background: rgb(174 174 174 / 12%);
+  color: var(--white);
 }
 html:not([data-theme='dark']) .chart-navigation .current-encounter-header {
-  background: rgb(174 174 174 / 12%); /* transparent UND gray */
-  color: var(--white); /* white text per request in light theme */
-  border-bottom: 2px solid var(--und-green);
+  background: rgb(174 174 174 / 12%);
+  color: var(--white);
+}
+/* Dynamic underline color based on overall note status */
+.chart-navigation .current-encounter-header {
+  --note-underline: var(--und-green);
+  border-bottom: 2px solid var(--note-underline);
+}
+.chart-navigation .current-encounter-header[data-status='empty'] {
+  --note-underline: var(--surface-light-border);
+}
+.chart-navigation .current-encounter-header[data-status='partial'] {
+  --note-underline: var(--und-orange);
+}
+.chart-navigation .current-encounter-header[data-status='complete'] {
+  --note-underline: var(--und-green);
+}
+/* Right-side disclosure indicator (rotates) */
+.chart-navigation .current-encounter-header::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 7px 0 7px 10px; /* right-pointing triangle */
+  border-color: transparent transparent transparent rgba(255, 255, 255, 0.9);
+  transform: translateY(-50%) rotate(0deg);
+  transform-origin: 50% 45%;
+  opacity: 0.95;
+  transition: transform 160ms ease;
+}
+.chart-navigation .current-encounter-header[aria-expanded='true']::after {
+  transform: translateY(-50%) rotate(90deg); /* down */
+}
+.chart-navigation .current-encounter-header:focus-visible {
+  outline: 3px solid var(--und-orange);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chart-navigation .current-encounter-header::after {
+    transition: none;
+  }
+}
+
+/* Collapsible container for the sections list under "My Note" */
+.chart-navigation .note-sections {
+  overflow: hidden;
+  will-change: max-height, opacity, transform;
+  transition:
+    max-height 240ms ease,
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+.chart-navigation .note-sections.is-collapsed {
+  pointer-events: none;
 }
 
 /* Artifact pills styling */
@@ -352,7 +419,7 @@ html:not([data-theme='dark']) .chart-navigation .section-card.active > .section-
   flex-direction: column;
   gap: 0.25rem; /* 4px */
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   max-height: 75rem; /* 1200px */
   opacity: 1;
   transition:
@@ -462,6 +529,16 @@ html[data-theme='dark'] .chart-navigation .section-card.active .subsection-item:
 /* Wrapper for artifacts area to control spacing above/below */
 .chart-navigation .artifact-block {
   margin: 4px 0 6px 0; /* reduce space above first pill and below footer */
+  overflow: hidden; /* allow height animation */
+  will-change: max-height, opacity, transform;
+  transition:
+    max-height 240ms ease,
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.chart-navigation .artifact-block.is-collapsed {
+  pointer-events: none;
 }
 
 .chart-navigation .artifact-pill {
@@ -526,8 +603,8 @@ html[data-theme='dark'] .chart-navigation .section-card.active .subsection-item:
 /* White panel for navigation list inside gray sidebar */
 .sidebar-nav-panel {
   /* Comfortable outer spacing so gradient shows around cards */
-  margin: 8px 8px 12px 8px;
-  padding: 12px;
+  margin: 8px 8px 12px 8px; /* symmetric margins to keep content centered */
+  padding: 12px 12px 12px 12px; /* symmetric padding for visual balance */
   /* Safe bottom space so sticky footer actions don't collide with fixed page footer/ribbon */
   /* Modest safe space so content doesn't collide with bottom ribbon */
   padding-bottom: calc(var(--edu-ribbon-h) + env(safe-area-inset-bottom) + 16px);
@@ -535,6 +612,7 @@ html[data-theme='dark'] .chart-navigation .section-card.active .subsection-item:
   border-radius: 0;
   box-shadow: none;
   overflow: visible;
+  transition: none; /* eliminate subtle animation on panel */
 }
 /* Ensure base text color is dark in light theme within the white-panel area */
 html:not([data-theme='dark']) .sidebar-nav-panel {
@@ -678,7 +756,7 @@ html[data-theme='dark'] .chart-navigation .section-nav-item .nav-progress-text {
 .case-file-header {
   position: sticky;
   top: 0;
-  z-index: var(--z-case-header);
+  z-index: 3001; /* ensure above other chrome (topbar is 3000) */
   height: var(--header-h, 56px);
   margin: 0;
   padding: 0;
@@ -687,21 +765,84 @@ html[data-theme='dark'] .chart-navigation .section-nav-item .nav-progress-text {
   justify-content: center;
   background: transparent; /* badge supplies color */
   border: 0;
+  /* Bring back the white underline across the full header width */
+  border-bottom: var(--header-b, 2px) solid var(--white);
+  position: sticky;
+  /* Use a full-bleed background anchored to the header box to avoid any left gutter */
+  isolation: isolate; /* create a new stacking context for ::before */
+  transition: none; /* avoid any animation on sticky header */
+  cursor: pointer; /* clickable for toggling artifacts */
+  pointer-events: auto;
+}
+.case-file-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--und-green);
+  z-index: -1; /* behind text */
+  transition: none; /* ensure no bg animation */
+}
+.case-file-header:hover::before {
+  filter: brightness(1.05);
 }
 .case-file-badge {
+  all: unset; /* reset browser button styling safely */
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
-  background: var(--und-green);
+  background: transparent; /* background handled by header ::before for full-bleed */
   color: var(--white);
   font-weight: 900;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   font-size: clamp(0.95rem, 2.7vw, 1.125rem);
-  border: 2px solid transparent;
-  /* Removed border-bottom underline for cleaner look */
+  border: 0;
+  cursor: pointer;
+  position: relative; /* enable absolute-positioned indicator */
+}
+.case-file-badge:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: -2px; /* keep within the green bar */
+}
+/* Rotating disclosure indicator (right triangle → down triangle) */
+.case-file-badge::after {
+  content: '';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  /* draw a right-pointing triangle */
+  border-width: 7px 0 7px 10px;
+  border-color: transparent transparent transparent rgba(255, 255, 255, 0.9);
+  transform: translateY(-50%) rotate(0deg);
+  transform-origin: 50% 45%;
+  opacity: 0.95;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease;
+}
+.case-file-badge[aria-expanded='true']::after {
+  /* rotate to become a down-pointing indicator when expanded */
+  transform: translateY(-50%) rotate(90deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .case-file-badge::after {
+    transition: none;
+  }
+}
+/* Defensive: if an older build still uses span.reset-contents, ensure it remains clickable */
+.case-file-header .case-file-badge.reset-contents {
+  all: unset;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
 }
 
 /* Case editing form in sidebar */

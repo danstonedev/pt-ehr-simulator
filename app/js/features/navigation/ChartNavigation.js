@@ -17,36 +17,24 @@ const ARTIFACT_CATEGORY_META = {
   'prior-notes': { label: 'Prior Notes', order: 7 },
   other: { label: 'Other', order: 99 },
 };
-const ARTIFACT_COLLAPSE_KEY = 'artifactCategoryCollapse_v1';
-function loadArtifactCollapseState() {
-  try {
-    return JSON.parse(localStorage.getItem(ARTIFACT_COLLAPSE_KEY) || '{}') || {};
-  } catch {
-    return {};
-  }
-}
-function saveArtifactCollapseState(state) {
-  try {
-    localStorage.setItem(ARTIFACT_COLLAPSE_KEY, JSON.stringify(state || {}));
-  } catch {}
-}
-let artifactCollapseState = loadArtifactCollapseState();
+// Collapse state keys are now case-scoped so settings persist per case, not globally
+const ARTIFACT_COLLAPSE_KEY_BASE = 'artifactCategoryCollapse_v1';
+const SECTION_COLLAPSE_KEY_BASE = 'sectionCollapse_v1';
+// Persisted visibility of the entire Case File (artifacts) block; per-case namespace
+const CASEFILE_PANEL_KEY_BASE = 'caseFilePanel_v1';
 
-// Persisted collapse state for section cards
-const SECTION_COLLAPSE_KEY = 'sectionCollapse_v1';
-function loadSectionCollapseState() {
+function safeLoad(key) {
   try {
-    return JSON.parse(localStorage.getItem(SECTION_COLLAPSE_KEY) || '{}') || {};
+    return JSON.parse(localStorage.getItem(key) || '{}') || {};
   } catch {
     return {};
   }
 }
-function saveSectionCollapseState(state) {
+function safeSave(key, state) {
   try {
-    localStorage.setItem(SECTION_COLLAPSE_KEY, JSON.stringify(state || {}));
+    localStorage.setItem(key, JSON.stringify(state || {}));
   } catch {}
 }
-let sectionCollapseState = loadSectionCollapseState();
 
 // Heuristic normalization for artifact type across legacy/new cases
 function normalizeArtifactType(mod) {
@@ -2048,6 +2036,31 @@ export function openEditCaseModal(caseInfo, onSave) {
 }
 
 export function createChartNavigation(config) {
+  // Derive a namespace for persistence (prefer stable case id; fallback to route param)
+  let ns = 'global';
+  try {
+    const caseIdFromData =
+      config?.caseData?.id || config?.caseData?.caseId || config?.caseData?.meta?.id;
+    if (caseIdFromData) ns = String(caseIdFromData);
+    else {
+      const hash = window.location.hash || '';
+      const m = hash.match(/[?#&]case=([^&#]+)/i);
+      if (m && m[1]) ns = decodeURIComponent(m[1]);
+    }
+  } catch {}
+
+  const ARTIFACT_COLLAPSE_KEY = `${ARTIFACT_COLLAPSE_KEY_BASE}__${ns}`;
+  const SECTION_COLLAPSE_KEY = `${SECTION_COLLAPSE_KEY_BASE}__${ns}`;
+  const CASEFILE_PANEL_KEY = `${CASEFILE_PANEL_KEY_BASE}__${ns}`;
+  const artifactContainerId = `casefile-artifacts-${ns}`;
+
+  let artifactCollapseState = safeLoad(ARTIFACT_COLLAPSE_KEY);
+  let sectionCollapseState = safeLoad(SECTION_COLLAPSE_KEY);
+  // Default to visible if no state stored
+  let caseFilePanelState = safeLoad(CASEFILE_PANEL_KEY);
+  let artifactsVisible = Object.prototype.hasOwnProperty.call(caseFilePanelState, 'visible')
+    ? !!caseFilePanelState.visible
+    : true;
   const {
     activeSection,
     onSectionChange,
@@ -2309,7 +2322,7 @@ export function createChartNavigation(config) {
             if (scrollEl) prevScroll = scrollEl.scrollTop;
           } catch {}
           sectionCollapseState[section.id] = !isCollapsed;
-          saveSectionCollapseState(sectionCollapseState);
+          safeSave(SECTION_COLLAPSE_KEY, sectionCollapseState);
           rebuild();
           // Restore scroll position & refocus equivalent button after rebuild
           try {
@@ -2335,7 +2348,7 @@ export function createChartNavigation(config) {
               if (scrollEl) prevScroll = scrollEl.scrollTop;
             } catch {}
             sectionCollapseState[section.id] = !isCollapsed;
-            saveSectionCollapseState(sectionCollapseState);
+            safeSave(SECTION_COLLAPSE_KEY, sectionCollapseState);
             rebuild();
             try {
               if (scrollEl) {
@@ -2504,14 +2517,140 @@ export function createChartNavigation(config) {
 
   // Standalone CASE FILE header (full-width in sidebar)
   // Inline styles enforce visual in case of stylesheet load/cascade issues.
+  let artifactContainer; // will be assigned below; used by header toggle
+
+  function persistCaseFileVisibility(v) {
+    try {
+      caseFilePanelState.visible = !!v;
+      safeSave(CASEFILE_PANEL_KEY, caseFilePanelState);
+    } catch {}
+  }
+
+  let caseFileToggleBtn;
+  // Animated expand/collapse helpers for the artifacts container
+  function animateCollapse(el) {
+    if (!el) return;
+    const current = el.scrollHeight;
+    el.style.maxHeight = current + 'px';
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+    // force reflow to apply starting values
+    void el.offsetHeight;
+    el.classList.add('is-collapsed');
+    el.style.maxHeight = '0px';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-6px)';
+  }
+  function animateExpand(el) {
+    if (!el) return;
+    el.classList.remove('is-collapsed');
+    el.style.maxHeight = el.scrollHeight + 'px';
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+    // after transition completes, remove explicit max-height so future content growth is allowed
+    const done = () => {
+      try {
+        el.style.maxHeight = 'none';
+        el.removeEventListener('transitionend', done);
+      } catch {}
+    };
+    el.addEventListener('transitionend', done);
+  }
+
+  function toggleCaseFileArtifacts() {
+    try {
+      console.warn('[CASE FILE] toggle requested');
+    } catch {}
+    artifactsVisible = !artifactsVisible;
+    persistCaseFileVisibility(artifactsVisible);
+    try {
+      console.warn('[CASE FILE] artifactsVisible =>', artifactsVisible);
+      if (caseFileHeader) caseFileHeader.setAttribute('aria-expanded', String(artifactsVisible));
+      if (caseFileToggleBtn)
+        caseFileToggleBtn.setAttribute('aria-expanded', String(artifactsVisible));
+      // Update aria-label to reflect the resulting action
+      try {
+        if (caseFileHeader)
+          caseFileHeader.setAttribute(
+            'aria-label',
+            artifactsVisible ? 'Collapse Case File' : 'Expand Case File',
+          );
+        if (caseFileToggleBtn)
+          caseFileToggleBtn.setAttribute(
+            'aria-label',
+            artifactsVisible ? 'Collapse Case File' : 'Expand Case File',
+          );
+      } catch {}
+      if (artifactContainer) {
+        if (artifactsVisible) animateExpand(artifactContainer);
+        else animateCollapse(artifactContainer);
+      }
+    } catch {}
+  }
   const caseFileHeader = el(
     'h4',
     {
       class: 'case-file-header',
+      // Header is a visual container; also interactive for fallback/older DOM
+      role: 'button',
+      tabindex: '0',
+      title: 'Toggle Case File',
+      'aria-expanded': String(artifactsVisible),
+      'aria-controls': artifactContainerId,
+      'aria-label': artifactsVisible ? 'Collapse Case File' : 'Expand Case File',
+      onclick: (e) => {
+        try {
+          console.warn('[CASE FILE] header click');
+        } catch {}
+        try {
+          e.stopPropagation();
+        } catch {}
+        toggleCaseFileArtifacts();
+      },
+      onkeydown: (e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          try {
+            e.stopPropagation();
+          } catch {}
+          toggleCaseFileArtifacts();
+        }
+      },
       style:
-        'background:#00883A;display:flex;align-items:center;justify-content:center;margin:0;padding:0;height:56px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;font-size:clamp(0.95rem,2.7vw,1.125rem);color:#fff;border:0;border-bottom:2px solid #fff;box-sizing:border-box;',
+        'display:flex;align-items:center;justify-content:center;margin:0;padding:0;box-sizing:border-box;',
     },
-    [el('span', { class: 'case-file-badge reset-contents' }, 'Case File')],
+    [
+      (caseFileToggleBtn = el(
+        'button',
+        {
+          class: 'case-file-badge',
+          type: 'button',
+          title: 'Toggle Case File',
+          'aria-controls': artifactContainerId,
+          'aria-expanded': String(artifactsVisible),
+          'aria-label': artifactsVisible ? 'Collapse Case File' : 'Expand Case File',
+          onclick: (e) => {
+            try {
+              console.warn('[CASE FILE] button click');
+            } catch {}
+            try {
+              e.stopPropagation();
+            } catch {}
+            toggleCaseFileArtifacts();
+          },
+          onkeydown: (e) => {
+            if (e.key === ' ' || e.key === 'Enter') {
+              e.preventDefault();
+              try {
+                e.stopPropagation();
+              } catch {}
+              toggleCaseFileArtifacts();
+            }
+          },
+        },
+        'Case File',
+      )),
+    ],
   );
 
   const sidebar = el(
@@ -2521,6 +2660,7 @@ export function createChartNavigation(config) {
       role: 'complementary',
       'aria-label': 'Chart navigation',
       tabindex: '-1',
+      // No delegated click handler; header/button handlers manage toggle and stop propagation
     },
     [
       // CASE FILE header row aligned with patient header
@@ -2565,7 +2705,7 @@ export function createChartNavigation(config) {
                   'aria-expanded': String(!isCollapsed),
                   onclick: () => {
                     artifactCollapseState[cat.key] = !artifactCollapseState[cat.key];
-                    saveArtifactCollapseState(artifactCollapseState);
+                    safeSave(ARTIFACT_COLLAPSE_KEY, artifactCollapseState);
                     container.replaceChildren(...build());
                   },
                 },
@@ -2669,22 +2809,98 @@ export function createChartNavigation(config) {
               }
               return nodes;
             }
-            const container = el('div', { class: 'artifact-block grouped-artifacts' });
+            const container = el('div', {
+              class: 'artifact-block grouped-artifacts',
+              id: artifactContainerId,
+            });
             container.replaceChildren(...build());
+            // Apply initial visibility based on persisted state
+            artifactContainer = container;
+            if (!artifactsVisible) {
+              // initialize collapsed state
+              container.classList.add('is-collapsed');
+              container.style.maxHeight = '0px';
+              container.style.opacity = '0';
+              container.style.transform = 'translateY(-6px)';
+            } else {
+              container.style.maxHeight = 'none';
+              container.style.opacity = '1';
+              container.style.transform = 'translateY(0)';
+            }
             return container;
           })(),
           // Extra padding before section trackers
           el('div', { class: 'mt-20' }),
-          // Current Encounter header (renamed from Note Progress)
-          el(
-            'h4',
-            {
-              class: 'current-encounter-header',
-              'aria-label': 'Current Encounter Progress',
-            },
-            'Current Encounter',
-          ),
-          // Section cards + subsections (collapsible)
+          // My Note header (toggleable)
+          (() => {
+            const noteHeader = el(
+              'h4',
+              {
+                class: 'current-encounter-header',
+                role: 'button',
+                tabIndex: 0,
+                'aria-label': 'My Note',
+                'aria-expanded': 'true',
+                title: 'Toggle My Note sections',
+              },
+              'My Note',
+            );
+            // Compute aggregate status to color the underline
+            try {
+              const statuses = sections.map((s) => getProgressStatus(s.id, config.caseData).status);
+              const hasComplete = statuses.includes('complete');
+              const hasEmpty = statuses.includes('empty');
+              const hasPartial = statuses.includes('partial');
+              let agg = 'empty';
+              if (hasPartial || (hasComplete && hasEmpty)) agg = 'partial';
+              else if (hasComplete && !hasPartial && !hasEmpty) agg = 'complete';
+              noteHeader.setAttribute('data-status', agg);
+            } catch {}
+            // Toggle handler wires to the subsequent note sections container
+            const toggle = () => {
+              try {
+                const container = noteHeader.nextElementSibling;
+                if (!container || !container.classList.contains('note-sections')) return;
+                const isCollapsed = container.classList.contains('is-collapsed');
+                const next = !isCollapsed;
+                noteHeader.setAttribute('aria-expanded', String(!next));
+                if (next) {
+                  // collapse
+                  const h = container.scrollHeight;
+                  container.style.maxHeight = h + 'px';
+                  container.style.opacity = '1';
+                  container.style.transform = 'translateY(0)';
+                  void container.offsetHeight; // reflow
+                  container.classList.add('is-collapsed');
+                  container.style.maxHeight = '0px';
+                  container.style.opacity = '0';
+                  container.style.transform = 'translateY(-6px)';
+                } else {
+                  // expand
+                  container.classList.remove('is-collapsed');
+                  container.style.maxHeight = container.scrollHeight + 'px';
+                  container.style.opacity = '1';
+                  container.style.transform = 'translateY(0)';
+                  const done = () => {
+                    try {
+                      container.style.maxHeight = 'none';
+                      container.removeEventListener('transitionend', done);
+                    } catch {}
+                  };
+                  container.addEventListener('transitionend', done);
+                }
+              } catch {}
+            };
+            noteHeader.addEventListener('click', toggle);
+            noteHeader.addEventListener('keydown', (e) => {
+              if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                toggle();
+              }
+            });
+            return noteHeader;
+          })(),
+          // Section cards + subsections (collapsible), wrapped for note toggle
           (() => {
             const sectionsContainer = el('div', { class: 'sections-container' });
             const rebuild = () => {
@@ -2744,7 +2960,13 @@ export function createChartNavigation(config) {
               }
             };
             rebuild();
-            return sectionsContainer;
+            // Wrap in a collapsible container controlled by the My Note header
+            const wrapper = el('div', {
+              class: 'note-sections',
+              style: 'max-height:none; opacity:1; transform:translateY(0);',
+            });
+            wrapper.appendChild(sectionsContainer);
+            return wrapper;
           })(),
           // Footer actions: Sign & Export (Word)
           (() => {
