@@ -131,6 +131,9 @@
 .d-flex {
   display: flex;
 }
+.d-inline-flex {
+  display: inline-flex;
+}
 .fd-column {
   flex-direction: column;
 }

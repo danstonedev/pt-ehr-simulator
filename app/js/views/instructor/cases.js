@@ -938,90 +938,87 @@ route('#/instructor/cases', async (app) => {
             el('td', {}, meta.setting || ''),
             el('td', {}, meta.diagnosis || ''),
             el('td', {}, meta.acuity || ''),
-            el('td', { style: 'white-space: nowrap;' }, [
-              el(
-                'button',
-                {
-                  class: 'btn small primary',
-                  style: 'margin-right: 8px;',
-                  onClick: async (e) => {
-                    showSharePopup(studentLink);
-                    try {
-                      await navigator.clipboard.writeText(studentLink);
-                    } catch {}
-                    const btn = e.currentTarget || e.target;
-                    const originalNodes = Array.from(btn.childNodes);
-                    // Replace button content safely without parsing HTML
-                    btn.replaceChildren(document.createTextNode('✓ Copied!'));
-                    setTimeout(() => {
-                      btn.replaceChildren(...originalNodes);
-                    }, 2000);
-                  },
-                },
-                [spriteIcon('share'), 'Share'],
-              ),
-              el(
-                'button',
-                {
-                  class: 'btn small primary',
-                  style: 'margin-right: 8px;',
-                  onClick: () =>
-                    urlNavigate('/instructor/editor', {
-                      case: c.id,
-                      v: c.latestVersion || 0,
-                      encounter: 'eval',
-                    }),
-                },
-                [spriteIcon('edit'), 'Edit'],
-              ),
-              el(
-                'button',
-                {
-                  class: 'btn small primary',
-                  style: 'margin-right: 8px;',
-                  onClick: () =>
-                    urlNavigate('/student/editor', {
-                      case: c.id,
-                      v: c.latestVersion || 0,
-                      encounter: 'eval',
-                    }),
-                },
-                [spriteIcon('preview'), 'Student View'],
-              ),
-              el(
-                'button',
-                {
-                  class: 'btn small primary',
-                  style: 'margin-right: 8px;',
-                  onClick: () =>
-                    urlNavigate('/student/editor', {
-                      case: c.id,
-                      v: c.latestVersion || 0,
-                      encounter: 'eval',
-                      key: 'true',
-                    }),
-                },
-                [spriteIcon('preview'), 'Answer Key'],
-              ),
-              el(
-                'button',
-                {
-                  class: 'btn small subtle-danger',
-                  style: 'display: inline-flex; align-items: center; gap: 6px;',
-                  onClick: async () => {
-                    if (confirm(`Are you sure you want to delete "${c.title}"?`)) {
+            el('td', { class: 'nowrap' }, [
+              el('div', { class: 'd-inline-flex ai-center gap-6' }, [
+                el(
+                  'button',
+                  {
+                    class: 'btn small primary d-inline-flex ai-center gap-6',
+                    onClick: async (e) => {
+                      showSharePopup(studentLink);
                       try {
-                        await store.deleteCase(c.id);
-                        await loadAndRender(); // Reload all data and re-render the view
-                      } catch (error) {
-                        console.error('Failed to delete case:', error);
-                        alert('Error deleting case. See console for details.');
-                      }
-                    }
+                        await navigator.clipboard.writeText(studentLink);
+                      } catch {}
+                      const btn = e.currentTarget || e.target;
+                      const originalNodes = Array.from(btn.childNodes);
+                      // Replace button content safely without parsing HTML
+                      btn.replaceChildren(document.createTextNode('✓ Copied!'));
+                      setTimeout(() => {
+                        btn.replaceChildren(...originalNodes);
+                      }, 2000);
+                    },
                   },
-                },
-                [spriteIcon('delete'), 'Delete'],
-              ),
+                  [spriteIcon('share'), 'Share'],
+                ),
+                el(
+                  'button',
+                  {
+                    class: 'btn small primary d-inline-flex ai-center gap-6',
+                    onClick: () =>
+                      urlNavigate('/instructor/editor', {
+                        case: c.id,
+                        v: c.latestVersion || 0,
+                        encounter: 'eval',
+                      }),
+                  },
+                  [spriteIcon('edit'), 'Edit'],
+                ),
+                el(
+                  'button',
+                  {
+                    class: 'btn small primary d-inline-flex ai-center gap-6',
+                    onClick: () =>
+                      urlNavigate('/student/editor', {
+                        case: c.id,
+                        v: c.latestVersion || 0,
+                        encounter: 'eval',
+                      }),
+                  },
+                  [spriteIcon('preview'), 'Student View'],
+                ),
+                el(
+                  'button',
+                  {
+                    class: 'btn small primary d-inline-flex ai-center gap-6',
+                    onClick: () =>
+                      urlNavigate('/student/editor', {
+                        case: c.id,
+                        v: c.latestVersion || 0,
+                        encounter: 'eval',
+                        key: 'true',
+                      }),
+                  },
+                  [spriteIcon('preview'), 'Answer Key'],
+                ),
+                el(
+                  'button',
+                  {
+                    class: 'btn small subtle-danger d-inline-flex ai-center gap-6',
+                    onClick: async () => {
+                      if (confirm(`Are you sure you want to delete "${c.title}"?`)) {
+                        try {
+                          await store.deleteCase(c.id);
+                          await loadAndRender(); // Reload all data and re-render the view
+                        } catch (error) {
+                          console.error('Failed to delete case:', error);
+                          alert('Error deleting case. See console for details.');
+                        }
+                      }
+                    },
+                  },
+                  [spriteIcon('delete'), 'Delete'],
+                ),
+              ]),
             ]),
           ]);
         }),
