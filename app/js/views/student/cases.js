@@ -35,7 +35,9 @@ function openCreateNoteModal() {
       role: 'dialog',
       'aria-modal': 'true',
       'aria-label': 'Create SOAP Note',
-      style: 'padding:24px; width:92%; max-width:520px;',
+      className: undefined,
+      style: 'width:92%; max-width:520px;',
+      class: 'popup-card-base bg-surface text-color br-lg shadow-modal p-24',
       onclick: (e) => e.stopPropagation(),
     },
     [
@@ -53,7 +55,7 @@ function openCreateNoteModal() {
         value: defaultTitle,
         placeholder: 'e.g., Shoulder Pain Eval - Aug 2025',
       }),
-      el('div', { class: 'd-flex gap-8 jc-end', style: 'margin-top:18px;' }, [
+      el('div', { class: 'd-flex gap-8 jc-end mt-20' }, [
         el('button', { class: 'btn secondary', onClick: () => close() }, 'Cancel'),
         el(
           'button',
@@ -640,7 +642,7 @@ function renderBlankNotesPanel(app) {
     el('p', { class: 'small m-0' }, 'Manage scratch SOAP notes not tied to a case.'),
   ];
   if (blankItems.length > 0) {
-    const list = el('ul', { style: 'margin: 8px 0 0 0; padding-left: 18px;' });
+    const list = el('ul', { class: 'mt-8', style: 'padding-left: 18px;' });
     blankItems.forEach(({ key, title }) => {
       const noteId = key.replace('draft_', '').replace('_eval', '');
       const li = el('li', { class: 'mb-6' }, [
