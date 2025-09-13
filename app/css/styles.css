@@ -394,6 +394,25 @@
   flex-wrap: wrap;
 }
 
+/* Min-width helpers for responsive form columns */
+.minw-160 {
+  min-width: 160px;
+}
+.minw-180 {
+  min-width: 180px;
+}
+.minw-200 {
+  min-width: 200px;
+}
+.minw-220 {
+  min-width: 220px;
+}
+
+/* Resize helper to re-enable vertical resizing where needed */
+.resize-vertical {
+  resize: vertical;
+}
+
 /* Min-dimension helpers */
 .minh-68 {
   min-height: 68px;

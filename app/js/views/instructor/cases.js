@@ -31,17 +31,16 @@ function showSharePopup(url) {
     },
   });
   const statusEl = el('div', {
-    class: 'small',
+    class: 'small text-secondary mt-8',
     'aria-live': 'polite',
-    style: 'margin-top:8px; color:var(--text-secondary); min-height:1em;',
+    style: 'min-height:1em;',
   });
 
   let inputRef;
   const copyBtn = el(
     'button',
     {
-      class: 'btn primary',
-      style: 'padding:8px 12px; font-size:14px;',
+      class: 'btn primary small',
       onclick: async () => {
         try {
           await navigator.clipboard.writeText(url);
@@ -76,8 +75,7 @@ function showSharePopup(url) {
           type: 'text',
           value: url,
           readOnly: true,
-          style:
-            'flex:1; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+          class: 'form-input-standard w-100 box-border flex-1',
           onclick: (e) => {
             e.target.select();
           },
@@ -134,8 +132,7 @@ function showCaseCreationModal() {
             type: 'text',
             required: true,
             placeholder: 'e.g., Shoulder Impingement (R)',
-            style:
-              'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+            class: 'form-input-standard w-100 box-border',
           }),
         ]),
         el('div', { class: 'mb-12' }, [
@@ -143,8 +140,7 @@ function showCaseCreationModal() {
           el('input', {
             type: 'date',
             id: 'case-dob',
-            style:
-              'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+            class: 'form-input-standard w-100 box-border',
             oninput: (e) => {
               if (e.isTrusted) delete e.target.dataset.autofilled;
               const computed = computeAgeFromDob(e.target.value);
@@ -157,7 +153,7 @@ function showCaseCreationModal() {
           el('div', { class: 'mt-6 fs-12 text-secondary' }, 'Age auto-fills when DOB is entered.'),
         ]),
         el('div', { class: 'd-flex gap-16 mb-16 flex-wrap' }, [
-          el('div', { style: 'flex:1; min-width:220px;' }, [
+          el('div', { class: 'flex-1 minw-220' }, [
             el('label', { class: 'block mb-8 fw-500 text-color' }, 'Patient Age *'),
             el('input', {
               type: 'number',
@@ -166,8 +162,7 @@ function showCaseCreationModal() {
               min: 0,
               max: 120,
               placeholder: '25',
-              style:
-                'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+              class: 'form-input-standard w-100 box-border',
               oninput: (e) => {
                 const dobEl = document.getElementById('case-dob');
                 if (!dobEl) return;
@@ -186,15 +181,14 @@ function showCaseCreationModal() {
               },
             }),
           ]),
-          el('div', { style: 'flex:1; min-width:220px;' }, [
+          el('div', { class: 'flex-1 minw-220' }, [
             el('label', { class: 'block mb-8 fw-500 text-color' }, 'Sex *'),
             el(
               'select',
               {
                 id: 'case-gender',
                 required: true,
-                style:
-                  'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+                class: 'form-input-standard w-100 box-border',
               },
               [
                 el('option', { value: '' }, 'Select...'),
@@ -213,8 +207,7 @@ function showCaseCreationModal() {
             {
               id: 'case-setting',
               required: true,
-              style:
-                'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+              class: 'form-input-standard w-100 box-border',
             },
             [
               el('option', { value: '' }, 'Select setting...'),
@@ -234,8 +227,7 @@ function showCaseCreationModal() {
             {
               id: 'case-acuity',
               required: true,
-              style:
-                'width:100%; padding:10px 12px; border:1px solid var(--input-border); border-radius:8px; font-size:14px;',
+              class: 'form-input-standard w-100 box-border',
             },
             [
               el('option', { value: '' }, 'Select acuity...'),
@@ -252,16 +244,11 @@ function showCaseCreationModal() {
             {
               type: 'button',
               class: 'btn neutral',
-              style: 'padding:12px 24px; font-size:14px;',
               onclick: () => close(),
             },
             'Cancel',
           ),
-          el(
-            'button',
-            { type: 'submit', class: 'btn primary', style: 'padding:12px 24px; font-size:14px;' },
-            'Create Case',
-          ),
+          el('button', { type: 'submit', class: 'btn primary' }, 'Create Case'),
         ]),
       ]),
     ],
@@ -345,8 +332,7 @@ function showPromptGenerationModal() {
               id: 'gen-prompt',
               rows: 3,
               placeholder: 'Key history/context to ground the case...',
-              class: 'form-input-standard w-100 box-border',
-              style: 'resize:vertical;',
+              class: 'form-input-standard w-100 box-border resize-vertical',
             }),
           ]),
           // Structured anchors row 1
@@ -370,13 +356,13 @@ function showPromptGenerationModal() {
               });
               sel.append(el('option', { value: '' }, 'Select region...'));
               regions.forEach((r) => sel.append(el('option', { value: r }, r)));
-              return el('div', { style: 'flex:1; min-width:200px;' }, [
+              return el('div', { class: 'flex-1 minw-200' }, [
                 el('label', { class: 'block mb-6 fw-600 text-color' }, 'Body Region *'),
                 sel,
               ]);
             })(),
             // Condition
-            el('div', { style: 'flex:1; min-width:200px;' }, [
+            el('div', { class: 'flex-1 minw-200' }, [
               el('label', { class: 'block mb-6 fw-600 text-color' }, 'Suspected Condition *'),
               el('input', {
                 id: 'gen-condition',
@@ -402,7 +388,7 @@ function showPromptGenerationModal() {
                 el('option', { value: 'SNF' }, 'SNF'),
                 el('option', { value: 'Acute Rehab' }, 'Acute Rehab'),
               );
-              return el('div', { style: 'flex:1; min-width:200px;' }, [
+              return el('div', { class: 'flex-1 minw-200' }, [
                 el('label', { class: 'block mb-6 fw-600 text-color' }, 'Clinical Setting *'),
                 sel,
               ]);
@@ -419,7 +405,7 @@ function showPromptGenerationModal() {
                 el('option', { value: 'subacute' }, 'Subacute'),
                 el('option', { value: 'chronic' }, 'Chronic'),
               );
-              return el('div', { style: 'flex:1; min-width:200px;' }, [
+              return el('div', { class: 'flex-1 minw-200' }, [
                 el('label', { class: 'block mb-6 fw-600 text-color' }, 'Acuity *'),
                 sel,
               ]);
@@ -427,7 +413,7 @@ function showPromptGenerationModal() {
           ]),
           // Structured anchors row 3
           el('div', { class: 'd-flex gap-12 mb-12 flex-wrap' }, [
-            el('div', { style: 'flex:1; min-width:160px;' }, [
+            el('div', { class: 'flex-1 minw-160' }, [
               el('label', { class: 'block mb-6 fw-600 text-color' }, 'Age (yrs)'),
               el('input', {
                 id: 'gen-age',
@@ -438,7 +424,7 @@ function showPromptGenerationModal() {
                 class: 'form-input-standard w-100 box-border',
               }),
             ]),
-            el('div', { style: 'flex:1; min-width:180px;' }, [
+            el('div', { class: 'flex-1 minw-180' }, [
               el('label', { class: 'block mb-6 fw-600 text-color' }, 'Sex'),
               (() => {
                 const sel = el('select', {
@@ -454,7 +440,7 @@ function showPromptGenerationModal() {
                 return sel;
               })(),
             ]),
-            el('div', { style: 'flex:1; min-width:200px;' }, [
+            el('div', { class: 'flex-1 minw-200' }, [
               el('label', { class: 'block mb-6 fw-600 text-color' }, 'Pain (0–10)'),
               el('input', {
                 id: 'gen-pain',
@@ -705,8 +691,7 @@ route('#/instructor/cases', async (app) => {
         type: 'text',
         placeholder: 'Search cases by title, setting, diagnosis, or acuity...',
         value: searchTerm,
-        style:
-          'width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px;',
+        class: 'form-input-standard w-100 box-border',
         onInput: (e) => {
           searchTerm = e.target.value.toLowerCase();
           renderTable();
