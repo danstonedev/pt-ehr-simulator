@@ -801,6 +801,9 @@ body {
 html {
   font-size: 16px; /* Base font size for better accessibility */
   /* Remove deprecated text-size-adjust properties to satisfy linters */
+  /* Ensure native anchor/hash jumps clear sticky headers on small screens */
+  scroll-padding-top: var(--topbar-h, 56px);
+  scroll-padding-bottom: var(--edu-ribbon-h, 24px);
 }
 
 body {
@@ -829,6 +832,13 @@ body {
     'liga' 1,
     'kern' 1;
   text-rendering: optimizeLegibility;
+}
+
+/* Prefer dynamic viewport units when supported to avoid URL bar jank on iOS */
+@supports (height: 100dvh) {
+  body {
+    min-height: 100dvh;
+  }
 }
 
 /* Typography hierarchy */
@@ -3417,6 +3427,21 @@ select:focus,
   .nav-text-secondary,
   .nav-text-meta {
     font-size: 0.875rem; /* Larger text on mobile */
+  }
+}
+
+/* Prevent iOS Safari zoom on focus for small screens by ensuring inputs are >=16px */
+@media (max-width: 480px) {
+  .form-input-standard,
+  .instructor-form-input,
+  input[type='text'],
+  input[type='email'],
+  input[type='tel'],
+  input[type='number'],
+  input[type='search'],
+  select,
+  textarea {
+    font-size: 16px;
   }
 }
 

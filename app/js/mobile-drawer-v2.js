@@ -64,6 +64,29 @@
     // Prefer core toggle if available to avoid double logic
     const useCore = typeof window.toggleMobileNav === 'function';
 
+    let removeTrap = null;
+    function trapFocus(container) {
+      const SEL = 'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])';
+      const nodes = Array.from(container.querySelectorAll(SEL)).filter(
+        (n) => !n.disabled && n.tabIndex !== -1 && n.offsetParent !== null,
+      );
+      if (!nodes.length) return () => {};
+      const first = nodes[0];
+      const last = nodes[nodes.length - 1];
+      const handler = (e) => {
+        if (e.key !== 'Tab') return;
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      };
+      container.addEventListener('keydown', handler);
+      return () => container.removeEventListener('keydown', handler);
+    }
+
     function openDrawer() {
       if (!SIMPLE_MODE) {
         // If a smooth scroll just occurred (e.g., landing on a non-Subjective section),
@@ -104,6 +127,8 @@
           drawer.focus({ preventScroll: true });
         }
       } catch {}
+      // Trap focus within drawer while open
+      removeTrap = trapFocus(drawer);
     }
     function closeDrawer() {
       if (useCore) {
@@ -117,6 +142,10 @@
       overlay.classList.remove('is-visible');
       document.body.classList.remove('mobile-drawer-open');
       hamburger.setAttribute('aria-expanded', 'false');
+      if (removeTrap) {
+        removeTrap();
+        removeTrap = null;
+      }
     }
 
     // Create a visible close button if absent

@@ -56,6 +56,7 @@
     contain: layout paint; /* isolate layout/paint */
     will-change: transform; /* hint for compositor */
     backface-visibility: hidden; /* fix flicker on iOS Safari */
+    overscroll-behavior: contain; /* prevent scroll chaining to body */
   }
   .chart-navigation.is-open,
   .chart-navigation.mobile-open {
@@ -112,6 +113,7 @@
   }
   body.mobile-drawer-open {
     overflow: hidden;
+    overscroll-behavior: none; /* stop scroll chaining on iOS/Android */
   }
 }
 
@@ -138,6 +140,7 @@
   .site-menu-panel {
     height: 100%;
     overflow: auto;
+    overscroll-behavior: contain; /* contain nested scroll chaining */
     padding: 12px;
     display: flex;
     flex-direction: column;
