@@ -9,7 +9,7 @@ import { el } from '../ui/utils.js';
 function buildWhatsNewPanel() {
   return el('div', { class: 'panel' }, [
     el('h3', {}, 'Program Executive Overview'),
-    el('ul', { style: 'margin: 6px 0 0 18px;' }, [
+    el('ul', { class: 'mt-6', style: 'margin-left:18px;' }, [
       el('li', {}, 'Static, browser-only EMR simulator (no backend; GitHub Pages deployable)'),
       el('li', {}, 'Centralized routing with deep links & shareable states'),
       el('li', {}, 'Data store: case/draft separation, schema validation/migration'),
@@ -27,28 +27,22 @@ route('#/', async (app) => {
 
   // Quick access row: Student (left) • EMR badge (center) • Faculty (right)
   const quickRow = (() => {
-    const row = el('div', {
-      class: 'home-quick-row',
-      style:
-        'display:grid; width:100%; align-items:center; justify-items:center; grid-template-columns: 1fr auto 1fr; gap:32px; padding:16px 0; margin-top: calc(33vh - 96px);',
-    });
+    const row = el('div', { class: 'home-quick-row' });
     const studentBtn = el(
       'button',
       {
-        class: 'btn primary',
+        class: 'btn primary btn-hero student',
         onClick: () => urlNavigate('/student/cases'),
         'aria-label': 'Open Student',
-        style: 'font-size:44px; padding:24px 44px; border-radius:14px; justify-self:end;',
       },
       'STUDENT',
     );
     const facultyBtn = el(
       'button',
       {
-        class: 'btn primary',
+        class: 'btn primary btn-hero faculty',
         onClick: () => urlNavigate('/instructor/cases'),
         'aria-label': 'Open Faculty',
-        style: 'font-size:44px; padding:24px 44px; border-radius:14px; justify-self:start;',
       },
       'FACULTY',
     );
@@ -57,8 +51,7 @@ route('#/', async (app) => {
       title: 'Click to reveal Student & Faculty sections and the overview',
       role: 'button',
       tabindex: '0',
-      style:
-        'width:min(280px, 30vw); height:auto; display:block; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,.15); cursor:pointer;',
+      class: 'home-badge',
     });
     // Theme-aware logo switching (light vs dark) with filename auto-detect.
     // We'll probe common filenames and pick the first that loads.
@@ -109,22 +102,6 @@ route('#/', async (app) => {
     row.replaceChildren(studentBtn, img, facultyBtn);
     // Expose a hook so we can attach reveal behavior later
     row._badgeEl = img;
-    // Responsive: stack on very small screens
-    const applyLayout = () => {
-      const mobile = window.innerWidth < 560;
-      row.style.gridTemplateColumns = mobile ? '1fr' : '1fr auto 1fr';
-      row.style.gap = mobile ? '16px' : '32px';
-      // When stacked, center both buttons
-      if (mobile) {
-        studentBtn.style.justifySelf = 'center';
-        facultyBtn.style.justifySelf = 'center';
-      } else {
-        studentBtn.style.justifySelf = 'end';
-        facultyBtn.style.justifySelf = 'start';
-      }
-    };
-    applyLayout();
-    window.addEventListener('resize', applyLayout, { passive: true });
     return row;
   })();
 
@@ -134,13 +111,9 @@ route('#/', async (app) => {
 
   const studentPanel = el('div', { class: 'panel' }, [
     el('h2', {}, 'Student'),
-    el('div', { style: 'margin:6px 0 12px 0;' }, [
-      el(
-        'div',
-        { class: 'muted', style: 'font-weight:600; margin-bottom:6px;' },
-        'Student Experience Summary',
-      ),
-      el('ul', { style: 'margin:0 0 0 18px;' }, [
+    el('div', { class: 'mt-6 mb-12' }, [
+      el('div', { class: 'fw-600 mb-6 text-secondary' }, 'Student Experience Summary'),
+      el('ul', { class: 'm-0', style: 'margin-left:18px;' }, [
         el('li', {}, 'Access: #/student/cases → assigned/available cases'),
         el('li', {}, 'Documentation: guided tabs for SOAP, Goals, Billing'),
         el('li', {}, 'Persistence: auto-save drafts in localStorage'),
@@ -151,13 +124,9 @@ route('#/', async (app) => {
 
   const facultyPanel = el('div', { class: 'panel' }, [
     el('h2', {}, 'Faculty'),
-    el('div', { style: 'margin:6px 0 12px 0;' }, [
-      el(
-        'div',
-        { class: 'muted', style: 'font-weight:600; margin-bottom:6px;' },
-        'Faculty Experience Summary',
-      ),
-      el('ul', { style: 'margin:0 0 0 18px;' }, [
+    el('div', { class: 'mt-6 mb-12' }, [
+      el('div', { class: 'fw-600 mb-6 text-secondary' }, 'Faculty Experience Summary'),
+      el('ul', { class: 'm-0', style: 'margin-left:18px;' }, [
         el('li', {}, 'Access: #/instructor/cases for case management'),
         el('li', {}, 'Authoring: demographics, DOB age calculator, schema integrity'),
         el('li', {}, 'Distribution: share deep links with students'),
@@ -170,46 +139,22 @@ route('#/', async (app) => {
   const whatsNew = buildWhatsNewPanel();
 
   // Row 2: Student + Faculty (full-width row with 2-up on desktop)
-  const studentFacultyRow = el(
-    'div',
-    {
-      class: 'row-student-faculty',
-      style: 'display:grid; gap:12px; grid-template-columns: 1fr; align-items:start;',
-    },
-    [studentPanel, facultyPanel],
-  );
+  const studentFacultyRow = el('div', { class: 'row-student-faculty d-grid gap-12' }, [
+    studentPanel,
+    facultyPanel,
+  ]);
 
   // Row 3: Two-column grid for side info and optional resume card
-  const leftCol = el('div', { class: 'col-side', style: 'display:grid; gap:12px;' }, [whatsNew]);
+  const leftCol = el('div', { class: 'col-side d-grid gap-12' }, [whatsNew]);
   // right column intentionally omitted
 
-  const grid = el(
-    'div',
-    {
-      class: 'home-grid',
-      style: 'display:grid; gap:12px; grid-template-columns: 1fr; align-items:start;',
-    },
-    [leftCol],
-  );
+  const grid = el('div', { class: 'home-grid d-grid gap-12' }, [leftCol]);
 
   // Responsive: make main column wider on desktop
-  const setGrid = () => {
-    const desktop = window.innerWidth >= 900;
-    grid.style.gridTemplateColumns = '1fr';
-    studentFacultyRow.style.gridTemplateColumns = desktop ? '1fr 1fr' : '1fr';
-  };
-  setGrid();
-  window.addEventListener('resize', setGrid, { passive: true });
+  // Grid responsive behavior handled in CSS media queries
 
   // Hide details until the badge is clicked
-  const revealWrap = el(
-    'div',
-    {
-      style:
-        'display:none; opacity:0; transform: translateY(-12px); transition: opacity 600ms ease, transform 600ms ease;',
-    },
-    [studentFacultyRow, grid],
-  );
+  const revealWrap = el('div', { class: 'home-reveal' }, [studentFacultyRow, grid]);
   // Assign an id so the badge can reference it for accessibility
   revealWrap.id = 'home-reveal';
   // Click/keyboard toggle handler (show/hide with animation)
@@ -225,7 +170,7 @@ route('#/', async (app) => {
     isTransitioning = false;
     // When hiding completes, set display:none
     if (!isRevealed) {
-      revealWrap.style.display = 'none';
+      revealWrap.classList.add('is-hidden');
     }
   };
   revealWrap.addEventListener('transitionend', onTransitionEnd);
@@ -233,11 +178,10 @@ route('#/', async (app) => {
   const show = () => {
     if (isRevealed || isTransitioning) return;
     isTransitioning = true;
-    revealWrap.style.display = '';
+    revealWrap.classList.remove('is-hidden');
     requestAnimationFrame(() => {
       void revealWrap.offsetWidth;
-      revealWrap.style.opacity = '1';
-      revealWrap.style.transform = 'translateY(0)';
+      revealWrap.classList.add('is-open');
       isRevealed = true;
       if (badge) {
         badge.setAttribute('aria-expanded', 'true');
@@ -257,8 +201,7 @@ route('#/', async (app) => {
     isTransitioning = true;
     requestAnimationFrame(() => {
       void revealWrap.offsetWidth;
-      revealWrap.style.opacity = '0';
-      revealWrap.style.transform = 'translateY(-12px)';
+      revealWrap.classList.remove('is-open');
       isRevealed = false;
       if (badge) {
         badge.setAttribute('aria-expanded', 'false');
@@ -282,10 +225,7 @@ route('#/', async (app) => {
   }
 
   // Final container: quick access row then reveal-on-click content
-  const container = el('div', { class: 'home-container', style: 'display:grid; gap:12px;' }, [
-    quickRow,
-    revealWrap,
-  ]);
+  const container = el('div', { class: 'home-container d-grid gap-12' }, [quickRow, revealWrap]);
 
   app.append(container);
 });
