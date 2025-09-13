@@ -1051,6 +1051,14 @@ body:has(#app .home-container) {
     opacity 600ms ease,
     transform 600ms ease;
 }
+.home-reveal {
+  display: block;
+  opacity: 0;
+  transform: translateY(-12px);
+  transition:
+    opacity 600ms ease,
+    transform 600ms ease;
+}
 .home-reveal.is-open {
   opacity: 1;
   transform: translateY(0);

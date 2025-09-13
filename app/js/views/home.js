@@ -154,7 +154,7 @@ route('#/', async (app) => {
   // Grid responsive behavior handled in CSS media queries
 
   // Hide details until the badge is clicked
-  const revealWrap = el('div', { class: 'home-reveal' }, [studentFacultyRow, grid]);
+  const revealWrap = el('div', { class: 'home-reveal is-hidden' }, [studentFacultyRow, grid]);
   // Assign an id so the badge can reference it for accessibility
   revealWrap.id = 'home-reveal';
   // Click/keyboard toggle handler (show/hide with animation)
