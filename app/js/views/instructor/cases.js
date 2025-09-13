@@ -119,7 +119,7 @@ function showCaseCreationModal() {
     'div',
     {
       class: 'popup-card-base bg-surface text-color br-lg shadow-modal p-24',
-      style: 'max-width:720px; width:92%;',
+      class: 'maxw-720 w-92',
       onclick: (e) => e.stopPropagation(),
     },
     [
@@ -301,7 +301,7 @@ function showPromptGenerationModal() {
         'div',
         {
           class: 'popup-card-base bg-surface text-color br-lg shadow-modal p-24',
-          style: 'max-width:720px; width:92%;',
+          class: 'maxw-720 w-92',
           onclick: (e) => e.stopPropagation(),
         },
         [

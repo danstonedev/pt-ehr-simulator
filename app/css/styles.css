@@ -295,6 +295,9 @@
 .mw-100 {
   max-width: 100%;
 }
+.maxw-720 {
+  max-width: 720px;
+}
 .mh-78vh {
   max-height: 78vh;
 }
@@ -304,6 +307,9 @@
 /* Width helpers */
 .w-100 {
   width: 100%;
+}
+.w-92 {
+  width: 92%;
 }
 .w-12 {
   width: 12px;
