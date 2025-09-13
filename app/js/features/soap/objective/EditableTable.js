@@ -8,18 +8,10 @@ import { el, textareaAutoResize } from '../../../ui/utils.js';
 function buildTableHeader({ title, showAddButton, compactAddButton, addButtonText, onAdd }) {
   if (!title && !(showAddButton && !compactAddButton)) return null;
   const header = el('div', {
-    class: 'editable-table__header',
-    style:
-      'display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;',
+    class: 'editable-table__header d-flex jc-between ai-center mb-8',
   });
   if (title) {
-    header.appendChild(
-      el(
-        'h5',
-        { class: 'editable-table__title', style: 'margin: 0; color: var(--accent2);' },
-        title,
-      ),
-    );
+    header.appendChild(el('h5', { class: 'editable-table__title m-0 text-accent' }, title));
   }
   if (showAddButton && !compactAddButton) {
     header.appendChild(
@@ -44,8 +36,7 @@ function ensureEmptyOption(options) {
 
 function buildSelectInput(column, value, onChange) {
   const input = el('select', {
-    class: 'editable-table__select',
-    style: 'width: 100%; padding: 4px;',
+    class: 'editable-table__select form-input-standard',
     onchange: (e) => onChange(String(e.target.value)),
   });
   const rawOptions = ensureEmptyOption(column.options);
@@ -68,23 +59,21 @@ function buildInputForColumn(column, value, onChange) {
   if (column.type === 'number')
     return el('input', {
       type: 'number',
-      class: 'editable-table__input',
+      class: 'editable-table__input form-input-standard',
       value: value,
       placeholder: column.placeholder || '',
       min: column.min,
       max: column.max,
       step: column.step,
-      style: 'width: 100%; padding: 4px;',
       onblur: (e) => onChange(e.target.value),
     });
   if (column.type === 'textarea') {
     const t = el(
       'textarea',
       {
-        class: 'editable-table__textarea',
+        class: 'editable-table__textarea form-input-standard resize-vertical',
         rows: column.rows || 1,
         placeholder: column.placeholder || '',
-        style: 'width: 100%; padding: 4px; min-height: 40px;',
         onblur: (e) => onChange(e.target.value),
       },
       value,
@@ -94,10 +83,9 @@ function buildInputForColumn(column, value, onChange) {
   }
   return el('input', {
     type: column.type || 'text',
-    class: 'editable-table__input',
+    class: 'editable-table__input form-input-standard',
     value: value,
     placeholder: column.placeholder || '',
-    style: 'width: 100%; padding: 4px;',
     onblur: (e) => onChange(e.target.value),
   });
 }
@@ -148,7 +136,7 @@ function buildTableElement({
               'th',
               {
                 class: `editable-table__header-cell editable-table__header-cell--${col.field}`,
-                style: col.width ? `width: ${col.width};` : '',
+                style: col.width ? `width: ${col.width};` : undefined,
               },
               col.label,
             ),
@@ -159,7 +147,7 @@ function buildTableElement({
                   'th',
                   {
                     class: 'editable-table__header-cell editable-table__header-cell--actions',
-                    style: 'width: 50px;',
+                    style: undefined,
                   },
                   actionsHeaderLabel,
                 ),
@@ -186,8 +174,7 @@ function buildCompactFooter(showAddButton, compactAddButton, onAdd) {
   return el(
     'div',
     {
-      class: 'editable-table__footer',
-      style: 'display:flex; justify-content:center; margin-bottom: 16px;',
+      class: 'editable-table__footer d-flex jc-center mb-16',
     },
     el('div', { class: 'compact-add-btn', title: 'Add row', onclick: onAdd }, '+'),
   );
@@ -215,8 +202,8 @@ export function createEditableTable(config) {
   } = config;
 
   const container = el('div', {
-    class: `editable-table ${className}`.trim(),
-    style: Object.assign({ marginBottom: '16px' }, style),
+    class: `editable-table mb-16 ${className}`.trim(),
+    style: style,
   });
 
   // Add title and controls
@@ -267,7 +254,7 @@ function makeCreateCell(updateCell) {
       'td',
       {
         class: `editable-table__cell editable-table__cell--${column.field}`,
-        style: column.width ? `width: ${column.width};` : '',
+        style: column.width ? `width: ${column.width};` : undefined,
       },
       input,
     );

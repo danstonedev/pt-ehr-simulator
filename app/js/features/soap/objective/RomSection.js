@@ -14,8 +14,7 @@ import { createBilateralTable } from './EditableTable.js';
  */
 export function createRomSection(regionKey, region, romData, onChange) {
   const container = el('div', {
-    class: 'assessment-section rom-section',
-    style: 'margin-bottom: 24px;',
+    class: 'assessment-section rom-section mb-24',
   });
 
   const table = createBilateralTable({

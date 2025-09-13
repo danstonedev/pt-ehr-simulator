@@ -14,8 +14,7 @@ import { createBilateralTable } from './EditableTable.js';
  */
 export function createMmtSection(regionKey, region, mmtData, onChange) {
   const container = el('div', {
-    class: 'assessment-section mmt-section',
-    style: 'margin-bottom: 24px;',
+    class: 'assessment-section mmt-section mb-24',
   });
 
   const mmtGrades = [

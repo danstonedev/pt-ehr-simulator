@@ -14,8 +14,7 @@ import { createEditableTable } from './EditableTable.js';
  */
 export function createSpecialTestsSection(regionKey, region, testData, onChange) {
   const container = el('div', {
-    class: 'assessment-section special-tests-section',
-    style: 'margin-bottom: 24px;',
+    class: 'assessment-section special-tests-section mb-24',
   });
 
   const testResults = [

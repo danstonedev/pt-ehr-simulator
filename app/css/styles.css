@@ -153,6 +153,10 @@
 .text-secondary {
   color: var(--text-secondary);
 }
+/* Accent text helper */
+.text-accent {
+  color: var(--accent2);
+}
 /* Layout/text helpers */
 .flex-1 {
   flex: 1 1 auto;
