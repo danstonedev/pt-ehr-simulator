@@ -184,7 +184,7 @@ html:not([data-theme='dark']) .chart-navigation .current-encounter-header {
 .chart-navigation .artifact-list {
   display: flex;
   flex-direction: column;
-  gap: 4px; /* tighter stack for table-like density */
+  gap: 0.25rem; /* tighter stack for table-like density */
 }
 /* Artifact entries mimic subsection items */
 .chart-navigation .artifact-list .artifact-entry {
@@ -236,7 +236,7 @@ html[data-theme='dark'] .chart-navigation .artifact-list .artifact-entry:hover {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem;
   background: var(--surface-light);
   border: 1px solid var(--surface-light-border);
   border-radius: 6px;
@@ -310,7 +310,7 @@ html:not([data-theme='dark'])
 .chart-navigation .sections-container {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.375rem;
 }
 /* Section card container - dividers removed for cleaner look */
 .chart-navigation .section-card {
@@ -578,7 +578,7 @@ html[data-theme='dark'] .chart-navigation .section-card.active .subsection-item:
   font-size: 1rem; /* 16px, larger text while staying compact */
   display: flex;
   align-items: center;
-  gap: 8px; /* keep spacing tight */
+  gap: 0.5rem; /* keep spacing tight */
   justify-content: flex-start !important;
   min-height: 32px; /* override base .btn height for compact rows */
   line-height: 1.25;
@@ -687,13 +687,13 @@ html:not([data-theme='dark']) .sidebar-nav-panel {
 .case-info-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 6px;
+  gap: 0.375rem;
 }
 .case-info-row {
   display: grid;
   grid-template-columns: 80px 1fr;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 .case-info-row .label {
   color: var(--text-secondary);

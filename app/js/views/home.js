@@ -9,7 +9,7 @@ import { el } from '../ui/utils.js';
 function buildWhatsNewPanel() {
   return el('div', { class: 'panel' }, [
     el('h3', {}, 'Program Executive Overview'),
-    el('ul', { class: 'mt-6', style: 'margin-left:18px;' }, [
+    el('ul', { class: 'mt-6 ml-18' }, [
       el('li', {}, 'Static, browser-only EMR simulator (no backend; GitHub Pages deployable)'),
       el('li', {}, 'Centralized routing with deep links & shareable states'),
       el('li', {}, 'Data store: case/draft separation, schema validation/migration'),
@@ -113,7 +113,7 @@ route('#/', async (app) => {
     el('h2', {}, 'Student'),
     el('div', { class: 'mt-6 mb-12' }, [
       el('div', { class: 'fw-600 mb-6 text-secondary' }, 'Student Experience Summary'),
-      el('ul', { class: 'm-0', style: 'margin-left:18px;' }, [
+      el('ul', { class: 'm-0 ml-18' }, [
         el('li', {}, 'Access: #/student/cases → assigned/available cases'),
         el('li', {}, 'Documentation: guided tabs for SOAP, Goals, Billing'),
         el('li', {}, 'Persistence: auto-save drafts in localStorage'),
@@ -126,7 +126,7 @@ route('#/', async (app) => {
     el('h2', {}, 'Faculty'),
     el('div', { class: 'mt-6 mb-12' }, [
       el('div', { class: 'fw-600 mb-6 text-secondary' }, 'Faculty Experience Summary'),
-      el('ul', { class: 'm-0', style: 'margin-left:18px;' }, [
+      el('ul', { class: 'm-0 ml-18' }, [
         el('li', {}, 'Access: #/instructor/cases for case management'),
         el('li', {}, 'Authoring: demographics, DOB age calculator, schema integrity'),
         el('li', {}, 'Distribution: share deep links with students'),

@@ -162,6 +162,21 @@ function buildRouteWrapper(app, before) {
   return newWrapper;
 }
 
+// Disable CSS transitions during window resize/rotation to avoid janky animations
+let resizeTimer = null;
+function setResizingState(on) {
+  const root = document.documentElement;
+  if (on) root.classList.add('is-resizing');
+  else root.classList.remove('is-resizing');
+}
+function handleResize() {
+  setResizingState(true);
+  if (resizeTimer) clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => setResizingState(false), 180);
+}
+window.addEventListener('resize', handleResize, { passive: true });
+window.addEventListener('orientationchange', handleResize, { passive: true });
+
 // Helper function to match parameterized routes
 function matchRoute(routePath, actualPath) {
   const routeSegments = routePath.split('/');

@@ -7,7 +7,7 @@
   width: 100%;
   border-collapse: collapse;
   margin-top: var(--space-2);
-  font-size: 13px; /* denser */
+  font-size: 0.8125rem; /* 13px - denser */
 }
 
 /* Align tables with subsection inputs using shared indent */
@@ -38,7 +38,7 @@
 }
 
 .table th {
-  font-size: 14px; /* denser header */
+  font-size: 0.875rem; /* 14px - denser header */
   font-weight: 600;
   color: #fff; /* White text on dark background */
   text-transform: capitalize;
@@ -71,8 +71,8 @@
   margin-left: 6px;
 }
 .table th .sort-icon svg {
-  width: 12px;
-  height: 12px;
+  width: 0.75rem; /* 12px */
+  height: 0.75rem; /* 12px */
   fill: currentColor;
 }
 
@@ -105,7 +105,7 @@
   display: inline-block;
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   font-weight: 600;
   line-height: 1;
   border: 1px solid transparent;
@@ -131,14 +131,14 @@
   width: 100%;
   border-collapse: collapse;
   margin: var(--space-2) 0;
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
 }
 .regional-assessment .table th {
   background: var(--bg2);
   padding: var(--space-1) var(--space-1);
   text-align: left;
   border: none;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   font-weight: 600;
   color: var(--text);
   text-transform: capitalize;
@@ -159,7 +159,7 @@
 .regional-assessment .table select {
   border: 1px solid var(--input-border);
   padding: 2px var(--space-1);
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   border-radius: var(--input-radius);
   background: var(--input-bg);
   color: var(--input-text);
@@ -187,7 +187,7 @@
 .editable-table__title {
   margin: 0;
   color: var(--accent2);
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   font-weight: 600;
 }
 /* Ensure titles have a little breathing room from rounded containers so they never look clipped */
@@ -218,19 +218,20 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
 }
 
-/* Responsive: horizontal scroll for wide tables only on small screens */
+/* Responsive: horizontal scroll for wide tables on small and tablet screens */
 .table-responsive {
   width: 100%;
 }
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .table-responsive {
     overflow-x: auto;
+    overscroll-behavior-x: contain;
   }
   .table-responsive table {
-    min-width: 640px; /* ensure scroll appears when columns overflow */
+    min-width: 40rem; /* 640px - ensure scroll appears when columns overflow */
   }
 }
 .editable-table__table {
@@ -239,7 +240,7 @@
   border: none;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  font-size: 13px;
+  font-size: 0.8125rem; /* 13px */
 }
 .editable-table__head {
   /* Single color background instead of gradient for cleaner look */
@@ -249,7 +250,7 @@
 .editable-table__header-cell {
   padding: var(--space-1) var(--space-2);
   text-align: left;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   font-weight: 600;
   color: var(--text);
   text-transform: capitalize;
@@ -281,13 +282,23 @@
 }
 
 /* Mobile table adjustments (migrated from styles.css) */
-@media (max-width: 768px) {
-  .table {
-    font-size: 0.875rem;
+@media (max-width: 1024px) {
+  /* Proportional shrink on tablets and phones */
+  .table,
+  .editable-table__table {
+    font-size: clamp(12px, 1.5vw, 14px);
   }
   .table th,
-  .table td {
-    padding: var(--space-2);
+  .table td,
+  .editable-table__table th,
+  .editable-table__table td {
+    padding: var(--space-1) var(--space-2);
+    white-space: nowrap; /* default to single-line cells; scroll horizontally */
+  }
+  /* Opt-in wrapper if a table needs multiline content instead of scrolling */
+  .table--wrap th,
+  .table--wrap td {
+    white-space: normal;
   }
 }
 .editable-table__input,
@@ -394,11 +405,6 @@ html[data-theme='dark'] .editable-table__select option:checked {
 .editable-table__cell--actions {
   text-align: center;
 }
-/* Keep actions column a consistent narrow width */
-.editable-table__header-cell--actions,
-.editable-table__cell--actions {
-  width: 50px;
-}
 
 /* Bilateral table widths */
 .bilateral-table .editable-table__header-cell--name {
@@ -462,13 +468,3 @@ html[data-theme='dark'] .editable-table__select option:checked {
 }
 
 /* All table fields pick up var(--input-radius) via global input rules */
-
-/* When table inputs use the shared .form-input-standard, keep them compact within tables */
-.editable-table .form-input-standard {
-  padding: 2px var(--space-1);
-  min-height: 32px;
-  font-size: 12px;
-}
-.editable-table .form-input-standard.resize-vertical {
-  min-height: 32px;
-}

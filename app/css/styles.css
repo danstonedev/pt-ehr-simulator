@@ -117,7 +117,7 @@
   margin-bottom: 6px;
 }
 .fs-18 {
-  font-size: 18px;
+  font-size: 1.125rem; /* 18px */
 }
 .mb-6 {
   margin-bottom: 6px;
@@ -126,7 +126,7 @@
   margin-top: 12px;
 }
 .gap-8 {
-  gap: 8px;
+  gap: 0.5rem;
 }
 .d-flex {
   display: flex;
@@ -173,14 +173,13 @@
     Arial,
     sans-serif;
 }
-
 /* Rare unit helper: points for print-like spacing in generated documents */
 .ml-12pt {
   margin-left: 12pt;
 }
 /* Typography & color utilities */
 .fs-12 {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
 }
 .text-secondary {
   color: var(--text-secondary);
@@ -261,16 +260,16 @@
 }
 /* Gap helpers */
 .gap-6 {
-  gap: 6px;
+  gap: 0.375rem;
 }
 .gap-10 {
-  gap: 10px;
+  gap: 0.625rem;
 }
 .gap-16 {
-  gap: 16px;
+  gap: 1rem;
 }
 .gap-12 {
-  gap: 12px;
+  gap: 0.75rem;
 }
 /* Margin helpers */
 .mt-4 {
@@ -331,10 +330,10 @@
 }
 /* Font sizing */
 .fs-14 {
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
 }
 .fs-42 {
-  font-size: 42px;
+  font-size: 2.625rem; /* 42px */
 }
 /* Max dimensions */
 .mw-100 {
@@ -594,12 +593,12 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 20px;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
   --shadow-1: 0 2px 8px rgba(0, 0, 0, 0.1);
   --shadow-2: 0 8px 18px rgba(0, 0, 0, 0.25);
   /* Input radius token (used across inputs/buttons) */
@@ -723,12 +722,12 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 20px;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
   --shadow-1: 0 2px 8px rgba(0, 0, 0, 0.1);
   --shadow-2: 0 8px 18px rgba(0, 0, 0, 0.25);
   /* Input radius token (overridable in contexts like tables) */
@@ -1035,7 +1034,7 @@ html {
 }
 /* Left/Right inline layout */
 .edu-ribbon {
-  gap: 8px;
+  gap: 0.5rem;
 }
 .edu-ribbon .edu-left {
   margin-right: auto;
@@ -1106,7 +1105,7 @@ body:has(#app .home-container) {
   align-items: center;
   justify-items: center;
   grid-template-columns: 1fr auto 1fr;
-  gap: 32px;
+  gap: 2rem;
   padding: 16px 0;
   margin-top: calc(33vh - 96px);
 }
@@ -1117,7 +1116,7 @@ body:has(#app .home-container) {
   justify-self: start;
 }
 .btn-hero {
-  font-size: 44px;
+  font-size: 2.75rem; /* 44px */
   padding: 24px 44px;
   border-radius: 14px;
 }
@@ -1158,29 +1157,29 @@ body:has(#app .home-container) {
 /* Grid wrappers */
 .home-container {
   display: grid;
-  gap: 12px;
+  gap: 0.75rem;
 }
 .row-student-faculty {
   display: grid;
-  gap: 12px;
+  gap: 0.75rem;
   grid-template-columns: 1fr;
   align-items: start;
 }
 .home-grid {
   display: grid;
-  gap: 12px;
+  gap: 0.75rem;
   grid-template-columns: 1fr;
   align-items: start;
 }
 .col-side {
   display: grid;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 @media (max-width: 559px) {
   .home-quick-row {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 1rem;
   }
   .home-quick-row .btn-hero.student,
   .home-quick-row .btn-hero.faculty {
@@ -1227,13 +1226,15 @@ body[data-route='instructor-editor'] #app {
 
 /* Patient info sticky header: unify geometry with sidebar CASE FILE tab */
 #patient-sticky-header {
-  height: var(--header-h);
+  height: auto; /* allow 2+ lines when needed */
+  min-height: var(--header-h);
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* align to top when multi-line */
   justify-content: space-between;
-  padding: 0 20px; /* match sticky-top-bar horizontal padding */
+  padding: 8px 20px; /* add vertical breathing room */
   line-height: 1; /* kill extra line-height growth */
   box-sizing: border-box;
+  flex-wrap: wrap; /* permit wrapping to next line on narrow screens */
   /* Only a visible bottom border; remove transparent side borders that appeared as faint lines */
   border: 0;
   border-bottom: var(--header-b) solid var(--und-green);
@@ -1244,27 +1245,48 @@ body[data-route='instructor-editor'] #app {
   top: var(--topbar-h, 72px);
   z-index: var(--z-case-header);
   background: var(--case-header-bg, var(--bg));
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 /* Patient header layout helpers */
 .patient-header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
+  flex: 1 1 auto; /* take available space */
+  min-width: 0; /* allow inner text to wrap instead of pushing button */
+}
+
+/* Ensure the text block (name + demographics) can shrink and ellipsize */
+.patient-header-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0; /* critical so child text can calculate ellipsis */
 }
 
 .patient-name-line {
-  font-size: 20px;
+  /* Fixed on tablet/desktop; phones get a smaller clamp below */
+  font-size: 1.25rem; /* 20px */
   line-height: 1.25;
+  /* Prevent overflow into right controls on mid-widths */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-inline-size: 100%;
 }
 
 .patient-demo-line {
-  font-size: 16px;
+  /* Fixed on tablet/desktop; phones get a smaller clamp below */
+  font-size: 1rem; /* 16px */
   color: var(--text-secondary);
-  line-height: 1.3;
+  line-height: 1.25;
   margin-top: 4px;
-  margin-left: var(--space-4);
+  margin-left: 0; /* remove left indent */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-inline-size: 100%;
 }
 
 .patient-sex {
@@ -1274,8 +1296,27 @@ body[data-route='instructor-editor'] #app {
 }
 
 .patient-dob {
-  font-weight: 700;
-  color: var(--text);
+  font-weight: 600; /* slightly reduce emphasis so title stays primary */
+  color: var(--text-secondary); /* lighten compared to name line */
+}
+
+/* Force readable white text on the dark patient header background in all themes */
+#patient-sticky-header {
+  color: var(--white);
+}
+#patient-sticky-header .patient-name-line {
+  color: var(--white) !important;
+}
+#patient-sticky-header .patient-demo-line,
+#patient-sticky-header .patient-dob,
+#patient-sticky-header .patient-sex {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Keep Edit button pinned to the right/top even when header wraps */
+#patient-sticky-header .btn.secondary {
+  margin-left: auto;
+  align-self: flex-start;
 }
 
 /* Patient avatar */
@@ -1298,7 +1339,51 @@ html:not([data-theme='dark']) #patient-sticky-header {
   /* Scope text tokens inside the header for correct contrast */
   --text: var(--white);
   --text-secondary: rgba(255, 255, 255, 0.9);
-  color: var(--text);
+  color: var(--white); /* ensure header base text is white */
+}
+/* Explicitly colorize important child lines for light theme with maximum specificity */
+html:not([data-theme='dark']) body #patient-sticky-header .patient-name-line {
+  color: white !important;
+}
+html:not([data-theme='dark']) body #patient-sticky-header .patient-demo-line,
+html:not([data-theme='dark']) body #patient-sticky-header .patient-dob,
+html:not([data-theme='dark']) body #patient-sticky-header .patient-sex {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+/* Target the nested structure shown in dev tools */
+html:not([data-theme='dark']) body #patient-sticky-header .patient-header-text .patient-name-line,
+html:not([data-theme='dark']) body #patient-sticky-header .patient-header-text .patient-demo-line {
+  color: white !important;
+}
+/* Also target any spans inside the patient header lines */
+html:not([data-theme='dark']) body #patient-sticky-header .patient-name-line span,
+html:not([data-theme='dark']) body #patient-sticky-header .patient-demo-line span {
+  color: white !important;
+}
+
+/* Dark theme: ensure the floating patient header uses white text as well */
+html[data-theme='dark'] #patient-sticky-header {
+  --text: var(--white);
+  --text-secondary: rgba(255, 255, 255, 0.9);
+  color: var(--white);
+}
+html[data-theme='dark'] #patient-sticky-header .patient-name-line {
+  color: var(--white) !important;
+}
+html[data-theme='dark'] #patient-sticky-header .patient-demo-line,
+html[data-theme='dark'] #patient-sticky-header .patient-dob,
+html[data-theme='dark'] #patient-sticky-header .patient-sex {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+/* Target the nested structure for dark theme too */
+html[data-theme='dark'] body #patient-sticky-header .patient-header-text .patient-name-line,
+html[data-theme='dark'] body #patient-sticky-header .patient-header-text .patient-demo-line {
+  color: white !important;
+}
+/* Also target any spans inside the patient header lines for dark theme */
+html[data-theme='dark'] body #patient-sticky-header .patient-name-line span,
+html[data-theme='dark'] body #patient-sticky-header .patient-demo-line span {
+  color: white !important;
 }
 
 /* Ensure the white Edit button uses dark text inside the gradient header */
@@ -1309,6 +1394,61 @@ html:not([data-theme='dark']) #patient-sticky-header .btn.secondary {
 }
 html:not([data-theme='dark']) #patient-sticky-header .btn.secondary:hover {
   color: var(--und-green);
+}
+
+/* Small screens: prevent overflow by allowing wrap and gently scaling text */
+@media (max-width: 600px) {
+  #patient-sticky-header {
+    padding: 6px 12px; /* slightly tighter for compact header */
+    display: grid; /* keep actions at top-right while text wraps */
+    grid-template-columns: 1fr auto;
+    grid-auto-rows: auto;
+    align-items: start;
+    column-gap: 0.75rem;
+    row-gap: 0.25rem;
+  }
+  .patient-avatar {
+    inline-size: 28px; /* free more width for title */
+    block-size: 28px;
+    flex-basis: 28px;
+  }
+  .patient-name-line {
+    font-size: clamp(0.875rem, 3.6vw, 1.125rem); /* shrink more aggressively to stay on one line */
+    line-height: 1.2;
+    white-space: nowrap;
+    display: block; /* override -webkit-box from previous rule */
+    -webkit-line-clamp: initial; /* neutralize multi-line clamp */
+    -webkit-box-orient: initial;
+    line-clamp: unset;
+    overflow: hidden;
+    text-overflow: ellipsis; /* last-resort safety for extreme lengths */
+  }
+  .patient-demo-line {
+    font-size: clamp(0.75rem, 3.2vw, 0.875rem); /* shrink proportionally */
+    line-height: 1.25;
+    margin-left: 0; /* tighten to avoid horizontal overflow */
+  }
+  .patient-header-left {
+    align-items: flex-start; /* align avatar with multi-line text top */
+  }
+  .patient-header-left {
+    grid-column: 1 / 2;
+  }
+  /* Place the actions container in the top-right grid cell */
+  #patient-header-actions {
+    grid-column: 2 / 3;
+    grid-row: 1;
+    justify-self: end;
+    align-self: start;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: nowrap; /* avoid pushing title by wrapping actions */
+  }
+  #patient-header-actions .btn.secondary {
+    padding: 8px 12px; /* keep tap target but reduce width pressure */
+    font-size: clamp(0.75rem, 3vw, 0.875rem); /* shrink button text slightly too */
+    white-space: nowrap;
+  }
 }
 
 /* Darker panel containers on Home, Student, Faculty dashboards */
@@ -1334,10 +1474,10 @@ html[data-theme='dark'] body[data-route='instructor-cases'] {
   --border: color-mix(in srgb, var(--editor-bg) 46%, white);
 }
 
-/* Offset page content for fixed main header */
-/* Only add offset when a topbar exists */
-body:has(header.topbar) {
-  padding-top: var(--topbar-h);
+/* Offset page content for fixed main header without exposing body's light bg */
+/* Move offset to the main app container so it inherits the app/editor background */
+header.topbar + main#app {
+  margin-top: var(--topbar-h);
 }
 
 /* Top bar navigation styles consolidated under header.topbar at the end of file */
@@ -1376,9 +1516,11 @@ body:has(header.topbar) {
   /* Standardized control elevation (matches FAB base) */
   box-shadow: var(--elev-fab);
   transition: background 0.2s ease;
+  /* Ensure the visible icon (sun/moon) inside the thumb is UND orange */
+  color: var(--und-orange);
 }
 .theme-toggle .icon {
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   line-height: 1;
 }
 .theme-toggle .icon.sun {
@@ -1710,7 +1852,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   z-index: -1;
 }
 .home-hero__title {
-  font-size: clamp(22px, 4vw, 32px);
+  font-size: clamp(1.375rem, 4vw, 2rem); /* 22px → 32px */
   font-weight: 800;
   letter-spacing: 0.5px;
   margin: 0;
@@ -1761,29 +1903,39 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 .sticky-top-bar .active-section-title {
   margin: 0;
   color: var(--white);
-  font-size: 18px;
+  font-size: 1.0625rem; /* 17px fixed on tablet/desktop */
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  /* Let the title shrink within flex and truncate when space is tight */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Sticky top bar left and right sections */
 .sticky-top-bar .left-section {
   display: flex;
   align-items: center;
+  /* Let the title area flex and shrink before overlapping right controls */
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .sticky-top-bar .right-section {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
+  /* Keep controls sized to content so left section can take remaining space */
+  flex: 0 0 auto;
 }
 
 /* Save status pill shown in sticky header */
 .sticky-top-bar .save-status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   background: var(--bg);
   color: var(--text); /* text respects theme */
   border: 1px solid transparent;
@@ -1807,7 +1959,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   background: var(--danger);
 }
 .sticky-top-bar .save-status-pill .text {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   font-weight: 600;
   color: var(--text);
 }
@@ -1815,7 +1967,7 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 /* Override button styling for UND Green header */
 .sticky-top-bar .btn.secondary {
   padding: 8px 16px;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: var(--white);
@@ -1827,6 +1979,51 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   color: var(--white);
   /* Avoid transform near sticky header to reduce compositing churn */
   /* transform: translateY(-1px); */
+}
+/* Small screens: let sticky header grow and stack content */
+@media (max-width: 600px) {
+  .sticky-top-bar {
+    height: auto; /* allow 2-line wrap when needed */
+    min-height: var(--sticky-header-h);
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .sticky-top-bar > .bar-inner {
+    max-width: none; /* use full width on phones */
+    gap: 0.5rem 0.75rem;
+    flex-wrap: wrap; /* allow left/right to stack */
+  }
+  .sticky-top-bar .left-section,
+  .sticky-top-bar .right-section {
+    flex: 1 1 100%; /* stack full-width rows */
+  }
+  .sticky-top-bar .right-section {
+    justify-content: flex-start;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+  }
+  .sticky-top-bar .active-section-title {
+    /* Shrink and keep single-line with ellipsis on phones to avoid obstruction */
+    font-size: clamp(0.875rem, 3.4vw, 1.0625rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+  .sticky-top-bar .save-status-pill {
+    padding: 5px 8px;
+  }
+  .sticky-top-bar .save-status-pill .text {
+    font-size: clamp(0.6875rem, 2.8vw, 0.75rem);
+  }
+  .sticky-top-bar .btn.secondary {
+    padding: 8px 12px;
+    font-size: clamp(0.8125rem, 3.2vw, 0.875rem);
+  }
+  /* Ensure main content clears the taller header on phones */
+  #app:has(.sticky-top-bar) .main-content-with-sidebar {
+    padding-top: 96px;
+  }
 }
 /* Desktop-only offset; on narrow viewports the mobile drawer handles layout */
 @media (min-width: 901px) {
@@ -1915,14 +2112,16 @@ body[data-route='instructor-editor'] .section-content {
 }
 
 .section-title {
-  font-size: 18px;
+  /* Fluid size: 18px on small → 22px on larger screens */
+  font-size: clamp(1.125rem, 1rem + 1vw, 1.375rem);
   margin: 14px 0 var(--space-2);
   color: var(--text);
   font-weight: 600;
 }
 
 .subsection-title {
-  font-size: 16px;
+  /* Fluid size: 16px on small → 18px on larger screens */
+  font-size: clamp(1rem, 0.95rem + 0.5vw, 1.125rem);
   margin: 6px 0 16px 0; /* restore original spacing under subsection titles */
   /* Add horizontal padding with fixed units for consistent underline behavior */
   /* Reduce height to ~2/3 by decreasing vertical padding (12px → 8px) */
@@ -1944,7 +2143,9 @@ body[data-route='instructor-editor'] .section-content {
 }
 
 .brand {
+  /* Fluid brand label size while keeping header layout stable */
   font-weight: 700;
+  font-size: clamp(0.95rem, 0.85rem + 0.8vw, 1.25rem);
   letter-spacing: 0.3px;
 }
 
@@ -2212,7 +2413,7 @@ html[data-theme='dark'] input[type='checkbox'] {
 .form-label {
   width: auto;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   font-weight: 500;
   line-height: 1.4;
   /* Reduce gap beneath input titles to half */
@@ -2324,21 +2525,21 @@ html[data-theme='dark'] .section-content .form-row {
 }
 .form-input--small {
   padding: var(--space-1) var(--space-2);
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
 }
 .form-input--large {
   padding: 14px var(--space-4);
-  font-size: 16px;
+  font-size: 1rem; /* 16px */
 }
 
 .form-hint {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   color: var(--text-subtle);
   margin-top: var(--space-1);
   line-height: 1.4;
 }
 .form-error {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   color: var(--danger);
   margin-top: var(--space-1);
   line-height: 1.4;
@@ -2348,7 +2549,7 @@ html[data-theme='dark'] .section-content .form-row {
 }
 .form-error::before {
   content: '⚠';
-  font-size: 10px;
+  font-size: 0.625rem; /* 10px */
 }
 
 /* Grid helpers */
@@ -2435,10 +2636,24 @@ html[data-theme='dark'] .sticky-top-bar {
   background: linear-gradient(90deg, var(--und-black) 0%, var(--chrome-topbar-right) 100%);
 }
 .pain-scale-desc {
-  font-size: 12px;
+  font-size: clamp(0.75rem, 0.7rem + 0.3vw, 0.875rem);
   color: var(--text-secondary);
   margin-top: var(--space-1);
   line-height: 1.4;
+}
+
+/* Narrow screens: slightly tighter pain scale to avoid overflow while keeping 44px tap targets */
+@media (max-width: 420px) {
+  .pain-scale-container {
+    gap: 0.375rem;
+  }
+  .pain-scale-btn {
+    /* Reduce font size subtly; maintain tap target via line-height/padding */
+    font-size: 0.95rem;
+    line-height: 1.2;
+    padding: 10px 12px; /* ~44px tall with line-height */
+    min-width: 40px;
+  }
 }
 
 .pt-field-group {
@@ -2496,7 +2711,7 @@ html[data-theme='dark'] .sticky-top-bar {
   color: white;
   margin: -24px -24px 0 -24px; /* Fixed units instead of calc(-1 * var(--space-5)) */
   padding: 16px 24px; /* Fixed units instead of var(--space-4) var(--space-5) */
-  font-size: 20px;
+  font-size: 1.25rem; /* 20px */
   font-weight: 700;
   font-family:
     'Inter',
@@ -2507,7 +2722,7 @@ html[data-theme='dark'] .sticky-top-bar {
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   text-transform: uppercase;
   letter-spacing: 0.8px;
 }
@@ -2534,7 +2749,7 @@ html[data-theme='dark'] .sticky-top-bar {
 .section-content .subsection-title:first-child,
 .subjective-section .subsection-title:first-child,
 .section-anchor .subsection-title:first-child {
-  margin-top: 12px; /* Small breathing room below header */
+  margin-top: 0.75rem; /* 12px Small breathing room below header */
 }
 
 /* PT Exam sections */
@@ -2548,7 +2763,7 @@ html[data-theme='dark'] .sticky-top-bar {
 .pt-exam-section h5 {
   color: var(--accent2);
   margin: 0 0 var(--space-2);
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   font-weight: 600;
 }
 
@@ -2561,7 +2776,7 @@ html[data-theme='dark'] .sticky-top-bar {
    ======================================== */
 .group-header {
   color: var(--muted);
-  font-size: 16px;
+  font-size: 1rem; /* 16px */
   font-weight: 600;
   margin: var(--space-6) 0 var(--space-3);
   padding-bottom: var(--space-2);
@@ -2614,7 +2829,7 @@ html[data-theme='dark'] .sticky-top-bar {
 }
 .draft-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 1rem; /* 16px */
   color: var(--text);
 }
 .draft-encounter {
@@ -2622,7 +2837,7 @@ html[data-theme='dark'] .sticky-top-bar {
   color: var(--muted);
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   font-weight: 600;
 }
 .draft-info {
@@ -2653,7 +2868,7 @@ html[data-theme='dark'] .sticky-top-bar {
 }
 .completion-text,
 .draft-modified {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   color: var(--muted);
 }
 .draft-actions {
@@ -2662,7 +2877,7 @@ html[data-theme='dark'] .sticky-top-bar {
   justify-content: flex-end;
 }
 .draft-actions .btn {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   padding: var(--space-1) 10px;
 }
 
@@ -2707,7 +2922,7 @@ html[data-theme='dark'] .sticky-top-bar {
   font-weight: 500;
 }
 .billing-code-fields .form-hint {
-  font-size: 11px;
+  font-size: 0.6875rem; /* 11px */
   margin-top: 2px;
   color: var(--text-subtle);
   opacity: 0.8;
@@ -2722,7 +2937,7 @@ html[data-theme='dark'] .sticky-top-bar {
   left: 0;
   right: 0;
   z-index: 10;
-  font-size: 13px;
+  font-size: 0.8125rem; /* 13px */
   color: var(--text);
   background: var(--bg);
   border: 1px solid var(--border);
@@ -2766,7 +2981,7 @@ html[data-theme='dark'] .sticky-top-bar {
 .goal-linker-header h3 {
   margin: 0;
   color: var(--accent2);
-  font-size: 18px;
+  font-size: 1.125rem; /* 18px */
   font-weight: 600;
 }
 .close-btn {
@@ -2802,7 +3017,7 @@ html[data-theme='dark'] .sticky-top-bar {
 .case-details-grid {
   display: grid;
   grid-template-columns: 1fr; /* single column */
-  row-gap: 14px;
+  row-gap: 0.875rem;
 }
 .case-details-grid .case-info-row {
   display: block; /* stack label and value */
@@ -2811,30 +3026,30 @@ html[data-theme='dark'] .sticky-top-bar {
   display: block;
   margin: 0 0 4px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   font-weight: 600;
 }
 .case-details-grid .case-info-row .value {
   display: block;
   color: var(--text);
-  font-size: 16px;
+  font-size: 1rem; /* 16px */
   font-weight: 600;
   line-height: 1.4;
 }
 /* Summary row and module cards in Case Details */
 .case-details-summary .label {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
 }
 .case-details-summary .value {
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
 }
 .module-card .label {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
 }
 .module-card .value {
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
 }
 .case-details-modal .goal-linker-header {
   /* UND green gradient header applied in both themes */
@@ -2843,7 +3058,7 @@ html[data-theme='dark'] .sticky-top-bar {
   position: relative;
 }
 .case-details-modal .goal-linker-header h3 {
-  font-size: 20px;
+  font-size: 1.25rem; /* 20px */
   color: var(--white);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
@@ -2861,7 +3076,7 @@ html[data-theme='dark'] .sticky-top-bar {
 .goal-section-title {
   margin: var(--space-4) 0 var(--space-2);
   color: var(--accent2);
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -2891,7 +3106,7 @@ html[data-theme='dark'] .sticky-top-bar {
 .goal-text {
   line-height: 1.4;
   color: var(--text);
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
 }
 
 .goal-linker-actions {
@@ -2912,7 +3127,7 @@ html[data-theme='dark'] .sticky-top-bar {
   color: var(--und-green-dark);
   padding: var(--space-1) var(--space-2);
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   font-weight: 500;
   margin: 2px var(--space-1) 2px 0;
   cursor: pointer;
@@ -2932,7 +3147,7 @@ html[data-theme='dark'] .sticky-top-bar {
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   font-weight: 500;
   transition: all 0.2s ease;
   margin-top: var(--space-1);
@@ -2968,7 +3183,7 @@ select:focus,
   padding: 2px var(--space-2);
   border-radius: 12px;
   border: 1px solid var(--border);
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   color: var(--muted);
 }
 .text-muted {
@@ -2977,7 +3192,7 @@ select:focus,
 }
 .hint {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   margin-top: var(--space-1);
 }
 .hr {
@@ -2985,7 +3200,7 @@ select:focus,
   margin: var(--space-3) 0;
 }
 .small {
-  font-size: 12px;
+  font-size: 0.75rem; /* 12px */
   color: var(--muted);
 }
 .inline-card {
@@ -3023,7 +3238,7 @@ select:focus,
     height: 28px;
   }
   .brand-label {
-    font-size: 14px;
+    font-size: 0.875rem; /* 14px */
   }
   .brand-label-suffix {
     display: none;
@@ -3051,7 +3266,7 @@ select:focus,
 
   header.topbar {
     padding: 0 12px;
-    gap: 8px;
+    gap: 0.5rem;
   }
 
   /* Logo scales down slightly */
@@ -3500,7 +3715,7 @@ select:focus,
 }
 .modal-iframe-wrap {
   width: 100%;
-  height: 560px;
+  height: min(560px, 80dvh); /* cap to viewport on mobile */
 }
 .modal-iframe {
   width: 100%;
@@ -3520,12 +3735,12 @@ select:focus,
   border-radius: 8px;
   padding: 10px;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 0.875rem; /* 14px */
   resize: vertical;
 }
 .modal-actions {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   justify-content: flex-end;
   margin-top: 12px;
 }
@@ -3647,7 +3862,7 @@ header.topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 1rem;
   box-sizing: border-box; /* include padding/border in height */
   height: var(--topbar-h);
   padding: 0 16px; /* no vertical padding so total height == --topbar-h */
@@ -3684,7 +3899,7 @@ header.topbar {
   color: var(--text);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   padding: 6px 12px;
   border-bottom: 1px solid var(--border);
 }
@@ -3713,14 +3928,14 @@ header.topbar {
 .brand-row {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
 }
 .brand-row .feedback-btn {
   margin-left: 8px;
 }
 @media (max-width: 640px) {
   .brand-row {
-    gap: 8px;
+    gap: 0.5rem;
   }
 }
 
@@ -3741,7 +3956,7 @@ header.topbar .topnav {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   flex-wrap: nowrap;
 }
 header.topbar .topnav a:hover {
@@ -3797,7 +4012,7 @@ header.topbar a.button {
   letter-spacing: 0.06em;
   margin-left: 10px;
   white-space: nowrap;
-  font-size: 18px; /* smaller than previous 24px */
+  font-size: 1.125rem; /* 18px smaller than previous 24px */
   text-decoration: none;
 }
 .brand-label .brand-label-suffix {

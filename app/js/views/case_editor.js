@@ -177,13 +177,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     } catch {}
     if (!canEdit) return;
     const openEdit = () => openEditCaseModal(getCaseInfoSnapshot(), handleCaseInfoUpdate);
-    actions.append(
-      el(
-        'button',
-        { class: 'btn secondary', style: 'padding:4px 8px; font-size:12px;', onclick: openEdit },
-        'Edit',
-      ),
-    );
+    actions.append(el('button', { class: 'btn secondary', onclick: openEdit }, 'Edit'));
   }
 
   // Scroll to a percent within the section content
@@ -476,26 +470,10 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     return new Date(year, monthIndex, day, 0, 0, 0, 0);
   }
 
-  function computeAgeFromDobLocal(dobStr) {
-    if (!dobStr) return '';
-    const dob = parseLocalDateYMD(dobStr);
-    if (!dob) return '';
-    const today = new Date();
-    let age = today.getFullYear() - dob.getFullYear();
-    const m = today.getMonth() - dob.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-    return age >= 0 && age < 200 ? String(age) : '';
-  }
+  // computeAgeFromDobLocal removed: age no longer displayed in header
 
-  const patientHeaderNameEl = el('div', { style: 'font-size:20px; line-height:1.25;' }, '');
-  const patientHeaderDemoEl = el(
-    'div',
-    {
-      style:
-        'font-size:16px; color: var(--text-secondary); line-height:1.3; margin-top:4px; margin-left: var(--space-4);',
-    },
-    '',
-  );
+  const patientHeaderNameEl = el('div', {}, '');
+  const patientHeaderDemoEl = el('div', {}, '');
   // Avatar container (PNG swapped by sex + theme)
   const avatarEl = el('div', { class: 'patient-avatar', 'aria-hidden': 'true' }, []);
 
@@ -553,12 +531,17 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   // Apply CSS classes to reduce inline styles
   patientHeaderNameEl.className = 'patient-name-line';
   patientHeaderDemoEl.className = 'patient-demo-line';
+  // Remove legacy inline styles so CSS classes control responsive sizing
+  try {
+    patientHeaderNameEl.removeAttribute('style');
+    patientHeaderDemoEl.removeAttribute('style');
+  } catch {}
 
   const patientHeader = el('div', { id: 'patient-sticky-header' }, [
-    // Left: avatar + name lines
+    // Left: avatar + name lines (wrap text in its own flex child so it can shrink)
     el('div', { class: 'patient-header-left' }, [
       avatarEl,
-      el('div', {}, [patientHeaderNameEl, patientHeaderDemoEl]),
+      el('div', { class: 'patient-header-text' }, [patientHeaderNameEl, patientHeaderDemoEl]),
     ]),
     // Right: actions
     el('div', { id: 'patient-header-actions' }, []),
@@ -595,7 +578,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         // Final fallback
         'Untitled Case';
       const dob = c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '';
-      const age = computeAgeFromDobLocal(dob) || c.patientAge || c.age || '';
       let sex = c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || '';
       updatePatientAvatar(sex);
       // Format MM-DD-YYYY
@@ -609,24 +591,14 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
           dobFmt = `${mm}-${dd}-${yyyy}`;
         }
       }
-      // Line 1: Title (Sex) where Sex is non-bold
-      // Prefer human-friendly label for unspecified
-      if (String(sex).toLowerCase() === 'unspecified') sex = 'Prefer not to say';
-      const sexDisplay = sex
-        ? String(sex).slice(0, 1).toUpperCase() + String(sex).slice(1).toLowerCase()
-        : '';
+      // Line 1: Title only (bold)
+      // Sex removed per request
       patientHeaderNameEl.replaceChildren();
-      patientHeaderNameEl.append(
-        el('span', { style: 'font-weight:700' }, displayName),
-        ...(sexDisplay ? [el('span', { class: 'patient-sex' }, `(${sexDisplay})`)] : []),
-      );
+      patientHeaderNameEl.append(el('span', { style: 'font-weight:700' }, displayName));
       // Line 2: MM-DD-YYYY (xx years old) with date bold
       const dateText = dobFmt || dob || 'N/A';
       patientHeaderDemoEl.replaceChildren();
-      patientHeaderDemoEl.append(
-        el('span', { class: 'patient-dob' }, dateText),
-        ...(age ? [el('span', {}, ` (${age} years old)`)] : []),
-      );
+      patientHeaderDemoEl.append(el('span', { class: 'patient-dob' }, dateText));
       // Expose measured height to CSS as a variable so sticky offsets and anchors account for it
       const h = patientHeader.offsetHeight || 0;
       document.documentElement.style.setProperty('--patient-sticky-h', `${h}px`);

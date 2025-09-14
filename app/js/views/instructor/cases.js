@@ -33,7 +33,7 @@ function showSharePopup(url) {
   const statusEl = el('div', {
     class: 'small text-secondary mt-8',
     'aria-live': 'polite',
-    style: 'min-height:1em;',
+    className: 'small text-secondary mt-8 minh-1em',
   });
 
   let inputRef;
@@ -60,8 +60,7 @@ function showSharePopup(url) {
       role: 'dialog',
       'aria-modal': 'true',
       'aria-label': 'Share',
-      class: 'popup-card-base bg-surface text-color br-lg shadow-modal p-20',
-      style: 'width:92%; max-width:520px; position:relative;',
+      class: 'popup-card-base bg-surface text-color br-lg shadow-modal p-20 w-92 maxw-520 relative',
       onclick: (e) => e.stopPropagation(),
     },
     [

@@ -144,7 +144,7 @@
     padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 0.625rem;
   }
   /* Make standard buttons stretch full width inside the drawer */
   .site-menu .btn.block {
@@ -208,7 +208,7 @@
   table.stack-on-mobile td {
     display: grid;
     grid-template-columns: 42% 1fr;
-    gap: 8px;
+    gap: 0.5rem;
     padding: 6px 0;
     border: none;
   }
