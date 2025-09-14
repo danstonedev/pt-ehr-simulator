@@ -4,6 +4,79 @@
  */
 import { el, textareaAutoResize } from '../../../ui/utils.js';
 
+// ---- Bilateral helpers (extracted to reduce function complexity) ----
+function groupBilateralItems(items) {
+  const groups = {};
+  items.forEach((item, index) => {
+    const baseName = item.name || item.joint || item.muscle;
+    if (!groups[baseName]) {
+      groups[baseName] = { normal: item.normal, left: null, right: null, bilateral: null };
+    }
+    if (item.side === 'L') groups[baseName].left = index;
+    else if (item.side === 'R') groups[baseName].right = index;
+    else groups[baseName].bilateral = index;
+  });
+  return groups;
+}
+
+function buildBilateralColumns({
+  valueType = 'text',
+  options = [],
+  normalValues = true,
+  embedNormalInName = false,
+  nameColumnLabel = 'Name',
+  nameColumnShortLabel = '',
+}) {
+  const cols = [
+    {
+      field: 'name',
+      label: nameColumnLabel,
+      type: 'label',
+      short: nameColumnShortLabel || undefined,
+    },
+    { field: 'left', label: 'Left', type: valueType, options, placeholder: 'L' },
+    { field: 'right', label: 'Right', type: valueType, options, placeholder: 'R' },
+  ];
+  const hasNormal = !!(normalValues && !embedNormalInName);
+  if (hasNormal) cols.push({ field: 'normal', label: 'Normal', type: 'label' });
+
+  // Standard widths
+  if (cols.length === 3) {
+    cols[0].width = '50%';
+    cols[1].width = '25%';
+    cols[2].width = '25%';
+  } else if (cols.length === 4) {
+    cols[0].width = '40%';
+    cols[1].width = '20%';
+    cols[2].width = '20%';
+    cols[3].width = '20%';
+  }
+  return { columns: cols, hasNormal };
+}
+
+function groupsToTableData(groups, data, { normalValues, embedNormalInName }) {
+  const tableData = {};
+  const groupsByRowId = {};
+  Object.keys(groups).forEach((groupName) => {
+    const group = groups[groupName];
+    const rowId = groupName.toLowerCase().replace(/\s+/g, '-');
+    groupsByRowId[rowId] = group;
+    const displayName =
+      normalValues && embedNormalInName && group.normal
+        ? `${groupName} (${group.normal})`
+        : groupName;
+
+    const rowBase = {
+      name: displayName,
+      left: data[group.left] || '',
+      right: data[group.right] || '',
+    };
+    if (!embedNormalInName && normalValues) rowBase.normal = group.normal || '';
+    tableData[rowId] = rowBase;
+  });
+  return { tableData, groupsByRowId };
+}
+
 // Map common percentage widths to utility classes to avoid inline styles
 function widthClass(width) {
   const v = String(width || '').trim();
@@ -72,6 +145,9 @@ function buildSelectInput(column, value, onChange) {
 }
 
 function buildInputForColumn(column, value, onChange) {
+  if (column.type === 'label') {
+    return el('span', { class: 'editable-table__label' }, String(value ?? ''));
+  }
   if (column.type === 'select') return buildSelectInput(column, value, onChange);
   if (column.type === 'number')
     return el('input', {
@@ -161,6 +237,7 @@ function buildTableElement({
                     ? `width: ${col.width};`
                     : undefined,
                 scope: 'col',
+                ...(col.short ? { 'data-short': String(col.short) } : {}),
               },
               col.label,
             ),
@@ -298,6 +375,7 @@ function makeCreateCell(updateCell) {
           : column.width
             ? `width: ${column.width};`
             : undefined,
+        'data-col-label': String(column.label || ''),
       },
       input,
     );
@@ -395,77 +473,25 @@ export function createBilateralTable(config) {
     normalValues = true,
     // notesColumn removed (UI simplification)
     nameColumnLabel = 'Name',
+    nameColumnShortLabel = '',
     showTitle = true,
     embedNormalInName = false,
     // notesWidth no longer used
   } = config;
 
-  // Group items by their base name (without side designation)
-  const groups = {};
-  items.forEach((item, index) => {
-    const baseName = item.name || item.joint || item.muscle;
-    if (!groups[baseName]) {
-      groups[baseName] = {
-        normal: item.normal,
-        left: null,
-        right: null,
-        bilateral: null,
-      };
-    }
-
-    if (item.side === 'L') {
-      groups[baseName].left = index;
-    } else if (item.side === 'R') {
-      groups[baseName].right = index;
-    } else {
-      groups[baseName].bilateral = index;
-    }
+  // Group items and build columns/data
+  const groups = groupBilateralItems(items);
+  const { columns, hasNormal } = buildBilateralColumns({
+    valueType,
+    options,
+    normalValues,
+    embedNormalInName,
+    nameColumnLabel,
+    nameColumnShortLabel,
   });
-
-  const columns = [
-    { field: 'name', label: nameColumnLabel },
-    { field: 'left', label: 'Left', type: valueType, options },
-    { field: 'right', label: 'Right', type: valueType, options },
-  ];
-
-  if (normalValues && !embedNormalInName) {
-    columns.push({ field: 'normal', label: 'Normal' });
-  }
-
-  // Apply standardized width distribution
-  if (columns.length === 3) {
-    columns[0].width = '50%';
-    columns[1].width = '25%';
-    columns[2].width = '25%';
-  } else if (columns.length === 4) {
-    columns[0].width = '40%';
-    columns[1].width = '20%';
-    columns[2].width = '20%';
-    columns[3].width = '20%';
-  }
-
-  // Notes column removed
-
-  // Convert grouped data to table format
-  const tableData = {};
-  const groupsByRowId = {};
-  Object.keys(groups).forEach((groupName) => {
-    const group = groups[groupName];
-    const rowId = groupName.toLowerCase().replace(/\s+/g, '-');
-    groupsByRowId[rowId] = group;
-    const displayName =
-      normalValues && embedNormalInName && group.normal
-        ? `${groupName} (${group.normal})`
-        : groupName;
-
-    const rowBase = {
-      name: displayName,
-      left: data[group.left] || '',
-      right: data[group.right] || '',
-    };
-    if (!embedNormalInName && normalValues) rowBase.normal = group.normal || '';
-    // notes removed
-    tableData[rowId] = rowBase;
+  const { tableData, groupsByRowId } = groupsToTableData(groups, data, {
+    normalValues,
+    embedNormalInName,
   });
 
   return createEditableTable({
@@ -487,6 +513,6 @@ export function createBilateralTable(config) {
     },
     showAddButton: false, // Bilateral tables typically have fixed structure
     actionsHeaderLabel: '', // Blank header to avoid 'Actions' label
-    className: 'bilateral-table',
+    className: `bilateral-table ${hasNormal ? 'has-normal' : 'no-normal'}`,
   });
 }

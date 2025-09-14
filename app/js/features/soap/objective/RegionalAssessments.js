@@ -514,16 +514,9 @@ function getRegionOrder() {
 }
 
 function makeRegionSelector(regionOrder, selectedRegions, onToggle) {
-  const regionSelector = el('div', { class: 'region-selector', style: 'margin-bottom: 20px;' });
-  const regionLabel = el(
-    'p',
-    { style: 'margin-bottom: 10px; font-weight: 500; font-size: 14px;' },
-    'Select regions to assess:',
-  );
-  const regionButtons = el('div', {
-    class: 'region-buttons',
-    style: 'display: flex; gap: 10px; flex-wrap: wrap;',
-  });
+  const regionSelector = el('div', { class: 'region-selector' });
+  const regionLabel = el('p', { class: 'region-selector__label' }, 'Select regions to assess:');
+  const regionButtons = el('div', { class: 'region-buttons' });
   const buttonsMap = {};
   regionOrder.forEach((regionKey) => {
     const region = regionalAssessments[regionKey];
@@ -532,8 +525,7 @@ function makeRegionSelector(regionOrder, selectedRegions, onToggle) {
       'button',
       {
         type: 'button',
-        class: `btn region-toggle-btn ${isSelected ? 'primary' : 'secondary'}`,
-        style: 'padding: 8px 16px; border-radius: 20px; font-size: 14px;',
+        class: `btn pill-btn region-toggle-btn ${isSelected ? 'primary' : 'secondary'}`,
         onclick: () => onToggle(regionKey),
       },
       region.name,
@@ -598,7 +590,13 @@ function makeRefreshTables({
       });
       promTable = createEditableTable({
         columns: [
-          { field: 'name', label: 'Passive Range of Motion (PROM)', width: '50%' },
+          {
+            field: 'name',
+            label: 'Passive Range of Motion (PROM)',
+            short: 'PROM',
+            width: '50%',
+            type: 'label',
+          },
           { field: 'left', label: 'Left', width: '25%' },
           { field: 'right', label: 'Right', width: '25%' },
         ],
@@ -626,6 +624,7 @@ function makeRefreshTables({
         showAddButton: false,
         showDeleteButton: true,
         actionsHeaderLabel: '',
+        className: 'bilateral-table',
       });
       promContainer.appendChild(promTable.element);
     } else {

@@ -40,10 +40,25 @@ export function textareaAutoResize(t) {
     return Math.ceil(lineHeight * rows + paddingTop + paddingBottom + borderTop + borderBottom);
   };
   const fit = () => {
+    const cs = window.getComputedStyle(t);
+    const lineHeight = parseFloat(cs.lineHeight) || 18;
     const base = computeBaseHeight();
+    // Determine max rows: prefer data attribute, then CSS var, then fallback
+    const dataMax = parseInt(t.getAttribute('data-max-rows') || '0', 10);
+    const cssVar = parseFloat(cs.getPropertyValue('--textarea-max-rows'));
+    const maxRows = dataMax > 0 ? dataMax : !Number.isNaN(cssVar) && cssVar > 0 ? cssVar : 10;
+
     t.style.height = 'auto';
-    const desired = Math.max(base, t.scrollHeight + 0);
+    const contentHeight = t.scrollHeight;
+    const maxContent = Math.ceil(lineHeight * maxRows);
+    const desired = Math.max(base, Math.min(contentHeight, maxContent));
     t.style.height = desired + 'px';
+    // Allow scrolling when capped
+    if (contentHeight > maxContent) {
+      t.style.overflowY = 'auto';
+    } else {
+      t.style.overflowY = 'hidden';
+    }
   };
   t.addEventListener('input', fit);
   // Defer first fit to ensure styles/placeholders applied

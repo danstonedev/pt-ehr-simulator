@@ -94,6 +94,8 @@
   --bw-1: 1px;
   --bw-2: 2px;
   --ring-thin: 0.1em;
+  /* Max rows cap used by textarea auto-resize (can be overridden per route) */
+  --textarea-max-rows: 10;
 }
 
 /* Accessibility utilities */
@@ -1710,6 +1712,14 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
   width: 100%;
 }
 
+/* Whole container gutters on small screens */
+@media (max-width: 600px) {
+  #app {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
 /* Sticky top bar + sidebar-aware adjustments */
 .sticky-top-bar {
   position: fixed;
@@ -2439,8 +2449,9 @@ html[data-theme='dark'] input[type='checkbox'] {
 
 /* Indent form labels within subsections */
 .section-anchor {
-  --subsection-indent: 32px;
-  /* Indent inner subsection content equally from both sides */
+  /* Responsive, subtle indent capped for mobile/phone widths */
+  --subsection-indent: clamp(12px, 4vw, 25px);
+  /* Indent content subtly on both sides; headers will bleed back out */
   padding-left: var(--subsection-indent);
   padding-right: var(--subsection-indent);
   /* Ensure anchored scroll positions are visible below fixed headers */
@@ -2462,7 +2473,7 @@ body[data-route='instructor-editor'] .section-anchor {
 
 /* Do not indent subsection titles; keep them aligned with the subsection edge */
 .section-anchor > .subsection-title {
-  /* Let the subsection header visually span the full section width */
+  /* Bleed to both sides to span full width of the section */
   margin-left: calc(-1 * var(--subsection-indent));
   margin-right: calc(-1 * var(--subsection-indent));
 }
@@ -2506,6 +2517,8 @@ body[data-route='instructor-editor'] .section-anchor {
   margin-left: calc(-1 * (var(--subsection-indent) + var(--space-6)));
   /* Use default inner padding */
   padding-left: var(--space-4);
+  /* Keep right edge aligned with section content by negating the base indent */
+  margin-right: calc(-1 * var(--subsection-indent));
 }
 
 .form-input-wrapper {
@@ -2692,6 +2705,56 @@ html[data-theme='dark'] .sticky-top-bar {
 }
 
 /* Regional assessment table styles extracted to tables.css */
+
+/* Regional selector (pills) */
+.region-selector {
+  margin-bottom: 16px;
+}
+.region-selector__label {
+  margin: 0 0 8px 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.region-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Reuse base .btn; specialize pill look */
+.pill-btn {
+  border-radius: 999px;
+  padding: 8px 14px; /* default desktop-ish */
+  font-size: 0.95rem;
+  line-height: 1.1;
+}
+/* Condense vertical height vs. base .btn (contextual override) */
+.region-buttons .pill-btn {
+  min-height: 40px; /* slightly shorter than global 44px */
+  padding-block: 6px; /* tighter vertical padding */
+}
+
+/* Compact on phones while keeping 44px min tap target from .btn */
+@media (max-width: 640px) {
+  .region-selector {
+    margin-bottom: 12px;
+  }
+  .region-selector__label {
+    font-size: 0.9rem; /* keep readable, avoid <16px to prevent iOS zoom */
+  }
+  .region-buttons {
+    gap: 6px;
+  }
+  .pill-btn {
+    padding: 8px 10px; /* tighter horizontal padding */
+    font-size: 0.95rem; /* ≥15.2px on common DPR; base .btn enforces min-height */
+    min-width: 40px; /* allow tighter wrap without overflow */
+  }
+  .region-buttons .pill-btn {
+    min-height: 36px; /* compact but still usable on phones */
+    padding-block: 6px;
+  }
+}
 
 /* ========================================
    13) SOAP & OBJECTIVE SECTIONS
@@ -3331,6 +3394,8 @@ select:focus,
   /* Compact topbar and scalable tokens on mobile */
   :root {
     --topbar-h: 60px; /* reduce header height to free vertical space */
+    /* Slightly smaller cap for auto-resizing textareas on phones */
+    --textarea-max-rows: 6;
   }
 
   header.topbar {
@@ -3343,6 +3408,19 @@ select:focus,
     height: 24px;
   }
 
+  /* Very small screens: tighten horizontal gutters to 8px */
+  @media (max-width: 600px) {
+    .section-content {
+      --pad-x: 8px;
+      padding-left: var(--pad-x);
+      padding-right: var(--pad-x);
+      max-width: 100%; /* use full container width on small screens */
+    }
+    .sticky-top-bar {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+  }
   /* Larger font size for mobile readability */
   html {
     font-size: 16px;

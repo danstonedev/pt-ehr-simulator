@@ -41,7 +41,7 @@ export function createSpecialTestsSection(regionKey, region, testData, onChange)
   const table = createEditableTable({
     title: '', // hide green band title
     columns: [
-      { field: 'name', label: 'Special Tests', width: '50%' }, // widen first column now that Notes removed
+      { field: 'name', label: 'Special Tests', short: 'Tests', width: '50%' }, // short header on mobile
       { field: 'left', label: 'Left', width: '25%', type: 'select', options: testResults },
       { field: 'right', label: 'Right', width: '25%', type: 'select', options: testResults },
     ],
@@ -60,7 +60,8 @@ export function createSpecialTestsSection(regionKey, region, testData, onChange)
     },
     showAddButton: false,
     actionsHeaderLabel: '',
-    className: 'special-tests-table',
+    // Mark as no-normal to ensure the 3-column mobile grid variant (no trailing empty track)
+    className: 'special-tests-table bilateral-table no-normal',
   });
 
   container.appendChild(table.element);

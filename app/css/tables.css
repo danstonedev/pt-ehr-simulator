@@ -127,6 +127,13 @@
 }
 
 /* Regional assessment tables */
+.regional-assessment {
+  /* Density controls (overridable by media queries below) */
+  --ra-cell-pad-y: 4px;
+  --ra-cell-pad-x: 8px;
+  --ra-input-pad-y: 2px;
+  --ra-line-height: 1.25;
+}
 .regional-assessment .table {
   width: 100%;
   border-collapse: collapse;
@@ -135,7 +142,7 @@
 }
 .regional-assessment .table th {
   background: var(--bg2);
-  padding: var(--space-1) var(--space-1);
+  padding: var(--ra-cell-pad-y) var(--ra-cell-pad-x);
   text-align: left;
   border: none;
   font-size: 0.875rem; /* 14px */
@@ -144,13 +151,15 @@
   text-transform: capitalize;
   letter-spacing: 0.3px;
   border-bottom: none;
+  line-height: var(--ra-line-height);
 }
 .regional-assessment .table td {
-  padding: var(--space-1);
+  padding: var(--ra-cell-pad-y) var(--ra-cell-pad-x);
   border: none;
   vertical-align: middle;
   background: var(--panel);
   color: var(--text);
+  line-height: var(--ra-line-height);
 }
 .regional-assessment .table tr:nth-child(even) td {
   background: var(--surface-muted);
@@ -158,7 +167,7 @@
 .regional-assessment .table input,
 .regional-assessment .table select {
   border: 1px solid var(--input-border);
-  padding: 2px var(--space-1);
+  padding: var(--ra-input-pad-y) var(--ra-cell-pad-x);
   font-size: 0.75rem; /* 12px */
   border-radius: var(--input-radius);
   background: var(--input-bg);
@@ -234,6 +243,197 @@
     min-width: 40rem; /* 640px - ensure scroll appears when columns overflow */
   }
 }
+@media (max-width: 1024px) {
+  /* Only affect bilateral assessment tables (ROM/Muscle/Special) */
+  .regional-assessment .bilateral-table .table-responsive,
+  .multi-regional-assessment .bilateral-table .table-responsive {
+    overflow-x: visible;
+  }
+  .regional-assessment .bilateral-table .table-responsive table,
+  .multi-regional-assessment .bilateral-table .table-responsive table {
+    min-width: 0;
+    width: 100%;
+  }
+  /* Detach from HTML table layout so grid sizing rules fully apply */
+  .regional-assessment .bilateral-table .editable-table__table,
+  .multi-regional-assessment .bilateral-table .editable-table__table {
+    display: block;
+    width: 100%;
+  }
+  .regional-assessment .bilateral-table .editable-table__head,
+  .multi-regional-assessment .bilateral-table .editable-table__head,
+  .regional-assessment .bilateral-table .editable-table__body,
+  .multi-regional-assessment .bilateral-table .editable-table__body {
+    display: block;
+  }
+  /* On mobile, ignore desktop width utilities/inline widths so grid controls sizing */
+  .bilateral-table .w-50p,
+  .bilateral-table .w-40p,
+  .bilateral-table .w-25p,
+  .bilateral-table .w-20p,
+  .bilateral-table .editable-table__head th[style*='width'],
+  .bilateral-table .editable-table__cell[style*='width'] {
+    width: auto !important;
+  }
+  .regional-assessment .bilateral-table .editable-table__body tr,
+  .multi-regional-assessment .bilateral-table .editable-table__body tr {
+    display: grid;
+    width: 100%;
+    /* Default assumes Normal column exists; distribute extra width more evenly */
+    grid-template-columns: minmax(140px, 1fr) minmax(96px, 1fr) minmax(96px, 1fr) auto;
+    grid-template-areas: 'name left right normal';
+    gap: 2px;
+    align-items: center;
+  }
+  /* No-Normal variant: remove trailing empty space */
+  .regional-assessment .bilateral-table.no-normal .editable-table__body tr,
+  .multi-regional-assessment .bilateral-table.no-normal .editable-table__body tr {
+    /* More space to Left/Right, slightly tighter name min width */
+    grid-template-columns: minmax(120px, 1fr) minmax(110px, 1fr) minmax(110px, 1fr);
+    grid-template-areas: 'name left right';
+  }
+  /* Align table header to the same grid so columns line up */
+  .regional-assessment .bilateral-table .editable-table__head tr,
+  .multi-regional-assessment .bilateral-table .editable-table__head tr {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(140px, 1fr) minmax(96px, 1fr) minmax(96px, 1fr) auto;
+    align-items: center;
+  }
+  /* Ensure grid items stretch and can shrink/grow within tracks */
+  .regional-assessment .bilateral-table .editable-table__head th,
+  .multi-regional-assessment .bilateral-table .editable-table__head th,
+  .regional-assessment .bilateral-table .editable-table__body td,
+  .multi-regional-assessment .bilateral-table .editable-table__body td {
+    justify-self: stretch;
+    min-width: 0;
+  }
+  .regional-assessment .bilateral-table.no-normal .editable-table__head tr,
+  .multi-regional-assessment .bilateral-table.no-normal .editable-table__head tr {
+    /* Match the body layout for no-normal grid */
+    grid-template-columns: minmax(120px, 1fr) minmax(110px, 1fr) minmax(110px, 1fr);
+  }
+  .regional-assessment .bilateral-table .editable-table__head th,
+  .multi-regional-assessment .bilateral-table .editable-table__head th {
+    padding: 2px 6px; /* tighter header */
+    font-size: 0.8125rem; /* 13px */
+    white-space: nowrap;
+  }
+  .bilateral-table .editable-table__header-cell--left,
+  .bilateral-table .editable-table__header-cell--right {
+    text-align: center;
+  }
+  /* If a header cell carries data-short, use it to display a compact label on mobile */
+  .bilateral-table .editable-table__head th[data-short]::before {
+    content: attr(data-short);
+    color: #fff;
+  }
+  .bilateral-table .editable-table__head th[data-short] {
+    color: transparent;
+  }
+  /* Hide Actions header on mobile to match hidden actions column */
+  .bilateral-table .editable-table__head .editable-table__header-cell--actions {
+    display: none;
+  }
+  .regional-assessment .bilateral-table .editable-table__body td,
+  .multi-regional-assessment .bilateral-table .editable-table__body td {
+    padding: 2px 6px; /* denser rows on mobile */
+  }
+  /* Slightly tighter horizontal padding for L/R cells to maximize input width */
+  .regional-assessment .bilateral-table .editable-table__cell--left,
+  .regional-assessment .bilateral-table .editable-table__cell--right,
+  .multi-regional-assessment .bilateral-table .editable-table__cell--left,
+  .multi-regional-assessment .bilateral-table .editable-table__cell--right {
+    padding-left: 2px; /* reclaim a couple pixels per column */
+    padding-right: 2px;
+  }
+  .regional-assessment .bilateral-table .editable-table__cell--name,
+  .multi-regional-assessment .bilateral-table .editable-table__cell--name {
+    grid-area: name;
+    padding-right: var(--space-2);
+  }
+  /* Allow the movement name to wrap to two lines for clarity */
+  .bilateral-table .editable-table__cell--name .editable-table__label {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+    line-height: 1.2;
+  }
+  .regional-assessment .bilateral-table .editable-table__cell--left,
+  .multi-regional-assessment .bilateral-table .editable-table__cell--left {
+    grid-area: left;
+    min-width: 0; /* allow input to expand fully within track */
+  }
+  .regional-assessment .bilateral-table .editable-table__cell--right,
+  .multi-regional-assessment .bilateral-table .editable-table__cell--right {
+    grid-area: right;
+    min-width: 0;
+  }
+  .regional-assessment .bilateral-table .editable-table__cell--normal,
+  .multi-regional-assessment .bilateral-table .editable-table__cell--normal {
+    grid-area: normal;
+    justify-self: end;
+  }
+  /* Place delete button into the name row, top-right */
+  .regional-assessment .bilateral-table .editable-table__cell--actions,
+  .multi-regional-assessment .bilateral-table .editable-table__cell--actions {
+    display: none; /* hide actions to keep layout clean on mobile */
+  }
+  .bilateral-table .editable-table__cell--actions .remove-btn {
+    transform: none;
+    width: 28px;
+    height: 28px;
+    line-height: 24px;
+    border-radius: 999px;
+    font-size: 16px;
+  }
+  /* Prefix only the Normal cell with a tiny label to save space */
+  .regional-assessment .bilateral-table .editable-table__cell--normal::before,
+  .multi-regional-assessment .bilateral-table .editable-table__cell--normal::before {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-right: 6px;
+    content: 'Normal:';
+  }
+  /* Inputs fill width */
+  .regional-assessment .bilateral-table .editable-table__body input,
+  .regional-assessment .bilateral-table .editable-table__body select,
+  .regional-assessment .bilateral-table .editable-table__body textarea,
+  .multi-regional-assessment .bilateral-table .editable-table__body input,
+  .multi-regional-assessment .bilateral-table .editable-table__body select,
+  .multi-regional-assessment .bilateral-table .editable-table__body textarea {
+    width: 100%;
+    box-sizing: border-box;
+    display: block; /* prevent shrink-to-fit on inline inputs */
+  }
+  /* Keep inputs legible and avoid iOS zoom */
+  .regional-assessment .bilateral-table .editable-table__body input,
+  .regional-assessment .bilateral-table .editable-table__body select {
+    font-size: 16px;
+    line-height: 1.1;
+    padding: 6px 6px;
+    text-align: center; /* numeric values easier to scan */
+  }
+}
+
+/* Ultra narrow phones: allow Normal to wrap under to keep L/R visible on same line */
+@media (max-width: 420px) {
+  .regional-assessment .bilateral-table .editable-table__body tr,
+  .multi-regional-assessment .bilateral-table .editable-table__body tr {
+    grid-template-columns: 1fr minmax(56px, 84px) minmax(56px, 84px);
+    grid-template-areas:
+      'name left right'
+      'normal normal normal';
+  }
+  .regional-assessment .bilateral-table .editable-table__cell--normal,
+  .multi-regional-assessment .bilateral-table .editable-table__cell--normal {
+    justify-self: start;
+  }
+}
 .editable-table__table {
   width: 100%;
   border-collapse: collapse;
@@ -275,6 +475,12 @@
 }
 .editable-table__row:hover {
   background: var(--und-green-light);
+}
+/* Touch devices: suppress hover highlight */
+@media (hover: none) {
+  .editable-table__row:hover {
+    background: transparent;
+  }
 }
 .editable-table__cell {
   padding: var(--space-1);
@@ -375,6 +581,18 @@ html[data-theme='dark'] .editable-table__select option:checked {
   padding-right: calc(var(--space-1) + 10px);
   padding-bottom: calc(var(--space-1) + 6px);
 }
+/* Read-only label value used for compact Normal column */
+.editable-table__label {
+  white-space: nowrap;
+  font-weight: 500;
+  color: var(--text);
+}
+/* Special Tests selects: compact fit on small screens */
+@media (max-width: 1024px) {
+  .special-tests-table .editable-table__select {
+    min-width: 72px;
+  }
+}
 
 /* Goals table: match standard input size and one-line textarea initial height */
 .goals-table .editable-table__input,
@@ -410,10 +628,12 @@ html[data-theme='dark'] .editable-table__select option:checked {
 .bilateral-table .editable-table__header-cell--name {
   width: 25%;
 }
-.bilateral-table .editable-table__header-cell--left,
-.bilateral-table .editable-table__header-cell--right {
-  width: 20%;
-  text-align: left;
+@media (min-width: 1025px) {
+  .bilateral-table .editable-table__header-cell--left,
+  .bilateral-table .editable-table__header-cell--right {
+    width: 20%;
+    text-align: left;
+  }
 }
 .bilateral-table .editable-table__header-cell--normal {
   width: 15%;
@@ -468,3 +688,18 @@ html[data-theme='dark'] .editable-table__select option:checked {
 }
 
 /* All table fields pick up var(--input-radius) via global input rules */
+
+/* Extra compact rules for Regional Assessment tables on smaller screens */
+@media (max-width: 768px) {
+  .regional-assessment {
+    --ra-cell-pad-y: 3px;
+    --ra-cell-pad-x: 6px;
+    --ra-input-pad-y: 1px;
+    --ra-line-height: 1.2;
+  }
+  /* Keep inputs/selects comfortably tappable but tighter vertically inside table context */
+  .regional-assessment .table input,
+  .regional-assessment .table select {
+    min-height: 32px; /* denser than 40–44px, but within table grid it's acceptable */
+  }
+}

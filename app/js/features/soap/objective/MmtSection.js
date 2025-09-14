@@ -39,6 +39,7 @@ export function createMmtSection(regionKey, region, mmtData, onChange) {
     // Notes column removed per latest requirements
     notesColumn: false,
     nameColumnLabel: 'Manual Muscle Testing', // use green title as first column header
+    nameColumnShortLabel: 'MMT',
     showTitle: false, // hide green band title
     // notesWidth no longer needed
   });
