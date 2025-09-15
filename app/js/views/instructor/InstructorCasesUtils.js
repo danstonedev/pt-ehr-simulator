@@ -189,6 +189,45 @@ export function createHeaderContent(text, icon) {
 }
 
 /**
+ * Create a complete sortable header element
+ * @param {string} text - Header text
+ * @param {string} column - Column identifier
+ * @param {string} currentSortColumn - Current sort column
+ * @param {string} currentSortDirection - Current sort direction
+ * @param {Function} spriteIcon - Icon creation function
+ * @returns {HTMLElement} Complete sortable header element
+ */
+export function createSortableHeader(
+  text,
+  column,
+  currentSortColumn,
+  currentSortDirection,
+  spriteIcon,
+) {
+  const isActive = currentSortColumn === column;
+  const isDesc = isActive && currentSortDirection === 'desc';
+
+  const header = document.createElement('th');
+  header.className = 'sortable';
+  // Accessibility: indicate sort state for assistive tech and enable CSS highlighting
+  if (isActive) header.setAttribute('aria-sort', isDesc ? 'descending' : 'ascending');
+  header.style.cssText = `
+    cursor: pointer; 
+    user-select: none; 
+    -webkit-user-select: none;
+    position: relative; 
+    padding: 12px 8px;
+  `;
+
+  // Create the header content using utility functions
+  const icon = createSortIcon(isActive, isDesc, spriteIcon);
+  const content = createHeaderContent(text, icon);
+  header.appendChild(content);
+
+  return header;
+}
+
+/**
  * Handle sort column click
  * @param {string} column - Column being clicked
  * @param {string} currentSortColumn - Current sort column

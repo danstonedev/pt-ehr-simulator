@@ -3,6 +3,7 @@ import { navigate as urlNavigate } from '../../core/url.js';
 import { listCases } from '../../core/store.js';
 import { storage } from '../../core/index.js';
 import { el } from '../../ui/utils.js';
+import { createCasesMap, scanAndProcessDrafts, sortDrafts } from './DraftsUtils.js';
 
 route('#/student/drafts', async (app) => {
   app.replaceChildren();
@@ -13,71 +14,13 @@ route('#/student/drafts', async (app) => {
   try {
     // Get all case data to match case IDs with titles
     const allCases = await listCases();
+    const casesMap = createCasesMap(allCases);
 
-    const casesMap = {};
-    allCases.forEach((caseWrapper) => {
-      casesMap[caseWrapper.id] = caseWrapper.title;
-    });
-
-    // Scan storage for draft keys
-    const drafts = [];
-    const keys = storage.keys();
-    for (let i = 0; i < keys.length; i++) {
-      const key = keys[i];
-      if (key && key.startsWith('draft_')) {
-        try {
-          const draftData = JSON.parse(storage.getItem(key));
-          // More robust parsing: handle case IDs that contain underscores
-          const parts = key.split('_');
-          if (parts.length < 3) continue; // Invalid key format
-
-          // For keys like "draft_case_dbbcd14f_eval", we need to reconstruct the case ID
-          // The case ID starts after "draft_" and ends before the last "_encounter"
-          const draftPrefix = 'draft_';
-          const keyWithoutPrefix = key.substring(draftPrefix.length);
-          const lastUnderscoreIndex = keyWithoutPrefix.lastIndexOf('_');
-
-          if (lastUnderscoreIndex === -1) continue; // No encounter part found
-
-          const caseId = keyWithoutPrefix.substring(0, lastUnderscoreIndex);
-          const encounter = keyWithoutPrefix.substring(lastUnderscoreIndex + 1);
-
-          // Calculate completion percentage
-          const sections = ['subjective', 'assessment', 'goals', 'plan', 'billing'];
-          const objectiveSections = draftData.objective
-            ? [draftData.objective.text || ''].filter(Boolean).length
-            : 0;
-          const completedSections =
-            sections.filter((section) => draftData[section] && draftData[section].trim().length > 0)
-              .length + (objectiveSections > 0 ? 1 : 0);
-          const totalSections = sections.length + 1; // +1 for objective
-          const completionPercent = Math.round((completedSections / totalSections) * 100);
-
-          // Get last modified time (approximate)
-          const lastModified = new Date().toLocaleDateString(); // Could enhance with actual timestamp
-
-          drafts.push({
-            key,
-            caseId,
-            encounter,
-            caseTitle: casesMap[caseId] || `Case ${caseId}`,
-            data: draftData,
-            completionPercent,
-            lastModified,
-            hasContent: completedSections > 0,
-          });
-        } catch (error) {
-          console.warn('Could not parse draft:', key, error);
-        }
-      }
-    }
+    // Scan storage for draft keys and process them
+    const drafts = scanAndProcessDrafts(storage, casesMap);
 
     // Sort drafts by case title, then encounter
-    drafts.sort((a, b) => {
-      const titleCompare = a.caseTitle.localeCompare(b.caseTitle);
-      if (titleCompare !== 0) return titleCompare;
-      return a.encounter.localeCompare(b.encounter);
-    });
+    sortDrafts(drafts);
 
     app.replaceChildren();
 
