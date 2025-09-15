@@ -347,3 +347,59 @@ export function handleSectionScroll(
 
   return { header, root };
 }
+
+/**
+ * Handle case info updates and keep UI/data in sync
+ * @param {Object} c - Case object
+ * @param {Object} draft - Draft object
+ * @param {Object} updatedInfo - Updated case information
+ * @param {Function} save - Save function
+ * @param {Function} updatePatientHeader - Update patient header function
+ * @param {Function} renderPatientHeaderActions - Render patient header actions function
+ */
+export function handleCaseInfoUpdate(
+  c,
+  draft,
+  updatedInfo,
+  save,
+  updatePatientHeader,
+  renderPatientHeaderActions,
+) {
+  try {
+    c.caseTitle = updatedInfo.title;
+    c.title = updatedInfo.title;
+    c.setting = updatedInfo.setting;
+    c.patientAge = updatedInfo.age;
+    c.patientGender = updatedInfo.sex;
+    c.acuity = updatedInfo.acuity;
+    c.patientDOB = updatedInfo.dob;
+    if (Array.isArray(updatedInfo.modules)) {
+      c.modules = updatedInfo.modules;
+      draft.modules = updatedInfo.modules;
+    }
+    // Keep canonical containers in sync
+    c.meta = c.meta || {};
+    c.meta.title = updatedInfo.title;
+    c.meta.setting = updatedInfo.setting;
+    c.meta.acuity = updatedInfo.acuity;
+    c.snapshot = c.snapshot || {};
+    c.snapshot.age = updatedInfo.age;
+    c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
+    c.snapshot.dob = updatedInfo.dob;
+    updatePatientHeader();
+    renderPatientHeaderActions();
+    save();
+    if (window.refreshChartProgress) window.refreshChartProgress();
+  } catch (e) {
+    console.warn('handleCaseInfoUpdate error:', e);
+  }
+}
+
+/**
+ * Get case info snapshot for editing
+ * @param {Object} c - Case object
+ * @returns {Object} Case info snapshot
+ */
+export function getCaseInfoSnapshot(c) {
+  return getCaseInfo(c);
+}

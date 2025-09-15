@@ -28,7 +28,19 @@ import {
   getPatientDOB,
   getPatientSex,
   handleSectionScroll,
+  handleCaseInfoUpdate,
+  getCaseInfoSnapshot,
 } from './CaseEditorUtils.js';
+import {
+  getHeaderOffsetPx,
+  getNearestVisibleAnchorId,
+  scrollToAnchorExact,
+  afterNextLayout,
+  getSectionScrollPercent,
+  scrollToPercentExact,
+  exposeScrollHelpers,
+} from './ScrollUtils.js';
+import { createMissingCaseIdError } from './EditorUIUtils.js';
 import {
   createChartNavigation,
   refreshChartNavigation,
@@ -66,144 +78,20 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   } = params;
 
   // Helper: compute fixed header offset using utility function
-  const getHeaderOffsetPx = () => calculateHeaderOffset();
-
-  function getNearestVisibleAnchorId() {
-    const sec = document.querySelector('.section-content');
-    if (!sec) return '';
-    const anchors = Array.from(sec.querySelectorAll('.section-anchor')).filter((a) => {
-      const cs = getComputedStyle(a);
-      return a.offsetParent !== null && cs.display !== 'none' && cs.visibility !== 'hidden';
-    });
-    if (!anchors.length) return '';
-    let best = anchors[0];
-    const threshold = getHeaderOffsetPx();
-    anchors.forEach((a) => {
-      const r = a.getBoundingClientRect();
-      if (r.top <= threshold) best = a;
-    });
-    return best?.id || '';
-  }
-
-  // Prefer native anchor scrolling using CSS scroll-margin-top; fallback to manual offset
-  function scrollToAnchorExact(anchorId, behavior = 'auto') {
-    if (!anchorId) return false;
-    const target = document.getElementById(anchorId);
-    if (!target || target.offsetParent === null) return false;
-    try {
-      target.scrollIntoView({ behavior, block: 'start', inline: 'nearest' });
-      return true;
-    } catch {
-      // Fallback for older browsers
-      const offset = getHeaderOffsetPx();
-      const rect = target.getBoundingClientRect();
-      const y = Math.max(0, window.scrollY + rect.top - offset);
-      window.scrollTo({ top: y, behavior });
-      return true;
-    }
-  }
-
-  function afterNextLayout(fn) {
-    requestAnimationFrame(() => requestAnimationFrame(fn));
-  }
-
-  // Compute the current scroll percent within the section content, 0..1
-  function getSectionScrollPercent() {
-    const sec = document.querySelector('.section-content');
-    if (!sec) return 0;
-    const offset = getHeaderOffsetPx();
-    const rect = sec.getBoundingClientRect();
-    const sectionTopAbs = window.scrollY + rect.top;
-    const rel = Math.max(0, window.scrollY - (sectionTopAbs - offset));
-    const viewportH = window.innerHeight;
-    const scrollable = Math.max(0, sec.scrollHeight - (viewportH - offset));
-    return scrollable > 0 ? Math.max(0, Math.min(1, rel / scrollable)) : 0;
-  }
-  // Centralized handler to apply case info updates and keep UI/data in sync
-  function handleCaseInfoUpdate(updatedInfo) {
-    try {
-      c.caseTitle = updatedInfo.title;
-      c.title = updatedInfo.title;
-      c.setting = updatedInfo.setting;
-      c.patientAge = updatedInfo.age;
-      c.patientGender = updatedInfo.sex;
-      c.acuity = updatedInfo.acuity;
-      c.patientDOB = updatedInfo.dob;
-      if (Array.isArray(updatedInfo.modules)) {
-        c.modules = updatedInfo.modules;
-        draft.modules = updatedInfo.modules;
-      }
-      // Keep canonical containers in sync
-      c.meta = c.meta || {};
-      c.meta.title = updatedInfo.title;
-      c.meta.setting = updatedInfo.setting;
-      c.meta.acuity = updatedInfo.acuity;
-      c.snapshot = c.snapshot || {};
-      c.snapshot.age = updatedInfo.age;
-      c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
-      c.snapshot.dob = updatedInfo.dob;
-      updatePatientHeader();
-      renderPatientHeaderActions();
-      save();
-      if (window.refreshChartProgress) window.refreshChartProgress();
-    } catch (e) {
-      console.warn('handleCaseInfoUpdate error:', e);
-    }
-  }
-
-  // Render actions (Edit Case) in the patient header when allowed
-  function getCaseInfoSnapshot() {
-    return getCaseInfo(c);
-  }
-  function renderPatientHeaderActions() {
-    const actions = document.getElementById('patient-header-actions');
-    if (!actions) return;
-    actions.replaceChildren();
-
-    const canEdit = canEditCase(isFacultyMode, caseId);
-    if (!canEdit) return;
-
-    const openEdit = () => openEditCaseModal(getCaseInfoSnapshot(), handleCaseInfoUpdate);
-    actions.append(el('button', { class: 'btn secondary', onclick: openEdit }, 'Edit'));
-  }
-
-  // Scroll to a percent within the section content
-  function scrollToPercentExact(pct) {
-    const sec = document.querySelector('.section-content');
-    if (!sec) return false;
-    const offset = getHeaderOffsetPx();
-    const rect = sec.getBoundingClientRect();
-    const sectionTopAbs = window.scrollY + rect.top;
-    const viewportH = window.innerHeight;
-    const scrollable = Math.max(0, sec.scrollHeight - (viewportH - offset));
-    const clamped = Math.max(0, Math.min(1, pct ?? 0));
-
-    const targetY = Math.max(0, sectionTopAbs - offset + scrollable * clamped);
-    window.scrollTo({ top: targetY, behavior: 'auto' });
-    return true;
-  }
+  const getHeaderOffsetPxLocal = () => calculateHeaderOffset();
 
   // Expose helpers for troubleshooting from the console (non-breaking)
-  window.scrollHelpers = {
-    getHeaderOffsetPx,
+  exposeScrollHelpers({
+    getHeaderOffsetPx: getHeaderOffsetPxLocal,
     getNearestVisibleAnchorId,
     scrollToAnchorExact,
     getSectionScrollPercent,
     scrollToPercentExact,
-  };
+  });
 
   if (!caseId) {
     app.replaceChildren();
-    app.append(
-      el('div', { class: 'panel error' }, [
-        el('h2', {}, 'Missing Case ID'),
-        el(
-          'p',
-          {},
-          `No case ID provided in URL. Expected format: #/student/editor?case=CASE_ID&v=0&encounter=eval`,
-        ),
-      ]),
-    );
+    app.append(createMissingCaseIdError());
     return;
   }
 
