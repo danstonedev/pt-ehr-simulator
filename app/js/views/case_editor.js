@@ -17,6 +17,19 @@ import {
   createLoadingIndicator,
 } from '../features/case-management/CaseInitialization.js';
 import {
+  getCaseInfo,
+  getPatientDisplayName,
+  getCaseDataForNavigation,
+  updateCaseObject,
+  parseEditorQueryParams,
+  calculateHeaderOffset,
+  canEditCase,
+  formatDOB,
+  getPatientDOB,
+  getPatientSex,
+  handleSectionScroll,
+} from './CaseEditorUtils.js';
+import {
   createChartNavigation,
   refreshChartNavigation,
   updateSaveStatus,
@@ -34,40 +47,26 @@ route('#/instructor/editor', async (app, qs) => {
   return renderCaseEditor(app, qs, true); // true = faculty mode
 });
 
-/* eslint-disable-next-line complexity */
 async function renderCaseEditor(app, qs, isFacultyMode) {
   // AbortController for all event listeners in this view; router will call returned cleanup
   const ac = new AbortController();
   let offRoute = null;
   let activeObserver = null;
   let headerRO = null;
-  const caseId = qs.get('case');
-  // Version param removed with header changes
-  const encounter = qs.get('encounter') || 'eval';
-  const isKeyMode = qs.get('key') === 'true';
-  // const fromParam = qs.get('from') || '';
-  const initialSectionParam = (qs.get('section') || '').toLowerCase();
-  const initialAnchorParam = qs.get('anchor') || '';
-  const spParamRaw = qs.get('sp');
-  const initialScrollPercent = spParamRaw !== null ? parseFloat(spParamRaw) : NaN;
-  // Helper: compute fixed header offset (green sticky header removed)
-  function getHeaderOffsetPx() {
-    const cs = getComputedStyle(document.documentElement);
-    const topbarH = parseInt(
-      (cs.getPropertyValue('--topbar-h') || '').replace('px', '').trim(),
-      10,
-    );
-    const tb = isNaN(topbarH) ? 72 : topbarH;
-    const sticky = document.getElementById('patient-sticky-header');
-    const sh = sticky && sticky.offsetParent !== null ? sticky.offsetHeight : 0;
-    // Include the in-content sticky section divider height so anchors land fully below it
-    const dividerH = parseInt(
-      (cs.getPropertyValue('--section-divider-h') || '').replace('px', '').trim(),
-      10,
-    );
-    const sd = isNaN(dividerH) ? 0 : dividerH;
-    return tb + sh + sd;
-  }
+
+  // Parse query parameters using utility function
+  const params = parseEditorQueryParams(qs);
+  const {
+    caseId,
+    encounter,
+    isKeyMode,
+    initialSectionParam,
+    initialAnchorParam,
+    initialScrollPercent,
+  } = params;
+
+  // Helper: compute fixed header offset using utility function
+  const getHeaderOffsetPx = () => calculateHeaderOffset();
 
   function getNearestVisibleAnchorId() {
     const sec = document.querySelector('.section-content');
@@ -153,29 +152,17 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   }
 
   // Render actions (Edit Case) in the patient header when allowed
-  /* eslint-disable-next-line complexity */
   function getCaseInfoSnapshot() {
-    return {
-      title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
-      setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
-      age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
-      sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-      acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
-      dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
-      modules: Array.isArray(c.modules) ? c.modules : [],
-    };
+    return getCaseInfo(c);
   }
   function renderPatientHeaderActions() {
     const actions = document.getElementById('patient-header-actions');
     if (!actions) return;
     actions.replaceChildren();
-    let canEdit = !!isFacultyMode;
-    // Allow students to edit if working on a blank note
-    try {
-      const idStr = String(caseId || '');
-      if (!canEdit && idStr.startsWith('blank')) canEdit = true;
-    } catch {}
+
+    const canEdit = canEditCase(isFacultyMode, caseId);
     if (!canEdit) return;
+
     const openEdit = () => openEditCaseModal(getCaseInfoSnapshot(), handleCaseInfoUpdate);
     actions.append(el('button', { class: 'btn secondary', onclick: openEdit }, 'Edit'));
   }
@@ -384,48 +371,15 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   // Sticky top bar removed; preview can be triggered from elsewhere if desired
 
   // Function to refresh chart navigation progress
-  /* eslint-disable-next-line complexity */
   function refreshChartProgress() {
     refreshChartNavigation(chartNav, {
       activeSection: active,
       onSectionChange: (sectionId) => switchTo(sectionId),
       isFacultyMode: isFacultyMode,
-      caseData: {
-        ...c,
-        ...draft,
-        modules: Array.isArray(draft.modules) ? draft.modules : c.modules,
-        editorSettings: c.editorSettings || draft.editorSettings,
-      },
-      caseInfo: {
-        title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
-        setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
-        age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
-        sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-        acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
-        dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
-        modules: Array.isArray(c.modules) ? c.modules : [],
-      },
+      caseData: getCaseDataForNavigation(c, draft),
+      caseInfo: getCaseInfo(c),
       onCaseInfoUpdate: (updatedInfo) => {
-        c.caseTitle = updatedInfo.title;
-        c.title = updatedInfo.title;
-        c.setting = updatedInfo.setting;
-        c.patientAge = updatedInfo.age;
-        c.patientGender = updatedInfo.sex;
-        c.acuity = updatedInfo.acuity;
-        c.patientDOB = updatedInfo.dob;
-        c.modules = Array.isArray(updatedInfo.modules) ? updatedInfo.modules : c.modules || [];
-        // Keep canonical containers in sync
-        c.meta = c.meta || {};
-        c.meta.title = updatedInfo.title;
-        c.meta.setting = updatedInfo.setting;
-        c.meta.acuity = updatedInfo.acuity;
-        c.snapshot = c.snapshot || {};
-        c.snapshot.age = updatedInfo.age;
-        c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
-        c.snapshot.dob = updatedInfo.dob;
-        if (Array.isArray(updatedInfo.modules)) {
-          draft.modules = updatedInfo.modules;
-        }
+        updateCaseObject(c, updatedInfo, draft);
         save();
         refreshChartProgress();
       },
@@ -453,24 +407,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   window.refreshChartProgress = refreshChartProgress;
 
   // Sticky patient header (two-line stacked)
-  // Parse YYYY-MM-DD as a local date (avoid implicit UTC parsing which can shift a day in some TZs)
-  function parseLocalDateYMD(str) {
-    if (!str || typeof str !== 'string') return null;
-    // Accept only canonical YYYY-MM-DD
-    const m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!m) {
-      const d = new Date(str);
-      return isNaN(d.getTime()) ? null : d; // fallback for other formats
-    }
-    const [, y, mo, da] = m;
-    const year = Number(y);
-    const monthIndex = Number(mo) - 1; // 0-based
-    const day = Number(da);
-    // Construct local date (year, monthIndex, day) which uses local timezone midnight
-    return new Date(year, monthIndex, day, 0, 0, 0, 0);
-  }
-
-  // computeAgeFromDobLocal removed: age no longer displayed in header
+  // Note: Date parsing moved to CaseEditorUtils.js
 
   const patientHeaderNameEl = el('div', {}, '');
   const patientHeaderDemoEl = el('div', {}, '');
@@ -561,48 +498,31 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   });
   themeObserver.observe(document.documentElement, { attributes: true });
 
-  /* eslint-disable-next-line complexity */
   function updatePatientHeader() {
     try {
-      const displayName =
-        // Explicit patientName fields first
-        c.patientName ||
-        c.name ||
-        // Meta-provided patient label or meta.title (older cases store title only in meta)
-        (c.meta && (c.meta.patientName || c.meta.title)) ||
-        // Snapshot-provided patient name (published case snapshots)
-        (c.snapshot && (c.snapshot.patientName || c.snapshot.name)) ||
-        // Alternate case title keys
-        c.caseTitle ||
-        c.title ||
-        // Final fallback
-        'Untitled Case';
-      const dob = c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '';
-      let sex = c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || '';
+      const displayName = getPatientDisplayName(c);
+      const dob = getPatientDOB(c);
+      const sex = getPatientSex(c);
+
       updatePatientAvatar(sex);
-      // Format MM-DD-YYYY
-      let dobFmt = '';
-      if (dob) {
-        const d = parseLocalDateYMD(dob);
-        if (d) {
-          const mm = String(d.getMonth() + 1).padStart(2, '0');
-          const dd = String(d.getDate()).padStart(2, '0');
-          const yyyy = d.getFullYear();
-          dobFmt = `${mm}-${dd}-${yyyy}`;
-        }
-      }
-      // Line 1: Title only (bold)
-      // Sex removed per request
+
+      // Format date and update UI
+      const dobFmt = formatDOB(dob);
+      const dateText = dobFmt || dob || 'N/A';
+
+      // Update header elements
       patientHeaderNameEl.replaceChildren();
       patientHeaderNameEl.append(el('span', { style: 'font-weight:700' }, displayName));
-      // Line 2: MM-DD-YYYY (xx years old) with date bold
-      const dateText = dobFmt || dob || 'N/A';
+
       patientHeaderDemoEl.replaceChildren();
       patientHeaderDemoEl.append(el('span', { class: 'patient-dob' }, dateText));
-      // Expose measured height to CSS as a variable so sticky offsets and anchors account for it
+
+      // Update CSS variable for layout
       const h = patientHeader.offsetHeight || 0;
       document.documentElement.style.setProperty('--patient-sticky-h', `${h}px`);
-    } catch {}
+    } catch {
+      // Ignore errors
+    }
   }
   // Prefer ResizeObserver to track header height changes precisely (wrapping/content/theme)
   try {
@@ -874,7 +794,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     } catch {}
   }
 
-  /* eslint-disable-next-line complexity */
   function switchTo(s) {
     if (!isValidSection(s)) return;
 
@@ -900,37 +819,10 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
         activeSection: active,
         onSectionChange: (sectionId) => switchTo(sectionId),
         isFacultyMode: isFacultyMode,
-        caseData: { ...c, ...draft, editorSettings: c.editorSettings || draft.editorSettings },
-        caseInfo: {
-          title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
-          setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
-          age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
-          sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-          acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
-          dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
-          modules: Array.isArray(c.modules) ? c.modules : [],
-        },
+        caseData: getCaseDataForNavigation(c, draft),
+        caseInfo: getCaseInfo(c),
         onCaseInfoUpdate: (updatedInfo) => {
-          c.caseTitle = updatedInfo.title;
-          c.title = updatedInfo.title;
-          c.setting = updatedInfo.setting;
-          c.patientAge = updatedInfo.age;
-          c.patientGender = updatedInfo.sex;
-          c.acuity = updatedInfo.acuity;
-          c.patientDOB = updatedInfo.dob;
-          if (Array.isArray(updatedInfo.modules)) {
-            c.modules = updatedInfo.modules;
-            draft.modules = updatedInfo.modules;
-          }
-          // Keep canonical containers in sync
-          c.meta = c.meta || {};
-          c.meta.title = updatedInfo.title;
-          c.meta.setting = updatedInfo.setting;
-          c.meta.acuity = updatedInfo.acuity;
-          c.snapshot = c.snapshot || {};
-          c.snapshot.age = updatedInfo.age;
-          c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
-          c.snapshot.dob = updatedInfo.dob;
+          updateCaseObject(c, updatedInfo, draft);
           updatePatientHeader();
           debouncedSave();
         },
@@ -944,62 +836,27 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     }
 
     // Scroll logic (single attempt + minimal fallback) kept intentionally lean
-    const header = getSectionHeader(s);
-    const root = getSectionRoot(s) || header;
-    if (root) {
-      // Sidebar may request a specific subsection anchor
-      let pendingAnchorId = '';
-      try {
-        if (window.__pendingAnchorScrollId) {
-          pendingAnchorId = String(window.__pendingAnchorScrollId);
-          window.__pendingAnchorScrollId = '';
-        }
-      } catch {}
-      const preferredAnchorBySection = {
-        subjective: 'hpi',
-        // Use a valid Objective anchor present in the section
-        objective: 'regional-assessment',
-        assessment: 'primary-impairments',
-        plan: 'goal-setting',
-        billing: 'diagnosis-codes',
-      };
-      const targetId = pendingAnchorId || preferredAnchorBySection[s];
-      let success = false;
-      if (targetId) success = scrollToAnchorExact(targetId, 'smooth');
-      if (!success) {
-        // Fallback: first visible anchor or section top
-        const firstAnchor = root.querySelector('.section-anchor');
-        if (firstAnchor) success = scrollToAnchorExact(firstAnchor.id, 'smooth');
-      }
-      if (!success) {
-        const offset = getHeaderOffsetPx();
-        const rect = root.getBoundingClientRect();
-        const y = Math.max(0, window.scrollY + rect.top - offset);
-        window.scrollTo({ top: y, behavior: 'smooth' });
-      }
-      // Clear programmatic flag on scroll end or timeout
-      const clearProg = () => {
-        isProgrammaticScroll = false;
-        window.removeEventListener('scrollend', clearProg);
-      };
-      try {
-        window.addEventListener('scrollend', clearProg, { once: true, signal: ac.signal });
-      } catch {
-        // scrollend not supported; fallback timeout
-        setTimeout(() => (isProgrammaticScroll = false), 800);
-      }
-      // Accessibility focus + live region
-      try {
-        const focusTarget = header || root;
-        focusTarget.setAttribute('tabindex', '-1');
-        focusTarget.focus({ preventScroll: true });
-      } catch {}
-      try {
-        const announcer = document.getElementById('route-announcer');
-        if (announcer) announcer.textContent = `Moved to ${s} section`;
-      } catch {}
-      performInitialScrollIfNeeded(s);
+    handleSectionScroll(
+      s,
+      getSectionHeader,
+      getSectionRoot,
+      scrollToAnchorExact,
+      getHeaderOffsetPx,
+    );
+
+    // Clear programmatic flag on scroll end or timeout
+    const clearProg = () => {
+      isProgrammaticScroll = false;
+      window.removeEventListener('scrollend', clearProg);
+    };
+    try {
+      window.addEventListener('scrollend', clearProg, { once: true, signal: ac.signal });
+    } catch {
+      // scrollend not supported; fallback timeout
+      setTimeout(() => (isProgrammaticScroll = false), 800);
     }
+
+    performInitialScrollIfNeeded(s);
   }
 
   // Initialize the editor with sidebar navigation only
