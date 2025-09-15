@@ -50,11 +50,34 @@ import {
 } from './CaseEditorRenderer.js';
 import { renderAllSections, getSectionRoot, getSectionHeader } from './SectionRenderer.js';
 import {
+  setupActiveSectionObserver,
+  performInitialScrollIfNeeded,
+  createScrollToPercentWithinActive,
+} from './NavigationManager.js';
+import {
   createChartNavigation,
   refreshChartNavigation,
   updateSaveStatus,
   openEditCaseModal,
 } from '../features/navigation/ChartNavigation.js';
+import { createSectionSwitcher } from './SectionSwitcher.js';
+import {
+  createInitialChartNavConfig,
+  createCaseInfoUpdateHandler,
+  createEditorSettingsHandler,
+  createSaveWrapper,
+  createDebouncedSave,
+} from './CaseInitializationManager.js';
+import {
+  validateCaseId,
+  setupScrollHelpers,
+  handleCaseInitializationError,
+} from './CaseEditorValidation.js';
+import {
+  createEditorConfiguration,
+  createScrollStateManager,
+  createChartRefreshFunction,
+} from './EditorConfigManager.js';
 // Sticky green header removed per design update
 
 // Modern modular SOAP section components
@@ -88,8 +111,8 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   // Helper: compute fixed header offset using utility function
   const getHeaderOffsetPxLocal = () => calculateHeaderOffset();
 
-  // Expose helpers for troubleshooting from the console (non-breaking)
-  exposeScrollHelpers({
+  // Setup scroll helpers for debugging using modular utility
+  setupScrollHelpers({
     getHeaderOffsetPx: getHeaderOffsetPxLocal,
     getNearestVisibleAnchorId,
     scrollToAnchorExact,
@@ -97,16 +120,9 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     scrollToPercentExact,
   });
 
-  if (!caseId) {
-    app.replaceChildren();
-    app.append(createMissingCaseIdError());
-    return;
-  }
-
-  // Redirect old "new" case routes to use the modal instead
-  if (caseId === 'new') {
-    urlNavigate('/instructor/cases');
-    return;
+  // Validate case ID and handle early returns using modular validation
+  if (!validateCaseId(caseId, app)) {
+    return; // Early return if validation failed
   }
 
   app.replaceChildren();
@@ -116,10 +132,9 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   // Initialize case using modular function
   const caseResult = await initializeCase(caseId, isFacultyMode, isKeyMode);
 
-  if (caseResult.error) {
-    app.replaceChildren();
-    app.append(createErrorDisplay(caseResult.title, caseResult.message, caseResult.details));
-    return;
+  // Handle case initialization errors using modular handler
+  if (handleCaseInitializationError(caseResult, app)) {
+    return; // Early return if error was handled
   }
 
   const caseWrapper = caseResult;
@@ -137,105 +152,124 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   const draftManager = initializeDraft(caseId, encounter, isFacultyMode, c, isKeyMode);
   let { draft, save: originalSave } = draftManager;
 
-  // Create chart navigation sidebar first
+  // Create editor configuration using utility
+  const editorConfig = createEditorConfiguration({
+    initialSectionParam,
+    qs,
+    initialScrollPercent,
+    initialAnchorParam,
+  });
+
+  const {
+    sections,
+    isValidSection,
+    active: configActive,
+    initialActiveSection,
+    simpleMode,
+    needsInitialPercentScroll: configNeedsInitialPercentScroll,
+    needsInitialAnchorScroll: configNeedsInitialAnchorScroll,
+  } = editorConfig;
+
+  let active = configActive;
+  let needsInitialPercentScroll = configNeedsInitialPercentScroll;
+  let needsInitialAnchorScroll = configNeedsInitialAnchorScroll;
+
+  // Create scroll state manager using utility
+  const scrollStateManager = createScrollStateManager();
+  const {
+    getProgrammaticScrollBlockUntil,
+    setProgrammaticScrollBlockUntil,
+    getIsProgrammaticScroll,
+    setIsProgrammaticScroll,
+  } = scrollStateManager;
+
+  let programmaticScrollBlockUntil = getProgrammaticScrollBlockUntil();
+  let isProgrammaticScroll = getIsProgrammaticScroll();
+
+  // Sticky top bar removed; preview can be triggered from elsewhere if desired
+
+  // Function to refresh chart navigation progress - declare placeholder first
+  let refreshChartProgress = () => {};
+
+  // Create section switcher using modular utility - now we have all dependencies
+  const switchTo = createSectionSwitcher({
+    sections,
+    active,
+    setActive: (newActive) => {
+      active = newActive;
+    },
+    setNeedsInitialPercentScroll: (value) => {
+      needsInitialPercentScroll = value;
+    },
+    setNeedsInitialAnchorScroll: (value) => {
+      needsInitialAnchorScroll = value;
+    },
+    setProgrammaticScrollBlockUntil: (value) => {
+      programmaticScrollBlockUntil = value;
+    },
+    setIsProgrammaticScroll: (value) => {
+      isProgrammaticScroll = value;
+    },
+    chartNav: null, // Will be set after chart nav creation
+    isFacultyMode,
+    c,
+    draft,
+    getCaseDataForNavigation,
+    getCaseInfo,
+    updateCaseObject,
+    updatePatientHeader: () => {}, // Placeholder
+    debouncedSave: () => {}, // Placeholder
+    save: originalSave,
+    handleSectionScroll,
+    getSectionHeader,
+    getSectionRoot,
+    scrollToAnchorExact,
+    getHeaderOffsetPx,
+    performInitialScrollWrapper: () => {}, // Placeholder
+    ac,
+  });
+
+  // Create chart navigation sidebar now that switchTo exists
   const chartNav = await createChartNavigationForEditor({
     c,
     draft,
     isFacultyMode,
     switchTo,
-    save,
+    save: originalSave,
     refreshChartProgress,
   });
 
+  // Update the section switcher with the actual chartNav
+  switchTo.chartNav = chartNav;
+
+  // Create patient header using modular utility BEFORE it's used
+  const headerElements = createPatientHeader(c);
+  const { patientHeader } = headerElements;
+  const updatePatientHeader = createPatientHeaderUpdater(c, headerElements);
+
   // Wrap save function to include progress refresh and status updates
-  const save = async (...args) => {
-    // Update sidebar save status only (sticky header removed)
-    updateSaveStatus(chartNav, 'saving');
-    // Announce saving to screen readers
-    try {
-      const announcer = document.getElementById('route-announcer');
-      if (announcer) announcer.textContent = 'Saving…';
-    } catch {}
-    try {
-      await originalSave(...args);
-      updateSaveStatus(chartNav, 'saved');
-      try {
-        const announcer = document.getElementById('route-announcer');
-        if (announcer) announcer.textContent = 'All changes saved';
-      } catch {}
-      if (window.refreshChartProgress) window.refreshChartProgress();
-    } catch (error) {
-      updateSaveStatus(chartNav, 'error');
-      try {
-        const announcer = document.getElementById('route-announcer');
-        if (announcer) announcer.textContent = 'Save failed';
-      } catch {}
-      console.error('Save failed:', error);
-    }
-  };
+  const save = createSaveWrapper({
+    originalSave,
+    chartNav,
+    updateSaveStatus,
+  });
+
+  // Update placeholders with actual functions
+  switchTo.updatePatientHeader = updatePatientHeader;
 
   // Make draft available globally for goal linking
   window.currentDraft = draft;
   window.saveDraft = save;
 
-  // Create debounced save function for case info updates
-  let saveTimeout;
-  const debouncedSave = () => {
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => {
-      save();
-      refreshChartProgress();
-    }, 500); // Wait 500ms after user stops typing
-  };
+  // Create debounced save function for case info updates using utility
+  const debouncedSave = createDebouncedSave(save, () => {
+    if (window.refreshChartProgress) window.refreshChartProgress();
+  });
 
   // Make chart refresh available globally for components
   window.refreshChartProgress = null; // Will be set after chart creation
 
-  // Section configuration - no need for old progress tracking
-  const sections = ['subjective', 'objective', 'assessment', 'plan', 'billing'];
-  const isValidSection = (s) => sections.includes(s);
-  let active = isValidSection(initialSectionParam) ? initialSectionParam : 'subjective';
-  const initialActiveSection = active;
-  // Simple mode: only permit initial scroll if URL explicitly requests it
-  // Simple mode defaults on; allow URL to opt out with navsimple=0
-  const navParam = qs.get('navsimple');
-  const simpleMode = navParam === '0' ? false : !!EXPERIMENT_FLAGS.NAV_SIMPLE_MODE;
-  let needsInitialPercentScroll =
-    !simpleMode && Number.isFinite(initialScrollPercent) && isValidSection(active);
-  let needsInitialAnchorScroll =
-    (!simpleMode && !needsInitialPercentScroll && !!initialAnchorParam && isValidSection(active)) ||
-    (simpleMode && !!initialAnchorParam && isValidSection(active));
-
-  // During a programmatic section change we temporarily suppress scroll-driven
-  // active section recalculation to avoid rapid re-renders (jitter) while the
-  // browser animates smooth scrolling. We store a timestamp instead of a boolean
-  // so overlapping programmatic navigations extend the window naturally.
-  let programmaticScrollBlockUntil = 0;
-  let isProgrammaticScroll = false; // simple guard
-
   // Sticky top bar removed; preview can be triggered from elsewhere if desired
-
-  // Function to refresh chart navigation progress
-  function refreshChartProgress() {
-    refreshChartNavigation(chartNav, {
-      activeSection: active,
-      onSectionChange: (sectionId) => switchTo(sectionId),
-      isFacultyMode: isFacultyMode,
-      caseData: getCaseDataForNavigation(c, draft),
-      caseInfo: getCaseInfo(c),
-      onCaseInfoUpdate: (updatedInfo) => {
-        updateCaseObject(c, updatedInfo, draft);
-        save();
-        refreshChartProgress();
-      },
-      onEditorSettingsChange: (nextSettings) => {
-        draft.editorSettings = nextSettings;
-        c.editorSettings = nextSettings;
-        save();
-        refreshChartProgress();
-      },
-    });
-  }
 
   // React to external URL changes (e.g., user edits hash or navigates)
   try {
@@ -248,11 +282,22 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     });
   } catch {}
 
+  // Create the actual refresh function to replace the placeholder
+  refreshChartProgress = createChartRefreshFunction({
+    chartNav,
+    active,
+    switchTo,
+    isFacultyMode,
+    getCaseDataForNavigation,
+    getCaseInfo,
+    c,
+    draft,
+    updateCaseObject,
+    save: originalSave,
+  });
+
   // Make chart refresh available globally for components
   window.refreshChartProgress = refreshChartProgress;
-
-  // Create patient header using modular utility
-  const { patientHeader, updatePatientHeader } = createPatientHeader();
 
   // Setup theme observer for avatar updates
   const themeObserver = setupThemeObserver(patientHeader);
@@ -289,289 +334,89 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   // Use modular section renderer
   const { sectionRoots, sectionHeaders } = renderAllSections(contentRoot, draft, save);
 
-  // Percent scroll within the currently active top-level section
-  function scrollToPercentWithinActive(pct) {
-    const root = getSectionRoot(sectionRoots, active);
-    if (!root) return false;
-    const offset = getHeaderOffsetPx();
-    const rect = root.getBoundingClientRect();
-    const sectionTopAbs = window.scrollY + rect.top;
-    const viewportH = window.innerHeight;
-    const scrollable = Math.max(0, root.scrollHeight - (viewportH - offset));
-    const clamped = Math.max(0, Math.min(1, pct ?? 0));
-    const targetY = Math.max(0, sectionTopAbs - offset + scrollable * clamped);
-    window.scrollTo({ top: targetY, behavior: 'auto' });
-    return true;
-  }
+  // Create scroll utility function
+  const scrollToPercentWithinActive = createScrollToPercentWithinActive(
+    getSectionRoot,
+    getHeaderOffsetPx,
+    sectionRoots,
+  );
 
-  function performInitialScrollIfNeeded(currentSectionId) {
-    // If the user navigated away from the initially requested section before
-    // the initial scroll fired, cancel the initial scroll behavior entirely.
-    if (currentSectionId !== initialActiveSection) {
-      needsInitialPercentScroll = false;
-      needsInitialAnchorScroll = false;
-      // Also check for any transient pending anchor requests and clear them if no longer relevant
-      try {
-        if (window.__pendingAnchorScrollId && currentSectionId !== active) {
-          window.__pendingAnchorScrollId = '';
-        }
-      } catch {}
-      return;
-    }
-    if (currentSectionId !== active) return;
-    // If a pending anchor scroll was requested by the sidebar while changing sections, honor it first
-    try {
-      if (window.__pendingAnchorScrollId) {
-        const id = String(window.__pendingAnchorScrollId);
-        window.__pendingAnchorScrollId = '';
-        // Attempt immediate scroll; retry lightly after next layout
-        let ok = scrollToAnchorExact(id, 'smooth');
-        afterNextLayout(() => {
-          if (!ok) ok = scrollToAnchorExact(id, 'smooth');
-        });
-        setTimeout(() => {
-          if (!ok) scrollToAnchorExact(id, 'smooth');
-        }, 120);
-        // Do not proceed with percent/anchor initial behavior in this pass
-        needsInitialPercentScroll = false;
-        needsInitialAnchorScroll = false;
-        return;
-      }
-    } catch {}
-    if (needsInitialPercentScroll && Number.isFinite(initialScrollPercent)) {
-      let okP = scrollToPercentWithinActive(initialScrollPercent);
-      afterNextLayout(() => {
-        if (!okP) okP = scrollToPercentWithinActive(initialScrollPercent);
-      });
-      setTimeout(() => {
-        if (!okP) okP = scrollToPercentWithinActive(initialScrollPercent);
-        if (!okP) {
-          // fallback to anchor or nearest visible anchor
-          if (initialAnchorParam) {
-            let ok = scrollToAnchorExact(initialAnchorParam);
-            afterNextLayout(() => {
-              if (!ok) ok = scrollToAnchorExact(initialAnchorParam);
-            });
-            setTimeout(() => {
-              if (!ok) ok = scrollToAnchorExact(initialAnchorParam);
-              if (!ok) {
-                const fallbackId = getNearestVisibleAnchorId();
-                if (fallbackId) scrollToAnchorExact(fallbackId);
-              }
-            }, 120);
-          } else {
-            const fallbackId = getNearestVisibleAnchorId();
-            if (fallbackId) scrollToAnchorExact(fallbackId);
-          }
-        }
-      }, 120);
-      needsInitialPercentScroll = false;
-      needsInitialAnchorScroll = false;
-      return;
-    }
-    if (needsInitialAnchorScroll && initialAnchorParam) {
-      let ok = scrollToAnchorExact(initialAnchorParam);
-      afterNextLayout(() => {
-        if (!ok) ok = scrollToAnchorExact(initialAnchorParam);
-      });
-      setTimeout(() => {
-        if (!ok) ok = scrollToAnchorExact(initialAnchorParam);
-        if (!ok) {
-          const fallbackId = getNearestVisibleAnchorId();
-          if (fallbackId) scrollToAnchorExact(fallbackId);
-        }
-      }, 120);
-      needsInitialAnchorScroll = false;
-    }
-  }
+  // Create wrapper for initial scroll handling that updates state variables
+  const performInitialScrollWrapper = (currentSectionId) => {
+    const result = performInitialScrollIfNeeded({
+      currentSectionId,
+      active,
+      initialActiveSection,
+      needsInitialPercentScroll,
+      needsInitialAnchorScroll,
+      initialScrollPercent,
+      scrollToPercentWithinActive: (pct) => scrollToPercentWithinActive(pct, active),
+      initialAnchorParam,
+      afterNextLayout,
+    });
 
-  // Use IntersectionObserver to update active section based on section headers entering the viewport
-  function setupActiveSectionObserver() {
-    try {
-      if (activeObserver) activeObserver.disconnect();
-    } catch {}
-    const offset = Math.max(0, getHeaderOffsetPx());
-    function setActiveSectionFromObserver(id) {
-      if (!id || id === active) return;
-      if (!['subjective', 'objective', 'assessment', 'plan', 'billing'].includes(id)) return;
-      active = id;
-      refreshChartNavigation(chartNav, {
-        activeSection: active,
-        onSectionChange: (sectionId) => switchTo(sectionId),
-        isFacultyMode: isFacultyMode,
-        caseData: {
-          ...c,
-          ...draft,
-          modules: Array.isArray(draft.modules) ? draft.modules : c.modules,
-          editorSettings: c.editorSettings || draft.editorSettings,
-        },
-        caseInfo: getCaseInfoSnapshot(),
-        onCaseInfoUpdate: handleCaseInfoUpdate,
-        onEditorSettingsChange: (nextSettings) => {
-          draft.editorSettings = nextSettings;
-          c.editorSettings = nextSettings;
-          save();
-          if (window.refreshChartProgress) window.refreshChartProgress();
-        },
-      });
-    }
+    needsInitialPercentScroll = result.needsInitialPercentScroll;
+    needsInitialAnchorScroll = result.needsInitialAnchorScroll;
+  };
 
-    activeObserver = new IntersectionObserver(
-      (entries) => {
-        if (Date.now() < programmaticScrollBlockUntil || isProgrammaticScroll) return;
-        for (const e of entries) {
-          if (!e.isIntersecting) continue;
-          const id = (e.target.id || '').replace('section-', '');
-          setActiveSectionFromObserver(id);
-        }
-      },
-      { root: null, rootMargin: `-${offset + 8}px 0px -60% 0px`, threshold: 0.01 },
-    );
-    // Observe all section headers
-    try {
-      Object.values(sectionHeaders).forEach((hdr) => hdr && activeObserver.observe(hdr));
-    } catch {}
-  }
-
-  function switchTo(s) {
-    if (!isValidSection(s)) return;
-
-    const changingSection = s !== active;
-    active = s;
-
-    // User selection overrides any pending initial scroll behavior
-    needsInitialPercentScroll = false;
-    needsInitialAnchorScroll = false;
-
-    // Prevent scroll-driven active recalculation for the duration of the smooth scroll
-    programmaticScrollBlockUntil = Date.now() + 700; // ~0.7s window
-    isProgrammaticScroll = true;
-
-    // Sync section to URL (replace by default to avoid history spam)
-    try {
-      setQueryParams({ section: s });
-    } catch {}
-
-    if (changingSection) {
-      // Update chart navigation only if the logical active section changed.
-      refreshChartNavigation(chartNav, {
-        activeSection: active,
-        onSectionChange: (sectionId) => switchTo(sectionId),
-        isFacultyMode: isFacultyMode,
-        caseData: getCaseDataForNavigation(c, draft),
-        caseInfo: getCaseInfo(c),
-        onCaseInfoUpdate: (updatedInfo) => {
-          updateCaseObject(c, updatedInfo, draft);
-          updatePatientHeader();
-          debouncedSave();
-        },
-        onEditorSettingsChange: (nextSettings) => {
-          draft.editorSettings = nextSettings;
-          c.editorSettings = nextSettings;
-          save();
-          if (window.refreshChartProgress) window.refreshChartProgress();
-        },
-      });
-    }
-
-    // Scroll logic (single attempt + minimal fallback) kept intentionally lean
-    handleSectionScroll(
-      s,
-      getSectionHeader,
-      getSectionRoot,
-      scrollToAnchorExact,
+  // Create wrapper that maintains activeObserver state
+  const setupActiveSectionObserverWrapper = () => {
+    activeObserver = setupActiveSectionObserver({
+      activeObserver,
+      sectionHeaders,
       getHeaderOffsetPx,
-    );
-
-    // Clear programmatic flag on scroll end or timeout
-    const clearProg = () => {
-      isProgrammaticScroll = false;
-      window.removeEventListener('scrollend', clearProg);
-    };
-    try {
-      window.addEventListener('scrollend', clearProg, { once: true, signal: ac.signal });
-    } catch {
-      // scrollend not supported; fallback timeout
-      setTimeout(() => (isProgrammaticScroll = false), 800);
-    }
-
-    performInitialScrollIfNeeded(s);
-  }
+      active,
+      setActive: (newActive) => {
+        active = newActive;
+      },
+      chartNav,
+      switchTo,
+      isFacultyMode,
+      c,
+      draft,
+      save,
+      programmaticScrollBlockUntil,
+      isProgrammaticScroll,
+    });
+  };
 
   // Initialize the editor with sidebar navigation only
   app.append(chartNav, mainContainer);
   // Initialize header immediately so CSS var is ready before sections mount
   updatePatientHeader();
   const renderPatientHeaderActions = createPatientHeaderActionsRenderer(
-    patientHeader,
     isFacultyMode,
+    caseId,
     c,
     save,
   );
   renderPatientHeaderActions();
-  renderAllSections();
   // Set up IntersectionObserver for active section tracking
-  setupActiveSectionObserver();
-  // Initial nav state + optional deep link handling
-  refreshChartNavigation(chartNav, {
-    activeSection: active,
-    onSectionChange: (sectionId) => switchTo(sectionId),
-    isFacultyMode: isFacultyMode,
-    caseData: {
-      ...c,
-      ...draft,
-      modules: Array.isArray(draft.modules) ? draft.modules : c.modules,
-      editorSettings: c.editorSettings || draft.editorSettings,
-    },
-    caseInfo: {
-      title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
-      setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
-      age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
-      sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-      acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
-      dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
-      modules: Array.isArray(c.modules) ? c.modules : [],
-    },
-    onCaseInfoUpdate: (updatedInfo) => {
-      c.caseTitle = updatedInfo.title;
-      c.title = updatedInfo.title;
-      c.setting = updatedInfo.setting;
-      c.patientAge = updatedInfo.age;
-      c.patientGender = updatedInfo.sex;
-      c.acuity = updatedInfo.acuity;
-      c.patientDOB = updatedInfo.dob;
-      if (Array.isArray(updatedInfo.modules)) {
-        c.modules = updatedInfo.modules;
-        draft.modules = updatedInfo.modules;
-      }
-      // Keep canonical containers in sync
-      c.meta = c.meta || {};
-      c.meta.title = updatedInfo.title;
-      c.meta.setting = updatedInfo.setting;
-      c.meta.acuity = updatedInfo.acuity;
-      c.snapshot = c.snapshot || {};
-      c.snapshot.age = updatedInfo.age;
-      c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
-      c.snapshot.dob = updatedInfo.dob;
-      save();
-      if (window.refreshChartProgress) window.refreshChartProgress();
-    },
-    onEditorSettingsChange: (nextSettings) => {
-      draft.editorSettings = nextSettings;
-      c.editorSettings = nextSettings;
-      save();
-      if (window.refreshChartProgress) window.refreshChartProgress();
-    },
+  setupActiveSectionObserverWrapper();
+  // Initial nav state + optional deep link handling using modular configuration
+  const onCaseInfoUpdate = createCaseInfoUpdateHandler({ c, draft, save });
+  const onEditorSettingsChange = createEditorSettingsHandler({ draft, c, save });
+
+  const initialConfig = createInitialChartNavConfig({
+    active,
+    switchTo,
+    isFacultyMode,
+    c,
+    draft,
+    onCaseInfoUpdate,
+    onEditorSettingsChange,
   });
+
+  refreshChartNavigation(chartNav, initialConfig);
   // Perform initial anchor/percent scroll after content is laid out
-  afterNextLayout(() => performInitialScrollIfNeeded(active));
+  afterNextLayout(() => performInitialScrollWrapper(active));
 
   // Recreate observer on resize to keep rootMargin aligned with sticky header height
   window.addEventListener(
     'resize',
     () => {
       try {
-        setupActiveSectionObserver();
+        setupActiveSectionObserverWrapper();
       } catch {}
     },
     { passive: true, signal: ac.signal },

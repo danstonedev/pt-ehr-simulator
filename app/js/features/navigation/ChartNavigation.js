@@ -647,13 +647,13 @@ function createEditableCaseHeader(caseInfo, onUpdate, options = {}) {
 
 // Simple Case Details Modal
 function openCaseDetailsModal(caseInfo) {
-  const overlay = el('div', { class: 'goal-linker-modal', role: 'dialog', 'aria-modal': 'true' });
+  const overlay = el('div', { class: 'modal-overlay', role: 'dialog', 'aria-modal': 'true' });
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.remove();
   });
 
-  const content = el('div', { class: 'goal-linker-content case-details-modal' }, [
-    el('div', { class: 'goal-linker-header' }, [
+  const content = el('div', { class: 'modal-content case-details-modal' }, [
+    el('div', { class: 'modal-header' }, [
       el('h3', {}, 'Case Details'),
       el(
         'button',
@@ -661,7 +661,7 @@ function openCaseDetailsModal(caseInfo) {
         '✕',
       ),
     ]),
-    el('div', { class: 'goal-selection-list case-details-body' }, [
+    el('div', { class: 'modal-body case-details-body' }, [
       el('div', { class: 'case-info-grid case-details-grid' }, [
         // Secondary details: Setting, Acuity
         el('div', { class: 'case-info-row' }, [
@@ -677,7 +677,7 @@ function openCaseDetailsModal(caseInfo) {
     el(
       'div',
       {
-        class: 'goal-linker-header',
+        class: 'modal-actions',
         style:
           'justify-content: flex-end; background: var(--surface); border-top: 1px solid var(--border);',
       },
@@ -697,7 +697,7 @@ function openCaseDetailsModal(caseInfo) {
 function openViewArtifactModal(module, options = {}) {
   const { isFacultyMode = false, onEdit, onRemove } = options || {};
   const overlay = el('div', {
-    class: 'goal-linker-modal popup-overlay-base',
+    class: 'modal-overlay popup-overlay-base',
     role: 'dialog',
     'aria-modal': 'true',
   });
@@ -712,8 +712,8 @@ function openViewArtifactModal(module, options = {}) {
   overlay.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') overlay.remove();
   });
-  const content = el('div', { class: 'goal-linker-content case-details-modal popup-card-base' }, [
-    el('div', { class: 'goal-linker-header' }, [
+  const content = el('div', { class: 'modal-content case-details-modal popup-card-base' }, [
+    el('div', { class: 'modal-header' }, [
       el('h3', {}, title),
       el(
         'button',
@@ -721,7 +721,7 @@ function openViewArtifactModal(module, options = {}) {
         '✕',
       ),
     ]),
-    el('div', { class: 'goal-selection-list case-details-body' }, [
+    el('div', { class: 'modal-body case-details-body' }, [
       (() => {
         // Use the shared normalizer so new/legacy modules behave the same
         const t = normalizeArtifactType(module);
@@ -1210,7 +1210,7 @@ function openViewArtifactModal(module, options = {}) {
     el(
       'div',
       {
-        class: 'goal-linker-header',
+        class: 'modal-actions',
         style:
           'justify-content: flex-end; background: var(--surface); border-top: 1px solid var(--border); display:flex; gap:8px;',
       },
@@ -1287,7 +1287,7 @@ function openViewArtifactModal(module, options = {}) {
 // Add Artifact modal (faculty): collects title, type, and type-specific fields
 function openAddArtifactModal(onAdd) {
   const overlay = el('div', {
-    class: 'goal-linker-modal popup-overlay-base',
+    class: 'modal-overlay popup-overlay-base',
     role: 'dialog',
     'aria-modal': 'true',
   });
@@ -1452,8 +1452,8 @@ function openAddArtifactModal(onAdd) {
     ]),
   ]);
 
-  const content = el('div', { class: 'goal-linker-content case-details-modal popup-card-base' }, [
-    el('div', { class: 'goal-linker-header' }, [
+  const content = el('div', { class: 'modal-content case-details-modal popup-card-base' }, [
+    el('div', { class: 'modal-header' }, [
       el('h3', {}, 'Add Case Artifact'),
       el(
         'button',
@@ -1461,7 +1461,7 @@ function openAddArtifactModal(onAdd) {
         '✕',
       ),
     ]),
-    el('div', { class: 'goal-selection-list case-details-body' }, [
+    el('div', { class: 'modal-body case-details-body' }, [
       el('div', { class: 'instructor-form-field' }, [
         el('label', { class: 'instructor-form-label' }, 'Title *'),
         titleInput,
@@ -1495,7 +1495,7 @@ function openAddArtifactModal(onAdd) {
     el(
       'div',
       {
-        class: 'goal-linker-header',
+        class: 'modal-actions',
         style:
           'justify-content: flex-end; background: var(--surface); border-top: 1px solid var(--border); gap:16px;',
       },
@@ -1556,7 +1556,7 @@ function openAddArtifactModal(onAdd) {
 // Edit Artifact modal (faculty): similar to Add but pre-populated and updates existing module
 function openEditArtifactModal(module, onSave) {
   const overlay = el('div', {
-    class: 'goal-linker-modal popup-overlay-base',
+    class: 'modal-overlay popup-overlay-base',
     role: 'dialog',
     'aria-modal': 'true',
   });
@@ -1733,8 +1733,8 @@ function openEditArtifactModal(module, onSave) {
     ]),
   ]);
 
-  const content = el('div', { class: 'goal-linker-content case-details-modal popup-card-base' }, [
-    el('div', { class: 'goal-linker-header' }, [
+  const content = el('div', { class: 'modal-content case-details-modal popup-card-base' }, [
+    el('div', { class: 'modal-header' }, [
       el('h3', {}, 'Edit Background Document'),
       el(
         'button',
@@ -1742,7 +1742,7 @@ function openEditArtifactModal(module, onSave) {
         '✕',
       ),
     ]),
-    el('div', { class: 'goal-selection-list case-details-body' }, [
+    el('div', { class: 'modal-body case-details-body' }, [
       el('div', { class: 'instructor-form-field' }, [
         el('label', { class: 'instructor-form-label' }, 'Title *'),
         titleInput,
@@ -1811,7 +1811,7 @@ function openEditArtifactModal(module, onSave) {
     el(
       'div',
       {
-        class: 'goal-linker-header',
+        class: 'modal-actions',
         style:
           'justify-content: flex-end; background: var(--surface); border-top: 1px solid var(--border); display:flex; gap:8px;',
       },
@@ -1890,8 +1890,9 @@ export function openEditCaseModal(caseInfo, onSave) {
   const modal = el(
     'div',
     {
-      class: 'popup-overlay-base',
-      style: `position: fixed; inset:0; background: rgba(0,0,0,0.5); display:flex; align-items:flex-start; justify-content:center; z-index: var(--z-modal); overflow-y:auto; padding:24px 12px;`,
+      'data-modal': 'edit-case',
+      class:
+        'modal-overlay popup-overlay-base fixed inset-0 overlay-50 d-flex ai-center jc-center z-modal',
       onclick: (e) => {
         if (e.target === modal) close();
       },
@@ -1900,201 +1901,184 @@ export function openEditCaseModal(caseInfo, onSave) {
       el(
         'div',
         {
-          class: 'popup-card-base',
-          style: `background: var(--bg); color: var(--text); padding:32px; border-radius:12px; max-width:560px; width:95%; max-height:calc(100vh - 48px); overflow:auto; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);`,
+          class: 'modal-content case-details-modal popup-card-base',
           onclick: (e) => e.stopPropagation(),
         },
         [
-          el('h2', { class: 'instructor-title' }, 'Edit Case Details'),
-          el('form', { id: 'edit-case-form', onsubmit: handleSubmit }, [
-            // Title
-            el('div', { class: 'instructor-form-field' }, [
-              el('label', { class: 'instructor-form-label' }, 'Case Title *'),
-              el('input', {
-                type: 'text',
-                id: 'edit-title',
-                required: true,
-                class: 'instructor-form-input',
-                value: caseInfo.title || '',
-              }),
-            ]),
-            // Age + DOB (single row)
-            el('div', { style: 'display: flex; gap: 16px; margin-bottom: 16px;' }, [
-              // Age (left)
-              el('div', { style: 'flex: 1;' }, [
-                el(
-                  'label',
-                  {
-                    style:
-                      'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
-                  },
-                  'Age',
-                ),
+          el('div', { class: 'modal-header' }, [
+            el('h3', {}, 'Edit Case Details'),
+            el(
+              'button',
+              { class: 'close-btn', onclick: () => close(), 'aria-label': 'Close' },
+              '✕',
+            ),
+          ]),
+          el('div', { class: 'modal-body case-details-body' }, [
+            el('form', { id: 'edit-case-form', onsubmit: handleSubmit }, [
+              // Title
+              el('div', { class: 'instructor-form-field' }, [
+                el('label', { class: 'instructor-form-label' }, 'Case Title *'),
                 el('input', {
-                  type: 'number',
-                  id: 'edit-age',
-                  min: 0,
-                  max: 120,
-                  style:
-                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
-                  value: caseInfo.age || '',
-                  oninput: (e) => {
-                    const dobEl = document.getElementById('edit-dob');
-                    if (!dobEl) return;
-                    // Only set/overwrite DOB if empty or previously auto-filled from age
-                    if (dobEl.value && dobEl.dataset.autofilled !== 'age') return;
-                    const v = parseInt(e.target.value, 10);
-                    if (isNaN(v) || v <= 0 || v > 120) return;
-                    const today = new Date();
-                    const y = today.getFullYear() - v;
-                    const m = today.getMonth();
-                    const lastDay = new Date(y, m + 1, 0).getDate();
-                    const d = Math.min(today.getDate(), lastDay);
-                    const mm = String(m + 1).padStart(2, '0');
-                    const dd = String(d).padStart(2, '0');
-                    dobEl.value = `${y}-${mm}-${dd}`;
-                    dobEl.dataset.autofilled = 'age';
-                  },
+                  type: 'text',
+                  id: 'edit-title',
+                  required: true,
+                  class: 'instructor-form-input',
+                  value: caseInfo.title || '',
                 }),
               ]),
-              // DOB (right)
-              el('div', { style: 'flex: 1;' }, [
+              // Age + DOB (single row)
+              el('div', { class: 'd-flex gap-16 mb-16 flex-wrap' }, [
+                // Age (left)
+                el('div', { class: 'flex-1 minw-220' }, [
+                  el('div', { class: 'instructor-form-field' }, [
+                    el('label', { class: 'instructor-form-label' }, 'Patient Age'),
+                    el('input', {
+                      type: 'number',
+                      id: 'edit-age',
+                      min: 0,
+                      max: 120,
+                      class: 'instructor-form-input',
+                      value: caseInfo.age || '',
+                      oninput: (e) => {
+                        const dobEl = document.getElementById('edit-dob');
+                        if (!dobEl) return;
+                        // Only set/overwrite DOB if empty or previously auto-filled from age
+                        if (dobEl.value && dobEl.dataset.autofilled !== 'age') return;
+                        const v = parseInt(e.target.value, 10);
+                        if (isNaN(v) || v <= 0 || v > 120) return;
+                        const today = new Date();
+                        const y = today.getFullYear() - v;
+                        const m = today.getMonth();
+                        const lastDay = new Date(y, m + 1, 0).getDate();
+                        const d = Math.min(today.getDate(), lastDay);
+                        const mm = String(m + 1).padStart(2, '0');
+                        const dd = String(d).padStart(2, '0');
+                        dobEl.value = `${y}-${mm}-${dd}`;
+                        dobEl.dataset.autofilled = 'age';
+                      },
+                    }),
+                  ]),
+                ]),
+                // DOB (right)
+                el('div', { class: 'flex-1 minw-220' }, [
+                  el('div', { class: 'instructor-form-field' }, [
+                    el('label', { class: 'instructor-form-label' }, 'DOB'),
+                    el('input', {
+                      type: 'date',
+                      id: 'edit-dob',
+                      value: caseInfo.dob || '',
+                      class: 'instructor-form-input',
+                      oninput: (e) => {
+                        // If user is typing a DOB, mark as user-edited so age changes won't overwrite
+                        if (e.isTrusted) delete e.target.dataset.autofilled;
+                        const computed = computeAgeFromDob(e.target.value);
+                        const ageEl = document.getElementById('edit-age');
+                        if (computed && ageEl) ageEl.value = computed;
+                      },
+                    }),
+                  ]),
+                  el('div', { class: 'hint' }, 'Age auto-fills when DOB is entered.'),
+                ]),
+              ]),
+              // Sex (full width row)
+              el('div', { class: 'instructor-form-field' }, [
+                el('label', { class: 'instructor-form-label' }, 'Sex'),
                 el(
-                  'label',
+                  'select',
                   {
-                    style:
-                      'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
+                    id: 'edit-gender',
+                    class: 'instructor-form-input',
                   },
-                  'DOB',
-                ),
-                el('input', {
-                  type: 'date',
-                  id: 'edit-dob',
-                  value: caseInfo.dob || '',
-                  style:
-                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
-                  oninput: (e) => {
-                    // If user is typing a DOB, mark as user-edited so age changes won't overwrite
-                    if (e.isTrusted) delete e.target.dataset.autofilled;
-                    const computed = computeAgeFromDob(e.target.value);
-                    const ageEl = document.getElementById('edit-age');
-                    if (computed && ageEl) ageEl.value = computed;
-                  },
-                }),
-                el(
-                  'div',
-                  { style: 'margin-top: 6px; font-size: 12px; color: var(--text-secondary);' },
-                  'Age auto-fills when DOB is entered.',
+                  [
+                    el('option', { value: '' }, 'Select...'),
+                    el(
+                      'option',
+                      { value: 'male', selected: caseSex === 'male' ? '' : undefined },
+                      'Male',
+                    ),
+                    el(
+                      'option',
+                      { value: 'female', selected: caseSex === 'female' ? '' : undefined },
+                      'Female',
+                    ),
+                    el(
+                      'option',
+                      { value: 'other', selected: caseSex === 'other' ? '' : undefined },
+                      'Other',
+                    ),
+                    el(
+                      'option',
+                      {
+                        value: 'unspecified',
+                        selected: caseSex === 'unspecified' ? '' : undefined,
+                      },
+                      'Prefer not to say',
+                    ),
+                  ],
                 ),
               ]),
-            ]),
-            // Sex (full width row)
-            el('div', { style: 'margin-bottom: 16px;' }, [
-              el(
-                'label',
-                {
-                  style:
-                    'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
-                },
-                'Sex',
-              ),
-              el(
-                'select',
-                {
-                  id: 'edit-gender',
-                  style:
-                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
-                },
-                [
-                  el('option', { value: '' }, 'Select...'),
-                  el(
-                    'option',
-                    { value: 'male', selected: caseSex === 'male' ? '' : undefined },
-                    'Male',
-                  ),
-                  el(
-                    'option',
-                    { value: 'female', selected: caseSex === 'female' ? '' : undefined },
-                    'Female',
-                  ),
-                  el(
-                    'option',
-                    { value: 'other', selected: caseSex === 'other' ? '' : undefined },
-                    'Other',
-                  ),
-                  el(
-                    'option',
-                    { value: 'unspecified', selected: caseSex === 'unspecified' ? '' : undefined },
-                    'Prefer not to say',
-                  ),
-                ],
-              ),
-            ]),
-            // Setting (moved below Age/Sex)
-            el('div', { class: 'instructor-form-field' }, [
-              el('label', { class: 'instructor-form-label' }, 'Clinical Setting *'),
-              el('select', { id: 'edit-setting', required: true, class: 'instructor-form-input' }, [
-                el('option', { value: '' }, 'Select setting...'),
+              // Setting (moved below Age/Sex)
+              el('div', { class: 'instructor-form-field' }, [
+                el('label', { class: 'instructor-form-label' }, 'Clinical Setting *'),
                 el(
-                  'option',
-                  {
-                    value: 'Outpatient',
-                    selected: caseInfo.setting === 'Outpatient' ? '' : undefined,
-                  },
-                  'Outpatient',
-                ),
-                el(
-                  'option',
-                  {
-                    value: 'Inpatient',
-                    selected: caseInfo.setting === 'Inpatient' ? '' : undefined,
-                  },
-                  'Inpatient',
-                ),
-                el(
-                  'option',
-                  {
-                    value: 'Home Health',
-                    selected: caseInfo.setting === 'Home Health' ? '' : undefined,
-                  },
-                  'Home Health',
-                ),
-                el(
-                  'option',
-                  { value: 'SNF', selected: caseInfo.setting === 'SNF' ? '' : undefined },
-                  'Skilled Nursing Facility (SNF)',
-                ),
-                el(
-                  'option',
-                  {
-                    value: 'Acute Rehab',
-                    selected: caseInfo.setting === 'Acute Rehab' ? '' : undefined,
-                  },
-                  'Acute Rehabilitation',
-                ),
-                el(
-                  'option',
-                  { value: 'Other', selected: caseInfo.setting === 'Other' ? '' : undefined },
-                  'Other',
+                  'select',
+                  { id: 'edit-setting', required: true, class: 'instructor-form-input' },
+                  [
+                    el('option', { value: '' }, 'Select setting...'),
+                    el(
+                      'option',
+                      {
+                        value: 'Outpatient',
+                        selected: caseInfo.setting === 'Outpatient' ? '' : undefined,
+                      },
+                      'Outpatient',
+                    ),
+                    el(
+                      'option',
+                      {
+                        value: 'Inpatient',
+                        selected: caseInfo.setting === 'Inpatient' ? '' : undefined,
+                      },
+                      'Inpatient',
+                    ),
+                    el(
+                      'option',
+                      {
+                        value: 'Home Health',
+                        selected: caseInfo.setting === 'Home Health' ? '' : undefined,
+                      },
+                      'Home Health',
+                    ),
+                    el(
+                      'option',
+                      { value: 'SNF', selected: caseInfo.setting === 'SNF' ? '' : undefined },
+                      'Skilled Nursing Facility (SNF)',
+                    ),
+                    el(
+                      'option',
+                      {
+                        value: 'Acute Rehab',
+                        selected: caseInfo.setting === 'Acute Rehab' ? '' : undefined,
+                      },
+                      'Acute Rehabilitation',
+                    ),
+                    el(
+                      'option',
+                      { value: 'Other', selected: caseInfo.setting === 'Other' ? '' : undefined },
+                      'Other',
+                    ),
+                  ],
                 ),
               ]),
             ]),
             // Acuity (schema enums)
-            el('div', { style: 'margin-bottom: 24px;' }, [
-              el(
-                'label',
-                {
-                  style:
-                    'display: block; margin-bottom: 8px; font-weight: 500; color: var(--text);',
-                },
-                'Case Acuity',
-              ),
+            el('div', { class: 'instructor-form-field' }, [
+              el('label', { class: 'instructor-form-label' }, 'Case Acuity'),
               el(
                 'select',
                 {
                   id: 'edit-acuity',
-                  style:
-                    'width:100%; padding:12px; border:1px solid var(--input-border); border-radius:6px; font-size:14px; box-sizing:border-box;',
+                  class: 'instructor-form-input',
                 },
                 [
                   el('option', { value: '' }, 'Select acuity...'),
@@ -2124,41 +2108,40 @@ export function openEditCaseModal(caseInfo, onSave) {
                 ],
               ),
             ]),
-            // Case Artifacts moved to dedicated modal and sidebar block
-            // Buttons (sticky footer area so actions remain visible)
-            el(
-              'div',
-              {
-                style:
-                  'position: sticky; bottom: 0; background: var(--bg); padding-top: 12px; margin-top: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; justify-content: flex-end;',
-              },
-              [
-                el(
-                  'button',
-                  {
-                    type: 'button',
-                    class: 'btn secondary',
-                    style: 'padding: 12px 24px; font-size: 14px;',
-                    onclick: () => document.body.removeChild(modal),
-                  },
-                  'Cancel',
-                ),
-                el(
-                  'button',
-                  {
-                    type: 'submit',
-                    class: 'btn primary',
-                    style: 'padding: 12px 24px; font-size: 14px;',
-                  },
-                  'Save Changes',
-                ),
-              ],
-            ),
           ]),
+          el(
+            'div',
+            {
+              class: 'modal-actions',
+              style:
+                'justify-content: flex-end; background: var(--surface); border-top: 1px solid var(--border); gap:16px;',
+            },
+            [
+              el(
+                'button',
+                {
+                  type: 'button',
+                  class: 'btn secondary',
+                  onclick: () => close(),
+                },
+                'Cancel',
+              ),
+              el(
+                'button',
+                {
+                  type: 'submit',
+                  class: 'btn primary',
+                },
+                'Save Changes',
+              ),
+            ],
+          ),
         ],
       ),
     ],
   );
+
+  document.body.appendChild(modal);
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -2190,26 +2173,15 @@ export function openEditCaseModal(caseInfo, onSave) {
         updated.dob = `${y}-${mm}-${dd}`;
       }
     }
-    document.body.removeChild(modal);
+    close();
     onSave?.(updated);
   }
 
-  document.body.appendChild(modal);
   requestAnimationFrame(() => {
     modal.classList.add('is-open');
     modal.querySelector('.popup-card-base').classList.add('is-open');
     setTimeout(() => document.getElementById('edit-title')?.focus(), 90);
   });
-  setTimeout(() => {
-    if (getComputedStyle(modal).opacity === '0') {
-      modal.style.opacity = '1';
-      const card = modal.querySelector('.popup-card-base');
-      if (card) {
-        card.style.opacity = '1';
-        card.style.transform = 'scale(1)';
-      }
-    }
-  }, 80);
 
   function close() {
     modal.classList.remove('is-open');
@@ -2835,7 +2807,9 @@ export function createChartNavigation(config) {
                         title: 'Add background document',
                         onclick: () => {
                           openAddArtifactModal((mod) => {
-                            const next = [...items, mod];
+                            // Get current modules from config instead of using closure
+                            const currentModules = config.caseInfo?.modules || [];
+                            const next = [...currentModules, mod];
                             const payload = { ...(config.caseInfo || {}), modules: next };
                             config.onCaseInfoUpdate?.(payload);
                           });
@@ -2866,7 +2840,9 @@ export function createChartNavigation(config) {
                         title: 'Add background document',
                         onclick: () => {
                           openAddArtifactModal((mod) => {
-                            const next = [...items, mod];
+                            // Get current modules from config instead of using closure
+                            const currentModules = config.caseInfo?.modules || [];
+                            const next = [...currentModules, mod];
                             const payload = { ...(config.caseInfo || {}), modules: next };
                             config.onCaseInfoUpdate?.(payload);
                           });

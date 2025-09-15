@@ -3095,9 +3095,9 @@ html[data-theme='dark'] .sticky-top-bar {
 }
 
 /* ========================================
-   18) ENHANCED GOAL LINKER MODAL
+   18) ENHANCED MODAL SYSTEM
    ======================================== */
-.goal-linker-modal {
+.modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
@@ -3108,7 +3108,7 @@ html[data-theme='dark'] .sticky-top-bar {
   -webkit-backdrop-filter: blur(4px); /* Safari/iOS */
   backdrop-filter: blur(4px);
 }
-.goal-linker-content {
+.modal-content {
   background: var(--surface);
   border-radius: var(--radius-xl);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -3119,7 +3119,7 @@ html[data-theme='dark'] .sticky-top-bar {
   display: flex;
   flex-direction: column;
 }
-.goal-linker-header {
+.modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -3127,7 +3127,7 @@ html[data-theme='dark'] .sticky-top-bar {
   border-bottom: 1px solid var(--color-border);
   background: var(--panel);
 }
-.goal-linker-header h3 {
+.modal-header h3 {
   margin: 0;
   color: var(--accent);
   font-size: 1.125rem; /* 18px */
@@ -3151,7 +3151,7 @@ html[data-theme='dark'] .sticky-top-bar {
   transform: scale(1.1);
 }
 
-.goal-selection-list {
+.modal-body {
   flex: 1;
   overflow-y: auto;
   padding: var(--space-5) var(--space-6);
@@ -3200,26 +3200,26 @@ html[data-theme='dark'] .sticky-top-bar {
 .module-card .value {
   font-size: 0.875rem; /* 14px */
 }
-.case-details-modal .goal-linker-header {
+.case-details-modal .modal-header {
   /* UND green gradient header applied in both themes */
   background: linear-gradient(135deg, var(--und-green) 0%, var(--und-green-dark) 85%);
   color: var(--white);
   position: relative;
 }
-.case-details-modal .goal-linker-header h3 {
+.case-details-modal .modal-header h3 {
   font-size: 1.25rem; /* 20px */
   color: var(--white);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
-.case-details-modal .goal-linker-header .close-btn {
+.case-details-modal .modal-header .close-btn {
   color: var(--white);
   border-radius: 4px;
   padding: 4px 8px;
 }
-.case-details-modal .goal-linker-header .close-btn:hover {
+.case-details-modal .modal-header .close-btn:hover {
   background: rgba(255, 255, 255, 0.12);
 }
-.case-details-modal .goal-linker-header + .goal-selection-list {
+.case-details-modal .modal-header + .modal-body {
   background: var(--surface);
 }
 .goal-section-title {
@@ -3258,7 +3258,7 @@ html[data-theme='dark'] .sticky-top-bar {
   font-size: 0.875rem; /* 14px */
 }
 
-.goal-linker-actions {
+.modal-actions {
   display: flex;
   gap: var(--space-3);
   justify-content: flex-end;
@@ -3565,7 +3565,7 @@ select:focus,
   /* Mobile table improvements moved to tables.css */
 
   /* Mobile modal improvements */
-  .goal-linker-content {
+  .modal-content {
     width: 95%;
     max-height: 90vh;
     margin: var(--space-2);

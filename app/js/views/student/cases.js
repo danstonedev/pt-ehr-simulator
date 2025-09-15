@@ -514,7 +514,6 @@ function makeCasesPanel(app, cases, drafts) {
         el(
           'button',
           {
-            class: 'btn primary',
             class: 'btn primary d-flex ai-center gap-8',
             title: 'Create a blank SOAP note not attached to a case',
             onClick: () => openCreateNoteModal(),

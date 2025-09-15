@@ -120,6 +120,7 @@ export function getCaseDataForNavigation(c, draft) {
  * @param {Object} draft - Draft object to update (optional)
  */
 export function updateCaseObject(c, updatedInfo, draft = null) {
+  console.warn('DEBUG: updateCaseObject called with modules:', updatedInfo.modules?.length);
   // Update primary fields
   c.caseTitle = updatedInfo.title;
   c.title = updatedInfo.title;
@@ -129,6 +130,7 @@ export function updateCaseObject(c, updatedInfo, draft = null) {
   c.acuity = updatedInfo.acuity;
   c.patientDOB = updatedInfo.dob;
   c.modules = Array.isArray(updatedInfo.modules) ? updatedInfo.modules : c.modules || [];
+  console.warn('DEBUG: updateCaseObject updated c.modules to length:', c.modules.length);
 
   // Keep canonical containers in sync
   c.meta = c.meta || {};
@@ -144,6 +146,7 @@ export function updateCaseObject(c, updatedInfo, draft = null) {
   // Update draft if provided
   if (draft && Array.isArray(updatedInfo.modules)) {
     draft.modules = updatedInfo.modules;
+    console.warn('DEBUG: updateCaseObject updated draft.modules to length:', draft.modules.length);
   }
 }
 
@@ -366,6 +369,7 @@ export function handleCaseInfoUpdate(
   renderPatientHeaderActions,
 ) {
   try {
+    console.warn('DEBUG: handleCaseInfoUpdate called with modules:', updatedInfo.modules?.length);
     c.caseTitle = updatedInfo.title;
     c.title = updatedInfo.title;
     c.setting = updatedInfo.setting;
@@ -376,6 +380,7 @@ export function handleCaseInfoUpdate(
     if (Array.isArray(updatedInfo.modules)) {
       c.modules = updatedInfo.modules;
       draft.modules = updatedInfo.modules;
+      console.warn('DEBUG: Updated c.modules to length:', c.modules.length);
     }
     // Keep canonical containers in sync
     c.meta = c.meta || {};
@@ -389,7 +394,9 @@ export function handleCaseInfoUpdate(
     updatePatientHeader();
     renderPatientHeaderActions();
     save();
+    console.warn('DEBUG: About to call window.refreshChartProgress');
     if (window.refreshChartProgress) window.refreshChartProgress();
+    console.warn('DEBUG: window.refreshChartProgress called');
   } catch (e) {
     console.warn('handleCaseInfoUpdate error:', e);
   }
