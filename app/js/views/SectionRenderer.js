@@ -1,12 +1,6 @@
 // Section rendering utilities for Case Editor
 import { el } from '../ui/utils.js';
-import {
-  createSubjectiveSection,
-  createObjectiveSection,
-  createAssessmentSection,
-  createPlanSection,
-  createBillingSection,
-} from '../features/soap/index.js';
+// SOAP sections loaded dynamically for better code splitting and performance
 
 /**
  * Creates a section wrapper with header and content
@@ -33,12 +27,16 @@ function createSectionWrapper(sectionId, title, content, cssClass) {
 }
 
 /**
- * Creates the subjective section with wrapper
+ * Creates the subjective section with wrapper (dynamically loaded)
  * @param {Object} draft - Draft data
  * @param {Function} save - Save function
- * @returns {Object} Section elements
+ * @returns {Promise<Object>} Section elements
  */
-function createSubjectiveSectionWithWrapper(draft, save) {
+async function createSubjectiveSectionWithWrapper(draft, save) {
+  const { createSubjectiveSection } = await import(
+    '../features/soap/subjective/SubjectiveSection.js'
+  );
+
   const content = createSubjectiveSection(draft.subjective, (data) => {
     draft.subjective = data;
     save();
@@ -49,12 +47,14 @@ function createSubjectiveSectionWithWrapper(draft, save) {
 }
 
 /**
- * Creates the objective section with wrapper
+ * Creates the objective section with wrapper (dynamically loaded)
  * @param {Object} draft - Draft data
  * @param {Function} save - Save function
- * @returns {Object} Section elements
+ * @returns {Promise<Object>} Section elements
  */
-function createObjectiveSectionWithWrapper(draft, save) {
+async function createObjectiveSectionWithWrapper(draft, save) {
+  const { createObjectiveSection } = await import('../features/soap/objective/ObjectiveSection.js');
+
   const content = createObjectiveSection(draft.objective, (data) => {
     draft.objective = data;
     save();
@@ -65,12 +65,16 @@ function createObjectiveSectionWithWrapper(draft, save) {
 }
 
 /**
- * Creates the assessment section with wrapper
+ * Creates the assessment section with wrapper (dynamically loaded)
  * @param {Object} draft - Draft data
  * @param {Function} save - Save function
- * @returns {Object} Section elements
+ * @returns {Promise<Object>} Section elements
  */
-function createAssessmentSectionWithWrapper(draft, save) {
+async function createAssessmentSectionWithWrapper(draft, save) {
+  const { createAssessmentSection } = await import(
+    '../features/soap/assessment/AssessmentSection.js'
+  );
+
   const content = createAssessmentSection(draft.assessment, (data) => {
     draft.assessment = data;
     save();
@@ -81,12 +85,14 @@ function createAssessmentSectionWithWrapper(draft, save) {
 }
 
 /**
- * Creates the plan section with wrapper
+ * Creates the plan section with wrapper (dynamically loaded)
  * @param {Object} draft - Draft data
  * @param {Function} save - Save function
- * @returns {Object} Section elements
+ * @returns {Promise<Object>} Section elements
  */
-function createPlanSectionWithWrapper(draft, save) {
+async function createPlanSectionWithWrapper(draft, save) {
+  const { createPlanSection } = await import('../features/soap/plan/PlanMain.js');
+
   const content = createPlanSection(draft.plan, (data) => {
     draft.plan = data;
     save();
@@ -97,12 +103,14 @@ function createPlanSectionWithWrapper(draft, save) {
 }
 
 /**
- * Creates the billing section with wrapper
+ * Creates the billing section with wrapper (dynamically loaded)
  * @param {Object} draft - Draft data
  * @param {Function} save - Save function
- * @returns {Object} Section elements
+ * @returns {Promise<Object>} Section elements
  */
-function createBillingSectionWithWrapper(draft, save) {
+async function createBillingSectionWithWrapper(draft, save) {
+  const { createBillingSection } = await import('../features/soap/billing/BillingSection.js');
+
   const content = createBillingSection(draft.billing, (data) => {
     draft.billing = data;
     save();
@@ -113,13 +121,13 @@ function createBillingSectionWithWrapper(draft, save) {
 }
 
 /**
- * Renders all sections into the content root
+ * Renders all sections into the content root (async for dynamic loading)
  * @param {HTMLElement} contentRoot - Content container
  * @param {Object} draft - Draft data
  * @param {Function} save - Save function
- * @returns {Object} Section roots and headers for reference
+ * @returns {Promise<Object>} Section roots and headers for reference
  */
-export function renderAllSections(contentRoot, draft, save) {
+export async function renderAllSections(contentRoot, draft, save) {
   contentRoot.replaceChildren();
 
   const sectionRoots = {};
@@ -134,11 +142,19 @@ export function renderAllSections(contentRoot, draft, save) {
     { id: 'billing', creator: createBillingSectionWithWrapper },
   ];
 
-  for (const section of sections) {
-    const { header, wrapper } = section.creator(draft, save);
-    sectionHeaders[section.id] = header;
-    sectionRoots[section.id] = wrapper;
-    contentRoot.append(wrapper);
+  // Load all sections in parallel for better performance
+  const sectionPromises = sections.map(async (section) => {
+    const { header, wrapper } = await section.creator(draft, save);
+    return { id: section.id, header, wrapper };
+  });
+
+  const results = await Promise.all(sectionPromises);
+
+  // Add sections to DOM and collect references
+  for (const result of results) {
+    sectionHeaders[result.id] = result.header;
+    sectionRoots[result.id] = result.wrapper;
+    contentRoot.append(result.wrapper);
   }
 
   return { sectionRoots, sectionHeaders };

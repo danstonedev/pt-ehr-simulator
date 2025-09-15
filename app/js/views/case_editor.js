@@ -3,13 +3,7 @@ import { route } from '../core/index.js';
 import { EXPERIMENT_FLAGS } from '../core/constants.js';
 import { setQueryParams, onRouteChange, navigate as urlNavigate } from '../core/url.js';
 import { el } from '../ui/utils.js';
-import {
-  createSubjectiveSection,
-  createObjectiveSection,
-  createAssessmentSection,
-  createPlanSection,
-  createBillingSection,
-} from '../features/soap/index.js';
+// SOAP sections now loaded dynamically for better code splitting
 import {
   initializeCase,
   initializeDraft,
@@ -244,7 +238,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   // Create patient header using modular utility BEFORE it's used
   const headerElements = createPatientHeader(c);
-  const { patientHeader } = headerElements;
+  const { patientHeader, avatarEl, updatePatientAvatar } = headerElements;
   const updatePatientHeader = createPatientHeaderUpdater(c, headerElements);
 
   // Wrap save function to include progress refresh and status updates
@@ -300,7 +294,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   window.refreshChartProgress = refreshChartProgress;
 
   // Setup theme observer for avatar updates
-  const themeObserver = setupThemeObserver(patientHeader);
+  const themeObserver = setupThemeObserver(avatarEl, updatePatientAvatar);
 
   // Setup resize observer for header height tracking
   try {
@@ -331,8 +325,8 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   ]);
 
   // Render all sections once to form a single scrolling page
-  // Use modular section renderer
-  const { sectionRoots, sectionHeaders } = renderAllSections(contentRoot, draft, save);
+  // Use modular section renderer (now loads SOAP sections dynamically)
+  const { sectionRoots, sectionHeaders } = await renderAllSections(contentRoot, draft, save);
 
   // Create scroll utility function
   const scrollToPercentWithinActive = createScrollToPercentWithinActive(

@@ -23,6 +23,26 @@ export default defineConfig({
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash].[ext]',
+
+        // Manual chunk configuration for code splitting
+        manualChunks(id) {
+          // SOAP sections - split these into separate chunks for lazy loading
+          if (id.includes('features/soap/subjective/')) {
+            return 'soap-subjective';
+          }
+          if (id.includes('features/soap/objective/')) {
+            return 'soap-objective';
+          }
+          if (id.includes('features/soap/assessment/')) {
+            return 'soap-assessment';
+          }
+          if (id.includes('features/soap/plan/')) {
+            return 'soap-plan';
+          }
+          if (id.includes('features/soap/billing/')) {
+            return 'soap-billing';
+          }
+        },
       },
 
       // Enable tree shaking for all modules
