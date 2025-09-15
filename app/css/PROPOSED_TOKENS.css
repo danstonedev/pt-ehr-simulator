@@ -1,0 +1,207 @@
+/* Note: CSS custom properties are not evaluated in @media conditions in plain CSS.
+   Keep existing breakpoint values literal in @media unless adopting a preprocessor/build step. */
+
+:root {
+  /*
+  ============================================================================
+  Palette (semantic)
+  - Keep simple, readable names; map aliases below for backward-compatibility.
+  ========================================================================= */
+  --color-brand: green;
+  --color-bg: #ffffff;
+  --color-fg: #000000;
+  --color-muted: gray;
+  --color-warn: orange;
+  --color-danger: red;
+  --color-overlay: rgba(0, 0, 0, 0.1);
+  --color-surface-90: rgba(255, 255, 255, 0.9);
+  --color-surface-18: rgba(255, 255, 255, 0.18);
+
+  /* Backward compatible color aliases (in-use) */
+  --color-1: var(--color-brand); /* was green */
+  --color-2: var(--color-bg); /* was white */
+  --color-3: var(--color-muted); /* was gray */
+  --color-4: var(--color-warn); /* was orange */
+  --color-5: var(--color-bg); /* was #fff */
+  --color-6: var(--color-fg); /* was #000 */
+  --color-7: var(--color-fg); /* was black */
+  --color-8: var(--color-surface-90); /* was rgba(255,255,255,.9) */
+  --color-9: var(--color-fg); /* was #000000 */
+  --color-10: var(--color-overlay); /* was rgba(0,0,0,.1) */
+  --color-11: var(--color-danger); /* was red */
+  --color-12: var(--color-surface-18); /* was rgba(255,255,255,.18) */
+
+  /* Canonical semantic aliases (project-wide)
+    - Use `--accent` (no `--accent2` alias).
+    - Use `--warn` (no `--warning` alias).
+    - For borders, use `--color-border`, `--color-border-strong`, `--color-border-muted` (avoid legacy `--border*` aliases).
+    These are defined in theme blocks in styles.css but noted here for discoverability. */
+
+  /* Surfaces (semantic) */
+  --surface-warn: #fff3cd; /* soft warn background */
+  --text-on-warn: #664d03; /* warn text color */
+  --surface-topbar: rgba(0, 0, 0, 0.92); /* default: dark topbar */
+  --surface-footer: rgba(10, 12, 18, 0.7); /* default: dark translucent footer */
+  /* Borders (semantic) */
+  --color-border: #d1d5db; /* neutral-300-ish default; themes will override */
+  --color-border-strong: #9ca3af; /* neutral-400-ish default; themes will override */
+  --color-border-muted: rgba(224, 224, 224, 0.35); /* light muted border; themes will override */
+
+  /* Icons */
+  --color-icon: var(--color-fg);
+
+  /* Component Surfaces (semantic, can be overridden per theme) */
+  --surface-inline-card: var(--color-surface-90); /* default translucent light */
+  --surface-editor: var(--color-bg); /* default to bg; themes can darken */
+  --surface-case-header: var(--color-bg); /* default to bg or gradient per theme */
+  --surface-table-striped: rgba(0, 0, 0, 0.04); /* light stripe default for readability */
+  --surface-table-head: #111827; /* neutral-800-ish default; themes will override */
+  /* Table header text (semantic) */
+  --table-head-text: #ffffff;
+
+  /*
+  ============================================================================
+  Typography
+  - Font sizes use a compact scale; keep existing numeric aliases for safety.
+  ========================================================================= */
+  --font-xs: 0.75rem; /* 12px */
+  --font-sm: 0.8125rem; /* 13px */
+  --font-md: 0.875rem; /* 14px */
+  --font-base: 1rem; /* 16px */
+  --font-lg: 1.125rem; /* 18px */
+  --font-xl: 1.25rem; /* 20px */
+
+  /* Aliases (existing references) */
+  --font-1: var(--font-xs);
+  --font-2: var(--font-md);
+  --font-3: var(--font-base);
+  --font-4: var(--font-sm);
+  --font-5: var(--font-lg);
+  --font-6: 16px; /* legacy literal */
+  --font-7: 12px; /* legacy literal */
+  --font-8: var(--font-xl);
+
+  /* Line heights */
+  --lh-tight: 1;
+  --lh-snug: 1.2;
+  --lh-normal: 1.3;
+  --lh-relaxed: 1.4;
+  --lh-comfy: 1.6;
+
+  /* Aliases (existing references) */
+  --lh-1: var(--lh-relaxed);
+  --lh-2: var(--lh-tight);
+  --lh-3: var(--lh-normal);
+  --lh-4: 1.25; /* between snug/normal; preserve exact value */
+  --lh-5: var(--lh-snug);
+  --lh-6: var(--lh-comfy);
+
+  /*
+  ============================================================================
+  Spacing (4px base scale)
+  ========================================================================= */
+  --space-xxs: 2px;
+  --space-xs: 4px;
+  --space-sm: 6px;
+  --space-md: 8px;
+  --space-lg: 10px;
+  --space-xl: 12px;
+  --space-2xl: 16px;
+  --space-3xl: 24px;
+
+  /* Aliases (existing references) */
+  --space-1: var(--space-md); /* 8px */
+  --space-2: var(--space-xl); /* 12px */
+  --space-3: var(--space-sm); /* 6px */
+  --space-4: var(--space-lg); /* 10px */
+  --space-5: var(--space-xs); /* 4px */
+  --space-6: var(--space-2xl); /* 16px */
+  --space-7: var(--space-xxs); /* 2px */
+  --space-8: var(--space-3xl); /* 24px */
+
+  /*
+  ============================================================================
+  Radii
+  ========================================================================= */
+  --radius-none: 0;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+  --radius-round: 50%;
+
+  /* Aliases (existing references) */
+  --radius-1: var(--radius-sm);
+  --radius-2: var(--radius-round);
+  --radius-3: var(--radius-md);
+  --radius-4: var(--radius-lg);
+  --radius-5: var(--radius-pill);
+  --radius-6: var(--radius-none);
+
+  /*
+  ============================================================================
+  Shadows
+  ========================================================================= */
+  --elev-none: none;
+  --elev-focus-ring: 0 0 0 2px rgba(0, 0, 0, 0.15); /* safe default */
+  --elev-fab: 0 4px 12px rgba(0, 0, 0, 0.2); /* safe default */
+  --danger-light: rgba(255, 0, 0, 0.35); /* used in focus ring */
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow-drawer: -10px 0 24px rgba(0, 0, 0, 0.35);
+
+  /* Aliases (existing references) */
+  --shadow-1: var(--elev-none);
+  --shadow-2: var(--elev-focus-ring);
+  --shadow-3: var(--shadow-1);
+  --shadow-4: none !important;
+  --shadow-5: var(--elev-fab);
+  --shadow-6: 0 0 0 2px var(--danger-light);
+  --shadow-7: var(--shadow-sm);
+  --shadow-8: var(--shadow-md);
+  --shadow-9: var(--shadow-lg);
+
+  /*
+  ============================================================================
+  Print font sizes (kept as pt for print CSS)
+  ========================================================================= */
+  --font-print-base: 12pt;
+  --font-print-small: 10pt;
+  --font-print-h1: 18pt;
+  --font-print-h2: 16pt;
+  --font-print-h3: 14pt;
+  --font-print-h4: 12pt;
+  --font-print-h5: 11pt;
+
+  /*
+  ============================================================================
+  Z-index (layering)
+  ========================================================================= */
+  --z-below: -1;
+  --z-1: var(--z-below); /* alias */
+  --z-base: 1;
+  --z-4: var(--z-base); /* alias */
+  --z-modal: 1090;
+  --z-5: var(--z-modal); /* alias */
+  --z-overlay: 1100;
+  --z-3: var(--z-overlay); /* alias */
+  --z-drawer: 1200;
+  --z-6: var(--z-drawer); /* alias */
+  --z-top: 10000;
+  --z-2: var(--z-top); /* alias */
+
+  /*
+  ============================================================================
+  Breakpoints (document only; not for @media usage with var())
+  ========================================================================= */
+  --bp-min-1: 901px; /* alias to preserve reference */
+  --bp-min-2: 1024px;
+  --bp-min-3: 900px;
+  --bp-min-4: 1025px;
+  --bp-max-1: 640px;
+  --bp-max-2: 1024px;
+  --bp-max-3: 768px;
+  --bp-max-4: 900px;
+}

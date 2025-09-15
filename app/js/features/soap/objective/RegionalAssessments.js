@@ -302,14 +302,14 @@ export function createRegionalAssessment(regionKey, assessmentData, onChange) {
     'div',
     {
       class: 'regional-assessment__header',
-      style: 'margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid var(--accent2);',
+      style: 'margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid var(--accent);',
     },
     [
       el(
         'h4',
         {
           class: 'regional-assessment__title',
-          style: 'margin: 0; color: var(--accent2); font-size: 18px;',
+          style: 'margin: 0; color: var(--accent); font-size: 18px;',
         },
         region.name,
       ),

@@ -209,7 +209,7 @@ export function createModeIndicator(isFacultyMode, isKeyMode) {
       'span',
       {
         class: 'badge',
-        style: 'background: var(--warning); color: var(--text); margin-left: 8px;',
+        style: 'background: var(--warn); color: var(--text); margin-left: 8px;',
       },
       'KEY VIEW',
     );

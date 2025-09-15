@@ -3185,7 +3185,7 @@ export function updateSaveStatus(sidebar, status) {
   if (statusDot && statusText) {
     switch (status) {
       case 'saving':
-        statusDot.style.background = 'var(--warning)';
+        statusDot.style.background = 'var(--warn)';
         statusText.textContent = 'Saving...';
         break;
       case 'saved':

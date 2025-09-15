@@ -7,7 +7,7 @@
   width: 100%;
   border-collapse: collapse;
   margin-top: var(--space-2);
-  font-size: 0.8125rem; /* 13px - denser */
+  font-size: var(--font-sm, 0.8125rem); /* 13px - denser */
 }
 
 /* Align tables with subsection inputs using shared indent */
@@ -38,13 +38,13 @@
 }
 
 .table th {
-  font-size: 0.875rem; /* 14px - denser header */
+  font-size: var(--font-md, 0.875rem); /* 14px - denser header */
   font-weight: 600;
-  color: #fff; /* White text on dark background */
+  color: var(--table-head-text, var(--color-bg, #fff)); /* Semantic header text color */
   text-transform: capitalize;
   letter-spacing: 0.3px;
-  /* Single color background instead of gradient for cleaner look */
-  background: var(--header-gradient-left);
+  /* Single color or tokenized background for cleaner look */
+  background: var(--surface-table-head, var(--header-gradient-left));
   contain: layout style; /* Performance optimization for table headers */
 }
 
@@ -87,9 +87,9 @@
 /* Dashboard cases tables: single color header for cleaner look */
 .cases-table thead th {
   /* Single color background instead of gradient */
-  background: var(--header-gradient-left);
-  color: #fff;
-  border-bottom: 1px solid var(--border-strong);
+  background: var(--surface-table-head, var(--header-gradient-left));
+  color: var(--table-head-text, var(--color-bg, #fff));
+  border-bottom: 1px solid var(--color-border-strong);
 }
 .cases-table thead th.sortable:hover {
   background: var(--header-gradient-left); /* keep single color on hover */
@@ -100,12 +100,17 @@
   background: color-mix(in srgb, var(--header-gradient-left) 85%, white);
 }
 
+/* Optional row striping using semantic token */
+.table tbody tr:nth-child(even) td {
+  background: var(--surface-table-striped, transparent);
+}
+
 /* Simple status labels used in Draft Status column */
 .cases-table .status {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 0.75rem; /* 12px */
+  font-size: var(--font-xs, 0.75rem); /* 12px */
   font-weight: 600;
   line-height: 1;
   border: 1px solid transparent;
@@ -138,14 +143,14 @@
   width: 100%;
   border-collapse: collapse;
   margin: var(--space-2) 0;
-  font-size: 0.75rem; /* 12px */
+  font-size: var(--font-xs, 0.75rem); /* 12px */
 }
 .regional-assessment .table th {
   background: var(--bg2);
   padding: var(--ra-cell-pad-y) var(--ra-cell-pad-x);
   text-align: left;
   border: none;
-  font-size: 0.875rem; /* 14px */
+  font-size: var(--font-md, 0.875rem); /* 14px */
   font-weight: 600;
   color: var(--text);
   text-transform: capitalize;
@@ -195,7 +200,7 @@
 }
 .editable-table__title {
   margin: 0;
-  color: var(--accent2);
+  color: var(--accent);
   font-size: 0.875rem; /* 14px */
   font-weight: 600;
 }
@@ -212,7 +217,7 @@
   border-radius: var(--radius-sm);
   border: none;
   background: var(--primary);
-  color: #fff;
+  color: var(--color-bg, #fff);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -224,7 +229,7 @@
 .editable-table__table {
   width: 100%;
   border-collapse: collapse;
-  border: 1px solid var(--border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   overflow: hidden;
   font-size: 0.875rem; /* 14px */
@@ -326,7 +331,7 @@
   /* If a header cell carries data-short, use it to display a compact label on mobile */
   .bilateral-table .editable-table__head th[data-short]::before {
     content: attr(data-short);
-    color: #fff;
+    color: var(--table-head-text, var(--color-bg, #fff));
   }
   .bilateral-table .editable-table__head th[data-short] {
     color: transparent;
@@ -460,7 +465,7 @@
 /* Ensure darker header background on editable tables, override .table th background */
 .editable-table__head .editable-table__header-cell {
   background: transparent;
-  color: #fff;
+  color: var(--table-head-text, var(--color-bg, #fff));
 }
 /* Keep Actions header visible (can be blank via JS) to preserve alignment */
 /* Increase specificity so this wins over `.table th { border-bottom: none; }` */
@@ -658,14 +663,14 @@ html[data-theme='dark'] .editable-table__select option:checked {
 .test-interpretation-reference summary {
   cursor: pointer;
   font-weight: bold;
-  color: var(--accent2);
+  color: var(--accent);
   font-size: 12px;
   -webkit-user-select: none;
   user-select: none;
 }
 .mmt-grading-reference summary:hover,
 .test-interpretation-reference summary:hover {
-  color: var(--accent2-dark);
+  color: var(--accent-dark);
 }
 
 /* Align helper dropdowns with subsection inputs/tables */
@@ -678,7 +683,7 @@ html[data-theme='dark'] .editable-table__select option:checked {
 /* Goals tables accents */
 .goals-table .editable-table__head .editable-table__header-cell {
   background: transparent;
-  color: #fff;
+  color: var(--table-head-text, var(--color-bg, #fff));
   border-bottom: 0;
 }
 
