@@ -5,9 +5,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "exit 0",
-    "start": "exit 0",
-    "dev": "exit 0",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:analyze": "vite build && echo \"Bundle analysis available at dist/stats.html\"",
+    "build:watch": "vite build --watch",
+    "start": "npm run dev",
+    "serve:build": "vite preview --port 3000",
     "lint": "eslint \"app/js/**/*.js\"",
     "format": "prettier -w .",
     "check": "eslint \"app/js/**/*.js\" && prettier -c .",
@@ -17,11 +21,15 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.50.2",
+    "@vitejs/plugin-legacy": "^7.2.1",
     "eslint": "^9.11.0",
-    "prettier": "^3.3.3",
+    "globals": "^15.12.0",
     "husky": "^9.1.4",
     "lint-staged": "^15.2.10",
-    "globals": "^15.12.0"
+    "prettier": "^3.3.3",
+    "rollup-plugin-visualizer": "^6.0.3",
+    "vite": "^7.1.5"
   },
   "main": "index.js",
   "repository": {

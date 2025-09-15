@@ -18,12 +18,7 @@ export function el(tag, attrs = {}, children = []) {
   });
   return e;
 }
-export function download(filename, text) {
-  const a = document.createElement('a');
-  a.href = 'data:text/json;charset=utf-8,' + encodeURIComponent(text);
-  a.download = filename;
-  a.click();
-}
+
 export function textareaAutoResize(t) {
   const computeBaseHeight = () => {
     const cs = window.getComputedStyle(t);
