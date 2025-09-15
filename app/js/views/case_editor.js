@@ -30,6 +30,7 @@ import {
   handleSectionScroll,
   handleCaseInfoUpdate,
   getCaseInfoSnapshot,
+  createChartNavigationForEditor,
 } from './CaseEditorUtils.js';
 import {
   getHeaderOffsetPx,
@@ -41,6 +42,13 @@ import {
   exposeScrollHelpers,
 } from './ScrollUtils.js';
 import { createMissingCaseIdError } from './EditorUIUtils.js';
+import {
+  createPatientHeader,
+  setupThemeObserver,
+  createPatientHeaderUpdater,
+  createPatientHeaderActionsRenderer,
+} from './CaseEditorRenderer.js';
+import { renderAllSections, getSectionRoot, getSectionHeader } from './SectionRenderer.js';
 import {
   createChartNavigation,
   refreshChartNavigation,
@@ -130,64 +138,13 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   let { draft, save: originalSave } = draftManager;
 
   // Create chart navigation sidebar first
-  const chartNav = createChartNavigation({
-    activeSection: 'subjective',
-    onSectionChange: (sectionId) => switchTo(sectionId),
-    isFacultyMode: isFacultyMode,
-    caseData: {
-      ...c,
-      ...draft,
-      // Prefer draft.modules when present; otherwise use case modules
-      modules: Array.isArray(draft.modules) ? draft.modules : c.modules,
-      editorSettings: c.editorSettings || draft.editorSettings,
-    },
-    caseInfo: {
-      // Prefer explicit fields, then canonical meta/snapshot fallbacks
-      title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
-      setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
-      age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
-      sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-      acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
-      dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
-      modules: Array.isArray(c.modules) ? c.modules : [],
-    },
-    onCaseInfoUpdate: (updatedInfo) => {
-      // Update the case object with new information
-      c.caseTitle = updatedInfo.title;
-      c.title = updatedInfo.title;
-      c.setting = updatedInfo.setting;
-      c.patientAge = updatedInfo.age;
-      c.patientGender = updatedInfo.sex;
-      c.acuity = updatedInfo.acuity;
-      c.patientDOB = updatedInfo.dob;
-      c.modules = Array.isArray(updatedInfo.modules) ? updatedInfo.modules : c.modules || [];
-      // Keep canonical containers in sync
-      c.meta = c.meta || {};
-      c.meta.title = updatedInfo.title;
-      c.meta.setting = updatedInfo.setting;
-      c.meta.acuity = updatedInfo.acuity;
-      c.snapshot = c.snapshot || {};
-      c.snapshot.age = updatedInfo.age;
-      // Normalize sex for snapshot to lower-case if looks like a label
-      c.snapshot.sex = (updatedInfo.sex || '').toLowerCase() || 'unspecified';
-      c.snapshot.dob = updatedInfo.dob;
-      // Persist modules to draft/case
-      if (Array.isArray(updatedInfo.modules)) {
-        draft.modules = updatedInfo.modules;
-      }
-
-      // Save the case
-      save();
-
-      // Refresh chart navigation to show updated progress
-      refreshChartProgress();
-    },
-    onEditorSettingsChange: (nextSettings) => {
-      draft.editorSettings = nextSettings;
-      c.editorSettings = nextSettings;
-      save();
-      refreshChartProgress();
-    },
+  const chartNav = await createChartNavigationForEditor({
+    c,
+    draft,
+    isFacultyMode,
+    switchTo,
+    save,
+    refreshChartProgress,
   });
 
   // Wrap save function to include progress refresh and status updates
@@ -294,125 +251,13 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   // Make chart refresh available globally for components
   window.refreshChartProgress = refreshChartProgress;
 
-  // Sticky patient header (two-line stacked)
-  // Note: Date parsing moved to CaseEditorUtils.js
+  // Create patient header using modular utility
+  const { patientHeader, updatePatientHeader } = createPatientHeader();
 
-  const patientHeaderNameEl = el('div', {}, '');
-  const patientHeaderDemoEl = el('div', {}, '');
-  // Avatar container (PNG swapped by sex + theme)
-  const avatarEl = el('div', { class: 'patient-avatar', 'aria-hidden': 'true' }, []);
+  // Setup theme observer for avatar updates
+  const themeObserver = setupThemeObserver(patientHeader);
 
-  // Asset mapping – user must place PNGs under app/img/avatars/
-  const AVATAR_MAP = {
-    male: {
-      light: 'img/icon_male_light.png',
-      dark: 'img/icon_male_dark.png',
-    },
-    female: {
-      light: 'img/icon_female_light.png',
-      dark: 'img/icon_female_dark.png',
-    },
-    neutral: {
-      light: 'img/icon_unknown_light.png',
-      dark: 'img/icon_unknown_dark.png',
-    },
-  };
-
-  function normalizeSex(val) {
-    if (!val) return 'neutral';
-    const s = String(val).toLowerCase();
-    if (s.startsWith('m')) return 'male';
-    if (s.startsWith('f')) return 'female';
-    return 'neutral';
-  }
-  function currentThemeMode() {
-    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-  }
-  function updatePatientAvatar(rawSex) {
-    const sex = normalizeSex(rawSex);
-    const mode = currentThemeMode();
-    // Skip if already set
-    if (avatarEl.dataset.sex === sex && avatarEl.dataset.mode === mode) return;
-    avatarEl.dataset.sex = sex;
-    avatarEl.dataset.mode = mode;
-    const src = (AVATAR_MAP[sex] && AVATAR_MAP[sex][mode]) || AVATAR_MAP.neutral[mode];
-    let img = avatarEl.querySelector('img');
-    if (!img) {
-      img = document.createElement('img');
-      img.decoding = 'async';
-      img.className = 'patient-avatar-img';
-      avatarEl.replaceChildren(img);
-    }
-    // Accessible alt text (describe visual symbol only once)
-    const altMap = {
-      male: 'Male patient avatar',
-      female: 'Female patient avatar',
-      neutral: 'Patient avatar',
-    };
-    img.alt = altMap[sex] || 'Patient avatar';
-    img.src = src;
-  }
-
-  // Apply CSS classes to reduce inline styles
-  patientHeaderNameEl.className = 'patient-name-line';
-  patientHeaderDemoEl.className = 'patient-demo-line';
-  // Remove legacy inline styles so CSS classes control responsive sizing
-  try {
-    patientHeaderNameEl.removeAttribute('style');
-    patientHeaderDemoEl.removeAttribute('style');
-  } catch {}
-
-  const patientHeader = el('div', { id: 'patient-sticky-header' }, [
-    // Left: avatar + name lines (wrap text in its own flex child so it can shrink)
-    el('div', { class: 'patient-header-left' }, [
-      avatarEl,
-      el('div', { class: 'patient-header-text' }, [patientHeaderNameEl, patientHeaderDemoEl]),
-    ]),
-    // Right: actions
-    el('div', { id: 'patient-header-actions' }, []),
-  ]);
-
-  // Initial neutral avatar
-  updatePatientAvatar();
-
-  // If theme toggling is added later, observe attribute changes on <html>
-  const themeObserver = new MutationObserver((mutList) => {
-    for (const m of mutList) {
-      if (m.type === 'attributes' && m.attributeName === 'data-theme') {
-        // Re-evaluate with last known sex (stored in dataset or fallback)
-        updatePatientAvatar(avatarEl.dataset.sex || 'neutral');
-      }
-    }
-  });
-  themeObserver.observe(document.documentElement, { attributes: true });
-
-  function updatePatientHeader() {
-    try {
-      const displayName = getPatientDisplayName(c);
-      const dob = getPatientDOB(c);
-      const sex = getPatientSex(c);
-
-      updatePatientAvatar(sex);
-
-      // Format date and update UI
-      const dobFmt = formatDOB(dob);
-      const dateText = dobFmt || dob || 'N/A';
-
-      // Update header elements
-      patientHeaderNameEl.replaceChildren();
-      patientHeaderNameEl.append(el('span', { style: 'font-weight:700' }, displayName));
-
-      patientHeaderDemoEl.replaceChildren();
-      patientHeaderDemoEl.append(el('span', { class: 'patient-dob' }, dateText));
-
-      // Update CSS variable for layout
-      const h = patientHeader.offsetHeight || 0;
-      document.documentElement.style.setProperty('--patient-sticky-h', `${h}px`);
-    } catch {
-      // Ignore errors
-    }
-  }
-  // Prefer ResizeObserver to track header height changes precisely (wrapping/content/theme)
+  // Setup resize observer for header height tracking
   try {
     if ('ResizeObserver' in window) {
       headerRO = new ResizeObserver(() => {
@@ -441,106 +286,12 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   ]);
 
   // Render all sections once to form a single scrolling page
-  const sectionRoots = {};
-  const sectionHeaders = {}; // anchored dividers used for section scroll/active detection
-  function renderAllSections() {
-    contentRoot.replaceChildren();
-
-    // Subjective
-    const subjHeader = el('div', { id: 'section-subjective', class: 'editor-section-divider' }, [
-      el('h3', { class: 'section-title' }, 'Subjective'),
-    ]);
-    sectionHeaders.subjective = subjHeader;
-    const subjWrap = el('div', { class: 'editor-section', id: 'wrap-subjective' }, [subjHeader]);
-    const subj = createSubjectiveSection(draft.subjective, (data) => {
-      draft.subjective = data;
-      save();
-      if (window.refreshChartProgress) window.refreshChartProgress();
-    });
-    // Ensure expected class is present for sidebar extraction
-    subj.classList.add('subjective-section');
-    subjWrap.append(subj);
-    sectionRoots.subjective = subjWrap;
-    contentRoot.append(subjWrap);
-
-    // Objective
-    const objHeader = el('div', { id: 'section-objective', class: 'editor-section-divider' }, [
-      el('h3', { class: 'section-title' }, 'Objective'),
-    ]);
-    sectionHeaders.objective = objHeader;
-    const objWrap = el('div', { class: 'editor-section', id: 'wrap-objective' }, [objHeader]);
-    const obj = createObjectiveSection(draft.objective, (data) => {
-      draft.objective = data;
-      save();
-      if (window.refreshChartProgress) window.refreshChartProgress();
-    });
-    obj.classList.add('objective-section');
-    objWrap.append(obj);
-    sectionRoots.objective = objWrap;
-    contentRoot.append(objWrap);
-
-    // Assessment
-    const assessHeader = el('div', { id: 'section-assessment', class: 'editor-section-divider' }, [
-      el('h3', { class: 'section-title' }, 'Assessment'),
-    ]);
-    sectionHeaders.assessment = assessHeader;
-    const assessWrap = el('div', { class: 'editor-section', id: 'wrap-assessment' }, [
-      assessHeader,
-    ]);
-    const assess = createAssessmentSection(draft.assessment, (data) => {
-      draft.assessment = data;
-      save();
-      if (window.refreshChartProgress) window.refreshChartProgress();
-    });
-    assess.classList.add('assessment-section');
-    assessWrap.append(assess);
-    sectionRoots.assessment = assessWrap;
-    contentRoot.append(assessWrap);
-
-    // Plan
-    const planHeader = el('div', { id: 'section-plan', class: 'editor-section-divider' }, [
-      el('h3', { class: 'section-title' }, 'Plan'),
-    ]);
-    sectionHeaders.plan = planHeader;
-    const planWrap = el('div', { class: 'editor-section', id: 'wrap-plan' }, [planHeader]);
-    const plan = createPlanSection(draft.plan, (data) => {
-      draft.plan = data;
-      save();
-      if (window.refreshChartProgress) window.refreshChartProgress();
-    });
-    plan.classList.add('plan-section');
-    planWrap.append(plan);
-    sectionRoots.plan = planWrap;
-    contentRoot.append(planWrap);
-
-    // Billing
-    const billHeader = el('div', { id: 'section-billing', class: 'editor-section-divider' }, [
-      el('h3', { class: 'section-title' }, 'Billing'),
-    ]);
-    sectionHeaders.billing = billHeader;
-    const billWrap = el('div', { class: 'editor-section', id: 'wrap-billing' }, [billHeader]);
-    const bill = createBillingSection(draft.billing, (data) => {
-      draft.billing = data;
-      save();
-      if (window.refreshChartProgress) window.refreshChartProgress();
-    });
-    bill.classList.add('billing-section');
-    billWrap.append(bill);
-    sectionRoots.billing = billWrap;
-    contentRoot.append(billWrap);
-  }
-
-  // Centralized initial scroll handler to apply percent-first, then anchor fallback
-  function getSectionRoot(id) {
-    return sectionRoots[id] || null;
-  }
-  function getSectionHeader(id) {
-    return sectionHeaders[id] || null;
-  }
+  // Use modular section renderer
+  const { sectionRoots, sectionHeaders } = renderAllSections(contentRoot, draft, save);
 
   // Percent scroll within the currently active top-level section
   function scrollToPercentWithinActive(pct) {
-    const root = getSectionRoot(active);
+    const root = getSectionRoot(sectionRoots, active);
     if (!root) return false;
     const offset = getHeaderOffsetPx();
     const rect = root.getBoundingClientRect();
@@ -751,6 +502,12 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   app.append(chartNav, mainContainer);
   // Initialize header immediately so CSS var is ready before sections mount
   updatePatientHeader();
+  const renderPatientHeaderActions = createPatientHeaderActionsRenderer(
+    patientHeader,
+    isFacultyMode,
+    c,
+    save,
+  );
   renderPatientHeaderActions();
   renderAllSections();
   // Set up IntersectionObserver for active section tracking

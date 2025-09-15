@@ -403,3 +403,70 @@ export function handleCaseInfoUpdate(
 export function getCaseInfoSnapshot(c) {
   return getCaseInfo(c);
 }
+
+/**
+ * Prepares case data for chart navigation
+ * @param {Object} c - Case object
+ * @param {Object} draft - Draft object
+ * @returns {Object} Prepared case data
+ */
+export function prepareCaseDataForNavigation(c, draft) {
+  return {
+    ...c,
+    ...draft,
+    // Prefer draft.modules when present; otherwise use case modules
+    modules: Array.isArray(draft.modules) ? draft.modules : c.modules,
+    editorSettings: c.editorSettings || draft.editorSettings,
+  };
+}
+
+/**
+ * Prepares case info for chart navigation
+ * @param {Object} c - Case object
+ * @returns {Object} Prepared case info
+ */
+export function prepareCaseInfoForNavigation(c) {
+  return {
+    // Prefer explicit fields, then canonical meta/snapshot fallbacks
+    title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
+    setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
+    age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
+    sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
+    acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
+    dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
+    modules: Array.isArray(c.modules) ? c.modules : [],
+  };
+}
+
+/**
+ * Creates chart navigation with case info integration
+ * @param {Object} params - Navigation creation parameters
+ * @returns {Promise<HTMLElement>} Chart navigation element
+ */
+export async function createChartNavigationForEditor({
+  c,
+  draft,
+  isFacultyMode,
+  switchTo,
+  save,
+  refreshChartProgress,
+}) {
+  const { createChartNavigation } = await import('../features/navigation/ChartNavigation.js');
+
+  return createChartNavigation({
+    activeSection: 'subjective',
+    onSectionChange: (sectionId) => switchTo(sectionId),
+    isFacultyMode,
+    caseData: prepareCaseDataForNavigation(c, draft),
+    caseInfo: prepareCaseInfoForNavigation(c),
+    onCaseInfoUpdate: (updatedInfo) => {
+      handleCaseInfoUpdate(c, draft, updatedInfo, save, refreshChartProgress);
+    },
+    onEditorSettingsChange: (nextSettings) => {
+      draft.editorSettings = nextSettings;
+      c.editorSettings = nextSettings;
+      save();
+      refreshChartProgress();
+    },
+  });
+}
