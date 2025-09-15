@@ -8,6 +8,12 @@ import {
 import * as store from '../../core/store.js';
 import { generateCase } from '../../services/index.js';
 import { el } from '../../ui/utils.js';
+import {
+  parseAndValidateCaseForm,
+  createSortableHeader,
+  handleSortClick,
+  sortCases,
+} from './InstructorCasesUtils.js';
 // Stop importing JS icons; we'll use the HTML sprite via <use>
 
 // Compute age from a YYYY-MM-DD string
@@ -558,33 +564,20 @@ function handleCaseCreation(e) {
     submitBtn.textContent = 'Creating...';
   }
 
-  const title = document.getElementById('case-title').value.trim();
-  const setting = document.getElementById('case-setting').value;
-  let age = parseInt(document.getElementById('case-age').value);
-  const gender = document.getElementById('case-gender').value;
-  const acuity = document.getElementById('case-acuity').value;
-  const dob = document.getElementById('case-dob')?.value || '';
-  if ((!age || isNaN(age)) && dob) {
-    const computed = parseInt(computeAgeFromDob(dob));
-    if (!isNaN(computed)) age = computed;
-  }
-  // If DOB empty but Age present, generate a realistic DOB (today minus age years)
-  let dobFinal = dob;
-  if ((!dobFinal || dobFinal === '') && age && !isNaN(age)) {
-    const today = new Date();
-    const y = today.getFullYear() - age;
-    const m = today.getMonth();
-    const lastDay = new Date(y, m + 1, 0).getDate();
-    const d = Math.min(today.getDate(), lastDay);
-    const mm = String(m + 1).padStart(2, '0');
-    const dd = String(d).padStart(2, '0');
-    dobFinal = `${y}-${mm}-${dd}`;
-  }
-
-  if (!title || !setting || (!age && !dob) || !gender || !acuity) {
+  // Parse and validate form data
+  const formData = parseAndValidateCaseForm();
+  if (!formData) {
     alert('Please fill in all required fields.');
+    // Re-enable submit on validation failure
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Create Case';
+    }
+    handleCaseCreation.submitting = false;
     return;
   }
+
+  const { title, setting, age, gender, acuity, dobFinal } = formData;
 
   handleCaseCreationAsync(title, setting, age, gender, acuity, dobFinal)
     .catch(() => {
@@ -720,29 +713,7 @@ route('#/instructor/cases', async (app) => {
 
       // Sort cases
       if (sortColumn) {
-        filteredCases.sort((a, b) => {
-          let aVal, bVal;
-
-          if (sortColumn === 'title') {
-            aVal = a.title || a.caseObj?.meta?.title || 'Untitled';
-            bVal = b.title || b.caseObj?.meta?.title || 'Untitled';
-          } else {
-            // Safe access to meta properties
-            aVal = a.caseObj?.meta?.[sortColumn] || '';
-            bVal = b.caseObj?.meta?.[sortColumn] || '';
-          }
-
-          if (typeof aVal === 'string') {
-            aVal = aVal.toLowerCase();
-            bVal = bVal.toLowerCase();
-          }
-
-          let comparison = 0;
-          if (aVal > bVal) comparison = 1;
-          if (aVal < bVal) comparison = -1;
-
-          return sortDirection === 'desc' ? -comparison : comparison;
-        });
+        sortCases(filteredCases, sortColumn, sortDirection);
       }
 
       const table = renderCaseTable(filteredCases);
@@ -754,49 +725,15 @@ route('#/instructor/cases', async (app) => {
     return container;
   }
 
-  function createSortableHeader(text, column) {
-    const isActive = sortColumn === column;
-    const isDesc = isActive && sortDirection === 'desc';
-
-    const header = document.createElement('th');
-    header.className = 'sortable';
-    // Accessibility: indicate sort state for assistive tech and enable CSS highlighting
-    if (isActive) header.setAttribute('aria-sort', isDesc ? 'descending' : 'ascending');
-    header.style.cssText = `
-      cursor: pointer; 
-      user-select: none; 
-      -webkit-user-select: none;
-      position: relative; 
-      padding: 12px 8px;
-    `;
-
-    // Create the header content
-    const container = document.createElement('div');
-    container.style.cssText =
-      'display: flex; align-items: center; justify-content: space-between; gap: 8px;';
-
-    const textSpan = document.createElement('span');
-    textSpan.style.fontWeight = '600';
-    textSpan.textContent = text;
-
-    const icon = spriteIcon(isActive ? (isDesc ? 'sortDesc' : 'sortAsc') : 'sort', {
-      className: 'icon sort-icon',
-    });
-    icon.style.opacity = isActive ? '0.9' : '0.5';
-
-    container.appendChild(textSpan);
-    container.appendChild(icon);
-    header.appendChild(container);
+  function createSortableHeaderLocal(text, column) {
+    const header = createSortableHeader(text, column, sortColumn, sortDirection, spriteIcon);
 
     // Add event listeners
-    // Hover/underline handled via CSS theme
     header.addEventListener('click', () => {
-      if (sortColumn === column) {
-        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-      } else {
-        sortColumn = column;
-        sortDirection = 'asc';
-      }
+      const newSortState = handleSortClick(column, sortColumn, sortDirection);
+      sortColumn = newSortState.sortColumn;
+      sortDirection = newSortState.sortDirection;
+
       const tableContainer = document.getElementById('table-container');
       if (tableContainer && tableContainer.parentElement) {
         const container = tableContainer.parentElement;
@@ -900,10 +837,10 @@ route('#/instructor/cases', async (app) => {
         'thead',
         {},
         el('tr', {}, [
-          createSortableHeader('Case Title', 'title'),
-          createSortableHeader('Setting', 'setting'),
-          createSortableHeader('Diagnosis', 'diagnosis'),
-          createSortableHeader('Acuity', 'acuity'),
+          createSortableHeaderLocal('Case Title', 'title'),
+          createSortableHeaderLocal('Setting', 'setting'),
+          createSortableHeaderLocal('Diagnosis', 'diagnosis'),
+          createSortableHeaderLocal('Acuity', 'acuity'),
           el('th', {}, ''),
         ]),
       ),
