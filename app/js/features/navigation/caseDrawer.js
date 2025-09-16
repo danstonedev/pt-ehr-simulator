@@ -331,6 +331,65 @@ export function initCaseDrawer() {
   return true;
 }
 
+// --- Robust first-load bootstrap ---
+// Some users report needing a manual refresh before the drawer animates. Likely causes:
+//  1. Sidebar (.chart-navigation) not yet in DOM when initCaseDrawer first runs
+//  2. CSS width calculations / transforms needing a frame to settle
+// We add a lightweight idempotent bootstrap that:
+//  - Runs on DOMContentLoaded / app-ready
+//  - Schedules a requestAnimationFrame + setTimeout retry if sidebar absent
+//  - Bails out once successful
+if (!window._caseDrawerBootstrapAttached) {
+  window._caseDrawerBootstrapAttached = true;
+  const tryInit = (phase) => {
+    if (window.caseDrawer && typeof window.caseDrawer.toggle === 'function') {
+      cdDebug('bootstrap:already-initialized', phase);
+      return true;
+    }
+    const ok = initCaseDrawer();
+    if (ok) {
+      cdDebug('bootstrap:initialized', phase);
+      return true;
+    }
+    return false;
+  };
+
+  const scheduleRetries = () => {
+    // rAF retry
+    requestAnimationFrame(() => {
+      if (tryInit('raf')) return;
+      // short timeout retry (DOM may still be streaming)
+      setTimeout(() => {
+        if (tryInit('timeout100')) return;
+        // final longer timeout; afterwards rely on mutation observer already set in initCaseDrawer
+        setTimeout(() => tryInit('timeout400'), 300);
+      }, 100);
+    });
+  };
+
+  // Run ASAP after current call stack if DOM ready; else wait for DOMContentLoaded
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    if (!tryInit('immediate')) scheduleRetries();
+  } else {
+    document.addEventListener(
+      'DOMContentLoaded',
+      () => {
+        if (!tryInit('domcontentloaded')) scheduleRetries();
+      },
+      { once: true },
+    );
+  }
+
+  // Also listen for custom app-ready event if dispatched elsewhere in app
+  window.addEventListener(
+    'app-ready',
+    () => {
+      if (!tryInit('app-ready')) scheduleRetries();
+    },
+    { once: true },
+  );
+}
+
 function updateNudgeVisibility() {
   const btn = document.getElementById('caseDrawerLeftNudge');
   const isMobile = window.matchMedia('(max-width: 900px)').matches;
