@@ -148,16 +148,16 @@ export class MobileNav {
     this.isOpen = true;
     document.body.classList.add('mobile-nav-open');
 
-    // Show elements
+    // Show elements (ensure NOT aria-hidden before moving focus)
     this.overlay.classList.add('visible');
     this.drawer.classList.add('open');
-
-    // Update ARIA
+    this.drawer.removeAttribute('aria-hidden');
+    this.drawer.removeAttribute('inert');
+    this.overlay.removeAttribute('aria-hidden');
+    this.overlay.removeAttribute('inert');
     this.hamburgerBtn.setAttribute('aria-expanded', 'true');
-    this.drawer.setAttribute('aria-hidden', 'false');
-    this.overlay.setAttribute('aria-hidden', 'false');
 
-    // Focus management
+    // Focus management (after visibility change)
     this.trapFocus();
   }
 
@@ -167,25 +167,27 @@ export class MobileNav {
     this.isOpen = false;
     document.body.classList.remove('mobile-nav-open');
 
-    // Hide elements
+    // Before hiding, move focus back to hamburger to avoid hiding focused descendant
+    try {
+      this.hamburgerBtn.focus();
+    } catch {}
+
+    // Hide elements / accessibility state
     this.overlay.classList.remove('visible');
     this.drawer.classList.remove('open');
-
-    // Update ARIA
     this.hamburgerBtn.setAttribute('aria-expanded', 'false');
     this.drawer.setAttribute('aria-hidden', 'true');
     this.overlay.setAttribute('aria-hidden', 'true');
-
-    // Return focus to hamburger button
-    this.hamburgerBtn.focus();
+    // Use inert so elements are removed from sequential navigation (safer than aria-hidden alone)
+    this.drawer.setAttribute('inert', '');
+    this.overlay.setAttribute('inert', '');
   }
 
   trapFocus() {
     // Simple focus trap - focus first focusable element in drawer
+    if (!this.drawer || this.drawer.getAttribute('aria-hidden') === 'true') return;
     const firstFocusable = this.drawer.querySelector('button, a, [tabindex]:not([tabindex="-1"])');
-    if (firstFocusable) {
-      firstFocusable.focus();
-    }
+    if (firstFocusable) firstFocusable.focus();
   }
 }
 
