@@ -10,13 +10,12 @@
   height: calc(
     100vh - var(--topbar-h, 56px) - var(--edu-ribbon-h, 24px) - env(safe-area-inset-bottom, 0px)
   );
-  /* Theme-aware gradient using CSS variables */
-  background: linear-gradient(
-    90deg,
-    var(--header-gradient-left) 0%,
-    var(--header-gradient-right) 100%
+  /* Theme-aware gradient using CSS variables; allow override via --sidebar-surface */
+  background: var(
+    --sidebar-surface,
+    linear-gradient(90deg, var(--header-gradient-left) 0%, var(--header-gradient-right) 100%)
   );
-  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  border-right: 1px solid var(--sidebar-border, rgba(0, 0, 0, 0.12));
   position: fixed;
   left: 0;
   top: var(--topbar-h);
@@ -28,6 +27,14 @@
   transition: none;
   contain: layout style; /* Performance optimization - isolate layout calculations */
   will-change: auto; /* Avoid unnecessary layer promotion on desktop */
+  color: var(--sidebar-fg, inherit);
+}
+
+/* Dark theme overrides use neutral surface rather than gradient for legibility */
+html[data-theme='dark'] .chart-navigation {
+  background: var(--sidebar-surface-dark, linear-gradient(90deg, #1f2937 0%, #111827 100%));
+  border-right-color: var(--sidebar-border-dark, rgba(255, 255, 255, 0.12));
+  color: var(--sidebar-fg-dark, rgba(255, 255, 255, 0.92));
 }
 
 /* Progressive enhancement: reserve space for vertical scrollbar where supported */

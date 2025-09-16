@@ -104,27 +104,67 @@ export function createChartRefreshFunction(options) {
     save,
   } = options;
 
-  return function refreshChartProgress() {
-    console.warn('DEBUG: refreshChartProgress function called');
-    refreshChartNavigation(chartNav, {
-      activeSection: active,
-      onSectionChange: (sectionId) => switchTo(sectionId),
-      isFacultyMode: isFacultyMode,
-      caseData: getCaseDataForNavigation(c, draft),
-      caseInfo: getCaseInfo(c),
-      onCaseInfoUpdate: (updatedInfo) => {
-        console.warn('DEBUG: onCaseInfoUpdate inside refreshChartProgress called');
-        updateCaseObject(c, updatedInfo, draft);
-        save();
-        console.warn('DEBUG: About to call refreshChartProgress recursively');
-        refreshChartProgress();
-      },
-      onEditorSettingsChange: (nextSettings) => {
-        draft.editorSettings = nextSettings;
-        c.editorSettings = nextSettings;
-        save();
-        refreshChartProgress();
-      },
-    });
-  };
+  // Query param gates for debug logging (use ?debug=1 or ?debug=progress)
+  const search = new URLSearchParams(location.search);
+  const debugAll = search.get('debug') === '1';
+  const debugProgress = debugAll || search.get('debug') === 'progress';
+
+  let frameHandle = null; // requestAnimationFrame handle
+  let isDirty = false; // Indicates a refresh has been requested while one is pending
+  let lastRunTs = 0; // diagnostic timing
+
+  function log(...args) {
+    if (debugProgress) console.warn('[progress]', ...args);
+  }
+
+  function runRefresh() {
+    frameHandle = null;
+    if (!isDirty) return; // no work queued
+    isDirty = false;
+    lastRunTs = performance.now();
+    log('refreshChartProgress executing');
+    try {
+      refreshChartNavigation(chartNav, {
+        activeSection: active,
+        onSectionChange: (sectionId) => switchTo(sectionId),
+        isFacultyMode: isFacultyMode,
+        caseData: getCaseDataForNavigation(c, draft),
+        caseInfo: getCaseInfo(c),
+        onCaseInfoUpdate: (updatedInfo) => {
+          log('onCaseInfoUpdate');
+          // Mutate case object then schedule (not immediate) another refresh
+          updateCaseObject(c, updatedInfo, draft);
+          save();
+          queue();
+        },
+        onEditorSettingsChange: (nextSettings) => {
+          log('onEditorSettingsChange');
+          draft.editorSettings = nextSettings;
+          c.editorSettings = nextSettings;
+          save();
+          queue();
+        },
+      });
+    } catch (err) {
+      log('refreshChartProgress error', err);
+    }
+  }
+
+  function queue() {
+    // Mark dirty and ensure a frame is queued
+    isDirty = true;
+    if (frameHandle == null) {
+      frameHandle = requestAnimationFrame(runRefresh);
+    }
+  }
+
+  // Public API: schedule a refresh; multiple rapid calls coalesce into one per frame
+  function refreshChartProgress() {
+    queue();
+  }
+
+  // Optionally expose a diagnostic method (not documented; for internal tests)
+  refreshChartProgress._diagnostics = () => ({ lastRunTs, pending: frameHandle != null, isDirty });
+
+  return refreshChartProgress;
 }

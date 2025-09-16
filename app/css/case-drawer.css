@@ -120,11 +120,21 @@
     will-change: transform;
     backface-visibility: hidden;
     transform-style: preserve-3d;
+    background: var(
+      --sidebar-surface,
+      linear-gradient(90deg, var(--header-gradient-left) 0%, var(--header-gradient-right) 100%)
+    );
+    color: var(--sidebar-fg, inherit);
   }
 
   /* When open, slide into view */
   body.case-drawer-open .chart-navigation {
     transform: translateX(calc(0px + var(--case-drag-x, 0px)));
+  }
+
+  html[data-theme='dark'] .chart-navigation {
+    background: var(--sidebar-surface-dark, linear-gradient(90deg, #1f2937 0%, #111827 100%));
+    color: var(--sidebar-fg-dark, rgba(255, 255, 255, 0.92));
   }
 
   /* Optional: prevent body from scrolling when drawer is open */
