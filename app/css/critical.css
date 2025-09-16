@@ -1,0 +1,293 @@
+/*
+==============================================================================
+ Critical CSS - Above-the-fold styles for PT EMR Simulator
+ - Essential layout, typography, and base styles for initial render
+ - Inline in HTML head to prevent render-blocking
+==============================================================================
+*/
+
+/* ========================================
+  1) CSS RESET & BASE STYLES
+  ======================================== */
+
+/* Basic reset */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+/* Enhanced typography for accessibility */
+html {
+  font-size: 16px; /* Base font size for better accessibility */
+  scroll-padding-top: var(--topbar-h, 56px);
+  scroll-padding-bottom: var(--edu-ribbon-h, 24px);
+}
+
+body {
+  margin: 0;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Roboto',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+  font-size: 1rem; /* 16px base */
+  line-height: 1.6; /* Better readability */
+  font-weight: 400;
+  background: var(--surface);
+  color: var(--text);
+  min-height: 100vh; /* allow page to grow naturally and scroll */
+  /* Improve font rendering */
+  font-feature-settings:
+    'liga' 1,
+    'kern' 1;
+  text-rendering: optimizeLegibility;
+}
+
+/* Prefer dynamic viewport units when supported to avoid URL bar jank on iOS */
+@supports (height: 100dvh) {
+  body {
+    min-height: 100dvh;
+  }
+}
+
+/* ========================================
+  2) DESIGN TOKENS (Critical Variables)
+  ======================================== */
+
+:root {
+  /* Official UND Brand Colors */
+  --und-gray: #aeaeae;
+  --und-green: #009a44;
+  --und-orange: #ff671f;
+  --und-black: var(--color-fg, #000000);
+
+  /* Generic core colors */
+  --white: var(--color-bg, #ffffff);
+  --black: var(--color-fg, #000000);
+
+  /* Subtle light surface variants */
+  --surface-alt: #f7f8f9;
+  --surface-alt-hover: #f0f2f4;
+
+  /* UND Green Variants */
+  --und-green-light: rgba(0, 154, 68, 0.08);
+  --und-green-dark: #007a35;
+
+  /* Neutral Gray Scale */
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+  --neutral-200: #eeeeee;
+  --neutral-300: #e0e0e0;
+  --neutral-400: #bdbdbd;
+  --neutral-500: #9e9e9e;
+  --neutral-600: #757575;
+  --neutral-700: #616161;
+  --neutral-800: #424242;
+  --neutral-900: #212121;
+}
+
+/* Light theme (default) */
+:root {
+  --surface: var(--white);
+  --surface-raised: var(--neutral-50);
+  --surface-sunken: var(--neutral-100);
+  --border: var(--neutral-300);
+  --border-subtle: var(--neutral-200);
+  --text: var(--neutral-900);
+  --text-muted: var(--neutral-600);
+  --text-subtle: var(--neutral-500);
+  --link: var(--und-green);
+  --link-hover: var(--und-green-dark);
+  --success: var(--und-green);
+  --warning: var(--und-orange);
+  --error: #d32f2f;
+}
+
+/* Dark theme */
+[data-theme='dark'] {
+  --surface: #121212;
+  --surface-raised: #1e1e1e;
+  --surface-sunken: #0a0a0a;
+  --border: #333333;
+  --border-subtle: #2a2a2a;
+  --text: #ffffff;
+  --text-muted: #cccccc;
+  --text-subtle: #999999;
+  --link: #4caf50;
+  --link-hover: #66bb6a;
+  --success: #4caf50;
+  --warning: #ff9800;
+  --error: #f44336;
+}
+
+/* ========================================
+  3) TYPOGRAPHY HIERARCHY (Critical)
+  ======================================== */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+  color: var(--text);
+}
+
+h1 {
+  font-size: 2rem; /* 32px */
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: 1.5rem; /* 24px */
+  margin-bottom: 0.75rem;
+}
+
+h3 {
+  font-size: 1.25rem; /* 20px */
+  margin-bottom: 0.5rem;
+}
+
+p {
+  margin: 0 0 1rem 0;
+  color: var(--text);
+}
+
+/* ========================================
+  4) LAYOUT UTILITIES (Critical)
+  ======================================== */
+
+/* Screen reader only */
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Essential flex utilities */
+.d-flex {
+  display: flex;
+}
+.d-inline-flex {
+  display: inline-flex;
+}
+.fd-column {
+  flex-direction: column;
+}
+.ai-center {
+  align-items: center;
+}
+.jc-between {
+  justify-content: space-between;
+}
+.jc-center {
+  justify-content: center;
+}
+
+/* Essential spacing utilities */
+.mt-1 {
+  margin-top: 0.25rem;
+}
+.mb-1 {
+  margin-bottom: 0.25rem;
+}
+.mt-2 {
+  margin-top: 0.5rem;
+}
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+.mt-4 {
+  margin-top: 1rem;
+}
+.mb-4 {
+  margin-bottom: 1rem;
+}
+
+/* Essential font utilities */
+.fw-600 {
+  font-weight: 600;
+}
+.fw-700 {
+  font-weight: 700;
+}
+.fs-14 {
+  font-size: 0.875rem;
+}
+.fs-16 {
+  font-size: 1rem;
+}
+
+/* ========================================
+  5) NAVIGATION & HEADER (Above-fold)
+  ======================================== */
+
+/* Basic navigation structure */
+nav {
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Basic button reset */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Basic link reset */
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+/* ========================================
+  6) LOADING & TRANSITION STATES
+  ======================================== */
+
+/* Basic loading state */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Smooth transitions for theme switching */
+* {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}

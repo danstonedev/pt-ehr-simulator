@@ -7,27 +7,18 @@ import { el } from '../ui/utils.js';
 import {
   getCaseInfo,
   getPatientDisplayName,
-  getCaseDataForNavigation,
-  updateCaseObject,
   canEditCase,
   getPatientDOB,
   getPatientSex,
   formatDOB,
-  handleSectionScroll,
 } from './CaseEditorUtils.js';
-import {
-  createChartNavigation,
-  refreshChartNavigation,
-  openEditCaseModal,
-} from '../features/navigation/ChartNavigation.js';
+import { openEditCaseModal } from '../features/navigation/ChartNavigation.js';
 
 /**
  * Create and setup patient header with avatar
- * @param {Object} c - Case object
- * @param {Function} updatePatientHeader - Update function
  * @returns {Object} Header elements and functions
  */
-export function createPatientHeader(c, updatePatientHeader) {
+export function createPatientHeader() {
   const patientHeaderNameEl = el('div', {}, '');
   const patientHeaderDemoEl = el('div', {}, '');
   const avatarEl = el('div', { class: 'patient-avatar', 'aria-hidden': 'true' }, []);

@@ -120,7 +120,6 @@ export function getCaseDataForNavigation(c, draft) {
  * @param {Object} draft - Draft object to update (optional)
  */
 export function updateCaseObject(c, updatedInfo, draft = null) {
-  console.warn('DEBUG: updateCaseObject called with modules:', updatedInfo.modules?.length);
   // Update primary fields
   c.caseTitle = updatedInfo.title;
   c.title = updatedInfo.title;
@@ -130,7 +129,6 @@ export function updateCaseObject(c, updatedInfo, draft = null) {
   c.acuity = updatedInfo.acuity;
   c.patientDOB = updatedInfo.dob;
   c.modules = Array.isArray(updatedInfo.modules) ? updatedInfo.modules : c.modules || [];
-  console.warn('DEBUG: updateCaseObject updated c.modules to length:', c.modules.length);
 
   // Keep canonical containers in sync
   c.meta = c.meta || {};
@@ -146,7 +144,6 @@ export function updateCaseObject(c, updatedInfo, draft = null) {
   // Update draft if provided
   if (draft && Array.isArray(updatedInfo.modules)) {
     draft.modules = updatedInfo.modules;
-    console.warn('DEBUG: updateCaseObject updated draft.modules to length:', draft.modules.length);
   }
 }
 
@@ -369,7 +366,6 @@ export function handleCaseInfoUpdate(
   renderPatientHeaderActions,
 ) {
   try {
-    console.warn('DEBUG: handleCaseInfoUpdate called with modules:', updatedInfo.modules?.length);
     c.caseTitle = updatedInfo.title;
     c.title = updatedInfo.title;
     c.setting = updatedInfo.setting;
@@ -380,7 +376,6 @@ export function handleCaseInfoUpdate(
     if (Array.isArray(updatedInfo.modules)) {
       c.modules = updatedInfo.modules;
       draft.modules = updatedInfo.modules;
-      console.warn('DEBUG: Updated c.modules to length:', c.modules.length);
     }
     // Keep canonical containers in sync
     c.meta = c.meta || {};
@@ -394,9 +389,7 @@ export function handleCaseInfoUpdate(
     updatePatientHeader();
     renderPatientHeaderActions();
     save();
-    console.warn('DEBUG: About to call window.refreshChartProgress');
     if (window.refreshChartProgress) window.refreshChartProgress();
-    console.warn('DEBUG: window.refreshChartProgress called');
   } catch (e) {
     console.warn('handleCaseInfoUpdate error:', e);
   }
@@ -428,19 +421,33 @@ export function prepareCaseDataForNavigation(c, draft) {
 }
 
 /**
+ * Helper function to get a field with fallbacks
+ * @param {Object} c - Case object
+ * @param {Array} fieldPaths - Array of field paths to try
+ * @param {string} defaultValue - Default value if none found
+ * @returns {string} The resolved value
+ */
+function getFieldWithMultipleFallbacks(c, fieldPaths, defaultValue) {
+  for (const fieldPath of fieldPaths) {
+    const value = getNestedValue(c, fieldPath);
+    if (value) return value;
+  }
+  return defaultValue;
+}
+
+/**
  * Prepares case info for chart navigation
  * @param {Object} c - Case object
  * @returns {Object} Prepared case info
  */
 export function prepareCaseInfoForNavigation(c) {
   return {
-    // Prefer explicit fields, then canonical meta/snapshot fallbacks
-    title: c.caseTitle || c.title || (c.meta && c.meta.title) || 'Untitled Case',
-    setting: c.setting || (c.meta && c.meta.setting) || 'Outpatient',
-    age: c.patientAge || c.age || (c.snapshot && c.snapshot.age) || '',
-    sex: c.patientGender || c.sex || (c.snapshot && c.snapshot.sex) || 'N/A',
-    acuity: c.acuity || (c.meta && c.meta.acuity) || 'unspecified',
-    dob: c.patientDOB || c.dob || (c.snapshot && c.snapshot.dob) || '',
+    title: getFieldWithMultipleFallbacks(c, ['caseTitle', 'title', 'meta.title'], 'Untitled Case'),
+    setting: getFieldWithMultipleFallbacks(c, ['setting', 'meta.setting'], 'Outpatient'),
+    age: getFieldWithMultipleFallbacks(c, ['patientAge', 'age', 'snapshot.age'], ''),
+    sex: getFieldWithMultipleFallbacks(c, ['patientGender', 'sex', 'snapshot.sex'], 'N/A'),
+    acuity: getFieldWithMultipleFallbacks(c, ['acuity', 'meta.acuity'], 'unspecified'),
+    dob: getFieldWithMultipleFallbacks(c, ['patientDOB', 'dob', 'snapshot.dob'], ''),
     modules: Array.isArray(c.modules) ? c.modules : [],
   };
 }

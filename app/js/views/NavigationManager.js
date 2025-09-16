@@ -1,6 +1,6 @@
 // Navigation and scroll management utilities for Case Editor
 import { refreshChartNavigation } from '../features/navigation/ChartNavigation.js';
-import { getNearestVisibleAnchorId, scrollToAnchorExact, afterNextLayout } from './ScrollUtils.js';
+import { getNearestVisibleAnchorId, scrollToAnchorExact } from './ScrollUtils.js';
 import { getCaseInfoSnapshot, handleCaseInfoUpdate } from './CaseEditorUtils.js';
 
 /**

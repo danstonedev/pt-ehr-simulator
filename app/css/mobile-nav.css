@@ -1,0 +1,218 @@
+/* Modern Mobile Navigation Styles */
+/* Matches the PT EMR Simulator design system */
+
+/* Mobile navigation overlay */
+.mobile-nav-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.mobile-nav-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Mobile navigation drawer */
+.mobile-nav-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(85vw, 320px);
+  height: 100vh;
+  background: var(--color-bg, #ffffff);
+  border-left: 1px solid var(--color-border, #e2e8f0);
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.mobile-nav-drawer.open {
+  transform: translateX(0);
+}
+
+/* Mobile navigation header */
+.mobile-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: var(--und-green, #009a44);
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-nav-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: white;
+}
+
+.mobile-nav-close {
+  background: none;
+  border: none;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.mobile-nav-close:hover,
+.mobile-nav-close:focus {
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+
+.mobile-nav-close:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+/* Mobile navigation content */
+.mobile-nav-content {
+  flex: 1;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Mobile navigation list */
+.mobile-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-nav-link {
+  display: block;
+  padding: 0.875rem 1.25rem;
+  color: var(--color-text, #1a202c);
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  border-bottom: 1px solid var(--color-border, #e2e8f0);
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link:focus {
+  background: var(--und-green-light, #f0fdf4);
+  color: var(--und-green, #009a44);
+  outline: none;
+}
+
+.mobile-nav-link:focus-visible {
+  outline: 2px solid var(--und-green, #009a44);
+  outline-offset: -2px;
+}
+
+/* Active link styling */
+.mobile-nav-link.active {
+  background: var(--und-green-light, #f0fdf4);
+  color: var(--und-green, #009a44);
+  border-left: 4px solid var(--und-green, #009a44);
+}
+
+/* Mobile navigation actions */
+.mobile-nav-actions {
+  padding: 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-top: 1px solid var(--color-border, #e2e8f0);
+  padding-top: 1.5rem;
+  margin-top: auto;
+}
+
+.mobile-nav-feedback-btn,
+.mobile-nav-theme-btn {
+  background: var(--color-bg-secondary, #f8fafc);
+  border: 1px solid var(--color-border, #e2e8f0);
+  color: var(--color-text, #1a202c);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-feedback-btn:hover,
+.mobile-nav-feedback-btn:focus,
+.mobile-nav-theme-btn:hover,
+.mobile-nav-theme-btn:focus {
+  background: var(--und-green-light, #f0fdf4);
+  border-color: var(--und-green, #009a44);
+  color: var(--und-green, #009a44);
+  outline: none;
+}
+
+.mobile-nav-feedback-btn:focus-visible,
+.mobile-nav-theme-btn:focus-visible {
+  outline: 2px solid var(--und-green, #009a44);
+  outline-offset: 2px;
+}
+
+/* Body scroll lock when mobile nav is open */
+body.mobile-nav-open {
+  overflow: hidden;
+}
+
+/* Ensure mobile nav only shows on mobile screens */
+@media (min-width: 769px) {
+  .mobile-nav-overlay,
+  .mobile-nav-drawer {
+    display: none !important;
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .mobile-nav-drawer {
+    width: min(90vw, 360px);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .mobile-nav-drawer {
+    border-left: 2px solid;
+  }
+
+  .mobile-nav-link {
+    border-bottom: 2px solid;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav-overlay,
+  .mobile-nav-drawer,
+  .mobile-nav-close,
+  .mobile-nav-link,
+  .mobile-nav-feedback-btn,
+  .mobile-nav-theme-btn {
+    transition: none;
+  }
+}

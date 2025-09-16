@@ -115,10 +115,6 @@ export function createCaseInfoUpdateHandler(options) {
   const { c, draft, save } = options;
 
   return function handleCaseInfoUpdate(updatedInfo) {
-    console.warn(
-      'DEBUG: CaseInitializationManager handleCaseInfoUpdate called with modules:',
-      updatedInfo.modules?.length,
-    );
     // Update primary case properties
     c.caseTitle = updatedInfo.title;
     c.title = updatedInfo.title;
@@ -132,7 +128,6 @@ export function createCaseInfoUpdateHandler(options) {
     if (Array.isArray(updatedInfo.modules)) {
       c.modules = updatedInfo.modules;
       draft.modules = updatedInfo.modules;
-      console.warn('DEBUG: CaseInitializationManager updated modules to length:', c.modules.length);
     }
 
     // Keep canonical containers in sync
@@ -147,16 +142,9 @@ export function createCaseInfoUpdateHandler(options) {
     c.snapshot.dob = updatedInfo.dob;
 
     // Save changes and refresh progress
-    console.warn('DEBUG: CaseInitializationManager about to save');
     save();
-    console.warn('DEBUG: CaseInitializationManager about to call window.refreshChartProgress');
     if (window.refreshChartProgress) {
       window.refreshChartProgress();
-      console.warn('DEBUG: CaseInitializationManager called window.refreshChartProgress');
-    } else {
-      console.warn(
-        'DEBUG: CaseInitializationManager - window.refreshChartProgress is not available',
-      );
     }
   };
 }

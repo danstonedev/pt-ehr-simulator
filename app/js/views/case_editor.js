@@ -1,29 +1,20 @@
 // Modern Case Editor with Conservative Imports
 import { route } from '../core/index.js';
-import { EXPERIMENT_FLAGS } from '../core/constants.js';
-import { setQueryParams, onRouteChange, navigate as urlNavigate } from '../core/url.js';
+import { onRouteChange } from '../core/url.js';
 import { el } from '../ui/utils.js';
 // SOAP sections now loaded dynamically for better code splitting
 import {
   initializeCase,
   initializeDraft,
-  createErrorDisplay,
   createLoadingIndicator,
 } from '../features/case-management/CaseInitialization.js';
 import {
   getCaseInfo,
-  getPatientDisplayName,
   getCaseDataForNavigation,
   updateCaseObject,
   parseEditorQueryParams,
   calculateHeaderOffset,
-  canEditCase,
-  formatDOB,
-  getPatientDOB,
-  getPatientSex,
   handleSectionScroll,
-  handleCaseInfoUpdate,
-  getCaseInfoSnapshot,
   createChartNavigationForEditor,
 } from './CaseEditorUtils.js';
 import {
@@ -33,9 +24,7 @@ import {
   afterNextLayout,
   getSectionScrollPercent,
   scrollToPercentExact,
-  exposeScrollHelpers,
 } from './ScrollUtils.js';
-import { createMissingCaseIdError } from './EditorUIUtils.js';
 import {
   createPatientHeader,
   setupThemeObserver,
@@ -49,10 +38,8 @@ import {
   createScrollToPercentWithinActive,
 } from './NavigationManager.js';
 import {
-  createChartNavigation,
-  refreshChartNavigation,
   updateSaveStatus,
-  openEditCaseModal,
+  refreshChartNavigation,
 } from '../features/navigation/ChartNavigation.js';
 import { createSectionSwitcher } from './SectionSwitcher.js';
 import {
@@ -60,7 +47,6 @@ import {
   createCaseInfoUpdateHandler,
   createEditorSettingsHandler,
   createSaveWrapper,
-  createDebouncedSave,
 } from './CaseInitializationManager.js';
 import {
   validateCaseId,
@@ -159,7 +145,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     isValidSection,
     active: configActive,
     initialActiveSection,
-    simpleMode,
     needsInitialPercentScroll: configNeedsInitialPercentScroll,
     needsInitialAnchorScroll: configNeedsInitialAnchorScroll,
   } = editorConfig;
@@ -170,12 +155,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   // Create scroll state manager using utility
   const scrollStateManager = createScrollStateManager();
-  const {
-    getProgrammaticScrollBlockUntil,
-    setProgrammaticScrollBlockUntil,
-    getIsProgrammaticScroll,
-    setIsProgrammaticScroll,
-  } = scrollStateManager;
+  const { getProgrammaticScrollBlockUntil, getIsProgrammaticScroll } = scrollStateManager;
 
   let programmaticScrollBlockUntil = getProgrammaticScrollBlockUntil();
   let isProgrammaticScroll = getIsProgrammaticScroll();
@@ -254,11 +234,6 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   // Make draft available globally for goal linking
   window.currentDraft = draft;
   window.saveDraft = save;
-
-  // Create debounced save function for case info updates using utility
-  const debouncedSave = createDebouncedSave(save, () => {
-    if (window.refreshChartProgress) window.refreshChartProgress();
-  });
 
   // Make chart refresh available globally for components
   window.refreshChartProgress = null; // Will be set after chart creation

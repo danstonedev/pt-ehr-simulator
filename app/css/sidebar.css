@@ -1073,7 +1073,7 @@ html[data-theme='dark'] .sidebar-nav-panel .section-nav-item.active {
 /* Mobile-first sidebar behavior is now handled by mobile-patch-v2.css */
 
 /* Responsive improvements for section navigation */
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   /* Mobile: adjust padding for better touch targets */
   .chart-navigation .section-card .section-nav-item {
     padding: 1rem 20px; /* increased touch-friendly padding */

@@ -42,6 +42,20 @@ export default defineConfig({
           if (id.includes('features/soap/billing/')) {
             return 'soap-billing';
           }
+
+          // CSS chunk splitting for component-specific styles
+          if (id.includes('css/components/')) {
+            return 'components-css';
+          }
+          if (id.includes('css/buttons.css')) {
+            return 'ui-css';
+          }
+          if (id.includes('css/tables.css')) {
+            return 'tables-css';
+          }
+          if (id.includes('css/sidebar.css')) {
+            return 'sidebar-css';
+          }
         },
       },
 
@@ -88,8 +102,12 @@ export default defineConfig({
 
   // CSS configuration
   css: {
-    // CSS code splitting
+    // CSS code splitting and optimization
     postcss: {},
+    // Enable CSS code splitting
+    codeSplit: true,
+    // Preprocess CSS to remove unused styles in production
+    preprocessorOptions: {},
   },
 
   // Optimization

@@ -1,7 +1,22 @@
 import { storage } from './adapters/storageAdapter.js';
+import { cssOptimizer, loadRouteCSS } from './css-optimizer.js';
 
 // Track per-view cleanup returned by renderers to avoid stacked listeners/memory leaks
 let currentCleanup = null;
+let __firstRenderDone = false; // track first successful route paint
+
+/**
+ * Determines the route type for CSS loading based on path
+ * @param {string} path - The current route path
+ * @returns {string} Route type for CSS optimization
+ */
+function getRouteType(path) {
+  if (path.includes('/student/')) return 'student';
+  if (path.includes('/instructor/')) return 'instructor';
+  if (path.includes('/editor/') || path.includes('/case/')) return 'editor';
+  if (path === '#/' || path.includes('/home')) return 'home';
+  return 'default';
+}
 
 // Basic route transition utility
 function applyRouteTransition(appEl, mode = 'fade') {
@@ -95,6 +110,30 @@ export function startRouter() {
     const { renderer, params } = resolveRendererAndParams(path);
     if (!renderer) return;
 
+    // Load route-specific CSS based on current path
+    try {
+      const routeType = getRouteType(path);
+      await loadRouteCSS(routeType);
+
+      // Only preload CSS for the most likely immediate next route
+      const preloadMap = {
+        home: [], // Don't preload on home - let users choose their path
+        student: ['editor'], // Students likely go to editor next
+        instructor: ['editor'], // Instructors likely go to editor next
+        editor: [], // Editor users typically stay in editor
+      };
+
+      const routesToPreload = preloadMap[routeType] || [];
+      if (routesToPreload.length > 0) {
+        // Delay preloading to ensure current route CSS is fully utilized first
+        setTimeout(() => {
+          cssOptimizer.preloadRoutes(routesToPreload);
+        }, 3000); // Wait 3 seconds before preloading
+      }
+    } catch (error) {
+      console.error('Failed to load route CSS:', error);
+    }
+
     // Teardown previous view before rendering the next one
     try {
       if (typeof currentCleanup === 'function') currentCleanup();
@@ -109,6 +148,10 @@ export function startRouter() {
     const maybeCleanup = await renderer(newWrapper, new URLSearchParams(query || ''), params);
     currentCleanup = typeof maybeCleanup === 'function' ? maybeCleanup : null;
     after(newWrapper);
+    if (!__firstRenderDone) {
+      __firstRenderDone = true;
+      window.dispatchEvent(new Event('app-ready'));
+    }
   }
   window.addEventListener('hashchange', render);
   render();
@@ -164,15 +207,31 @@ function buildRouteWrapper(app, before) {
 
 // Disable CSS transitions during window resize/rotation to avoid janky animations
 let resizeTimer = null;
+let isResizing = false;
+
 function setResizingState(on) {
   const root = document.documentElement;
-  if (on) root.classList.add('is-resizing');
-  else root.classList.remove('is-resizing');
+  if (on && !isResizing) {
+    isResizing = true;
+    root.classList.add('is-resizing');
+    // Temporarily disable will-change on sidebar for better performance during resize
+    const sidebar = document.querySelector('.chart-navigation');
+    if (sidebar) sidebar.style.willChange = 'auto';
+  } else if (!on && isResizing) {
+    isResizing = false;
+    root.classList.remove('is-resizing');
+    // Re-enable will-change after resize completes
+    const sidebar = document.querySelector('.chart-navigation');
+    if (sidebar && window.matchMedia('(max-width: 900px)').matches) {
+      sidebar.style.willChange = 'transform';
+    }
+  }
 }
+
 function handleResize() {
   setResizingState(true);
   if (resizeTimer) clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => setResizingState(false), 180);
+  resizeTimer = setTimeout(() => setResizingState(false), 200); // Increased from 180ms
 }
 window.addEventListener('resize', handleResize, { passive: true });
 window.addEventListener('orientationchange', handleResize, { passive: true });

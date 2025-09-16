@@ -1,0 +1,223 @@
+/* Case Drawer (mobile) - slides the existing .chart-navigation in/out on small screens */
+
+@media (max-width: 900px) {
+  /* Shared geometry tokens for the mobile drawer handle/nudge */
+  body {
+    /* Visible width of the green nudge/tab */
+    --case-nudge-w: 18px;
+    /* Sidebar has a 1px right border in sidebar.css; include it for perfect flush */
+    --case-drawer-border-w: 1px;
+    /* Shared drawer width to prevent calc(min()) drift across rules */
+    --case-drawer-w: min(88vw, 340px);
+    /* Optional rounding tweak if a device shows a hairline gap/overlap */
+    --case-nudge-fudge: 0px;
+  }
+  /* Left nudge: attach to drawer's right edge so it moves with it */
+  .case-left-nudge {
+    position: absolute;
+    top: 50%;
+    /* Keep the nudge's left edge aligned exactly with the drawer's outer edge */
+    right: calc(-1 * (var(--case-nudge-w) + var(--case-drawer-border-w, 0px)));
+    transform: translateY(-50%);
+    width: var(--case-nudge-w);
+    height: 54px;
+    border: none;
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    background: var(--brand-accent, #0a7f39);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    /* Keep the tab above sticky section headers (z≈1000) and footer (1100) */
+    z-index: 1200; /* also remains below top bar (3000) and modals */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+    /* Drag disabled; allow normal taps/scrolls */
+    touch-action: manipulation;
+    /* Performance optimizations */
+    contain: layout style;
+    will-change: transform;
+    backface-visibility: hidden;
+  }
+  /* Floating variant used before the drawer is present: keep it on left edge */
+  .case-left-nudge.case-left-nudge--floating {
+    position: fixed;
+    left: 0;
+    right: auto;
+    /* Always above sticky headers/content; still below top bar and modals */
+    z-index: 1200;
+    /* Smoothly follow the drawer during transitions - optimized for performance */
+    transition: transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* Performance optimization */
+    will-change: transform;
+    transform-origin: center;
+  }
+  /* While opening, translate the floating nudge to the drawer width so it visually rides along
+     until it is attached by JS (then its own translateY from the base rule continues to apply) */
+  /* When drawer is open, move the nudge to the drawer's right edge and keep it above the drawer */
+  body.case-drawer-open .case-left-nudge.case-left-nudge--floating {
+    /* Move to the drawer's outer edge: drawer width + its right border */
+    transform: translateX(
+        calc(
+          var(--case-drawer-w) + var(--case-drawer-border-w, 0px) + var(--case-drag-x, 0px) +
+            var(--case-nudge-fudge, 0px)
+        )
+      )
+      translateY(-50%);
+    z-index: 1200; /* ensure it never tucks behind section headers */
+  }
+  .case-left-nudge .icon {
+    width: 12px;
+    height: 12px;
+    fill: currentColor;
+  }
+  .case-left-nudge:active {
+    filter: brightness(0.95);
+  }
+
+  /* Overlay behind the drawer */
+  .case-drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    -webkit-backdrop-filter: saturate(120%) blur(2px);
+    backdrop-filter: saturate(120%) blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+    z-index: 900; /* below drawer */
+    /* Performance optimizations */
+    contain: strict;
+    will-change: opacity;
+  }
+
+  body.case-drawer-open .case-drawer-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Reuse existing sidebar container; augment as drawer on mobile */
+  .chart-navigation {
+    position: fixed;
+    top: var(--topbar-h, 56px);
+    left: 0;
+    height: calc(100vh - var(--topbar-h, 56px));
+    width: var(--case-drawer-w);
+    max-width: 90vw;
+    /* Allow the attached handle to protrude beyond the drawer edge */
+    overflow-x: visible;
+    overflow-y: auto;
+    /* Sidebar should be fully offscreen when closed; the handle peeks via its own negative right */
+    --case-handle-peek: 24px; /* can be tuned for discoverability */
+    transform: translateX(calc(-100% + var(--case-drag-x, 0px)));
+    transition: transform 240ms ease;
+    /* Keep drawer above sticky patient header (token-defined) */
+    z-index: var(--z-sidebar); /* above overlay, below topbar/footer */
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.35);
+    /* Performance optimizations for mobile drawer */
+    contain: layout style paint;
+    will-change: transform;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+  }
+
+  /* When open, slide into view */
+  body.case-drawer-open .chart-navigation {
+    transform: translateX(calc(0px + var(--case-drag-x, 0px)));
+  }
+
+  /* Optional: prevent body from scrolling when drawer is open */
+  body.case-drawer-open {
+    overflow: hidden;
+  }
+
+  /* Attached half-circle handle */
+  .case-drawer-handle {
+    position: absolute;
+    top: 50%;
+    right: calc(-1 * var(--case-handle-peek, 24px)); /* stick out from the drawer's right edge */
+    transform: translate(0, -50%);
+    width: 44px;
+    height: 68px;
+    border: none;
+    border-top-right-radius: 32px;
+    border-bottom-right-radius: 32px;
+    background: var(--brand-accent, #0a7f39);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: pan-y; /* allow vertical scroll while handling horizontal drag */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+  }
+
+  .case-drawer-handle .icon {
+    width: 18px;
+    height: 18px;
+    line-height: 1;
+    display: inline-block;
+    fill: currentColor;
+  }
+  .case-drawer-handle:active {
+    filter: brightness(0.95);
+  }
+
+  /* Keep handle visible; it doubles as the close control when open */
+  /* Now deprecated in favor of the left-edge nudge; hide entirely */
+  .case-drawer-handle {
+    display: none !important;
+  }
+}
+
+/* screen-reader-only utility (used for accessible labels inside handle) */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 1px, 1px) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case-drawer-overlay,
+  .chart-navigation {
+    transition: none !important;
+  }
+}
+
+/* Performance optimization: disable transitions during window resize */
+.is-resizing .case-drawer-overlay,
+.is-resizing .chart-navigation,
+.is-resizing .case-left-nudge {
+  transition: none !important;
+  will-change: auto !important;
+}
+
+/* Desktop: ensure no off-canvas transforms are applied */
+@media (min-width: 901px) {
+  .case-drawer-overlay {
+    display: none !important;
+  }
+  .chart-navigation {
+    position: static;
+    transform: none;
+    box-shadow: none;
+    height: auto;
+    width: auto;
+    /* Reset performance optimizations not needed on desktop */
+    will-change: auto;
+    contain: layout style; /* Keep layout containment for desktop performance */
+  }
+  .case-drawer-handle {
+    display: none !important;
+  }
+  .case-left-nudge {
+    display: none !important;
+  }
+}
