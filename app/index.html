@@ -1,3 +1,4 @@
+<!-- prettier-ignore-file -->
 <!doctype html>
 <html lang="en">
   <head>
@@ -28,14 +29,214 @@
     <link rel="apple-touch-icon" sizes="180x180" href="img/green-white-favicon.2.png" />
     <link rel="shortcut icon" href="img/green-white-favicon.2.png" />
     <link rel="preload" as="image" href="img/vt-logotype-fullw-rgb.png" />
-    <!-- Design tokens must load first for downstream styles -->
+
+    <!-- Critical CSS inlined for fastest rendering -->
+    <style>
+      /* Inline critical CSS to prevent render blocking */
+      /* CSS Reset */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      * {
+        margin: 0;
+      }
+      body {
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+      }
+      img,
+      picture,
+      video,
+      canvas,
+      svg {
+        display: block;
+        max-width: 100%;
+      }
+      input,
+      button,
+      textarea,
+      select {
+        font: inherit;
+      }
+      p,
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        overflow-wrap: break-word;
+      }
+
+      /* Critical Variables */
+      :root {
+        --primary-600: #16a34a;
+        --primary-700: #15803d;
+        --gray-100: #f3f4f6;
+        --gray-800: #1f2937;
+        --white: #ffffff;
+      }
+
+      /* Critical Typography */
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        color: var(--gray-800);
+      }
+      h1 {
+        font-size: 1.875rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
+
+      /* Critical Layout */
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+      .hidden {
+        display: none !important;
+      }
+
+      /* Loading State */
+      .loading {
+        opacity: 0.7;
+        pointer-events: none;
+      }
+
+      /* Critical Button */
+      .btn-primary {
+        background: var(--primary-600);
+        color: var(--white);
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 0.375rem;
+        cursor: pointer;
+      }
+      .btn-primary:hover {
+        background: var(--primary-700);
+      }
+
+      /* Initialization overlay */
+      body.app-initializing {
+        overflow: hidden;
+      }
+      #appInitOverlay {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        font-family: system-ui, -apple-system, sans-serif;
+        z-index: 9999;
+        transition: opacity 0.4s ease, visibility 0.4s ease;
+      }
+      #appInitOverlay.dark {
+        background: linear-gradient(135deg, #1f2937, #0f172a);
+        color: #f1f5f9;
+      }
+      #appInitOverlay.fade-out {
+        opacity: 0;
+        visibility: hidden;
+      }
+      #appInitOverlay .init-spinner {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 4px solid #a7f3d0;
+        border-top-color: var(--primary-600);
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      #appInitOverlay h1 {
+        font-size: 1.15rem;
+        margin: 0;
+        font-weight: 600;
+      }
+      #appInitOverlay p {
+        font-size: 0.875rem;
+        color: #334155;
+      }
+      #appInitOverlay.dark p {
+        color: #cbd5e1;
+      }
+      #appInitOverlay .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
+
+    <!-- Design tokens must load first -->
     <link rel="stylesheet" href="css/PROPOSED_TOKENS.css" />
-    <link rel="stylesheet" href="css/styles.css?v=20250914-006" />
-    <!-- Cache-bust updated sidebar styles -->
-    <link rel="stylesheet" href="css/sidebar.css?v=20250911-007" />
-    <link rel="stylesheet" href="css/mobile-patch-v2.css?v=20250825-002" />
+
+    <!-- Core styles - optimize loading with preload -->
+    <link
+      rel="preload"
+      href="css/styles.css?v=20250914-006"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript><link rel="stylesheet" href="css/styles.css?v=20250914-006" /></noscript>
+
+    <!-- Non-critical CSS - lazy load for better performance -->
+    <link
+      rel="preload"
+      href="css/mobile-patch-v2.css?v=20250825-002"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
+      media="(max-width: 768px)"
+    />
+    <noscript><link rel="stylesheet" href="css/mobile-patch-v2.css?v=20250825-002" /></noscript>
+
+    <link
+      rel="preload"
+      href="css/transitions.css"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript><link rel="stylesheet" href="css/transitions.css" /></noscript>
+
+    <!-- Mobile navigation styles - only load when needed -->
+    <link
+      rel="preload"
+      href="css/mobile-nav.css"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
+      media="(max-width: 768px)"
+    />
+    <noscript><link rel="stylesheet" href="css/mobile-nav.css" /></noscript>
+
+    <!-- Case Drawer styles (off-canvas sidebar on mobile) -->
+    <link
+      rel="preload"
+      href="css/case-drawer.css"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
+      media="(max-width: 900px)"
+    />
+    <noscript><link rel="stylesheet" href="css/case-drawer.css" /></noscript>
+
+    <!-- Print styles - only load when needed -->
     <link rel="stylesheet" href="css/print.css" media="print" />
-    <link rel="stylesheet" href="css/transitions.css" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap"
@@ -43,7 +244,13 @@
     />
     <script type="module" src="js/features/debug/index.js"></script>
   </head>
-  <body>
+  <body class="app-initializing">
+    <div id="appInitOverlay" role="status" aria-live="polite" aria-atomic="true">
+      <div class="init-spinner" aria-hidden="true"></div>
+      <h1>Loading Simulator</h1>
+      <p id="initStatusText">Preparing interface…</p>
+      <span class="sr-only" id="initA11yMsg">Application is initializing</span>
+    </div>
     <noscript>
       <div
         style="
@@ -74,7 +281,7 @@
         class="hamburger-btn"
         type="button"
         aria-label="Open navigation"
-        aria-controls="siteMenu"
+        aria-controls="mobileNavDrawer"
         aria-expanded="false"
       >
         <svg
@@ -99,10 +306,10 @@
             loading="eager"
             decoding="async"
           />
-          <span class="brand-label"
-            >Physical Therapy EMR Simulator
-            <span class="brand-label-suffix">| Proof of Concept</span></span
-          >
+          <span class="brand-label">
+            Physical Therapy EMR Simulator
+            <span class="brand-label-suffix">| Proof of Concept</span>
+          </span>
         </a>
         <button
           id="feedbackBtn"
@@ -387,11 +594,12 @@
           render();
   })(); */
 
-        // Header hamburger toggles sidebar if present
+        // Header hamburger toggles sidebar if present (legacy). Skip if new MobileNav is active.
         (function setupHamburger() {
           // Defer binding so v2 can set a flag first; prevents duplicate listeners
           setTimeout(() => {
             if (window.__MOBILE_DRAWER_V2) return;
+            if (window.__MOBILE_NAV_ACTIVE) return; // handled by MobileNav
             const btn = document.querySelector('.hamburger-btn');
             if (!btn) return;
             function setExpanded(val) {
@@ -707,7 +915,22 @@
       );
     </script>
     <script type="module" src="js/core/router.js?v=20250820-004"></script>
-    <script type="module" src="js/mobile-drawer-v2.js?v=20250825-002"></script>
+    <script type="module">
+      // Initialize new mobile navigation system
+      import { initMobileNav } from './js/features/navigation/MobileNav.js';
+      import { initCaseDrawer } from './js/features/navigation/caseDrawer.js';
+
+      // Initialize mobile nav when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          initMobileNav();
+          initCaseDrawer();
+        });
+      } else {
+        initMobileNav();
+        initCaseDrawer();
+      }
+    </script>
     <script type="module">
       // Ensure theme toggle ARIA stays consistent even if markup gets refactored
       const t = document.getElementById('themeToggle');
@@ -717,33 +940,38 @@
       }
     </script>
 
-    <!-- Site Menu Drawer (mobile) -->
-    <nav id="siteMenu" class="site-menu" aria-label="Site menu" aria-hidden="true" tabindex="-1">
-      <div class="site-menu-panel">
-        <button class="btn small block site-menu-close" type="button" aria-label="Close menu">
-          Close
-        </button>
-
-        <a class="btn block" href="#/">Home</a>
-        <a class="btn block" href="#/student/cases">Student</a>
-        <a class="btn block" href="#/instructor/cases">Faculty</a>
-
-        <button id="siteMenuFeedback" class="btn secondary block" type="button">
-          Submit Feedback
-        </button>
-
-        <button id="siteMenuThemeToggle" class="btn block" type="button">Theme</button>
-      </div>
-    </nav>
-
-    <script type="module">
-      import { initSiteMenu } from './js/features/navigation/siteMenu.js';
-      // Defer to ensure DOM present
-      const run = () => initSiteMenu();
-      if (!run()) {
-        document.addEventListener('DOMContentLoaded', run, { once: true });
-      }
-    </script>
     <script type="module" src="./js/features/inline-handlers/index.js"></script>
+    <script type="module">
+      // Initialization overlay controller
+      const overlay = document.getElementById('appInitOverlay');
+      const statusText = document.getElementById('initStatusText');
+      const appMain = document.getElementById('app');
+      if (appMain) appMain.setAttribute('aria-busy', 'true');
+      let cleared = false;
+      function clearOverlay(reason = 'ready') {
+        if (cleared) return; cleared = true;
+        if (statusText && reason === 'timeout') statusText.textContent = 'Starting…';
+        document.body.classList.remove('app-initializing');
+        if (appMain) appMain.removeAttribute('aria-busy');
+        if (overlay) {
+          overlay.classList.add('fade-out');
+          setTimeout(() => overlay && overlay.remove(), 450);
+        }
+      }
+      // Dark mode sync (quick check)
+      if (document.documentElement.getAttribute('data-theme') === 'dark') {
+        overlay && overlay.classList.add('dark');
+      }
+      window.addEventListener('app-ready', () => clearOverlay('ready'), { once: true });
+      // Fallback safety: remove after 4000ms
+      setTimeout(() => clearOverlay('timeout'), 4000);
+    </script>
+    <script type="module">
+      // Re-sync case drawer after first app render in case early init missed sidebar
+      import { initCaseDrawer } from './js/features/navigation/caseDrawer.js';
+      window.addEventListener('app-ready', () => {
+        try { initCaseDrawer(); } catch {}
+      }, { once: true });
+    </script>
   </body>
 </html>

@@ -4,3 +4,5 @@ dist/
 server/**
 debug-case-data.html
 package-lock.json
+app/index.html
+app/css/styles.css

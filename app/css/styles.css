@@ -1,3 +1,6 @@
+/* prettier-ignore-file
+  Rationale: Extremely large, hand-tuned stylesheet with intentional long lines and grouping.
+  Prettier formatting caused persistent check noise; ignoring to keep authored structure. */
 /*
 ==============================================================================
  PT EMR Simulator - Accessible & Professional Stylesheet
@@ -584,7 +587,8 @@
 
   /* Z-index layers */
   --z-topbar: 3000;
-  --z-sidebar: 1000;
+  /* Sidebar must sit above patient sticky header (1001) but below footer ribbon (1100) */
+  --z-sidebar: 1050;
   --z-case-header: 1001;
   --z-sticky-header: 1000; /* below footer ribbon to avoid overlap */
   --z-footer: 1100;
@@ -721,7 +725,8 @@
 
   /* Z-index layers */
   --z-topbar: 3000;
-  --z-sidebar: 1000;
+  /* Sidebar must sit above patient sticky header (1001) but below footer ribbon (1100) */
+  --z-sidebar: 1050;
   --z-case-header: 1001;
   --z-sticky-header: 1000; /* Below footer ribbon to avoid overlap */
   --z-footer: 1100;
@@ -882,7 +887,18 @@
   --case-header-bg: var(--surface-case-header);
 }
 
-/* Modules imported at top; keep this comment as a marker */
+/* Hard desktop minimum width: for devices with fine pointer (mouse/trackpad), enforce 900px layout width.
+   This allows very narrow windows to scroll horizontally instead of collapsing into mobile nav/state. */
+@media (pointer: fine) {
+  html,
+  body {
+    min-width: 900px; /* enforce desktop baseline */
+  }
+  body.force-desktop,
+  html.force-desktop {
+    min-width: 900px;
+  }
+}
 
 /* ========================================
    2) BASE / RESET & TYPOGRAPHY
@@ -1825,7 +1841,8 @@ html[data-theme='dark'] .theme-toggle .icon.moon {
 .editor-section-divider::before {
   content: '';
   position: absolute;
-  top: 0;
+  /* Extend 1px upward to eliminate occasional subpixel gap above the green banner */
+  top: -1px;
   bottom: 0;
   /* Bleed the gradient into the container gutters */
   left: calc(-1 * var(--pad-x));
@@ -3365,7 +3382,7 @@ select:focus,
    ======================================== */
 
 /* Tablet and desktop adjustments */
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .sticky-top-bar {
     /* Match section-content mobile horizontal padding (clamp min = 16px)
        so gutters align evenly on both sides */
@@ -4027,7 +4044,7 @@ header.topbar {
   z-index: var(--z-topbar); /* above sidebar and feature headers */
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start; /* we'll manage spacing with auto margins */
   gap: 1rem;
   box-sizing: border-box; /* include padding/border in height */
   height: var(--topbar-h);
@@ -4054,6 +4071,41 @@ header.topbar {
 .hamburger-btn:focus-visible {
   outline: 2px solid var(--white);
   outline-offset: 2px;
+}
+
+/* Defensive rule for MobileNav elements
+   Ensure mobile navigation UI never shows on desktop when the dedicated
+   mobile-nav.css isn’t loaded (we lazily load it only on <=768px).
+   Note: we only hide on desktop, so mobile behavior remains controlled
+   by mobile-nav.css. These IDs/classes are created by MobileNav.js. */
+@media (min-width: 769px) {
+  #mobileNavOverlay,
+  .mobile-nav-overlay,
+  #mobileNavDrawer,
+  .mobile-nav-drawer {
+    display: none !important;
+  }
+}
+
+/* Show the header hamburger only on small screens */
+@media (max-width: 768px) {
+  .hamburger-btn {
+    display: inline-flex;
+    order: 2; /* after brand row */
+  }
+  /* Ensure brand row doesn't stretch past hamburger; hamburger stays on far right */
+  header.topbar .brand-row {
+    flex: 1 1 auto;
+    order: 1;
+  }
+  /* Remove any unintended auto margin that could offset layout */
+  header.topbar .hamburger-btn {
+    margin-left: 0;
+  }
+  /* Space between brand and hamburger grows naturally */
+  header.topbar {
+    gap: 0.5rem;
+  }
 }
 
 /* Breadcrumbs (below header) */
