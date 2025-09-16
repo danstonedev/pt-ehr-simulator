@@ -14,6 +14,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+      - name: Install dependencies (omit optional)
+        run: npm ci --omit=optional || npm i --omit=optional
       - name: Install Playwright
         run: |
           npm i -D playwright@1.47.2
