@@ -1,0 +1,120 @@
+{
+  "$schema": "https://design-tokens.org/schema.json",
+  "meta": {
+    "name": "PT EMR Simulator Tokens",
+    "version": "1.0.0",
+    "source": "Derived from docs/STYLEGUIDE.md and existing CSS variables"
+  },
+  "props": {
+    /* Brand */
+    "color.brand.primary": { "value": "#009a44", "type": "color" },
+    "color.brand.primary.light": { "value": "#f0fdf4", "type": "color" },
+    "color.brand.accent": { "value": "#ff9c31", "type": "color" },
+
+    /* Neutrals / Surfaces (Light) */
+    "color.surface.background": { "value": "#f8fafc", "type": "color" },
+    "color.surface.background.hover": { "value": "#f1f5f9", "type": "color" },
+    "color.surface.panel": { "value": "#f1f5f9", "type": "color" },
+    "color.surface.panel.alt": { "value": "#edf2f7", "type": "color" },
+    "color.surface.base": { "value": "#ffffff", "type": "color" },
+    "color.surface.base.hover": { "value": "#f5f5f5", "type": "color" },
+    "color.border.base": { "value": "#d1d9e2", "type": "color" },
+    "color.border.surface": { "value": "#e2e8f0", "type": "color" },
+
+    /* Text (Light) */
+    "color.text.primary": { "value": "#1a202c", "type": "color" },
+    "color.text.secondary": { "value": "#4a5568", "type": "color" },
+
+    /* Gradients */
+    "color.gradient.sidebar.left": { "value": "#0d4d2c", "type": "color" },
+    "color.gradient.sidebar.right": { "value": "#0a3722", "type": "color" },
+
+    /* Elevation */
+    "elevation.none": { "value": "none", "type": "shadow" },
+    "elevation.deep": { "value": "0 8px 28px rgba(0,0,0,0.45)", "type": "shadow" },
+
+    /* Layout */
+    "layout.sidebar.width": { "value": "300px", "type": "sizing" },
+    "layout.topbar.height": { "value": "56px", "type": "sizing" },
+
+    /* Layer Z-Index */
+    "zindex.topbar": { "value": 3000, "type": "number" },
+    "zindex.modal": { "value": 2600, "type": "number" },
+    "zindex.sidebar": { "value": 1800, "type": "number" },
+    "zindex.overlay": { "value": 900, "type": "number" },
+    "zindex.floating.tab": { "value": 1200, "type": "number" },
+
+    /* Typography Scale */
+    "font.size.xs": { "value": "0.75rem", "type": "fontSize" },
+    "font.size.sm": { "value": "0.8125rem", "type": "fontSize" },
+    "font.size.md": { "value": "0.875rem", "type": "fontSize" },
+    "font.size.base": { "value": "1rem", "type": "fontSize" },
+    "font.size.lg": { "value": "1.125rem", "type": "fontSize" },
+    "font.size.xl": { "value": "1.25rem", "type": "fontSize" },
+
+    /* Radii */
+    "radius.sm": { "value": "4px", "type": "borderRadius" },
+    "radius.md": { "value": "8px", "type": "borderRadius" },
+    "radius.lg": { "value": "12px", "type": "borderRadius" },
+
+    /* Sidebar (Light) Semantic */
+    "sidebar.surface.gradient": {
+      "value": "linear-gradient(90deg,#0d4d2c,#0a3722)",
+      "type": "color"
+    },
+    "sidebar.border": { "value": "rgba(0,0,0,0.12)", "type": "color" },
+    "sidebar.fg": { "value": "#ffffff", "type": "color" },
+    "sidebar.link": { "value": "#ffffff", "type": "color" },
+    "sidebar.hover.bg": { "value": "#f0fdf4", "type": "color" },
+    "sidebar.hover.fg": { "value": "#009a44", "type": "color" },
+    "sidebar.active.bg": { "value": "#f0fdf4", "type": "color" },
+    "sidebar.active.fg": { "value": "#009a44", "type": "color" },
+    "sidebar.active.bar": { "value": "#009a44", "type": "color" },
+
+    /* Buttons */
+    "button.primary.bg": { "value": "#009a44", "type": "color" },
+    "button.primary.bg.hover": { "value": "#037a37", "type": "color" },
+    "button.primary.fg": { "value": "#ffffff", "type": "color" },
+    "button.primary.border": { "value": "#009a44", "type": "color" },
+
+    /* Roles (Light) */
+    "role.user.bg": { "value": "#f0fdf4", "type": "color" },
+    "role.user.fg": { "value": "#1a202c", "type": "color" },
+    "role.assistant.bg": { "value": "#ffffff", "type": "color" },
+    "role.assistant.fg": { "value": "#1a202c", "type": "color" },
+    "role.system.bg": { "value": "#fff3e0", "type": "color" },
+    "role.system.fg": { "value": "#5a3b00", "type": "color" },
+
+    /* Dark Mode Overrides */
+    "dark.surface.background": { "value": "#0f172a", "type": "color" },
+    "dark.surface.panel": { "value": "#1f2937", "type": "color" },
+    "dark.surface.panel.alt": { "value": "#273246", "type": "color" },
+    "dark.surface.base": { "value": "#1f2937", "type": "color" },
+    "dark.surface.base.hover": { "value": "#243047", "type": "color" },
+    "dark.border.base": { "value": "#334155", "type": "color" },
+    "dark.text.primary": { "value": "rgba(255,255,255,0.92)", "type": "color" },
+    "dark.text.secondary": { "value": "rgba(255,255,255,0.65)", "type": "color" },
+
+    /* Sidebar Dark */
+    "dark.sidebar.surface.gradient": {
+      "value": "linear-gradient(90deg,#1f2937,#111827)",
+      "type": "color"
+    },
+    "dark.sidebar.border": { "value": "rgba(255,255,255,0.12)", "type": "color" },
+    "dark.sidebar.fg": { "value": "rgba(255,255,255,0.92)", "type": "color" },
+    "dark.sidebar.link": { "value": "rgba(255,255,255,0.85)", "type": "color" },
+    "dark.sidebar.hover.bg": { "value": "rgba(255,255,255,0.08)", "type": "color" },
+    "dark.sidebar.hover.fg": { "value": "#ffffff", "type": "color" },
+    "dark.sidebar.active.bg": { "value": "rgba(255,255,255,0.12)", "type": "color" },
+    "dark.sidebar.active.fg": { "value": "#ffffff", "type": "color" },
+    "dark.sidebar.active.bar": { "value": "#009a44", "type": "color" },
+
+    /* Roles (Dark) */
+    "dark.role.user.bg": { "value": "rgba(0,154,68,0.18)", "type": "color" },
+    "dark.role.user.fg": { "value": "#e6ffe8", "type": "color" },
+    "dark.role.assistant.bg": { "value": "#243047", "type": "color" },
+    "dark.role.assistant.fg": { "value": "rgba(255,255,255,0.92)", "type": "color" },
+    "dark.role.system.bg": { "value": "#3a2a12", "type": "color" },
+    "dark.role.system.fg": { "value": "#ffd9a1", "type": "color" }
+  }
+}

@@ -273,3 +273,31 @@ If your Pages URL hasn’t updated yet, check Actions for the latest “Deploy t
 ## 📚 Notes on Word Export
 
 Word export relies on the global docx library. If it’s not present, the app will show an alert. To enable it, include docx via a script tag on the page you deploy this app to, or wire it into your hosting template. The app won’t fetch or bundle docx by itself.
+
+## 🎨 Design System & Theming
+
+The application uses a token‑driven theming system with light/dark support and semantic role mapping.
+
+Key resources:
+
+- Style Guide: `docs/STYLEGUIDE.md` (principles, patterns, accessible components)
+- LLM Prompt Template: `docs/STYLEGUIDE_PROMPT.md` (copy/paste prompt for AI assisted UI generation)
+- Curated Tokens JSON: `design-tokens.json`
+- Generated Tokens Snapshot: `design-tokens.generated.json` (run script to refresh)
+- Token Generation Script: `scripts/generate-design-tokens.mjs`
+
+### Generate / Refresh Token Snapshot
+
+```bash
+node scripts/generate-design-tokens.mjs
+```
+
+This merges discovered CSS custom properties with the curated `design-tokens.json` (never overwriting curated definitions) and writes `design-tokens.generated.json`.
+
+### Adding New Tokens
+
+1. Add the new CSS custom property to an appropriate stylesheet (e.g., `app/css/styles.css`).
+2. If it’s a semantic or brand‑level token, also add it to `design-tokens.json` with a clear hierarchical key.
+3. Re-run the generation script to confirm appearance in the generated snapshot.
+
+Dark mode tokens are defined via `html[data-theme='dark']` overrides—only deltas (changed values) belong there; never duplicate full rule sets.
