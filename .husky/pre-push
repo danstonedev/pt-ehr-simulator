@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Pre-push hook: run quick checks before allowing a push
+
+set -euo pipefail
+
+echo "husky pre-push: running npm run check"
+
+# Use Powershell-compatible invocation via npx if npm not in PATH
+npm run check
+
+echo "husky pre-push: checks passed"
