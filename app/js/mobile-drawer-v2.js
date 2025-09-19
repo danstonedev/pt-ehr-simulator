@@ -1,12 +1,90 @@
 /**
- * Mobile Drawer v2 (DISABLED)
- * This file has been disabled in favor of the new MobileNav system
- * Located at: app/js/features/navigation/MobileNav.js
+ * Mobile Drawer v2 (Test Harness)
+ *
+ * This lightweight script exists to support standalone HTML tests such as
+ * app/tests/mobile-drawer.test.html. It wires a simple hamburger toggle that:
+ * - Adds/removes 'is-open' on '.chart-navigation'
+ * - Adds/removes 'is-visible' on an overlay '.drawer-overlay'
+ * - Updates aria-expanded on the '.hamburger-btn' button
+ * - Closes when a '.mobile-close' button inside the drawer is clicked
+ *
+ * Note: The production app uses the modern MobileNav system in
+ * app/js/features/navigation/MobileNav.js and does not include this file.
  */
 
-// Disable all functionality
 (function () {
-  // Signal that this system is disabled
-  window.__MOBILE_DRAWER_V2 = false;
-  console.warn('Mobile Drawer v2 has been disabled. Using new MobileNav system.');
+  function init() {
+    const btn = document.querySelector('.hamburger-btn');
+    const drawer = document.querySelector('.chart-navigation');
+    if (!btn || !drawer) return;
+
+    // Ensure starting state
+    if (!btn.hasAttribute('aria-expanded')) btn.setAttribute('aria-expanded', 'false');
+
+    // Overlay: create if not present
+    let overlay =
+      document.getElementById('drawerOverlay') || document.querySelector('.drawer-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'drawerOverlay';
+      overlay.className = 'drawer-overlay';
+      document.body.appendChild(overlay);
+    }
+
+    function open() {
+      drawer.classList.add('is-open');
+      document.body.classList.add('mobile-drawer-open');
+      overlay.classList.add('is-visible');
+      btn.setAttribute('aria-expanded', 'true');
+      try {
+        drawer.focus();
+      } catch {}
+    }
+
+    function close() {
+      drawer.classList.remove('is-open');
+      document.body.classList.remove('mobile-drawer-open');
+      overlay.classList.remove('is-visible');
+      btn.setAttribute('aria-expanded', 'false');
+      try {
+        btn.focus();
+      } catch {}
+    }
+
+    function toggle() {
+      if (drawer.classList.contains('is-open')) {
+        close();
+      } else {
+        open();
+      }
+    }
+
+    // Bind events
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggle();
+    });
+    overlay.addEventListener('click', close);
+    const closeBtn = drawer.querySelector('.mobile-close');
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && drawer.classList.contains('is-open')) close();
+    });
+
+    // Expose for tests if needed
+    try {
+      window.__MOBILE_DRAWER_V2 = {
+        open,
+        close,
+        toggle,
+        elements: { btn, drawer, overlay },
+      };
+    } catch {}
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
 })();
