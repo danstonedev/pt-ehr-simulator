@@ -13,10 +13,8 @@
  */
 
 (function () {
-  function init() {
-    const btn = document.querySelector('.hamburger-btn');
-    const drawer = document.querySelector('.chart-navigation');
-    if (!btn || !drawer) return;
+  function wire(btn, drawer) {
+    if (!btn || !drawer || btn._mobileDrawerBound) return false;
 
     // Ensure starting state
     if (!btn.hasAttribute('aria-expanded')) btn.setAttribute('aria-expanded', 'false');
@@ -71,6 +69,9 @@
       if (e.key === 'Escape' && drawer.classList.contains('is-open')) close();
     });
 
+    // Mark as bound so we don't double-bind
+    btn._mobileDrawerBound = true;
+
     // Expose for tests if needed
     try {
       window.__MOBILE_DRAWER_V2 = {
@@ -80,11 +81,25 @@
         elements: { btn, drawer, overlay },
       };
     } catch {}
+    return true;
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  function tryInit() {
+    const btn = document.querySelector('.hamburger-btn');
+    const drawer = document.querySelector('.chart-navigation');
+    if (wire(btn, drawer)) return true;
+    return false;
+  }
+
+  // Attempt immediately
+  if (!tryInit()) {
+    // Fallback on DOMContentLoaded and load
+    document.addEventListener('DOMContentLoaded', tryInit, { once: true });
+    window.addEventListener('load', tryInit, { once: true });
+    // Last-resort short retry loop (250ms x 8 ≈ 2s)
+    let attempts = 0;
+    const t = setInterval(() => {
+      if (tryInit() || ++attempts >= 8) clearInterval(t);
+    }, 250);
   }
 })();
