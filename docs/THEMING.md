@@ -41,3 +41,18 @@ Usage tips:
 - Use CSS variables and BEM‑ish classes.
 - Keep selectors shallow; avoid ID styling except for scoped overrides.
 - Respect `prefers-color-scheme` and `prefers-reduced-motion`.
+
+## EMRsim logo assets
+
+The following logo variants are available in `app/img/`:
+
+- `EMRsim-white.png` — optimized for dark headers (this is used in the top bar by default)
+- `EMRsim-green.png` — green text version for light backgrounds
+- `EMRsim-black.png` — black text version for white/very light backgrounds
+
+Header usage is defined in `app/index.html` on the element `<img class="und-logo" src="img/EMRsim-white.png">`. Sizing is controlled via the `.und-logo` class in `app/css/styles.css`.
+
+To change per-theme automatically, either:
+
+- swap the `src` in a small script that listens for `data-theme` changes on `<html>`, or
+- use a `<picture>` element with `(prefers-color-scheme: dark)` conditional sources.

@@ -1,6 +1,9 @@
 import { route } from '../../core/router.js';
 import { navigate as urlNavigate } from '../../core/url.js';
-import { listCases } from '../../core/store.js';
+async function _listCases() {
+  const { listCases } = await import('../../core/store.js');
+  return listCases();
+}
 import { storage } from '../../core/index.js';
 import { el } from '../../ui/utils.js';
 
@@ -9,10 +12,9 @@ function spriteIcon(name, { className = 'icon', size } = {}) {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('class', className);
-  if (size) {
-    svg.style.width = size;
-    svg.style.height = size;
-  }
+  const sz = size || '18px';
+  svg.style.width = sz;
+  svg.style.height = sz;
   const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
   use.setAttribute('href', `#icon-${name}`);
   svg.appendChild(use);
@@ -22,7 +24,8 @@ function spriteIcon(name, { className = 'icon', size } = {}) {
 // Modal to create a blank SOAP note (not tied to a case)
 function openCreateNoteModal() {
   const overlay = el('div', {
-    class: 'popup-overlay-base fixed inset-0 overlay-65 d-flex ai-center jc-center z-modal',
+    class:
+      'modal-overlay popup-overlay-base fixed inset-0 overlay-50 d-flex ai-center jc-center z-modal',
     onclick: (e) => {
       if (e.target === overlay) close();
     },
@@ -31,53 +34,65 @@ function openCreateNoteModal() {
   const content = el(
     'div',
     {
-      class: 'popup-card-base bg-surface text-color br-lg shadow-modal',
+      class: 'modal-content case-details-modal popup-card-base',
       role: 'dialog',
       'aria-modal': 'true',
       'aria-label': 'Create SOAP Note',
-      className: undefined,
-      class: 'popup-card-base bg-surface text-color br-lg shadow-modal p-24 w-92 maxw-520',
       onclick: (e) => e.stopPropagation(),
     },
     [
-      el('h3', { class: 'm-0' }, 'Create SOAP Note'),
-      el(
-        'p',
-        { class: 'small mt-4 text-secondary' },
-        'Give your note a title so you can find it later.',
-      ),
-      el('label', { class: 'form-label-standard mt-12' }, 'Note Title'),
-      el('input', {
-        id: 'student-note-title-input',
-        type: 'text',
-        class: 'form-input-standard w-100 box-border',
-        value: defaultTitle,
-        placeholder: 'e.g., Shoulder Pain Eval - Aug 2025',
-      }),
-      el('div', { class: 'd-flex gap-8 jc-end mt-20' }, [
-        el('button', { class: 'btn secondary', onClick: () => close() }, 'Cancel'),
+      // Header (inherits green band styles from case-details-modal)
+      el('div', { class: 'modal-header' }, [
+        el('h3', {}, 'Create SOAP Note'),
+        el('button', { class: 'close-btn', 'aria-label': 'Close', onclick: () => close() }, '✕'),
+      ]),
+      // Body
+      el('div', { class: 'modal-body case-details-body' }, [
         el(
-          'button',
+          'form',
           {
-            class: 'btn primary',
-            onClick: () => {
+            onsubmit: (e) => {
+              e.preventDefault();
               const input = content.querySelector('#student-note-title-input');
               const title = (input && input.value ? input.value : '').trim() || 'Blank SOAP Note';
-              const id = `blank-${Date.now().toString(36)}-${Math.random()
-                .toString(36)
-                .slice(2, 6)}`;
+              const id = `blank-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
               try {
                 const draftKey = `draft_${id}_eval`;
                 const initialDraft = { noteTitle: title, __savedAt: Date.now() };
                 storage.setItem(draftKey, JSON.stringify(initialDraft));
-              } catch (e) {
-                console.warn('Could not pre-save blank note draft:', e);
+              } catch (e2) {
+                console.warn('Could not pre-save blank note draft:', e2);
               }
               close();
               urlNavigate('/student/editor', { case: id, v: 0, encounter: 'eval' });
             },
           },
-          'Create',
+          [
+            el('div', { class: 'instructor-form-field' }, [
+              el(
+                'label',
+                { class: 'instructor-form-label', for: 'student-note-title-input' },
+                'Note Title',
+              ),
+              el('input', {
+                id: 'student-note-title-input',
+                name: 'student-note-title-input',
+                type: 'text',
+                class: 'instructor-form-input',
+                value: defaultTitle,
+                placeholder: 'e.g., Shoulder Pain Eval - Aug 2025',
+              }),
+            ]),
+            // Actions
+            el('div', { class: 'modal-actions' }, [
+              el(
+                'button',
+                { type: 'button', class: 'btn secondary', onclick: () => close() },
+                'Cancel',
+              ),
+              el('button', { type: 'submit', class: 'btn primary' }, 'Create'),
+            ]),
+          ],
         ),
       ]),
     ],
@@ -88,6 +103,14 @@ function openCreateNoteModal() {
     const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const removeNow = () => {
       try {
+        document.removeEventListener('keydown', onKey);
+        // Clean inline fallback styles if applied
+        overlay.style.opacity = '';
+        const card = overlay.querySelector('.popup-card-base');
+        if (card) {
+          card.style.opacity = '';
+          card.style.transform = '';
+        }
         overlay.remove();
       } catch {}
     };
@@ -97,10 +120,28 @@ function openCreateNoteModal() {
   }
   overlay.append(content);
   document.body.append(overlay);
+  // Esc to close
+  const onKey = (e) => {
+    if (e.key === 'Escape') close();
+  };
+  document.addEventListener('keydown', onKey);
   requestAnimationFrame(() => {
     overlay.classList.add('is-open');
     content.classList.add('is-open');
-    setTimeout(() => content.querySelector('#student-note-title-input')?.focus(), 80);
+    // Mobile/sticky transition fallback
+    setTimeout(() => {
+      try {
+        const card = overlay.querySelector('.popup-card-base');
+        const overlayStyle = getComputedStyle(overlay);
+        const cardStyle = card ? getComputedStyle(card) : null;
+        if (overlayStyle && overlayStyle.opacity === '0') overlay.style.opacity = '1';
+        if (card && cardStyle && cardStyle.opacity === '0') {
+          card.style.opacity = '1';
+          card.style.transform = 'scale(1)';
+        }
+      } catch {}
+      content.querySelector('#student-note-title-input')?.focus();
+    }, 90);
   });
 }
 
@@ -681,7 +722,7 @@ function renderBlankNotesPanel(app) {
 route('#/student/cases', async (app) => {
   app.replaceChildren();
   try {
-    const cases = await listCases();
+    const cases = await _listCases();
     if (!Array.isArray(cases))
       return appendErrorPanel(app, 'Could not load cases. Please check the console for details.');
     if (cases.length === 0) return appendNoCasesPanel(app);

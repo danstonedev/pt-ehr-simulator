@@ -1,36 +1,17 @@
 // ChartNavigation.js - Professional EMR-style navigation with progress tracking
 import { el } from '../../ui/utils.js';
-import { createIcon } from '../../ui/Icons.js';
-import { exportToWord } from '../../services/document-export.js';
-import { ensureExportLibsLoaded } from '../../services/export-loader.js';
-import { openSignatureDialog, getPersistedSignatureMeta } from '../signature/SignatureModal.js';
-import { attachments as Att } from '../../services/index.js';
-
-// Artifact category metadata & persistence helpers
-const ARTIFACT_CATEGORY_META = {
-  referral: { label: 'Referrals', order: 1 },
-  pmh: { label: 'Past Medical History', order: 2 },
-  imaging: { label: 'Imaging', order: 3 },
-  labs: { label: 'Labs', order: 4 },
-  meds: { label: 'Medications', order: 5 },
-  vitals: { label: 'Vitals', order: 6 },
-  'prior-notes': { label: 'Prior Notes', order: 7 },
-  other: { label: 'Other', order: 99 },
-};
-const ARTIFACT_COLLAPSE_KEY = 'artifactCategoryCollapse_v1';
-function loadArtifactCollapseState() {
-  try {
-    return JSON.parse(localStorage.getItem(ARTIFACT_COLLAPSE_KEY) || '{}') || {};
-  } catch {
-    return {};
+import { openEditCaseModal } from './modal.js';
+// Note: icon utilities are used in other submodules; not needed directly here now
+// Lazy-load attachments service on demand
+let __attPromise;
+function getAttachmentsService() {
+  if (!__attPromise) {
+    __attPromise = import('../../services/attachments.js').then((m) => m.attachments);
   }
+  return __attPromise;
 }
-function saveArtifactCollapseState(state) {
-  try {
-    localStorage.setItem(ARTIFACT_COLLAPSE_KEY, JSON.stringify(state || {}));
-  } catch {}
-}
-let artifactCollapseState = loadArtifactCollapseState();
+
+// Artifact category handling moved to artifacts-panel.js
 
 // Persisted collapse state for top-level "Case File" artifact block
 const CASEFILE_COLLAPSED_KEY = 'caseFileCollapsed_v1';
@@ -70,7 +51,17 @@ function normalizeArtifactType(mod) {
   let t = (mod.type || '').toString().toLowerCase().trim();
   const id = (mod.id || '').toString().toLowerCase();
   const title = (mod.title || '').toString().toLowerCase();
-  const candidates = Object.keys(ARTIFACT_CATEGORY_META);
+  // Supported artifact types for viewer classification
+  const candidates = [
+    'referral',
+    'pmh',
+    'imaging',
+    'labs',
+    'meds',
+    'vitals',
+    'prior-notes',
+    'other',
+  ];
   if (t && candidates.includes(t)) return t;
   // Infer from id prefix
   for (const k of candidates) {
@@ -92,10 +83,7 @@ function normalizeArtifactType(mod) {
   return 'other';
 }
 
-function getCategoryForArtifact(mod) {
-  const t = normalizeArtifactType(mod);
-  return ARTIFACT_CATEGORY_META[t] ? t : 'other';
-}
+// getCategoryForArtifact moved to artifacts-panel.js
 
 /**
  * Creates SVG elements with proper namespace
@@ -992,7 +980,8 @@ function openViewArtifactModal(module, options = {}) {
                 // Async load object URL and set src, then track for revocation
                 (async () => {
                   try {
-                    const o = await Att.createObjectURL(m.id);
+                    const att = await getAttachmentsService();
+                    const o = await att.createObjectURL(m.id);
                     if (o?.url) {
                       img.src = o.url;
                       urlsToRevoke.push(o.url);
@@ -1077,7 +1066,8 @@ function openViewArtifactModal(module, options = {}) {
                       });
 
                       try {
-                        const o = await Att.createObjectURL(m.id);
+                        const att = await getAttachmentsService();
+                        const o = await att.createObjectURL(m.id);
                         if (!o?.url) throw new Error('No URL');
                         objectUrl = o.url;
                         const isImg = (m.mime || '').startsWith('image/');
@@ -1148,7 +1138,8 @@ function openViewArtifactModal(module, options = {}) {
                 );
                 btn.addEventListener('click', async () => {
                   try {
-                    const o = await Att.createObjectURL(m.id);
+                    const att = await getAttachmentsService();
+                    const o = await att.createObjectURL(m.id);
                     if (o?.url) {
                       const a = document.createElement('a');
                       a.href = o.url;
@@ -1183,7 +1174,8 @@ function openViewArtifactModal(module, options = {}) {
                   if (!confirm('Delete this file from storage and remove it from this document?'))
                     return;
                   try {
-                    await Att.delete(m.id);
+                    const att = await getAttachmentsService();
+                    await att.delete(m.id);
                   } catch (e) {
                     console.warn('Delete file failed:', e);
                   }
@@ -1303,6 +1295,7 @@ function openAddArtifactModal(onAdd) {
     class: 'instructor-form-input',
     placeholder: 'Artifact title (e.g., Referral to PT)',
     value: '',
+    'aria-label': 'Artifact title',
   });
 
   // Referral fields
@@ -1313,6 +1306,7 @@ function openAddArtifactModal(onAdd) {
     multiple: true,
     accept: '*/*',
     style: 'display:none;',
+    'aria-label': 'Select artifact files',
     onchange: async (e) => handleFiles(Array.from(e.target.files || [])),
   });
   const dropZone = el(
@@ -1336,13 +1330,14 @@ function openAddArtifactModal(onAdd) {
   );
   async function handleFiles(files) {
     if (!files.length) return;
-    if (!Att?.isSupported()) {
+    const att = await getAttachmentsService();
+    if (!att?.isSupported()) {
       alert('Attachments not supported in this browser (IndexedDB unavailable).');
       return;
     }
     for (const f of files) {
       try {
-        const meta = await Att.save(f, f.name, f.type);
+        const meta = await att.save(f, f.name, f.type);
         // Also embed as data URL for portability when case shared
         const fr = new FileReader();
         const dataUrl = await new Promise((res, rej) => {
@@ -1419,32 +1414,44 @@ function openAddArtifactModal(onAdd) {
   }
   const refForm = el('div', { style: 'display:grid; gap:10px; margin-top: 8px;' }, [
     el('div', {}, [
-      el('label', { class: 'instructor-form-label' }, 'Date'),
+      el('label', { class: 'instructor-form-label', for: 'artifact-date' }, 'Date'),
       el('input', {
+        id: 'artifact-date',
+        name: 'artifact-date',
         type: 'date',
         class: 'instructor-form-input',
         oninput: (e) => (ref.date = e.target.value),
       }),
     ]),
     el('div', {}, [
-      el('label', { class: 'instructor-form-label' }, 'From (provider/department)'),
+      el(
+        'label',
+        { class: 'instructor-form-label', for: 'artifact-source' },
+        'From (provider/department)',
+      ),
       el('input', {
+        id: 'artifact-source',
+        name: 'artifact-source',
         type: 'text',
         class: 'instructor-form-input',
         oninput: (e) => (ref.source = e.target.value),
       }),
     ]),
     el('div', {}, [
-      el('label', { class: 'instructor-form-label' }, 'Reason'),
+      el('label', { class: 'instructor-form-label', for: 'artifact-reason' }, 'Reason'),
       el('input', {
+        id: 'artifact-reason',
+        name: 'artifact-reason',
         type: 'text',
         class: 'instructor-form-input',
         oninput: (e) => (ref.reason = e.target.value),
       }),
     ]),
     el('div', {}, [
-      el('label', { class: 'instructor-form-label' }, 'Notes'),
+      el('label', { class: 'instructor-form-label', for: 'artifact-notes' }, 'Notes'),
       el('textarea', {
+        id: 'artifact-notes',
+        name: 'artifact-notes',
         class: 'instructor-form-input',
         style: 'min-height:68px;',
         oninput: (e) => (ref.notes = e.target.value),
@@ -1573,6 +1580,7 @@ function openEditArtifactModal(module, onSave) {
     class: 'instructor-form-input',
     placeholder: 'Artifact title',
     value: module?.title || '',
+    'aria-label': 'Artifact title',
   });
 
   // Referral fields
@@ -1588,6 +1596,7 @@ function openEditArtifactModal(module, onSave) {
     multiple: true,
     accept: '*/*',
     style: 'display:none;',
+    'aria-label': 'Select artifact files',
     onchange: async (e) => handleFilesEdit(Array.from(e.target.files || [])),
   });
   const dropZone = el(
@@ -1611,13 +1620,14 @@ function openEditArtifactModal(module, onSave) {
   );
   async function handleFilesEdit(files) {
     if (!files.length) return;
-    if (!Att?.isSupported()) {
+    const att = await getAttachmentsService();
+    if (!att?.isSupported()) {
       alert('Attachments not supported in this browser (IndexedDB unavailable).');
       return;
     }
     for (const f of files) {
       try {
-        const meta = await Att.save(f, f.name, f.type);
+        const meta = await att.save(f, f.name, f.type);
         const fr = new FileReader();
         const dataUrl = await new Promise((res, rej) => {
           fr.onerror = () => rej(fr.error);
@@ -1693,8 +1703,10 @@ function openEditArtifactModal(module, onSave) {
   }
   const refForm = el('div', { style: 'display:grid; gap:10px; margin-top: 8px;' }, [
     el('div', {}, [
-      el('label', { class: 'instructor-form-label' }, 'Date'),
+      el('label', { class: 'instructor-form-label', for: 'artifact-edit-date' }, 'Date'),
       el('input', {
+        id: 'artifact-edit-date',
+        name: 'artifact-edit-date',
         type: 'date',
         class: 'instructor-form-input',
         value: ref.date,
@@ -1702,8 +1714,14 @@ function openEditArtifactModal(module, onSave) {
       }),
     ]),
     el('div', {}, [
-      el('label', { class: 'instructor-form-label' }, 'From (provider/department)'),
+      el(
+        'label',
+        { class: 'instructor-form-label', for: 'artifact-edit-source' },
+        'From (provider/department)',
+      ),
       el('input', {
+        id: 'artifact-edit-source',
+        name: 'artifact-edit-source',
         type: 'text',
         class: 'instructor-form-input',
         value: ref.source,
@@ -1711,8 +1729,10 @@ function openEditArtifactModal(module, onSave) {
       }),
     ]),
     el('div', {}, [
-      el('label', { class: 'instructor-form-label' }, 'Reason'),
+      el('label', { class: 'instructor-form-label', for: 'artifact-edit-reason' }, 'Reason'),
       el('input', {
+        id: 'artifact-edit-reason',
+        name: 'artifact-edit-reason',
         type: 'text',
         class: 'instructor-form-input',
         value: ref.reason,
@@ -1720,10 +1740,12 @@ function openEditArtifactModal(module, onSave) {
       }),
     ]),
     el('div', {}, [
-      el('label', { class: 'instructor-form-label' }, 'Notes'),
+      el('label', { class: 'instructor-form-label', for: 'artifact-edit-notes' }, 'Notes'),
       el(
         'textarea',
         {
+          id: 'artifact-edit-notes',
+          name: 'artifact-edit-notes',
           class: 'instructor-form-input',
           style: 'min-height:68px;',
           oninput: (e) => (ref.notes = e.target.value),
@@ -1861,343 +1883,7 @@ function openEditArtifactModal(module, onSave) {
 }
 
 // Edit Case Details Modal (faculty): mirrors Create New Case layout
-export function openEditCaseModal(caseInfo, onSave) {
-  // Normalize incoming values to schema enums for correct default selection
-  const normalizeSex = (s) => {
-    if (!s) return 'unspecified';
-    const v = String(s).toLowerCase();
-    if (v === 'prefer not to say' || v === 'prefer-not-to-say' || v === 'n/a' || v === 'na')
-      return 'unspecified';
-    if (['male', 'female', 'other', 'unspecified'].includes(v)) return v;
-    return 'unspecified';
-  };
-  const normalizeAcuity = (a) => {
-    if (!a) return 'unspecified';
-    const v = String(a).toLowerCase();
-    if (['acute', 'subacute', 'chronic', 'unspecified'].includes(v)) return v;
-    // Map legacy/non-schema labels to closest enum or unspecified
-    if (v === 'routine') return 'unspecified';
-    if (v === 'complex') return 'chronic';
-    if (v === 'critical') return 'acute';
-    return 'unspecified';
-  };
-  const caseSex = normalizeSex(caseInfo?.sex);
-  const caseAcuity = normalizeAcuity(caseInfo?.acuity);
-  // Clone modules array for local editing
-  const modulesLocal = Array.isArray(caseInfo.modules)
-    ? JSON.parse(JSON.stringify(caseInfo.modules))
-    : [];
-  const modal = el(
-    'div',
-    {
-      'data-modal': 'edit-case',
-      class:
-        'modal-overlay popup-overlay-base fixed inset-0 overlay-50 d-flex ai-center jc-center z-modal',
-      onclick: (e) => {
-        if (e.target === modal) close();
-      },
-    },
-    [
-      el(
-        'div',
-        {
-          class: 'modal-content case-details-modal popup-card-base',
-          onclick: (e) => e.stopPropagation(),
-        },
-        [
-          el('div', { class: 'modal-header' }, [
-            el('h3', {}, 'Edit Case Details'),
-            el(
-              'button',
-              { class: 'close-btn', onclick: () => close(), 'aria-label': 'Close' },
-              '✕',
-            ),
-          ]),
-          el('div', { class: 'modal-body case-details-body' }, [
-            el('form', { id: 'edit-case-form', onsubmit: handleSubmit }, [
-              // Title
-              el('div', { class: 'instructor-form-field' }, [
-                el('label', { class: 'instructor-form-label' }, 'Case Title *'),
-                el('input', {
-                  type: 'text',
-                  id: 'edit-title',
-                  required: true,
-                  class: 'instructor-form-input',
-                  value: caseInfo.title || '',
-                }),
-              ]),
-              // Age + DOB (single row)
-              el('div', { class: 'd-flex gap-16 mb-16 flex-wrap' }, [
-                // Age (left)
-                el('div', { class: 'flex-1 minw-220' }, [
-                  el('div', { class: 'instructor-form-field' }, [
-                    el('label', { class: 'instructor-form-label' }, 'Patient Age'),
-                    el('input', {
-                      type: 'number',
-                      id: 'edit-age',
-                      min: 0,
-                      max: 120,
-                      class: 'instructor-form-input',
-                      value: caseInfo.age || '',
-                      oninput: (e) => {
-                        const dobEl = document.getElementById('edit-dob');
-                        if (!dobEl) return;
-                        // Only set/overwrite DOB if empty or previously auto-filled from age
-                        if (dobEl.value && dobEl.dataset.autofilled !== 'age') return;
-                        const v = parseInt(e.target.value, 10);
-                        if (isNaN(v) || v <= 0 || v > 120) return;
-                        const today = new Date();
-                        const y = today.getFullYear() - v;
-                        const m = today.getMonth();
-                        const lastDay = new Date(y, m + 1, 0).getDate();
-                        const d = Math.min(today.getDate(), lastDay);
-                        const mm = String(m + 1).padStart(2, '0');
-                        const dd = String(d).padStart(2, '0');
-                        dobEl.value = `${y}-${mm}-${dd}`;
-                        dobEl.dataset.autofilled = 'age';
-                      },
-                    }),
-                  ]),
-                ]),
-                // DOB (right)
-                el('div', { class: 'flex-1 minw-220' }, [
-                  el('div', { class: 'instructor-form-field' }, [
-                    el('label', { class: 'instructor-form-label' }, 'DOB'),
-                    el('input', {
-                      type: 'date',
-                      id: 'edit-dob',
-                      value: caseInfo.dob || '',
-                      class: 'instructor-form-input',
-                      oninput: (e) => {
-                        // If user is typing a DOB, mark as user-edited so age changes won't overwrite
-                        if (e.isTrusted) delete e.target.dataset.autofilled;
-                        const computed = computeAgeFromDob(e.target.value);
-                        const ageEl = document.getElementById('edit-age');
-                        if (computed && ageEl) ageEl.value = computed;
-                      },
-                    }),
-                  ]),
-                  el('div', { class: 'hint' }, 'Age auto-fills when DOB is entered.'),
-                ]),
-              ]),
-              // Sex (full width row)
-              el('div', { class: 'instructor-form-field' }, [
-                el('label', { class: 'instructor-form-label' }, 'Sex'),
-                el(
-                  'select',
-                  {
-                    id: 'edit-gender',
-                    class: 'instructor-form-input',
-                  },
-                  [
-                    el('option', { value: '' }, 'Select...'),
-                    el(
-                      'option',
-                      { value: 'male', selected: caseSex === 'male' ? '' : undefined },
-                      'Male',
-                    ),
-                    el(
-                      'option',
-                      { value: 'female', selected: caseSex === 'female' ? '' : undefined },
-                      'Female',
-                    ),
-                    el(
-                      'option',
-                      { value: 'other', selected: caseSex === 'other' ? '' : undefined },
-                      'Other',
-                    ),
-                    el(
-                      'option',
-                      {
-                        value: 'unspecified',
-                        selected: caseSex === 'unspecified' ? '' : undefined,
-                      },
-                      'Prefer not to say',
-                    ),
-                  ],
-                ),
-              ]),
-              // Setting (moved below Age/Sex)
-              el('div', { class: 'instructor-form-field' }, [
-                el('label', { class: 'instructor-form-label' }, 'Clinical Setting *'),
-                el(
-                  'select',
-                  { id: 'edit-setting', required: true, class: 'instructor-form-input' },
-                  [
-                    el('option', { value: '' }, 'Select setting...'),
-                    el(
-                      'option',
-                      {
-                        value: 'Outpatient',
-                        selected: caseInfo.setting === 'Outpatient' ? '' : undefined,
-                      },
-                      'Outpatient',
-                    ),
-                    el(
-                      'option',
-                      {
-                        value: 'Inpatient',
-                        selected: caseInfo.setting === 'Inpatient' ? '' : undefined,
-                      },
-                      'Inpatient',
-                    ),
-                    el(
-                      'option',
-                      {
-                        value: 'Home Health',
-                        selected: caseInfo.setting === 'Home Health' ? '' : undefined,
-                      },
-                      'Home Health',
-                    ),
-                    el(
-                      'option',
-                      { value: 'SNF', selected: caseInfo.setting === 'SNF' ? '' : undefined },
-                      'Skilled Nursing Facility (SNF)',
-                    ),
-                    el(
-                      'option',
-                      {
-                        value: 'Acute Rehab',
-                        selected: caseInfo.setting === 'Acute Rehab' ? '' : undefined,
-                      },
-                      'Acute Rehabilitation',
-                    ),
-                    el(
-                      'option',
-                      { value: 'Other', selected: caseInfo.setting === 'Other' ? '' : undefined },
-                      'Other',
-                    ),
-                  ],
-                ),
-              ]),
-            ]),
-            // Acuity (schema enums)
-            el('div', { class: 'instructor-form-field' }, [
-              el('label', { class: 'instructor-form-label' }, 'Case Acuity'),
-              el(
-                'select',
-                {
-                  id: 'edit-acuity',
-                  class: 'instructor-form-input',
-                },
-                [
-                  el('option', { value: '' }, 'Select acuity...'),
-                  el(
-                    'option',
-                    { value: 'acute', selected: caseAcuity === 'acute' ? '' : undefined },
-                    'Acute',
-                  ),
-                  el(
-                    'option',
-                    { value: 'subacute', selected: caseAcuity === 'subacute' ? '' : undefined },
-                    'Subacute',
-                  ),
-                  el(
-                    'option',
-                    { value: 'chronic', selected: caseAcuity === 'chronic' ? '' : undefined },
-                    'Chronic',
-                  ),
-                  el(
-                    'option',
-                    {
-                      value: 'unspecified',
-                      selected: caseAcuity === 'unspecified' ? '' : undefined,
-                    },
-                    'Unspecified',
-                  ),
-                ],
-              ),
-            ]),
-          ]),
-          el(
-            'div',
-            {
-              class: 'modal-actions',
-              style:
-                'justify-content: flex-end; background: var(--surface); border-top: 1px solid var(--border); gap:16px;',
-            },
-            [
-              el(
-                'button',
-                {
-                  type: 'button',
-                  class: 'btn secondary',
-                  onclick: () => close(),
-                },
-                'Cancel',
-              ),
-              el(
-                'button',
-                {
-                  type: 'submit',
-                  class: 'btn primary',
-                },
-                'Save Changes',
-              ),
-            ],
-          ),
-        ],
-      ),
-    ],
-  );
-
-  document.body.appendChild(modal);
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    const updated = {
-      title: document.getElementById('edit-title').value.trim(),
-      setting: document.getElementById('edit-setting').value,
-      age: document.getElementById('edit-age').value,
-      sex: document.getElementById('edit-gender').value,
-      dob: document.getElementById('edit-dob').value,
-      acuity: document.getElementById('edit-acuity').value,
-      modules: modulesLocal,
-    };
-    // If age empty but DOB present, compute
-    if ((!updated.age || updated.age === '') && updated.dob) {
-      const computed = computeAgeFromDob(updated.dob);
-      if (computed) updated.age = computed;
-    }
-    // If DOB empty but Age present, backfill a realistic DOB (today minus age years)
-    if ((!updated.dob || updated.dob === '') && updated.age) {
-      const v = parseInt(updated.age, 10);
-      if (!isNaN(v) && v > 0 && v <= 120) {
-        const today = new Date();
-        const y = today.getFullYear() - v;
-        const m = today.getMonth();
-        const lastDay = new Date(y, m + 1, 0).getDate();
-        const d = Math.min(today.getDate(), lastDay);
-        const mm = String(m + 1).padStart(2, '0');
-        const dd = String(d).padStart(2, '0');
-        updated.dob = `${y}-${mm}-${dd}`;
-      }
-    }
-    close();
-    onSave?.(updated);
-  }
-
-  requestAnimationFrame(() => {
-    modal.classList.add('is-open');
-    modal.querySelector('.popup-card-base').classList.add('is-open');
-    setTimeout(() => document.getElementById('edit-title')?.focus(), 90);
-  });
-
-  function close() {
-    modal.classList.remove('is-open');
-    const card = modal.querySelector('.popup-card-base');
-    if (card) card.classList.remove('is-open');
-    const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const removeNow = () => {
-      try {
-        modal.remove();
-      } catch {}
-    };
-    if (prefersReduce) return removeNow();
-    modal.addEventListener('transitionend', removeNow, { once: true });
-    setTimeout(removeNow, 480);
-  }
-}
+// openEditCaseModal is now sourced from './modal.js'
 
 export function createChartNavigation(config) {
   const {
@@ -2704,162 +2390,53 @@ export function createChartNavigation(config) {
           // Case info card removed per design; patient info now lives in sticky header above content.
           // Case File (formerly Background Information/Artifacts): list and controls
           (() => {
-            const items = Array.isArray(currentModules) ? currentModules : [];
-            // Group items by category
-            const grouped = {};
-            items.forEach((m) => {
-              const cat = getCategoryForArtifact(m);
-              (grouped[cat] = grouped[cat] || []).push(m);
-            });
-            const categories = Object.keys(grouped)
-              .sort(
-                (a, b) =>
-                  (ARTIFACT_CATEGORY_META[a]?.order || 999) -
-                  (ARTIFACT_CATEGORY_META[b]?.order || 999),
-              )
-              .map((k) => ({ key: k, meta: ARTIFACT_CATEGORY_META[k], items: grouped[k] }))
-              .filter((c) => c.items && c.items.length);
-
-            if (!categories.length && !config.isFacultyMode) return el('div');
-
-            function renderCategory(cat) {
-              const isCollapsed = !!artifactCollapseState[cat.key];
-              const header = el(
-                'button',
-                {
-                  class: 'artifact-cat-header',
-                  'aria-expanded': String(!isCollapsed),
-                  onclick: () => {
-                    artifactCollapseState[cat.key] = !artifactCollapseState[cat.key];
-                    saveArtifactCollapseState(artifactCollapseState);
-                    container.replaceChildren(...build());
-                  },
-                },
-                [
-                  el(
-                    'span',
-                    { class: 'twisty', style: 'display:inline-block; width:12px;' },
-                    isCollapsed ? '▶' : '▼',
-                  ),
-                  el(
-                    'span',
-                    { style: 'flex:1; text-align:left;' },
-                    `${cat.meta?.label || cat.key} (${cat.items.length})`,
-                  ),
-                ],
-              );
-
-              const itemButtons = cat.items.map((m) => {
-                const title =
-                  m.title || (m.type ? m.type[0].toUpperCase() + m.type.slice(1) : 'Artifact');
-                const btn = el(
-                  'button',
-                  {
-                    class: 'artifact-entry subsection-item',
-                    style:
-                      'display:flex; align-items:center; gap:6px; width:100%; background:none; border:none;',
-                    onClick: () =>
-                      openViewArtifactModal(m, {
-                        isFacultyMode: !!config.isFacultyMode,
-                        onEdit: (updated) => {
-                          const next = (items || []).map((x) =>
-                            x.id === updated.id ? { ...x, ...updated } : x,
-                          );
-                          const payload = { ...(config.caseInfo || {}), modules: next };
-                          config.onCaseInfoUpdate?.(payload);
-                        },
-                        onRemove: (id) => {
-                          const next = (items || []).filter((x) => x.id !== id);
-                          const payload = { ...(config.caseInfo || {}), modules: next };
-                          config.onCaseInfoUpdate?.(payload);
-                        },
-                      }),
-                    title: 'View artifact',
-                  },
-                  [createIcon('file'), el('span', { class: 'artifact-entry-title' }, title)],
-                );
-                return btn;
-              });
-
-              return el('div', { class: 'artifact-category' }, [
-                header,
-                isCollapsed
-                  ? el('div')
-                  : el('div', { class: 'artifact-list', style: 'margin-top:4px;' }, itemButtons),
-              ]);
-            }
-
-            function build() {
-              const nodes = categories.map(renderCategory);
-              if (config.isFacultyMode) {
-                // Add global add button at end
-                nodes.push(
-                  el(
-                    'div',
-                    {
-                      class: 'editable-table__footer artifact-add-footer',
-                      style: 'margin-top:6px;',
-                    },
-                    el(
-                      'div',
-                      {
-                        class: 'compact-add-btn',
-                        title: 'Add background document',
-                        onclick: () => {
-                          openAddArtifactModal((mod) => {
-                            // Get current modules from config instead of using closure
-                            const currentModules = config.caseInfo?.modules || [];
-                            const next = [...currentModules, mod];
-                            const payload = { ...(config.caseInfo || {}), modules: next };
-                            config.onCaseInfoUpdate?.(payload);
-                          });
-                        },
-                      },
-                      '+',
-                    ),
-                  ),
-                );
-              }
-              if (!nodes.length && config.isFacultyMode) {
-                nodes.push(
-                  el(
-                    'div',
-                    { style: 'font-size:12px; margin:4px 0; color: var(--text-secondary);' },
-                    'No artifacts yet.',
-                  ),
-                  el(
-                    'div',
-                    {
-                      class: 'editable-table__footer artifact-add-footer',
-                      style: 'margin-top:6px;',
-                    },
-                    el(
-                      'div',
-                      {
-                        class: 'compact-add-btn',
-                        title: 'Add background document',
-                        onclick: () => {
-                          openAddArtifactModal((mod) => {
-                            // Get current modules from config instead of using closure
-                            const currentModules = config.caseInfo?.modules || [];
-                            const next = [...currentModules, mod];
-                            const payload = { ...(config.caseInfo || {}), modules: next };
-                            config.onCaseInfoUpdate?.(payload);
-                          });
-                        },
-                      },
-                      '+',
-                    ),
-                  ),
-                );
-              }
-              return nodes;
-            }
             const container = el('div', {
-              class: 'artifact-block grouped-artifacts',
               id: 'artifact-block',
+              class: 'artifact-block grouped-artifacts',
             });
-            container.replaceChildren(...build());
+            // Lazy-mount artifacts panel via standard panel contract
+            (async () => {
+              try {
+                const [{ mountPanel }, { idleImport }] = await Promise.all([
+                  import('../../core/mount-panel.js'),
+                  import('../../core/prefetch.js'),
+                ]);
+                const currentModules = Array.isArray((config.caseInfo || {}).modules)
+                  ? config.caseInfo.modules
+                  : [];
+                mountPanel(container, () => import('./artifacts-panel.js'), {
+                  modules: currentModules,
+                  isFacultyMode: !!config.isFacultyMode,
+                  onViewArtifact: (m) =>
+                    openViewArtifactModal(m, {
+                      isFacultyMode: !!config.isFacultyMode,
+                      onEdit: (updated) => {
+                        const next = (currentModules || []).map((x) =>
+                          x.id === updated.id ? { ...x, ...updated } : x,
+                        );
+                        const payload = { ...(config.caseInfo || {}), modules: next };
+                        config.onCaseInfoUpdate?.(payload);
+                      },
+                      onRemove: (id) => {
+                        const next = (currentModules || []).filter((x) => x.id !== id);
+                        const payload = { ...(config.caseInfo || {}), modules: next };
+                        config.onCaseInfoUpdate?.(payload);
+                      },
+                    }),
+                  onAddClicked: () =>
+                    openAddArtifactModal((mod) => {
+                      const current = config.caseInfo?.modules || [];
+                      const next = [...current, mod];
+                      const payload = { ...(config.caseInfo || {}), modules: next };
+                      config.onCaseInfoUpdate?.(payload);
+                    }),
+                });
+                // Warm the artifact panel code on idle
+                idleImport(() => import('./artifacts-panel.js'));
+              } catch (e) {
+                console.warn('Failed to render artifacts panel:', e);
+              }
+            })();
             return container;
           })(),
           // Extra padding before section trackers
@@ -3000,49 +2577,30 @@ export function createChartNavigation(config) {
             wrapper.appendChild(sectionsContainer);
             return wrapper;
           })(),
-          // Footer actions: Sign & Export (Word)
+          // Footer actions: Sign & Export (Word) — lazy-loaded panel
           (() => {
-            async function handleExportClick() {
-              const out = config.caseData || {};
-              const draft = window && window.currentDraft ? window.currentDraft : out || {};
-              // Merge draft overlays first (title, snapshot, meta) before capturing signature
-              try {
-                if (draft.noteTitle) out.title = draft.noteTitle;
-              } catch {}
-              try {
-                if (draft.snapshot) out.snapshot = { ...(out.snapshot || {}), ...draft.snapshot };
-              } catch {}
-              try {
-                if (draft.meta) out.meta = { ...(out.meta || {}), ...draft.meta };
-              } catch {}
-
-              // Open signature dialog; continue only after signing
-              openSignatureDialog({
-                existingSignature: (out.meta && out.meta.signature) || getPersistedSignatureMeta(),
-                onSigned: async (signature) => {
-                  out.meta = { ...(out.meta || {}), signature };
-                  try {
-                    await ensureExportLibsLoaded();
-                    exportToWord(out, draft);
-                  } catch (e) {
-                    console.error('Export to Word failed after signing:', e);
-                    alert('Unable to complete export.');
-                  }
-                },
+            const mountNode = el('div', { class: 'nav-panel nav-sign-export' });
+            // Lazy mount using standard panel contract
+            setTimeout(() => {
+              import('../../core/mount-panel.js').then(({ mountPanel }) => {
+                try {
+                  mountPanel(mountNode, () => import('./sign-export-panel.js'), {
+                    caseData: config.caseData || {},
+                  });
+                } catch (e) {
+                  console.warn('Failed to mount sign-export panel:', e);
+                }
               });
-            }
-            return el('div', { style: 'margin: 24px 0 8px 0; display:flex; gap:8px;' }, [
-              el(
-                'button',
-                {
-                  class: 'btn primary',
-                  style: 'flex:1;',
-                  title: 'Sign the evaluation then export to a Word document',
-                  onClick: handleExportClick,
-                },
-                'Sign & Export',
-              ),
-            ]);
+            }, 0);
+
+            // Schedule idle prefetch to warm the panel code for subsequent navigations
+            try {
+              import('../../core/prefetch.js').then(({ idleImport }) => {
+                idleImport(() => import('./sign-export-panel.js'));
+              });
+            } catch {}
+
+            return mountNode;
           })(),
         ],
       ),
@@ -3181,24 +2739,7 @@ export function updateSaveStatus(sidebar, status) {
  * @param {HTMLElement} sidebar - The sidebar element to refresh
  * @param {Object} config - Updated navigation configuration
  */
-export function refreshChartNavigation(sidebar, config) {
-  // Create new navigation content
-  const newSidebar = createChartNavigation(config);
-
-  // Replace the content while preserving the container
-  sidebar.replaceChildren(...Array.from(newSidebar.children));
-  // Re-apply visibility controls on current content after refresh
-  setTimeout(() => {
-    try {
-      applySubsectionVisibilityControls({
-        activeSection: config.activeSection,
-        isFacultyMode: !!config.isFacultyMode,
-        caseData: config.caseData || {},
-        onEditorSettingsChange: config.onEditorSettingsChange,
-      });
-    } catch {}
-  }, 0);
-}
+// refreshChartNavigation moved to progress.js
 
 /**
  * Creates anchors for subsections to enable smooth scrolling

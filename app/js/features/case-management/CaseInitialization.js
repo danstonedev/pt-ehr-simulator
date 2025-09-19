@@ -1,7 +1,11 @@
 // CaseInitialization.js - Case Setup & Data Management Module
 // Handles case loading, draft initialization, storage seam management, and error handling
 
-import { getCase } from '../../core/store.js';
+// Use dynamic import for store access to avoid static bundling
+async function _getCase(caseId) {
+  const { getCase } = await import('../../core/store.js');
+  return getCase(caseId);
+}
 import { storage } from '../../core/index.js';
 import { el } from '../../ui/utils.js';
 import { mapFrequencyToEnum, mapDurationToEnum } from '../../services/case-generator.js';
@@ -754,7 +758,7 @@ function handleBlankCaseRequest(caseId, isFacultyMode) {
 }
 
 async function loadExistingCaseWrapper(caseId) {
-  const caseWrapper = await getCase(caseId);
+  const caseWrapper = await _getCase(caseId);
   if (!caseWrapper) {
     return {
       error: true,

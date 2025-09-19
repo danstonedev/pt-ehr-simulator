@@ -80,11 +80,9 @@ export class MobileNav {
           <li><a href="#/" class="mobile-nav-link">Home</a></li>
           <li><a href="#/student" class="mobile-nav-link">Student</a></li>
           <li><a href="#/instructor" class="mobile-nav-link">Faculty</a></li>
+          <li><a href="#" class="mobile-nav-link mobile-nav-feedback-link">Submit Feedback</a></li>
+          <li><a href="#" class="mobile-nav-link mobile-nav-theme-link">Toggle Theme</a></li>
         </ul>
-        <div class="mobile-nav-actions">
-          <button type="button" class="mobile-nav-feedback-btn">Submit Feedback</button>
-          <button type="button" class="mobile-nav-theme-btn">Toggle Theme</button>
-        </div>
       </div>
     `;
   }
@@ -126,6 +124,27 @@ export class MobileNav {
         this.close();
       }
     });
+
+    // Wire theme + feedback links in the list
+    const themeLink = this.drawer?.querySelector('.mobile-nav-theme-link');
+    if (themeLink && !themeLink._bound) {
+      themeLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const t = document.getElementById('themeToggle');
+        if (t) t.click();
+      });
+      themeLink._bound = true;
+    }
+    const feedbackLink = this.drawer?.querySelector('.mobile-nav-feedback-link');
+    if (feedbackLink && !feedbackLink._bound) {
+      feedbackLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const f = document.getElementById('feedbackBtn');
+        if (f) f.click();
+        this.close();
+      });
+      feedbackLink._bound = true;
+    }
   }
 
   isMobileScreen() {

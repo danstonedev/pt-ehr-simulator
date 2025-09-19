@@ -160,62 +160,6 @@ html[data-theme='dark'] .mobile-nav-link.active {
   border-left-color: var(--sidebar-active-bar-dark, var(--und-green, #009a44));
 }
 
-/* Mobile navigation actions */
-.mobile-nav-actions {
-  padding: 0 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  border-top: 1px solid var(--color-border, #e2e8f0);
-  padding-top: 1.5rem;
-  margin-top: auto;
-}
-
-.mobile-nav-feedback-btn,
-.mobile-nav-theme-btn {
-  background: var(--sidebar-btn-bg, var(--color-bg-secondary, #f8fafc));
-  border: 1px solid var(--sidebar-border, var(--color-border, #e2e8f0));
-  color: var(--sidebar-btn-fg, var(--color-text, #1a202c));
-  padding: 0.75rem 1rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-html[data-theme='dark'] .mobile-nav-feedback-btn,
-html[data-theme='dark'] .mobile-nav-theme-btn {
-  background: var(--sidebar-btn-bg-dark, rgba(255, 255, 255, 0.08));
-  border-color: var(--sidebar-border-dark, var(--color-border, #334155));
-  color: var(--sidebar-btn-fg-dark, rgba(255, 255, 255, 0.92));
-}
-
-.mobile-nav-feedback-btn:hover,
-.mobile-nav-feedback-btn:focus,
-.mobile-nav-theme-btn:hover,
-.mobile-nav-theme-btn:focus {
-  background: var(--sidebar-btn-hover, var(--und-green-light, #f0fdf4));
-  border-color: var(--sidebar-btn-hover-border, var(--und-green, #009a44));
-  color: var(--sidebar-btn-hover-fg, var(--und-green, #009a44));
-  outline: none;
-}
-
-html[data-theme='dark'] .mobile-nav-feedback-btn:hover,
-html[data-theme='dark'] .mobile-nav-feedback-btn:focus,
-html[data-theme='dark'] .mobile-nav-theme-btn:hover,
-html[data-theme='dark'] .mobile-nav-theme-btn:focus {
-  background: var(--sidebar-btn-hover-dark, rgba(255, 255, 255, 0.16));
-  border-color: var(--sidebar-btn-hover-border-dark, var(--sidebar-border-dark, #334155));
-  color: var(--sidebar-btn-hover-fg-dark, #fff);
-}
-
-.mobile-nav-feedback-btn:focus-visible,
-.mobile-nav-theme-btn:focus-visible {
-  outline: 2px solid var(--und-green, #009a44);
-  outline-offset: 2px;
-}
-
 /* Body scroll lock when mobile nav is open */
 body.mobile-nav-open {
   overflow: hidden;
@@ -252,9 +196,7 @@ body.mobile-nav-open {
   .mobile-nav-overlay,
   .mobile-nav-drawer,
   .mobile-nav-close,
-  .mobile-nav-link,
-  .mobile-nav-feedback-btn,
-  .mobile-nav-theme-btn {
+  .mobile-nav-link {
     transition: none;
   }
 }

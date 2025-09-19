@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Panel Contract Smoke Test</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <style>
+      body {
+        padding: 16px;
+        font:
+          14px/1.4 system-ui,
+          Segoe UI,
+          Roboto,
+          Arial,
+          sans-serif;
+      }
+      .result {
+        margin-top: 12px;
+        padding: 8px 10px;
+        border-radius: 8px;
+      }
+      .pass {
+        background: #e6ffed;
+        color: #046b1c;
+        border: 1px solid #a6f4c5;
+      }
+      .fail {
+        background: #ffeff0;
+        color: #8a041a;
+        border: 1px solid #ffd0d4;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Panel Contract Smoke Test</h1>
+    <p>Verifies a panel implements render(container, props) and returns a cleanup function.</p>
+    <div id="mount"></div>
+    <div id="results" class="result">Running…</div>
+    <script type="module">
+      import * as SignExport from '../js/features/navigation/sign-export-panel.js';
+      const mount = document.getElementById('mount');
+      const errors = [];
+      const resEl = document.getElementById('results');
+      function assert(cond, msg) {
+        if (!cond) errors.push(msg);
+      }
+
+      assert(typeof SignExport.render === 'function', 'render export missing');
+      const res = SignExport.render(mount, { caseData: { title: 'T' } });
+      assert(res && typeof res.cleanup === 'function', 'cleanup missing');
+      try {
+        res.cleanup();
+      } catch (e) {
+        errors.push('cleanup threw');
+      }
+
+      resEl.textContent = errors.length ? 'FAIL: ' + errors.join('; ') : 'PASS';
+      resEl.className = 'result ' + (errors.length ? 'fail' : 'pass');
+      console.log('Panel Contract Test:', errors.length ? 'FAIL' : 'PASS', errors);
+    </script>
+  </body>
+</html>

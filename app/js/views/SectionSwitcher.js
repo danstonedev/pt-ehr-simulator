@@ -1,7 +1,11 @@
 // SectionSwitcher.js - Modular section switching and navigation utilities
 
 import { setQueryParams } from '../core/url.js';
-import { refreshChartNavigation } from '../features/navigation/ChartNavigation.js';
+// Lazy navigation API (avoids static import of large ChartNavigation module)
+async function _getRefreshChartNavigation() {
+  const { getRefreshChartNavigation } = await import('../features/navigation/api.js');
+  return getRefreshChartNavigation();
+}
 
 /**
  * Creates a section switcher function with proper state management
@@ -59,24 +63,28 @@ export function createSectionSwitcher(options) {
 
     if (changingSection) {
       // Update chart navigation only if the logical active section changed.
-      refreshChartNavigation(chartNav, {
-        activeSection: s,
-        onSectionChange: (sectionId) => switchTo(sectionId),
-        isFacultyMode: isFacultyMode,
-        caseData: getCaseDataForNavigation(c, draft),
-        caseInfo: getCaseInfo(c),
-        onCaseInfoUpdate: (updatedInfo) => {
-          updateCaseObject(c, updatedInfo, draft);
-          updatePatientHeader();
-          debouncedSave();
-        },
-        onEditorSettingsChange: (nextSettings) => {
-          draft.editorSettings = nextSettings;
-          c.editorSettings = nextSettings;
-          save();
-          if (window.refreshChartProgress) window.refreshChartProgress();
-        },
-      });
+      _getRefreshChartNavigation().then(
+        (refreshChartNavigation) =>
+          refreshChartNavigation &&
+          refreshChartNavigation(chartNav, {
+            activeSection: s,
+            onSectionChange: (sectionId) => switchTo(sectionId),
+            isFacultyMode: isFacultyMode,
+            caseData: getCaseDataForNavigation(c, draft),
+            caseInfo: getCaseInfo(c),
+            onCaseInfoUpdate: (updatedInfo) => {
+              updateCaseObject(c, updatedInfo, draft);
+              updatePatientHeader();
+              debouncedSave();
+            },
+            onEditorSettingsChange: (nextSettings) => {
+              draft.editorSettings = nextSettings;
+              c.editorSettings = nextSettings;
+              save();
+              if (window.refreshChartProgress) window.refreshChartProgress();
+            },
+          }),
+      );
     }
 
     // Scroll logic (single attempt + minimal fallback) kept intentionally lean

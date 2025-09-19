@@ -151,11 +151,16 @@ html[data-theme='dark'] .btn.primary:hover {
   box-shadow: none;
 }
 
-/* Inline SVGs follow text color */
+/* Inline SVGs in normal buttons */
 .btn:not(.icon-btn) svg {
-  width: 16px;
-  height: 16px;
+  width: var(--btn-icon-size, 18px);
+  height: var(--btn-icon-size, 18px);
   fill: currentColor;
+  flex: 0 0 auto;
+}
+/* Nudge label spacing when icons present */
+.btn.d-inline-flex.ai-center.gap-6 svg {
+  margin-right: 2px; /* micro tweak alongside gap utility */
 }
 
 /* Neutral delete hover */
@@ -190,8 +195,8 @@ html[data-theme='dark'] .btn.primary:hover {
   border-radius: var(--radius-sm);
 }
 .btn.icon-btn svg {
-  width: 20px;
-  height: 20px;
+  width: var(--icon-btn-size, 20px);
+  height: var(--icon-btn-size, 20px);
   fill: var(--icon-color);
   opacity: var(--icon-opacity);
   transition: opacity 0.2s ease;

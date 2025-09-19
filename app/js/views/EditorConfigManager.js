@@ -1,7 +1,11 @@
 // EditorConfigManager.js - Handles editor configuration and state management
 
 import { EXPERIMENT_FLAGS } from '../core/constants.js';
-import { refreshChartNavigation } from '../features/navigation/ChartNavigation.js';
+// Lazy accessor to avoid statically bundling navigation API
+async function _getRefreshChartNavigation() {
+  const { getRefreshChartNavigation } = await import('../features/navigation/api.js');
+  return getRefreshChartNavigation();
+}
 
 /**
  * Creates editor configuration for section management
@@ -124,27 +128,30 @@ export function createChartRefreshFunction(options) {
     lastRunTs = performance.now();
     log('refreshChartProgress executing');
     try {
-      refreshChartNavigation(chartNav, {
-        activeSection: active,
-        onSectionChange: (sectionId) => switchTo(sectionId),
-        isFacultyMode: isFacultyMode,
-        caseData: getCaseDataForNavigation(c, draft),
-        caseInfo: getCaseInfo(c),
-        onCaseInfoUpdate: (updatedInfo) => {
-          log('onCaseInfoUpdate');
-          // Mutate case object then schedule (not immediate) another refresh
-          updateCaseObject(c, updatedInfo, draft);
-          save();
-          queue();
-        },
-        onEditorSettingsChange: (nextSettings) => {
-          log('onEditorSettingsChange');
-          draft.editorSettings = nextSettings;
-          c.editorSettings = nextSettings;
-          save();
-          queue();
-        },
-      });
+      _getRefreshChartNavigation().then(
+        (refreshChartNavigation) =>
+          refreshChartNavigation &&
+          refreshChartNavigation(chartNav, {
+            activeSection: active,
+            onSectionChange: (sectionId) => switchTo(sectionId),
+            isFacultyMode: isFacultyMode,
+            caseData: getCaseDataForNavigation(c, draft),
+            caseInfo: getCaseInfo(c),
+            onCaseInfoUpdate: (updatedInfo) => {
+              log('onCaseInfoUpdate');
+              updateCaseObject(c, updatedInfo, draft);
+              save();
+              queue();
+            },
+            onEditorSettingsChange: (nextSettings) => {
+              log('onEditorSettingsChange');
+              draft.editorSettings = nextSettings;
+              c.editorSettings = nextSettings;
+              save();
+              queue();
+            },
+          }),
+      );
     } catch (err) {
       log('refreshChartProgress error', err);
     }

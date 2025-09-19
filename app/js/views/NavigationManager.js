@@ -1,5 +1,9 @@
 // Navigation and scroll management utilities for Case Editor
-import { refreshChartNavigation } from '../features/navigation/ChartNavigation.js';
+// Lazy navigation API to avoid static bundling of ChartNavigation
+async function _getRefreshChartNavigation() {
+  const { getRefreshChartNavigation } = await import('../features/navigation/api.js');
+  return getRefreshChartNavigation();
+}
 import { getNearestVisibleAnchorId, scrollToAnchorExact } from './ScrollUtils.js';
 import { getCaseInfoSnapshot, handleCaseInfoUpdate } from './CaseEditorUtils.js';
 
@@ -35,28 +39,32 @@ export function createActiveSectionObserver({
     if (!id || id === active) return;
     if (!['subjective', 'objective', 'assessment', 'plan', 'billing'].includes(id)) return;
     setActive(id);
-    refreshChartNavigation(chartNav, {
-      activeSection: id,
-      onSectionChange: (sectionId) => switchTo(sectionId),
-      isFacultyMode,
-      caseData: {
-        ...c,
-        ...draft,
-        modules: Array.isArray(draft.modules) ? draft.modules : c.modules,
-        editorSettings: c.editorSettings || draft.editorSettings,
-      },
-      caseInfo: getCaseInfoSnapshot(c),
-      onCaseInfoUpdate: (updatedInfo) =>
-        handleCaseInfoUpdate(c, draft, updatedInfo, save, () => {
-          if (window.refreshChartProgress) window.refreshChartProgress();
+    _getRefreshChartNavigation().then(
+      (refreshChartNavigation) =>
+        refreshChartNavigation &&
+        refreshChartNavigation(chartNav, {
+          activeSection: id,
+          onSectionChange: (sectionId) => switchTo(sectionId),
+          isFacultyMode,
+          caseData: {
+            ...c,
+            ...draft,
+            modules: Array.isArray(draft.modules) ? draft.modules : c.modules,
+            editorSettings: c.editorSettings || draft.editorSettings,
+          },
+          caseInfo: getCaseInfoSnapshot(c),
+          onCaseInfoUpdate: (updatedInfo) =>
+            handleCaseInfoUpdate(c, draft, updatedInfo, save, () => {
+              if (window.refreshChartProgress) window.refreshChartProgress();
+            }),
+          onEditorSettingsChange: (nextSettings) => {
+            draft.editorSettings = nextSettings;
+            c.editorSettings = nextSettings;
+            save();
+            if (window.refreshChartProgress) window.refreshChartProgress();
+          },
         }),
-      onEditorSettingsChange: (nextSettings) => {
-        draft.editorSettings = nextSettings;
-        c.editorSettings = nextSettings;
-        save();
-        if (window.refreshChartProgress) window.refreshChartProgress();
-      },
-    });
+    );
   }
 
   return new IntersectionObserver(

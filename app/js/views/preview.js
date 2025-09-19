@@ -1,5 +1,8 @@
 import { route } from '../core/router.js';
-import { getCase } from '../core/store.js';
+async function _getCase(id) {
+  const { getCase } = await import('../core/store.js');
+  return getCase(id);
+}
 import { el, printPage } from '../ui/utils.js';
 
 route('#/preview', async (app, qs) => {
@@ -11,7 +14,7 @@ route('#/preview', async (app, qs) => {
 
   let c;
   try {
-    const caseWrapper = await getCase(caseId);
+    const caseWrapper = await _getCase(caseId);
     if (!caseWrapper) {
       app.replaceChildren();
       app.append(el('div', { class: 'panel' }, [el('h2', {}, 'Case not found')]));

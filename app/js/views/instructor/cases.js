@@ -5,7 +5,19 @@ import {
   getRoute as getUrlRoute,
   setQueryParams as setUrlQuery,
 } from '../../core/url.js';
-import * as store from '../../core/store.js';
+// Lazy-load store functions to avoid static/dynamic import mix warnings
+async function _listCases() {
+  const { listCases } = await import('../../core/store.js');
+  return listCases();
+}
+async function _createCase(caseObj) {
+  const { createCase } = await import('../../core/store.js');
+  return createCase(caseObj);
+}
+async function _deleteCase(id) {
+  const { deleteCase } = await import('../../core/store.js');
+  return deleteCase(id);
+}
 import { generateCase } from '../../services/index.js';
 import { el } from '../../ui/utils.js';
 import {
@@ -135,9 +147,10 @@ function showCaseCreationModal() {
       el('div', { class: 'modal-body case-details-body' }, [
         el('form', { onsubmit: (e) => handleCaseCreation(e) }, [
           el('div', { class: 'instructor-form-field' }, [
-            el('label', { class: 'instructor-form-label' }, 'Case Title *'),
+            el('label', { class: 'instructor-form-label', for: 'case-title' }, 'Case Title *'),
             el('input', {
               id: 'case-title',
+              name: 'case-title',
               type: 'text',
               required: true,
               placeholder: 'e.g., Shoulder Impingement (R)',
@@ -145,10 +158,11 @@ function showCaseCreationModal() {
             }),
           ]),
           el('div', { class: 'instructor-form-field' }, [
-            el('label', { class: 'instructor-form-label' }, 'DOB'),
+            el('label', { class: 'instructor-form-label', for: 'case-dob' }, 'DOB'),
             el('input', {
               type: 'date',
               id: 'case-dob',
+              name: 'case-dob',
               class: 'instructor-form-input',
               oninput: (e) => {
                 if (e.isTrusted) delete e.target.dataset.autofilled;
@@ -164,10 +178,11 @@ function showCaseCreationModal() {
           el('div', { class: 'd-flex gap-16 mb-16 flex-wrap' }, [
             el('div', { class: 'flex-1 minw-220' }, [
               el('div', { class: 'instructor-form-field' }, [
-                el('label', { class: 'instructor-form-label' }, 'Patient Age *'),
+                el('label', { class: 'instructor-form-label', for: 'case-age' }, 'Patient Age *'),
                 el('input', {
                   type: 'number',
                   id: 'case-age',
+                  name: 'case-age',
                   required: true,
                   min: 0,
                   max: 120,
@@ -194,11 +209,12 @@ function showCaseCreationModal() {
             ]),
             el('div', { class: 'flex-1 minw-220' }, [
               el('div', { class: 'instructor-form-field' }, [
-                el('label', { class: 'instructor-form-label' }, 'Sex *'),
+                el('label', { class: 'instructor-form-label', for: 'case-gender' }, 'Sex *'),
                 el(
                   'select',
                   {
                     id: 'case-gender',
+                    name: 'case-gender',
                     required: true,
                     class: 'instructor-form-input',
                   },
@@ -214,11 +230,16 @@ function showCaseCreationModal() {
             ]),
           ]),
           el('div', { class: 'instructor-form-field' }, [
-            el('label', { class: 'instructor-form-label' }, 'Clinical Setting *'),
+            el(
+              'label',
+              { class: 'instructor-form-label', for: 'case-setting' },
+              'Clinical Setting *',
+            ),
             el(
               'select',
               {
                 id: 'case-setting',
+                name: 'case-setting',
                 required: true,
                 class: 'instructor-form-input',
               },
@@ -234,11 +255,12 @@ function showCaseCreationModal() {
             ),
           ]),
           el('div', { class: 'instructor-form-field' }, [
-            el('label', { class: 'instructor-form-label' }, 'Case Acuity *'),
+            el('label', { class: 'instructor-form-label', for: 'case-acuity' }, 'Case Acuity *'),
             el(
               'select',
               {
                 id: 'case-acuity',
+                name: 'case-acuity',
                 required: true,
                 class: 'instructor-form-input',
               },
@@ -359,9 +381,14 @@ function showPromptGenerationModal() {
             ),
             // Title (optional)
             el('div', { class: 'instructor-form-field' }, [
-              el('label', { class: 'instructor-form-label' }, 'Case Title (optional)'),
+              el(
+                'label',
+                { class: 'instructor-form-label', for: 'gen-title' },
+                'Case Title (optional)',
+              ),
               el('input', {
                 id: 'gen-title',
+                name: 'gen-title',
                 type: 'text',
                 placeholder: 'e.g., Rotator Cuff Tendinopathy (R)',
                 class: 'instructor-form-input',
@@ -369,9 +396,14 @@ function showPromptGenerationModal() {
             ]),
             // Scenario prompt
             el('div', { class: 'instructor-form-field' }, [
-              el('label', { class: 'instructor-form-label' }, 'Scenario Prompt (1–3 sentences) *'),
+              el(
+                'label',
+                { class: 'instructor-form-label', for: 'gen-prompt' },
+                'Scenario Prompt (1–3 sentences) *',
+              ),
               el('textarea', {
                 id: 'gen-prompt',
+                name: 'gen-prompt',
                 rows: 3,
                 placeholder: 'Key history/context to ground the case...',
                 class: 'instructor-form-input resize-vertical',
@@ -400,7 +432,11 @@ function showPromptGenerationModal() {
                 regions.forEach((r) => sel.append(el('option', { value: r }, r)));
                 return el('div', { class: 'flex-1 minw-200' }, [
                   el('div', { class: 'instructor-form-field' }, [
-                    el('label', { class: 'instructor-form-label' }, 'Body Region *'),
+                    el(
+                      'label',
+                      { class: 'instructor-form-label', for: 'gen-region' },
+                      'Body Region *',
+                    ),
                     sel,
                   ]),
                 ]);
@@ -408,9 +444,14 @@ function showPromptGenerationModal() {
               // Condition
               el('div', { class: 'flex-1 minw-200' }, [
                 el('div', { class: 'instructor-form-field' }, [
-                  el('label', { class: 'instructor-form-label' }, 'Suspected Condition *'),
+                  el(
+                    'label',
+                    { class: 'instructor-form-label', for: 'gen-condition' },
+                    'Suspected Condition *',
+                  ),
                   el('input', {
                     id: 'gen-condition',
+                    name: 'gen-condition',
                     type: 'text',
                     placeholder: 'e.g., Rotator cuff tendinopathy',
                     class: 'instructor-form-input',
@@ -436,7 +477,11 @@ function showPromptGenerationModal() {
                 );
                 return el('div', { class: 'flex-1 minw-200' }, [
                   el('div', { class: 'instructor-form-field' }, [
-                    el('label', { class: 'instructor-form-label' }, 'Clinical Setting *'),
+                    el(
+                      'label',
+                      { class: 'instructor-form-label', for: 'gen-setting' },
+                      'Clinical Setting *',
+                    ),
                     sel,
                   ]),
                 ]);
@@ -455,7 +500,7 @@ function showPromptGenerationModal() {
                 );
                 return el('div', { class: 'flex-1 minw-200' }, [
                   el('div', { class: 'instructor-form-field' }, [
-                    el('label', { class: 'instructor-form-label' }, 'Acuity *'),
+                    el('label', { class: 'instructor-form-label', for: 'gen-acuity' }, 'Acuity *'),
                     sel,
                   ]),
                 ]);
@@ -465,9 +510,10 @@ function showPromptGenerationModal() {
             el('div', { class: 'd-flex gap-16 mb-16 flex-wrap' }, [
               el('div', { class: 'flex-1 minw-160' }, [
                 el('div', { class: 'instructor-form-field' }, [
-                  el('label', { class: 'instructor-form-label' }, 'Age (yrs)'),
+                  el('label', { class: 'instructor-form-label', for: 'gen-age' }, 'Age (yrs)'),
                   el('input', {
                     id: 'gen-age',
+                    name: 'gen-age',
                     type: 'number',
                     min: 1,
                     max: 120,
@@ -478,10 +524,11 @@ function showPromptGenerationModal() {
               ]),
               el('div', { class: 'flex-1 minw-180' }, [
                 el('div', { class: 'instructor-form-field' }, [
-                  el('label', { class: 'instructor-form-label' }, 'Sex'),
+                  el('label', { class: 'instructor-form-label', for: 'gen-sex' }, 'Sex'),
                   (() => {
                     const sel = el('select', {
                       id: 'gen-sex',
+                      name: 'gen-sex',
                       class: 'instructor-form-input',
                     });
                     sel.append(
@@ -496,9 +543,10 @@ function showPromptGenerationModal() {
               ]),
               el('div', { class: 'flex-1 minw-200' }, [
                 el('div', { class: 'instructor-form-field' }, [
-                  el('label', { class: 'instructor-form-label' }, 'Pain (0–10)'),
+                  el('label', { class: 'instructor-form-label', for: 'gen-pain' }, 'Pain (0–10)'),
                   el('input', {
                     id: 'gen-pain',
+                    name: 'gen-pain',
                     type: 'number',
                     min: 0,
                     max: 10,
@@ -511,9 +559,14 @@ function showPromptGenerationModal() {
             ]),
             // Functional goal
             el('div', { class: 'instructor-form-field' }, [
-              el('label', { class: 'instructor-form-label' }, 'Functional Goal (optional)'),
+              el(
+                'label',
+                { class: 'instructor-form-label', for: 'gen-goal' },
+                'Functional Goal (optional)',
+              ),
               el('input', {
                 id: 'gen-goal',
+                name: 'gen-goal',
                 type: 'text',
                 placeholder: 'e.g., reach overhead to place dishes',
                 class: 'instructor-form-input',
@@ -600,7 +653,7 @@ function capitalizeFirst(s) {
 function createCaseFromGenerated(caseData, modal) {
   (async () => {
     try {
-      const newCase = await store.createCase(caseData);
+      const newCase = await _createCase(caseData);
       if (modal) document.body.removeChild(modal);
       urlNavigate('/instructor/editor', { case: newCase.id });
     } catch (e) {
@@ -697,7 +750,7 @@ async function handleCaseCreationAsync(title, setting, age, gender, acuity, dob)
       },
     };
 
-    const newCase = await store.createCase(caseData);
+    const newCase = await _createCase(caseData);
 
     // Close modal (data attribute specific)
     const modal = document.querySelector('[data-modal="create-case"]');
@@ -719,10 +772,10 @@ route('#/instructor/cases', async (app) => {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('aria-hidden', 'true');
     svg.setAttribute('class', className);
-    if (size) {
-      svg.style.width = size;
-      svg.style.height = size;
-    }
+    // Default size for small buttons unless explicitly overridden
+    const sz = size || '18px';
+    svg.style.width = sz;
+    svg.style.height = sz;
     const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
     use.setAttribute('href', `#icon-${name}`);
     svg.appendChild(use);
@@ -811,7 +864,7 @@ route('#/instructor/cases', async (app) => {
     app.append(loadingIndicator);
 
     try {
-      allCases = await store.listCases();
+      allCases = await _listCases();
     } catch (error) {
       console.error('Failed to load cases:', error);
       app.replaceChildren(); // Clear loading indicator
@@ -988,7 +1041,7 @@ route('#/instructor/cases', async (app) => {
                     onClick: async () => {
                       if (confirm(`Are you sure you want to delete "${c.title}"?`)) {
                         try {
-                          await store.deleteCase(c.id);
+                          await _deleteCase(c.id);
                           await loadAndRender(); // Reload all data and re-render the view
                         } catch (error) {
                           console.error('Failed to delete case:', error);

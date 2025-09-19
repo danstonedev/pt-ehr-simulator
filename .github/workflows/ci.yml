@@ -11,7 +11,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
       - name: Install dependencies (omit optional)
         run: npm ci --omit=optional || npm i --omit=optional
       - name: Lint & format check
         run: npm run check
+      - name: Build
+        run: npm run build
+      - name: Enforce bundle size budgets
+        if: success()
+        run: node scripts/check-bundle-sizes.mjs
+      - name: Upload dist artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/

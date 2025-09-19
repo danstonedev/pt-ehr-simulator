@@ -1,6 +1,9 @@
 import { route } from '../../core/router.js';
 import { navigate as urlNavigate } from '../../core/url.js';
-import { listCases } from '../../core/store.js';
+async function _listCases() {
+  const { listCases } = await import('../../core/store.js');
+  return listCases();
+}
 import { storage } from '../../core/index.js';
 import { el } from '../../ui/utils.js';
 import { createCasesMap, scanAndProcessDrafts, sortDrafts } from './DraftsUtils.js';
@@ -13,7 +16,7 @@ route('#/student/drafts', async (app) => {
 
   try {
     // Get all case data to match case IDs with titles
-    const allCases = await listCases();
+    const allCases = await _listCases();
     const casesMap = createCasesMap(allCases);
 
     // Scan storage for draft keys and process them

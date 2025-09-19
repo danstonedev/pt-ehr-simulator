@@ -210,6 +210,18 @@
 }
 
 /* Global utility classes (theme-agnostic) */
+/* Accessibility: visually hidden utility for off-screen labels and helper text */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
 /* Positioning & overlay */
 .fixed {
   position: fixed;
@@ -528,23 +540,7 @@
   background: var(--primary-light);
 }
 
-.skip-link {
-  position: fixed;
-  top: 8px;
-  left: 8px;
-  z-index: 10000;
-  background: var(--und-green);
-  color: var(--white);
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  text-decoration: none;
-  transform: translateY(-150%);
-}
-.skip-link:focus {
-  transform: translateY(0);
-  outline: 2px solid var(--white);
-  outline-offset: 2px;
-}
+ 
 
 /* Respect user reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
@@ -566,7 +562,9 @@
 
   /* Theme-agnostic layout + primitives (same in light/dark) */
   /* Layout tokens */
-  --topbar-h: 72px; /* unify top bar height (taller per request) */
+  --topbar-h: 72px; /* keep original header height */
+  /* Brand logo height = 60% of nav bar (40% smaller than full height) */
+  --brand-logo-h: calc(var(--topbar-h) * 0.6);
   --edu-ribbon-h: 28px; /* bottom ribbon height for readable text */
   --sticky-header-h: 64px; /* unified sticky header height */
   /* Shared header geometry (alias for clarity across left/right headers) */
@@ -755,6 +753,7 @@
 .icon {
   width: 1em;
   height: 1em;
+  display: inline-block; /* ensure consistent box for <svg> icons */
   vertical-align: -0.125em;
   fill: currentColor;
 }
@@ -769,10 +768,8 @@
   display: none;
 }
 
-/* Topbar brand label suffix color ("| Proof of Concept") */
-.brand-label-suffix {
-  color: var(--und-gray);
-}
+/* Topbar brand label suffix no longer used */
+.brand-label-suffix { display: none !important; }
 
 /* Light theme - Accessibility-compliant (WCAG AA) */
 :root {
@@ -887,17 +884,19 @@
   --case-header-bg: var(--surface-case-header);
 }
 
-/* Hard desktop minimum width: for devices with fine pointer (mouse/trackpad), enforce 900px layout width.
-   This allows very narrow windows to scroll horizontally instead of collapsing into mobile nav/state. */
-@media (pointer: fine) {
+/* Hard desktop minimum width for true desktop environments:
+   require both hover and fine pointer so mobile device emulation doesn't inherit this. */
+@media (hover: hover) and (pointer: fine) {
   html,
   body {
     min-width: 900px; /* enforce desktop baseline */
   }
-  body.force-desktop,
-  html.force-desktop {
-    min-width: 900px;
-  }
+}
+
+/* Manual override: allow forcing desktop layout regardless of media features */
+html.force-desktop,
+body.force-desktop {
+  min-width: 900px;
 }
 
 /* ========================================
@@ -915,6 +914,8 @@ body {
 html {
   font-size: 16px; /* Base font size for better accessibility */
   /* Remove deprecated text-size-adjust properties to satisfy linters */
+  /* Prevent iOS Safari from auto-scaling text sizes unpredictably */
+  -webkit-text-size-adjust: 100%;
   /* Ensure native anchor/hash jumps clear sticky headers on small screens */
   scroll-padding-top: var(--topbar-h, 56px);
   scroll-padding-bottom: var(--edu-ribbon-h, 24px);
@@ -963,12 +964,6 @@ h4,
 h5,
 h6 {
   font-weight: 600;
-  line-height: 1.3;
-  margin: 0 0 1rem 0;
-  color: var(--text);
-}
-
-h1 {
   font-size: clamp(1.875rem, 1.2rem + 2.2vw, 2.25rem);
 } /* 30→36 */
 h2 {
@@ -1153,8 +1148,12 @@ body:has(#app .home-container) {
   justify-self: start;
 }
 .btn-hero {
-  font-size: 2.75rem; /* 44px */
-  padding: 24px 44px;
+  /* Responsive headline button sizing to avoid huge/tiny swings */
+  --btn-hero-fs-min: 1.125rem; /* 18px */
+  --btn-hero-fs-max: 2.75rem; /* 44px */
+  font-size: clamp(var(--btn-hero-fs-min), 6vw, var(--btn-hero-fs-max));
+  padding: clamp(14px, 2.2vw, 24px) clamp(20px, 4vw, 44px);
+  min-width: clamp(180px, 40vw, 360px);
   border-radius: 14px;
 }
 .home-badge {
@@ -1213,7 +1212,7 @@ body:has(#app .home-container) {
   gap: 0.75rem;
 }
 
-@media (max-width: 559px) {
+@media (max-width: 768px) {
   .home-quick-row {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -1221,6 +1220,14 @@ body:has(#app .home-container) {
   .home-quick-row .btn-hero.student,
   .home-quick-row .btn-hero.faculty {
     justify-self: center;
+  }
+}
+
+/* Additional small-screen tuning: cap hero size further on very narrow widths */
+@media (max-width: 420px) {
+  .btn-hero {
+    --btn-hero-fs-max: 2rem; /* 32px cap on very small screens */
+    min-width: clamp(160px, 70vw, 260px);
   }
 }
 
@@ -2386,9 +2393,29 @@ html[data-theme='dark'] input[type='checkbox'] {
   background: var(--und-green-light);
 }
 
-/* Spacing for feedback button in top nav */
+/* Feedback link styled like nav links */
 .topnav .feedback-btn {
+  padding: var(--space-3) var(--space-5);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+  position: relative;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
   margin-left: 8px;
+}
+.topnav .feedback-btn:hover {
+  color: var(--und-green);
+  background: var(--und-green-light);
+}
+.topnav .feedback-btn:focus-visible {
+  outline: 2px solid var(--und-green);
+  outline-offset: 2px;
 }
 
 .tabs {
@@ -3397,14 +3424,11 @@ select:focus,
     order: 2;
   }
   #primaryNav.topnav a,
-  #primaryNav .feedback-btn,
   #primaryNav .theme-toggle,
   .brand-row .feedback-btn {
     display: none !important;
   }
-  .und-logo {
-    height: 28px;
-  }
+  .und-logo { height: var(--brand-logo-h); }
   .brand-label {
     font-size: 0.875rem; /* 14px */
   }
@@ -3429,7 +3453,7 @@ select:focus,
   }
   /* Compact topbar and scalable tokens on mobile */
   :root {
-    --topbar-h: 60px; /* reduce header height to free vertical space */
+    --topbar-h: 60px; /* original mobile header height */
     /* Slightly smaller cap for auto-resizing textareas on phones */
     --textarea-max-rows: 6;
   }
@@ -3439,10 +3463,8 @@ select:focus,
     gap: 0.5rem;
   }
 
-  /* Logo scales down slightly */
-  .und-logo {
-    height: 24px;
-  }
+  /* Logo uses responsive token */
+  .und-logo { height: var(--brand-logo-h); }
 
   /* Very small screens: tighten horizontal gutters to 8px */
   @media (max-width: 600px) {
@@ -4148,9 +4170,6 @@ header.topbar {
   align-items: center;
   gap: 0.75rem;
 }
-.brand-row .feedback-btn {
-  margin-left: 8px;
-}
 @media (max-width: 640px) {
   .brand-row {
     gap: 0.5rem;
@@ -4208,56 +4227,19 @@ header.topbar a.button {
   text-decoration: none;
 }
 .und-logo {
-  height: 32px;
+  height: var(--brand-logo-h);
   width: auto;
   display: block;
   filter: none;
+  align-self: center; /* center in header */
 }
-@media (max-width: 480px) {
-  .und-logo {
-    height: 26px;
-  }
-}
+/* --brand-logo-h handles responsive sizing */
 
-/* Brand label to the right of UND logo */
-.brand-label {
-  /* Restore original brand styling, but smaller font size */
-  font-family:
-    'Oswald', 'Trade Gothic', 'TradeGothic LT', 'Trade Gothic Next', 'TradeGothicLTStd',
-    'TradeGothic LT Std', 'News Gothic', 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  color: var(--white);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  margin-left: 10px;
-  white-space: nowrap;
-  font-size: 1.125rem; /* 18px smaller than previous 24px */
-  text-decoration: none;
-}
+/* Brand label removed from markup; hide any remnants defensively */
+.brand-label,
 .brand-label .brand-label-suffix {
-  margin-left: 4px;
-  font-weight: 700;
-  color: var(--und-gray); /* UND gray per request */
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); /* pop against dark header */
-  white-space: nowrap;
+  display: none !important;
 }
-/* Reinstate subtle vertical divider before label */
-.brand-label::before {
-  content: '';
-  display: inline-block;
-  width: 1px;
-  height: 22px;
-  background: rgba(255, 255, 255, 0.6);
-  margin-right: 10px;
-  vertical-align: middle;
-  border-radius: 1px;
-}
-@media (max-width: 640px) {
-  .brand-label {
-    display: none;
-  }
-}
-
-/* Sticky top bar is fully defined earlier; duplicate one-liner removed */
 
 /* Sidebar offsets are defined in the primary sidebar block; redundant override removed */
 

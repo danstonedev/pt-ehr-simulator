@@ -362,9 +362,20 @@ function attachHeader(container, { title, showAddButton, compactAddButton, addBu
 }
 
 function makeCreateCell(updateCell) {
+  function applyA11yLabel(input, column, rowData, rowId) {
+    if (!input || !input.tagName || !/^(INPUT|TEXTAREA|SELECT)$/.test(input.tagName)) return;
+    try {
+      if (input.getAttribute('aria-label') || input.getAttribute('aria-labelledby')) return;
+      const rowLabel = rowData.name || rowId;
+      const colLabel = column.label || column.field;
+      input.setAttribute('aria-label', `${colLabel}: ${rowLabel}`);
+    } catch {}
+  }
   return (column, rowData, rowId) => {
     const value = rowData[column.field] || '';
     const input = buildInputForColumn(column, value, (val) => updateCell(rowId, column.field, val));
+    // Accessibility: ensure interactive form control has a programmatic name.
+    applyA11yLabel(input, column, rowData, rowId);
     return el(
       'td',
       {

@@ -37,10 +37,20 @@ import {
   performInitialScrollIfNeeded,
   createScrollToPercentWithinActive,
 } from './NavigationManager.js';
-import {
-  updateSaveStatus,
-  refreshChartNavigation,
-} from '../features/navigation/ChartNavigation.js';
+// Navigation helpers will be loaded lazily to reduce initial bundle size
+let updateSaveStatus; // assigned via ensureChartNavFns()
+let refreshChartNavigation; // assigned via ensureChartNavFns()
+async function ensureChartNavFns() {
+  if (!updateSaveStatus || !refreshChartNavigation) {
+    const [saveMod, refreshMod] = await Promise.all([
+      import('../features/navigation/saveStatus.js'),
+      import('../features/navigation/progress.js'),
+    ]);
+    updateSaveStatus = saveMod.updateSaveStatus;
+    refreshChartNavigation = refreshMod.refreshChartNavigation;
+  }
+  return { updateSaveStatus, refreshChartNavigation };
+}
 import { createSectionSwitcher } from './SectionSwitcher.js';
 import {
   createInitialChartNavConfig,
@@ -162,7 +172,7 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
 
   // Sticky top bar removed; preview can be triggered from elsewhere if desired
 
-  // Function to refresh chart navigation progress - declare placeholder first
+  // Function to refresh chart navigation progress - placeholder until nav loaded
   let refreshChartProgress = () => {};
 
   // Create section switcher using modular utility - now we have all dependencies
@@ -204,6 +214,8 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   });
 
   // Create chart navigation sidebar now that switchTo exists
+  // Ensure navigation helpers available before building chart navigation
+  await ensureChartNavFns();
   const chartNav = await createChartNavigationForEditor({
     c,
     draft,
@@ -225,7 +237,11 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
   const save = createSaveWrapper({
     originalSave,
     chartNav,
-    updateSaveStatus,
+    // Defer updateSaveStatus retrieval until first invocation
+    updateSaveStatus: async (...args) => {
+      await ensureChartNavFns();
+      updateSaveStatus?.(...args);
+    },
   });
 
   // Update placeholders with actual functions
@@ -376,6 +392,8 @@ async function renderCaseEditor(app, qs, isFacultyMode) {
     onEditorSettingsChange,
   });
 
+  // Lazy load nav helpers (already likely loaded, call defensively) before initial refresh
+  await ensureChartNavFns();
   refreshChartNavigation(chartNav, initialConfig);
   // Perform initial anchor/percent scroll after content is laid out
   afterNextLayout(() => performInitialScrollWrapper(active));

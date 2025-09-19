@@ -12,7 +12,11 @@ import {
   getPatientSex,
   formatDOB,
 } from './CaseEditorUtils.js';
-import { openEditCaseModal } from '../features/navigation/ChartNavigation.js';
+// Lazy accessor to avoid statically bundling navigation API
+async function _getOpenEditCaseModal() {
+  const { getOpenEditCaseModal } = await import('../features/navigation/api.js');
+  return getOpenEditCaseModal();
+}
 
 /**
  * Create and setup patient header with avatar
@@ -163,7 +167,9 @@ export function createPatientHeaderActionsRenderer(isFacultyMode, caseId, c, han
     if (!canEdit) return;
 
     const getCaseInfoSnapshot = () => getCaseInfo(c);
-    const openEdit = () => openEditCaseModal(getCaseInfoSnapshot(), handleCaseInfoUpdate);
+    const openEdit = () => {
+      _getOpenEditCaseModal().then((fn) => fn && fn(getCaseInfoSnapshot(), handleCaseInfoUpdate));
+    };
     actions.append(el('button', { class: 'btn secondary', onclick: openEdit }, 'Edit'));
   };
 }

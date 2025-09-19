@@ -23,35 +23,40 @@ async function readRecursive(dir) {
   for (const e of entries) {
     if (e.name.startsWith('.')) continue;
     const full = path.join(dir, e.name);
-    if (e.isDirectory()) files.push(...await readRecursive(full));
+    if (e.isDirectory()) files.push(...(await readRecursive(full)));
     else if (e.isFile() && e.name.endsWith('.css')) files.push(full);
   }
   return files;
 }
 
 function classify(name) {
-  if (name.startsWith('--und-')) return 'color.brand.' + name.replace(/^--und-/, '').replace(/-/g, '.');
+  if (name.startsWith('--und-'))
+    return 'color.brand.' + name.replace(/^--und-/, '').replace(/-/g, '.');
   if (name.startsWith('--bg')) return 'color.surface.' + name.replace(/^--/, '').replace(/-/g, '.');
-  if (name.startsWith('--panel')) return 'color.surface.' + name.replace(/^--/, '').replace(/-/g, '.');
-  if (name.startsWith('--surface-light')) return 'color.surface.base' + name.replace('--surface-light', '').replace(/-/g, '.');
+  if (name.startsWith('--panel'))
+    return 'color.surface.' + name.replace(/^--/, '').replace(/-/g, '.');
+  if (name.startsWith('--surface-light'))
+    return 'color.surface.base' + name.replace('--surface-light', '').replace(/-/g, '.');
   if (name.startsWith('--color-border')) return 'color.border.base';
   if (name.startsWith('--text-secondary')) return 'color.text.secondary';
   if (name.startsWith('--text')) return 'color.text.primary';
   if (name.startsWith('--font-')) return 'font.size.' + name.replace('--font-', '');
   if (name.startsWith('--radius-')) return 'radius.' + name.replace('--radius-', '');
-  if (name.startsWith('--sidebar-')) return 'sidebar.' + name.replace('--sidebar-', '').replace(/-/g, '.');
+  if (name.startsWith('--sidebar-'))
+    return 'sidebar.' + name.replace('--sidebar-', '').replace(/-/g, '.');
   if (name.startsWith('--role-')) return 'role.' + name.replace('--role-', '').replace(/-/g, '.');
   if (name.startsWith('--z-')) return 'zindex.' + name.replace('--z-', '').replace(/-/g, '.');
   if (name.startsWith('--topbar-h')) return 'layout.topbar.height';
   if (name.startsWith('--sidebar-w')) return 'layout.sidebar.width';
-  if (name.startsWith('--elev-')) return 'elevation.' + name.replace('--elev-', '').replace(/-/g, '.');
+  if (name.startsWith('--elev-'))
+    return 'elevation.' + name.replace('--elev-', '').replace(/-/g, '.');
   return 'misc.' + name.replace(/^--/, '').replace(/-/g, '.');
 }
 
 function normalizeValue(v) {
   return v
     .replace(/!important/g, '')
-    .replace(/var\([^)]*\)/g, m => m) // keep var() as-is
+    .replace(/var\([^)]*\)/g, (m) => m) // keep var() as-is
     .trim();
 }
 
@@ -111,15 +116,17 @@ async function main() {
     meta: {
       generated: new Date().toISOString(),
       source: 'scripts/generate-design-tokens.mjs',
-      cssFiles: cssFiles.map(f => path.relative(ROOT, f))
+      cssFiles: cssFiles.map((f) => path.relative(ROOT, f)),
     },
-    props: merged
+    props: merged,
   };
   await fs.writeFile(OUTPUT_FILE, JSON.stringify(output, null, 2) + '\n', 'utf8');
-  console.log(`Generated ${Object.keys(merged).length} tokens -> ${path.relative(ROOT, OUTPUT_FILE)}`);
+  console.log(
+    `Generated ${Object.keys(merged).length} tokens -> ${path.relative(ROOT, OUTPUT_FILE)}`,
+  );
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('Token generation failed:', err);
   process.exit(1);
 });

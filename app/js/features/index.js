@@ -9,14 +9,9 @@ export {
   createLoadingIndicator,
 } from './case-management/CaseInitialization.js';
 
-// Navigation
-export {
-  createChartNavigation,
-  createSectionAnchors,
-  refreshChartNavigation,
-  openEditCaseModal,
-} from './navigation/ChartNavigation.js';
-export { createSimpleTabs, createStickyTopBar } from './navigation/NavigationHeader.js';
+// Navigation: Do NOT re-export heavy navigation functions here to avoid
+// accidentally creating static bundle edges. Import from './navigation/api.js'
+// where lazy accessors are provided.
 
 // SOAP Documentation
 export * from './soap/index.js';

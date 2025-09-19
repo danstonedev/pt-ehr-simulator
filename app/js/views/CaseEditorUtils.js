@@ -465,7 +465,9 @@ export async function createChartNavigationForEditor({
   save,
   refreshChartProgress,
 }) {
-  const { createChartNavigation } = await import('../features/navigation/ChartNavigation.js');
+  // Temporary: still sourced from monolith via api (will point to submodule after split)
+  const { getCreateChartNavigation } = await import('../features/navigation/api.js');
+  const createChartNavigation = await getCreateChartNavigation();
 
   return createChartNavigation({
     activeSection: 'subjective',
