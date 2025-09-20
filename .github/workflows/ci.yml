@@ -12,8 +12,11 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      - name: Install dependencies (omit optional)
-        run: npm ci --omit=optional || npm i --omit=optional
+      - name: Clean npm cache and install dependencies
+        run: |
+          rm -rf node_modules package-lock.json
+          npm cache clean --force
+          npm install
       - name: Lint & format check
         run: npm run check
       - name: Build
