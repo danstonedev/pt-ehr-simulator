@@ -29,9 +29,9 @@
     "husky": "^9.1.4",
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
+    "rollup": "4.52.0",
     "rollup-plugin-visualizer": "^6.0.3",
     "sharp": "^0.33.5",
-    "rollup": "4.22.5",
     "vite": "7.1.5"
   },
   "main": "index.js",
@@ -51,5 +51,7 @@
     "*.{json,md,yml,yaml}": "prettier --write",
     "!.husky/**": "echo skip"
   },
-  "dependencies": {}
+  "overrides": {
+    "rollup": "4.52.0"
+  }
 }

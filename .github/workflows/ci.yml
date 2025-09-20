@@ -12,6 +12,8 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+      - name: Upgrade npm to latest
+        run: npm install -g npm@latest
       - name: Show npm version
         run: npm --version
       - name: Clean npm cache and install dependencies
