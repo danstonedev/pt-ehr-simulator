@@ -13,7 +13,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
+      - name: Show npm version
+        run: npm --version
       - name: Clean npm cache and install dependencies
         run: |
           rm -rf node_modules package-lock.json
