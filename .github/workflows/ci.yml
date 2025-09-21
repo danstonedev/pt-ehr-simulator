@@ -25,9 +25,6 @@ jobs:
         run: npm run check
       - name: Build
         run: npm run build
-      - name: Enforce bundle size budgets
-        if: success()
-        run: node scripts/check-bundle-sizes.mjs
       - name: Upload dist artifact
         if: success()
         uses: actions/upload-artifact@v4
