@@ -1,0 +1,155 @@
+/* Home v2 (Variant A) — stand-alone styles, minimal conflicts */
+
+:root {
+  /* Light theme: pure white home background like other pages */
+  --homev2-bg-top: #ffffff;
+  --homev2-bg-bottom: #ffffff;
+}
+
+/* Dark theme: use neutral grays for home background */
+:root[data-theme='dark'] {
+  --homev2-bg-top: #2c2c2c; /* var(--neutral-900) */
+  --homev2-bg-bottom: #2c2c2c; /* var(--neutral-900) */
+}
+
+/* Full-bleed background on body for home route */
+body[data-route='home'] {
+  background: linear-gradient(180deg, var(--homev2-bg-top) 0%, var(--homev2-bg-bottom) 100%);
+}
+/* Ensure the main app container does not paint a separate background */
+body[data-route='home'] #app {
+  background: transparent;
+}
+
+.homev2 {
+  /* Center the layout and constrain width to align with app grid */
+  max-width: 1120px;
+  margin-inline: auto;
+  padding: clamp(16px, 3vw, 32px) clamp(16px, 3vw, 32px);
+  display: grid;
+  gap: clamp(16px, 2vw, 24px);
+  color: var(--text);
+}
+
+.homev2-hero {
+  display: grid;
+  gap: clamp(10px, 1.2vw, 14px);
+  align-items: center;
+  justify-items: center;
+  text-align: center;
+  padding: clamp(16px, 2.4vw, 28px) 0;
+}
+.homev2-hero h1 {
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Ubuntu,
+    Cantarell,
+    Noto Sans,
+    Arial,
+    sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  font-size: clamp(1.375rem, 1.05rem + 1.8vw, 2.125rem);
+  color: var(--text);
+}
+.homev2-hero p {
+  max-width: 68ch;
+  color: var(--text-secondary, var(--neutral-600));
+}
+
+.homev2-cta {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+.homev2-cta .btn.primary {
+  font-weight: 700;
+  font-size: clamp(1rem, 0.9rem + 1.4vw, 1.25rem);
+  padding: clamp(12px, 1.6vw, 16px) clamp(18px, 3vw, 24px);
+  border-radius: var(--radius-lg, 12px);
+  border: 2px solid var(--accent, #009a44);
+  background: var(--accent, #009a44);
+  color: var(--white, #fff);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+.homev2-cta .btn.primary:hover,
+.homev2-cta .btn.primary:focus-visible {
+  background: var(--accent, #009a44);
+  border-color: var(--accent, #009a44);
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 3px var(--accent-light, rgba(0, 154, 68, 0.18)),
+    0 10px 24px rgba(0, 0, 0, 0.18);
+  outline: none;
+}
+
+@media (min-width: 860px) {
+  .homev2-cta {
+    grid-template-columns: 1fr 1fr;
+    max-width: 940px;
+  }
+}
+
+.homev2-grid {
+  display: grid;
+  gap: clamp(12px, 1.6vw, 16px);
+}
+@media (min-width: 980px) {
+  .homev2-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.homev2-card {
+  background: var(--panel, var(--white));
+  border: 1px solid var(--color-border, var(--color-border-muted, #d1d9e2));
+  border-radius: var(--radius-lg, 12px);
+  padding: clamp(14px, 1.8vw, 18px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 100%;
+}
+/* Removed green decorative bar */
+.homev2-card h2,
+.homev2-card h3 {
+  margin: 0 0 8px 0;
+  color: var(--text);
+}
+.homev2-card li {
+  color: var(--text);
+}
+.homev2-card .label {
+  font-weight: 700;
+  color: var(--accent, var(--und-green));
+  margin-bottom: 8px;
+}
+.homev2 ul {
+  margin: 0 0 0 18px;
+}
+.homev2 li {
+  margin: 6px 0;
+}
+
+/* Hover/focus elevation for cards */
+.homev2-card:hover,
+.homev2-card:focus-within {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.14);
+}
+
+/* Dark mode tweaks - removed hardcoded values, using tokens instead */
+html[data-theme='dark'] .homev2-card .label {
+  color: var(--accent, var(--und-green));
+}

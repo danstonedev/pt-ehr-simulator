@@ -7,8 +7,21 @@ import {
 } from '../../core/url.js';
 // Lazy-load store functions to avoid static/dynamic import mix warnings
 async function _listCases() {
-  const { listCases } = await import('../../core/store.js');
-  return listCases();
+  const store = await import('../../core/store.js');
+  if (typeof store.listCaseSummaries === 'function') {
+    return store.listCaseSummaries();
+  }
+  // Fallback for older bundles: load full cases and map to summaries
+  if (typeof store.listCases === 'function') {
+    const list = await store.listCases();
+    return (list || []).map((c) => ({
+      id: c.id,
+      title: c.title || c.caseObj?.meta?.title || 'Untitled Case',
+      latestVersion: c.latestVersion || 0,
+      isStored: true,
+    }));
+  }
+  throw new Error('Store API not available');
 }
 async function _createCase(caseObj) {
   const { createCase } = await import('../../core/store.js');
@@ -811,16 +824,9 @@ route('#/instructor/cases', async (app) => {
     function renderTable() {
       // Filter cases based on search
       let filteredCases = allCases.filter((c) => {
-        // Defensive check for case structure
-        if (!c || !c.caseObj) return false;
-
-        const caseData = c.caseObj.meta || {};
-        const title = caseData.title || c.title || 'Untitled';
-        const setting = caseData.setting || '';
-        const diagnosis = caseData.diagnosis || '';
-        const acuity = caseData.acuity || '';
-
-        const searchText = `${title} ${setting} ${diagnosis} ${acuity}`.toLowerCase();
+        if (!c) return false;
+        const title = c.title || 'Untitled';
+        const searchText = `${title}`.toLowerCase();
         return searchText.includes(searchTerm);
       });
 
@@ -966,12 +972,11 @@ route('#/instructor/cases', async (app) => {
             v: c.latestVersion || 0,
             encounter: 'eval',
           });
-          const meta = c.caseObj?.meta || {};
           return el('tr', {}, [
-            el('td', {}, c.title || meta.title || 'Untitled'),
-            el('td', {}, meta.setting || ''),
-            el('td', {}, meta.diagnosis || ''),
-            el('td', {}, meta.acuity || ''),
+            el('td', {}, c.title || 'Untitled'),
+            el('td', {}, ''),
+            el('td', {}, ''),
+            el('td', {}, ''),
             el('td', { class: 'nowrap' }, [
               el('div', { class: 'd-inline-flex ai-center gap-6' }, [
                 el(

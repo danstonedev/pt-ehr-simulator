@@ -30,9 +30,9 @@
   color: var(--sidebar-fg, inherit);
 }
 
-/* Dark theme overrides use neutral surface rather than gradient for legibility */
+/* Dark theme overrides use darker neutral surface for better contrast */
 html[data-theme='dark'] .chart-navigation {
-  background: var(--sidebar-surface-dark, linear-gradient(90deg, #1f2937 0%, #111827 100%));
+  background: var(--sidebar-surface-dark, var(--neutral-950));
   border-right-color: var(--sidebar-border-dark, rgba(255, 255, 255, 0.12));
   color: var(--sidebar-fg-dark, rgba(255, 255, 255, 0.92));
 }

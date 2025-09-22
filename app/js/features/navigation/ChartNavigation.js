@@ -2429,6 +2429,10 @@ export function createChartNavigation(config) {
                       const next = [...current, mod];
                       const payload = { ...(config.caseInfo || {}), modules: next };
                       config.onCaseInfoUpdate?.(payload);
+                      // Force page reload to refresh the UI and show the new artifact
+                      setTimeout(() => {
+                        window.location.reload();
+                      }, 300);
                     }),
                 });
                 // Warm the artifact panel code on idle

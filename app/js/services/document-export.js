@@ -61,22 +61,23 @@ export function exportToWord(caseData, draft) {
         // Core
         black: '000000',
         white: 'FFFFFF',
-        gray: '343a40',
-        grayText: '4B5563',
+        // Neutral grayscale aligned to web tokens
+        gray: '4A4A4A', // between neutral-700/750
+        grayText: '616161', // neutral-700 for secondary text
         // Brand
         blue: '009A44', // UND Green (legacy key used across file)
         green: '009A44',
         darkBlue: '007a35',
         accent: '009A44',
-        // Web-like table theme
-        slateHeader: '374151', // dark slate header
-        grid: 'D1D5DB', // light gray borders
-        inputBg: 'F3F4F6', // subtle input background (optional)
-        zebra: 'F8FAFC', // extra-light zebra (B/W friendly)
+        // Web-like table theme (UND neutrals)
+        neutralHeader: '2C2C2C', // neutral-900 for table header background
+        grid: 'E0E0E0', // neutral-300 borders
+        inputBg: 'F5F5F5', // neutral-100 input bg
+        zebra: 'FAFAFA', // neutral-50 zebra
         // Misc
         red: 'dc3545',
         lightGray: 'f8f9fa',
-        sectionBg: '2d3748',
+        sectionBg: '1A1A1A',
       },
 
       // Spacing (in points) - more generous for professional appearance
@@ -770,7 +771,7 @@ export function exportToWord(caseData, draft) {
                 spacing: { before: 0, after: 0 },
               }),
             ],
-            shading: isIndentCol ? undefined : { fill: FORMAT.colors.slateHeader },
+            shading: isIndentCol ? undefined : { fill: FORMAT.colors.neutralHeader },
             margins: isIndentCol
               ? { top: 0, bottom: 0, left: 0, right: 0 }
               : { top: 30, bottom: 30, left: 100, right: 100 },

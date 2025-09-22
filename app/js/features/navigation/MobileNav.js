@@ -78,8 +78,8 @@ export class MobileNav {
       <div class="mobile-nav-content">
         <ul class="mobile-nav-list">
           <li><a href="#/" class="mobile-nav-link">Home</a></li>
-          <li><a href="#/student" class="mobile-nav-link">Student</a></li>
-          <li><a href="#/instructor" class="mobile-nav-link">Faculty</a></li>
+          <li><a href="#/student/cases" class="mobile-nav-link">Student</a></li>
+          <li><a href="#/instructor/cases" class="mobile-nav-link">Faculty</a></li>
           <li><a href="#" class="mobile-nav-link mobile-nav-feedback-link">Submit Feedback</a></li>
           <li><a href="#" class="mobile-nav-link mobile-nav-theme-link">Toggle Theme</a></li>
         </ul>

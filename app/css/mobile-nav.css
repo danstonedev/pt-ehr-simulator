@@ -39,12 +39,12 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  color: var(--sidebar-fg, var(--color-text, #1a202c));
+  color: var(--sidebar-fg, var(--color-text, var(--neutral-950)));
 }
 
 html[data-theme='dark'] .mobile-nav-drawer {
-  background: var(--sidebar-surface-dark, var(--panel, #1f2937));
-  border-left-color: var(--sidebar-border-dark, var(--color-border, #334155));
+  background: var(--sidebar-surface-dark, var(--panel, var(--neutral-800)));
+  border-left-color: var(--sidebar-border-dark, var(--color-border, var(--neutral-700)));
   box-shadow: -4px 0 24px rgba(0, 0, 0, 0.6);
   color: var(--sidebar-fg-dark, rgba(255, 255, 255, 0.92));
 }
@@ -116,7 +116,7 @@ html[data-theme='dark'] .mobile-nav-drawer {
 .mobile-nav-link {
   display: block;
   padding: 0.875rem 1.25rem;
-  color: var(--sidebar-link, var(--color-text, #1a202c));
+  color: var(--sidebar-link, var(--color-text, var(--neutral-950)));
   text-decoration: none;
   font-size: 1rem;
   font-weight: 500;
@@ -126,7 +126,7 @@ html[data-theme='dark'] .mobile-nav-drawer {
 
 html[data-theme='dark'] .mobile-nav-link {
   color: var(--sidebar-link-dark, rgba(255, 255, 255, 0.85));
-  border-bottom-color: var(--sidebar-border-dark, var(--color-border, #334155));
+  border-bottom-color: var(--sidebar-border-dark, var(--color-border, var(--neutral-700)));
 }
 
 .mobile-nav-link:hover,

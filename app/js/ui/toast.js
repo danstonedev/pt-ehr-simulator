@@ -10,7 +10,7 @@ function ensureStyles() {
   styleInjected = true;
   const css = `
   .toast-container{position:fixed;left:0;right:0;bottom:16px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:9998;pointer-events:none}
-  .toast{pointer-events:auto;max-width:min(92vw,560px);background:rgba(31,41,55,.95);color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial,sans-serif;display:flex;align-items:center;gap:8px;opacity:0;transform:translateY(8px);transition:opacity .22s ease,transform .22s ease}
+  .toast{pointer-events:auto;max-width:min(92vw,560px);background:rgba(0,0,0,.9);color:var(--white, #fff);padding:10px 14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.18);font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial,sans-serif;display:flex;align-items:center;gap:8px;opacity:0;transform:translateY(8px);transition:opacity .22s ease,transform .22s ease}
   .toast.is-open{opacity:1;transform:translateY(0)}
   .toast .toast-icon{width:18px;height:18px;flex:0 0 18px;opacity:.9}
   @media (prefers-reduced-motion: reduce){.toast{transition:none}}

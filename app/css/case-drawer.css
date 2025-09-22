@@ -133,7 +133,7 @@
   }
 
   html[data-theme='dark'] .chart-navigation {
-    background: var(--sidebar-surface-dark, linear-gradient(90deg, #1f2937 0%, #111827 100%));
+    background: var(--sidebar-surface-dark, var(--panel, var(--neutral-800)));
     color: var(--sidebar-fg-dark, rgba(255, 255, 255, 0.92));
   }
 

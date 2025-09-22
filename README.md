@@ -270,6 +270,15 @@ If your Pages URL hasn’t updated yet, check Actions for the latest “Deploy t
 - Browser tests: open app/tests/\*.test.html while the server runs
 - Debug logs: append ?debug=1 to the app URL
 
+### Windows PowerShell command chaining
+
+When using Windows PowerShell (`powershell.exe`), chain commands with `;` instead of `&&` (which is a Bash operator). For example:
+
+- Run sequentially: `npm run check; npm run build`
+- Guard build on success (PowerShell): `npm run check; if ($LASTEXITCODE -eq 0) { npm run build }`
+
+This avoids the PowerShell error: `The token '&&' is not a valid statement separator in this version.`
+
 ## 📚 Notes on Word Export
 
 Word export relies on the global docx library. If it’s not present, the app will show an alert. To enable it, include docx via a script tag on the page you deploy this app to, or wire it into your hosting template. The app won’t fetch or bundle docx by itself.

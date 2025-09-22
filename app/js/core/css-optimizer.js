@@ -49,6 +49,7 @@ export async function loadComponentCSS(component) {
     navigation: ['css/sidebar.css'],
     editor: ['css/components/tables-lazy.css', 'css/components/forms-lazy.css', 'css/buttons.css'],
     mobile: ['css/mobile-patch-v2.css'],
+    homev2: ['css/home.css'],
   };
 
   const cssFiles = cssMap[component];
@@ -96,7 +97,7 @@ export async function loadRouteCSS(route) {
     student: ['forms'],
     instructor: ['forms', 'navigation'],
     editor: ['editor', 'soap'],
-    home: ['navigation'],
+    home: ['navigation', 'homev2'],
   };
 
   const components = routeCSSMap[route] || [];
@@ -149,6 +150,7 @@ export class CSSOptimizer {
             'css/components/forms-lazy.css',
             'css/buttons.css',
           ],
+          home: ['css/home.css'],
         };
 
         const cssFiles = routeCSSMap[route] || [];

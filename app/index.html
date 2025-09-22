@@ -80,7 +80,7 @@
         --primary-600: #16a34a;
         --primary-700: #15803d;
         --gray-100: #f3f4f6;
-        --gray-800: #1f2937;
+  --gray-800: var(--neutral-800, #424242);
         --white: #ffffff;
       }
 
@@ -141,7 +141,8 @@
       #appInitOverlay {
         position: fixed;
         inset: 0;
-        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        /* Use UND-approved light neutrals */
+        background: linear-gradient(135deg, var(--neutral-50, #fafafa), var(--neutral-100, #f5f5f5));
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -152,8 +153,9 @@
         transition: opacity 0.4s ease, visibility 0.4s ease;
       }
       #appInitOverlay.dark {
-        background: linear-gradient(135deg, #1f2937, #0f172a);
-        color: #f1f5f9;
+        /* Use UND-approved dark neutrals */
+        background: linear-gradient(135deg, var(--neutral-850, #383838), var(--neutral-900, #2c2c2c));
+        color: var(--text, #f1f5f9);
       }
       #appInitOverlay.fade-out {
         opacity: 0;
@@ -179,7 +181,7 @@
       }
       #appInitOverlay p {
         font-size: 0.875rem;
-        color: #334155;
+        color: var(--text-secondary, #616161);
       }
       #appInitOverlay.dark p {
         color: #cbd5e1;
@@ -196,60 +198,7 @@
         border: 0;
       }
 
-      /* Critical homepage hero CSS to avoid first-paint FOUC before styles.css loads */
-      .home-quick-row {
-        display: grid;
-        width: 100%;
-        align-items: center;
-        justify-items: center;
-        grid-template-columns: 1fr auto 1fr;
-        gap: 2rem;
-        padding: 16px 0;
-        margin-top: calc(33vh - 96px);
-      }
-      .home-quick-row .btn-hero.student { justify-self: end; }
-      .home-quick-row .btn-hero.faculty { justify-self: start; }
-
-      /* Minimal button tokens used on the hero */
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        font-weight: 600;
-        line-height: 1.2;
-        border-radius: 12px;
-        border: 2px solid transparent;
-        padding: 0.5rem 1rem;
-        cursor: pointer;
-        text-decoration: none;
-      }
-      .btn.primary { background: var(--primary-600); color: var(--white); }
-      .btn.primary:hover { background: var(--primary-700); }
-
-      /* Responsive headline sizing for the big hero buttons */
-      .btn-hero {
-        --btn-hero-fs-min: 1.125rem; /* 18px */
-        --btn-hero-fs-max: 2.75rem;  /* 44px */
-        font-size: clamp(var(--btn-hero-fs-min), 6vw, var(--btn-hero-fs-max));
-        padding: clamp(14px, 2.2vw, 24px) clamp(20px, 4vw, 44px);
-        min-width: clamp(180px, 40vw, 360px);
-      }
-
-      .home-badge {
-        width: min(280px, 30vw);
-        height: auto;
-        display: block;
-        border-radius: 50%;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        cursor: pointer;
-      }
-
-      @media (max-width: 768px) {
-        .home-quick-row { grid-template-columns: 1fr; gap: 1rem; }
-        .home-quick-row .btn-hero.student,
-        .home-quick-row .btn-hero.faculty { justify-self: center; }
-      }
+      /* Home-specific CSS moved to css/home.css (route-loaded). */
     </style>
 
     <!-- Design tokens must load first -->
@@ -258,11 +207,11 @@
     <!-- Core styles - optimize loading with preload -->
     <link
       rel="preload"
-  href="css/styles.css?v=20250919-007"
+  href="css/styles.css?v=20250922-002"
       as="style"
       onload="this.onload=null;this.rel='stylesheet'"
     />
-  <noscript><link rel="stylesheet" href="css/styles.css?v=20250919-007" /></noscript>
+  <noscript><link rel="stylesheet" href="css/styles.css?v=20250922-002" /></noscript>
 
     <!-- Non-critical CSS - lazy load for better performance -->
     <link
@@ -311,6 +260,16 @@
     />
   <script type="module" src="js/features/debug/index.js"></script>
   <script type="module" src="js/features/notifications/index.js"></script>
+  <!-- Dev-only: Unregister any existing Service Workers on localhost to avoid preload warnings and caches -->
+  <script type="module">
+    try {
+      const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      const debug = /(?:^|[?&])debug=1(?:&|$)/.test(location.search) || /(?:^|[?&])debug=1(?:&|$)/.test((location.hash||'').split('?')[1]||'');
+      if (isLocal || debug) {
+        import('./js/features/dev/unregister-sw.js');
+      }
+    } catch {}
+  </script>
   </head>
   <body class="app-initializing">
     <div id="appInitOverlay" role="status" aria-live="polite" aria-atomic="true">
@@ -342,7 +301,7 @@
         This application requires JavaScript to run. Please enable JavaScript in your browser.
       </div>
     </noscript>
-    
+
     <header class="topbar no-print">
       <button
         class="hamburger-btn"

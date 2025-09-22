@@ -117,6 +117,43 @@ async function tryFetchJson(urls) {
   return null;
 }
 
+// --- Manifest helpers (cache in-memory for quick lookups) ---
+let __manifestCache = null; // raw manifest JSON
+async function getManifest() {
+  if (__manifestCache) return __manifestCache;
+  __manifestCache = await tryFetchJson([
+    'data/cases/manifest.json',
+    './data/cases/manifest.json',
+    '/data/cases/manifest.json',
+    '/app/data/cases/manifest.json',
+  ]);
+  return __manifestCache;
+}
+
+function findManifestEntryById(manifest, id) {
+  if (!manifest || !Array.isArray(manifest.categories)) return null;
+  for (const cat of manifest.categories) {
+    if (!Array.isArray(cat.cases)) continue;
+    for (const c of cat.cases) {
+      if (c?.id === id) return { ...c, category: cat.id };
+    }
+  }
+  return null;
+}
+
+function flattenManifestCases(manifest) {
+  const out = [];
+  if (!manifest || !Array.isArray(manifest.categories)) return out;
+  for (const cat of manifest.categories) {
+    if (!Array.isArray(cat.cases)) continue;
+    for (const c of cat.cases) {
+      if (!c?.id) continue;
+      out.push({ ...c, category: cat.id });
+    }
+  }
+  return out;
+}
+
 // Load cases from manifest file-based layout: app/data/cases/manifest.json
 async function loadCasesFromManifest() {
   debugWarn('🔍 Loading cases from manifest...');
@@ -166,6 +203,36 @@ async function loadCasesFromManifest() {
 
   debugWarn('📋 Total cases collected:', Object.keys(collected));
   return collected;
+}
+
+// Load a single case by id using the manifest mapping, store it, and return the wrapper
+async function loadSingleCaseFromManifest(id) {
+  const manifest = await getManifest();
+  const entry = findManifestEntryById(manifest, id);
+  if (!entry || !entry.file) return null;
+
+  const caseWrapper = await tryFetchJson([
+    `data/${entry.file}`,
+    `./data/${entry.file}`,
+    `/data/${entry.file}`,
+    `/app/data/${entry.file}`,
+  ]);
+  if (!caseWrapper || !caseWrapper.id || !caseWrapper.caseObj) return null;
+
+  // Normalize/migrate and persist
+  caseWrapper.caseObj = migrateOldCaseData(caseWrapper.caseObj);
+  caseWrapper.caseObj = ensureDataIntegrity(caseWrapper.caseObj);
+
+  const map = loadCasesFromStorage();
+  map[caseWrapper.id] = {
+    id: caseWrapper.id,
+    title: caseWrapper.caseObj?.meta?.title || caseWrapper.title || 'Untitled Case',
+    latestVersion: caseWrapper.latestVersion || 0,
+    caseObj: caseWrapper.caseObj,
+  };
+  saveCasesToStorage(map);
+  scheduleAutoPublish();
+  return map[caseWrapper.id];
 }
 
 // --- Initialize with data file (app/data/cases.json) if empty; fallback to sample ---
@@ -228,10 +295,23 @@ export const listCases = async () => {
 };
 
 export const getCase = async (id) => {
-  const cases = await ensureCasesInitialized();
-  const caseData = cases[id];
+  // Fast path: return from storage if present
+  const map = loadCasesFromStorage();
+  let caseData = map[id];
   if (caseData && caseData.caseObj) {
-    // Apply data migrations and integrity checks
+    caseData.caseObj = migrateOldCaseData(caseData.caseObj);
+    caseData.caseObj = ensureDataIntegrity(caseData.caseObj);
+    return caseData;
+  }
+
+  // Lazy-load a single case via manifest if possible
+  const loaded = await loadSingleCaseFromManifest(id);
+  if (loaded) return loaded;
+
+  // Fallback: hydrate all (legacy behavior)
+  const cases = await ensureCasesInitialized();
+  caseData = cases[id];
+  if (caseData && caseData.caseObj) {
     caseData.caseObj = migrateOldCaseData(caseData.caseObj);
     caseData.caseObj = ensureDataIntegrity(caseData.caseObj);
   }
@@ -399,4 +479,22 @@ export const listDrafts = () => {
     console.error('Failed to list drafts:', error);
     return {};
   }
+};
+
+// --- Manifest-first summaries (no full case JSON) ---
+export const listCaseSummaries = async () => {
+  const manifest = await getManifest();
+  if (!manifest || !Array.isArray(manifest.categories)) return [];
+  const stored = loadCasesFromStorage();
+  const flat = flattenManifestCases(manifest);
+  return flat.map((c) => {
+    const cached = stored[c.id];
+    return {
+      id: c.id,
+      title: (cached && cached.title) || c.title || 'Untitled Case',
+      latestVersion: (cached && cached.latestVersion) || 0,
+      isStored: Boolean(cached),
+      // No caseObj to keep list light
+    };
+  });
 };

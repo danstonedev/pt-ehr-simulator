@@ -1,8 +1,21 @@
 import { route } from '../../core/router.js';
 import { navigate as urlNavigate } from '../../core/url.js';
-async function _listCases() {
-  const { listCases } = await import('../../core/store.js');
-  return listCases();
+async function _listCaseSummaries() {
+  const store = await import('../../core/store.js');
+  if (typeof store.listCaseSummaries === 'function') {
+    return store.listCaseSummaries();
+  }
+  // Fallback for older bundles: load full cases and map to summaries
+  if (typeof store.listCases === 'function') {
+    const list = await store.listCases();
+    return (list || []).map((c) => ({
+      id: c.id,
+      title: c.title || c.caseObj?.meta?.title || 'Untitled Case',
+      latestVersion: c.latestVersion || 0,
+      isStored: true,
+    }));
+  }
+  throw new Error('Store API not available');
 }
 import { storage } from '../../core/index.js';
 import { el } from '../../ui/utils.js';
@@ -210,13 +223,8 @@ function scanDrafts(storage) {
 
 // Build a lowercased search string for a case
 function getCaseSearchText(c) {
-  const vals = [
-    c.title,
-    c.caseObj?.meta?.title,
-    c.caseObj?.meta?.setting,
-    c.caseObj?.meta?.diagnosis,
-    c.caseObj?.meta?.acuity,
-  ].filter(Boolean);
+  // Manifest-first: only title is guaranteed
+  const vals = [c.title].filter(Boolean);
   return vals.join(' ').toLowerCase();
 }
 
@@ -244,9 +252,10 @@ function buildComparator(sortColumn, sortDirection, drafts) {
   };
   function getSortValue(caseObj) {
     const accessors = {
-      title: (obj) => (obj.title || obj.caseObj?.meta?.title || '').toLowerCase(),
-      setting: (obj) => (obj.caseObj?.meta?.setting || '').toLowerCase(),
-      diagnosis: (obj) => (obj.caseObj?.meta?.diagnosis || '').toLowerCase(),
+      title: (obj) => (obj.title || '').toLowerCase(),
+      // setting/diagnosis not available without full case load
+      setting: () => '',
+      diagnosis: () => '',
       status: (obj) => String(getStatusOrderForCase(obj, drafts)),
     };
     const accessor = accessors[sortColumn] || (() => '');
@@ -524,9 +533,9 @@ function createCaseRow(c, drafts, storage, urlNavigate) {
   const statusContent = buildStatusContent(evalDraft);
   const actionButtons = buildActionButtons(c, evalDraft, storage, urlNavigate);
   return el('tr', {}, [
-    el('td', {}, c.title ?? c.caseObj?.meta?.title ?? ''),
-    el('td', {}, c.caseObj?.meta?.setting ?? ''),
-    el('td', {}, c.caseObj?.meta?.diagnosis ?? ''),
+    el('td', {}, c.title || ''),
+    el('td', {}, ''),
+    el('td', {}, ''),
     el('td', {}, statusContent),
     el('td', { class: 'nowrap' }, actionButtons),
   ]);
@@ -565,7 +574,7 @@ function makeCasesPanel(app, cases, drafts) {
     ]),
     el('input', {
       type: 'text',
-      placeholder: 'Search cases by title, setting, diagnosis, or acuity...',
+      placeholder: 'Search cases by title...',
       class: 'form-input-standard w-100 mb-16',
       onInput: (e) => {
         searchTerm = (e.target.value || '').toLowerCase();
@@ -722,7 +731,7 @@ function renderBlankNotesPanel(app) {
 route('#/student/cases', async (app) => {
   app.replaceChildren();
   try {
-    const cases = await _listCases();
+    const cases = await _listCaseSummaries();
     if (!Array.isArray(cases))
       return appendErrorPanel(app, 'Could not load cases. Please check the console for details.');
     if (cases.length === 0) return appendNoCasesPanel(app);
