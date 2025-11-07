@@ -255,13 +255,21 @@ If not configured, the app uses the built-in deterministic case generator. No ex
 
 Note: No server components are required. If you need a server‑side endpoint, any HTTP service will work—just provide its URL via one of the mechanisms above.
 
-## 📦 Deployment (GitHub Pages)
+## 📦 Deployment
+
+### GitHub Pages
 
 - Pushing to the `main` branch automatically deploys via GitHub Actions (`.github/workflows/deploy-pages.yml`).
 - Only the `app/` directory is uploaded and served.
 - `.nojekyll` disables Jekyll processing; `404.html` provides SPA fallback so deep links reload correctly.
 
 If your Pages URL hasn’t updated yet, check Actions for the latest “Deploy to GitHub Pages” run.
+
+### Azure Static Web Apps
+
+This app can also be deployed to Azure Static Web Apps. See the workflow at `.github/workflows/azure-static-web-apps-thankful-coast-03f2b250f.yml`.
+
+**Important**: This is a pure frontend app with **no API/Functions**. If you encounter deployment errors about `FUNCTIONS_EXTENSION_VERSION`, `FUNCTIONS_WORKER_RUNTIME`, or `AzureWebJobsStorage` app settings, see **[docs/AZURE_DEPLOYMENT_FIX.md](docs/AZURE_DEPLOYMENT_FIX.md)** for detailed instructions on how to resolve these issues by removing incompatible settings from the Azure Portal.
 
 ## 🧪 Dev workflow quick refs
 
