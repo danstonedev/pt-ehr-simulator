@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Pre-push hook: run quick checks before allowing a push
 
-set -euo pipefail
+set -e
 
 echo "husky pre-push: running npm run check"
 
